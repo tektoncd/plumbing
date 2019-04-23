@@ -45,7 +45,7 @@ the Prow cluster and must be manually applied.
 gcloud container clusters get-credentials prow --zone us-central1-a --project tekton-releases
 
 # Step 2: Update the configuration used by Prow
-kubectl create configmap config --from-file=config.yaml=infra/prow/config.yaml --dry-run -o yaml | kubectl replace configmap config -f -
+kubectl create configmap config --from-file=config.yaml=prow/config.yaml --dry-run -o yaml | kubectl replace configmap config -f -
 
 # Step 3: Remember to configure kubectl to connect to your regular cluster!
 gcloud container clusters get-credentials ...

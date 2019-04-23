@@ -29,14 +29,12 @@ tide:
   queries:
   - repos:
     - tektoncd/pipeline
-    labels:
-    - lgtm
-    - approved
-    missingLabels:
-    - do-not-merge/hold
-    - do-not-merge/work-in-progress
-  - repos:
     - tektoncd/community
+    - tektoncd/plumbing
+    - tektoncd/dashboard
+    - tektoncd/cli
+    - tektoncd/experimental
+    - tektoncd/website
     labels:
     - lgtm
     - approved
