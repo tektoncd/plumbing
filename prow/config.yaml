@@ -28,12 +28,12 @@ branch-protection:
 tide:
   queries:
   - repos:
-    - tektoncd/pipeline
-    - tektoncd/community
-    - tektoncd/plumbing
-    - tektoncd/dashboard
     - tektoncd/cli
+    - tektoncd/community
+    - tektoncd/dashboard
     - tektoncd/experimental
+    - tektoncd/pipeline
+    - tektoncd/plumbing
     - tektoncd/website
     labels:
     - lgtm
