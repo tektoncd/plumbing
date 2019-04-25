@@ -28,6 +28,7 @@ branch-protection:
 tide:
   queries:
   - repos:
+    - tektoncd/catalog
     - tektoncd/cli
     - tektoncd/community
     - tektoncd/dashboard
@@ -42,6 +43,7 @@ tide:
     - do-not-merge/hold
     - do-not-merge/work-in-progress
   merge_method:
+    tektoncd/catalog: rebase
     tektoncd/cli: rebase
     tektoncd/community: rebase
     tektoncd/dashboard: rebase
