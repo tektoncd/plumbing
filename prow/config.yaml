@@ -42,7 +42,13 @@ tide:
     - do-not-merge/hold
     - do-not-merge/work-in-progress
   merge_method:
+    tektoncd/cli: rebase
+    tektoncd/community: rebase
+    tektoncd/dashboard: rebase
+    tektoncd/experimental: rebase
     tektoncd/pipeline: rebase
+    tektoncd/plumbing: rebase
+    tektoncd/website: rebase
   target_url: https://prow.tekton.dev/tide
 
 presubmits:
