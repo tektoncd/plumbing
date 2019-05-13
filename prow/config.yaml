@@ -333,6 +333,7 @@ presubmits:
       - name: github-token
         secret:
           secretName: oauth-token
+  tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
     agent: kubernetes
     context: pull-tekton-catalog-build-tests
