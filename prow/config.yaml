@@ -333,3 +333,108 @@ presubmits:
       - name: github-token
         secret:
           secretName: oauth-token
+  - name: pull-tekton-catalog-build-tests
+    agent: kubernetes
+    context: pull-tekton-catalog-build-tests
+    always_run: true
+    rerun_command: "/test pull-tekton-catalog-build-tests"
+    trigger: "(?m)^/test (all|pull-tekton-catalog-build-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--build-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-catalog-unit-tests
+    agent: kubernetes
+    context: pull-tekton-catalog-unit-tests
+    always_run: true
+    rerun_command: "/test pull-tekton-catalog-unit-tests"
+    trigger: "(?m)^/test (all|pull-tekton-catalog-unit-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--unit-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-catalog-integration-tests
+    agent: kubernetes
+    context: pull-tekton-catalog-integration-tests
+    always_run: true
+    rerun_command: "/test pull-tekton-catalog-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-catalog-integration-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--integration-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
