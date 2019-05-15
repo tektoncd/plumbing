@@ -92,10 +92,10 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-cli-unit-tests
     agent: kubernetes
-    context: tekton-cli-unit-tests
+    context: pull-tekton-cli-unit-tests
     always_run: true
-    rerun_command: "/test tekton-cli-unit-tests"
-    trigger: "(?m)^/test (all|tekton-cli-unit-tests),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-cli-unit-tests"
+    trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
       - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
