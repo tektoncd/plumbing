@@ -57,7 +57,6 @@ presubmits:
   tektoncd/cli:
   - name: pull-tekton-cli-build-tests
     agent: kubernetes
-    context: pull-tekton-cli-build-tests
     always_run: true
     rerun_command: "/test pull-tekton-cli-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
@@ -92,7 +91,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-cli-unit-tests
     agent: kubernetes
-    context: pull-tekton-cli-unit-tests
     always_run: true
     rerun_command: "/test pull-tekton-cli-unit-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
@@ -127,7 +125,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-cli-integration-tests
     agent: kubernetes
-    context: pull-tekton-cli-integration-tests
     always_run: true
     rerun_command: "/test pull-tekton-cli-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
@@ -163,7 +160,6 @@ presubmits:
   tektoncd/dashboard:
   - name: pull-tekton-dashboard-tests
     agent: kubernetes
-    context: pull-tekton-dashboard-tests
     always_run: true
     rerun_command: "/test pull-tekton-dashboard-tests"
     trigger: "(?m)^/test (all|pull-tekton-dashboard-tests),?(\\s+|$)"
@@ -199,7 +195,6 @@ presubmits:
   tektoncd/pipeline:
   - name: pull-tekton-pipeline-build-tests
     agent: kubernetes
-    context: pull-tekton-pipeline-build-tests
     always_run: true
     rerun_command: "/test pull-tekton-pipeline-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
@@ -234,7 +229,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-pipeline-unit-tests
     agent: kubernetes
-    context: tekton-pipeline-unit-tests
     always_run: true
     rerun_command: "/test tekton-pipeline-unit-tests"
     trigger: "(?m)^/test (all|tekton-pipeline-unit-tests),?(\\s+|$)"
@@ -269,7 +263,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-pipeline-integration-tests
     agent: kubernetes
-    context: pull-tekton-pipeline-integration-tests
     always_run: true
     rerun_command: "/test pull-tekton-pipeline-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
@@ -304,7 +297,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-pipeline-go-coverage
     agent: kubernetes
-    context: pull-tekton-pipeline-go-coverage
     always_run: true
     rerun_command: "/test pull-tekton-pipeline-go-coverage"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-go-coverage),?(\\s+|$)"
@@ -336,7 +328,6 @@ presubmits:
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
     agent: kubernetes
-    context: pull-tekton-catalog-build-tests
     always_run: true
     rerun_command: "/test pull-tekton-catalog-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-build-tests),?(\\s+|$)"
@@ -371,7 +362,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-catalog-unit-tests
     agent: kubernetes
-    context: pull-tekton-catalog-unit-tests
     always_run: true
     rerun_command: "/test pull-tekton-catalog-unit-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-unit-tests),?(\\s+|$)"
@@ -406,7 +396,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-catalog-integration-tests
     agent: kubernetes
-    context: pull-tekton-catalog-integration-tests
     always_run: true
     rerun_command: "/test pull-tekton-catalog-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-integration-tests),?(\\s+|$)"
