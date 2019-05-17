@@ -229,7 +229,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-dashboard-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -263,7 +263,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/prow-tests@sha256:39296f6df4f29812689b41c47c78bdb00fbbec5ee63407fcbfefec0f48f5b6b1
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
