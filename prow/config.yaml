@@ -159,7 +159,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-cli-go-coverage
     agent: kubernetes
-    context: pull-tekton-cli-go-coverage
     always_run: true
     rerun_command: "/test pull-tekton-cli-go-coverage"
     trigger: "(?m)^/test (all|pull-tekton-cli-go-coverage),?(\\s+|$)"
@@ -225,7 +224,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-dashboard-unit-tests
     agent: kubernetes
-    context: tekton-dashboard-unit-tests
     always_run: true
     rerun_command: "/test tekton-dashboard-unit-tests"
     trigger: "(?m)^/test (all|tekton-dashboard-unit-tests),?(\\s+|$)"
@@ -260,7 +258,6 @@ presubmits:
           secretName: test-account
   - name: pull-tekton-dashboard-integration-tests
     agent: kubernetes
-    context: pull-tekton-dashboard-integration-tests
     always_run: true
     rerun_command: "/test pull-tekton-dashboard-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
