@@ -9,6 +9,7 @@ data:
       - tekton-prow-3
       - tekton-prow-4
       - tekton-prow-5
+      - tekton-prow-6
       state: dirty
       type: gke-project
 kind: ConfigMap
