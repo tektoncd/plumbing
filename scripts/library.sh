@@ -358,7 +358,7 @@ function check_licenses() {
   # Fetch the google/licenseclassifier for its license db
   go get -u github.com/google/licenseclassifier
   # Check that we don't have any forbidden licenses in our images.
-  run_go_tool ./vendor/github.com/tektoncd/test-infra/tools/dep-collector dep-collector -check $@
+  run_go_tool ./vendor/github.com/knative/test-infra/tools/dep-collector dep-collector -check $@
 }
 
 # Run the given linter on the given files, checking it exists first.
