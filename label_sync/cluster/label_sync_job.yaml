@@ -1,0 +1,33 @@
+# Keep in sync with label_sync_cron_job
+# This is a oneoff job used for manual runs.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: label-sync-1008-002
+spec:
+  template:
+    spec:
+      containers:
+        - name: label-sync
+          image: gcr.io/k8s-testimages/label_sync:v20190126-6c4304780
+          args:
+          - --config=/etc/config/labels.yaml
+          - --confirm=true
+          - --orgs=tektoncd
+          - --token=/etc/github/bot-token
+          - --debug=true
+          volumeMounts:
+          - name: oauth
+            mountPath: /etc/github
+            readOnly: true
+          - name: config
+            mountPath: /etc/config
+            readOnly: true
+      restartPolicy: Never
+      volumes:
+      - name: oauth
+        secret:
+          secretName: bot-token-github
+      - name: config
+        configMap:
+          name: label-config-v2
