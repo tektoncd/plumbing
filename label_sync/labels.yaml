@@ -191,7 +191,7 @@ default:
       description: Indicates that an issue or PR should not be auto-closed due to staleness.
       name: lifecycle/frozen
       previously:
-      - name: keep-open
+        - name: keep-open
       target: both
       prowPlugin: lifecycle
       addedBy: anyone
@@ -199,7 +199,7 @@ default:
       description: Indicates that an issue or PR is actively being worked on by a contributor.
       name: lifecycle/active
       previously:
-      - name: active
+        - name: active
       target: both
       prowPlugin: lifecycle
       addedBy: anyone
@@ -338,13 +338,13 @@ default:
       prowPlugin: shrug
       addedBy: humans
 repos:
-  tektoncd/catalog:
   tektoncd/cli:
-    - color: 3f6eb5
-      description: Issues related to user-studies
-      name: user-study
-      target: issues
-      addedBy: humans
+    labels:
+      - color: 3f6eb5
+        description: Issues related to user-studies
+        name: user-study
+        target: issues
+        addedBy: humans
   tektoncd/community:
     labels:
       - color: 0052cc
@@ -353,50 +353,56 @@ repos:
         target: both
         addedBy: label
   tektoncd/dashboard:
+    labels:
       - color: 0052cc
         description: Indicates an issue on api area.
         name: area/api
         target: issues
         addedBy: label
-    - color: 3f6eb5
-      description: Issues related to user-studies
-      name: user-study
-      target: issues
-      addedBy: humans
-    - color: 160a72
-      description: This issue needs some help during design phase
-      name: design-help-wanted
-      target: issues
-      addedBy: humans
+      - color: 3f6eb5
+        description: Issues related to user-studies
+        name: user-study
+        target: issues
+        addedBy: humans
+      - color: 160a72
+        description: This issue needs some help during design phase
+        name: design-help-wanted
+        target: issues
+        addedBy: humans
   tektoncd/pipeline:
+    labels:
+      - color: ffcdc4
+        description: For consideration when planning the next milestone
+        name: maybe-next-milestone
+        target: both
+        addedBy: humans
       - color: 0052cc
         description: Indicates an issue on api area.
         name: area/api
         target: issues
         addedBy: label
-    - color: 3f6eb5
-      description: Issues related to user-studies
-      name: user-study
-      target: issues
-      addedBy: humans
-    - color: 4cdbd6
-      description: This task is mostly about implementation!!! And docs and tests of course but that's a given
-      name: meaty-juicy-coding-work
-      target: both
-      addedBy: humans
-    - color: 3E4B9E
-      description: Issues that should be considered as Epics (aka multiple sub-tasks, …)
-      name: epic
-      previously:
-        - Epic
-      target: both
-      addedBy: humans
-    - color: 64e5ba
-      description: This is for some internal Google project tracking
-      name: okr
-      target: both
-      addedBy: humans
+      - color: 3f6eb5
+        description: Issues related to user-studies
+        name: user-study
+        target: issues
+        addedBy: humans
+      - color: 4cdbd6
+        description: This task is mostly about implementation!!! And docs and tests of course but that's a given
+        name: meaty-juicy-coding-work
+        target: both
+        addedBy: humans
+      - color: 3E4B9E
+        description: Issues that should be considered as Epics (aka multiple sub-tasks, …)
+        name: Epic
+        target: both
+        addedBy: humans
+      - color: 64e5ba
+        description: This is for some internal Google project tracking
+        name: okr
+        target: both
+        addedBy: humans
   tektoncd/plumbing:
+    labels:
       - color: 0052cc
         description: Issues or PRs related to code in /boskos
         name: area/boskos
