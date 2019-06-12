@@ -84,3 +84,7 @@ Projects are created in GCP and added to the `boskos/boskos-config.yaml` file.
 
 Make sure the IAM account:
 `prow-account@tekton-releases.iam.gserviceaccount.com` has Editor permissions.
+
+After editing `boskos/boskos-config.yaml`,
+[apply the updated ConfigMap](https://github.com/kubernetes/test-infra/tree/master/boskos#config-update)
+to the `tekton-releases` `prow` cluster.
