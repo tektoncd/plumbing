@@ -167,7 +167,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/cli.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -506,7 +506,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/pipeline.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
         imagePullPolicy: Always
         command:
         - "/coverage"
