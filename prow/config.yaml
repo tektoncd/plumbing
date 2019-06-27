@@ -662,6 +662,37 @@ postsubmits:
       - name: nightly-account
         secret:
           secretName: nightly-account
+  tektoncd/experimental:
+  - name: tekton-dashboard-publish-images
+    always_run: true
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/nightly-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/publish-images.sh"
+        volumeMounts:
+        - name: nightly-account
+          mountPath: /etc/nightly-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/nightly-account/service-account.json
+      volumes:
+      # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
+      # images to gcr.io/tekton-nightly 👼
+      - name: nightly-account
+        secret:
+          secretName: nightly-account
 
 periodics:
   - cron: "31 8 * * *"
