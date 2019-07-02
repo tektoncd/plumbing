@@ -813,26 +813,8 @@ postsubmits:
       - name: nightly-account
         secret:
           secretName: nightly-account
-    tektoncd/pipeline:
-  - name: post-tekton-pipeline-go-coverage
-    branches:
-    - master
-    agent: kubernetes
-    decorate: true
-    spec:
-      containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
-        imagePullPolicy: Always
-        command:
-        - "/coverage"
-        args:
-        - "--artifacts=$(ARTIFACTS)"
-        - "--cov-threshold-percentage=0"
-    
-
-periodics:
-  - cron: "31 8 * * *"
-    name: ci-tekton-pipeline-nightly-release
+  tektoncd/pipelines:
+  - name: tekton-pipeline-publish-images
     always_run: true
     spec:
       containers:
@@ -862,3 +844,17 @@ periodics:
       - name: nightly-account
         secret:
           secretName: nightly-account
+  - name: post-tekton-pipeline-go-coverage
+    branches:
+    - master
+    agent: kubernetes
+    decorate: true
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+        imagePullPolicy: Always
+        command:
+        - "/coverage"
+        args:
+        - "--artifacts=$(ARTIFACTS)"
+        - "--cov-threshold-percentage=0"
