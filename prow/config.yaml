@@ -33,6 +33,7 @@ tide:
     - tektoncd/community
     - tektoncd/dashboard
     - tektoncd/experimental
+    - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
     - tektoncd/triggers
@@ -49,6 +50,7 @@ tide:
     tektoncd/community: rebase
     tektoncd/dashboard: rebase
     tektoncd/experimental: rebase
+    tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
     tektoncd/triggers: rebase
@@ -395,6 +397,139 @@ presubmits:
       - name: test-account
         secret:
           secretName: test-account
+  tektoncd/operator:
+  - name: pull-tekton-operator-build-tests
+    agent: kubernetes
+    always_run: true
+    rerun_command: "/test pull-tekton-operator-build-tests"
+    trigger: "(?m)^/test (all|pull-tekton-operator-build-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--build-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-operator-unit-tests
+    agent: kubernetes
+    always_run: true
+    rerun_command: "/test pull-tekton-operator-unit-tests"
+    trigger: "(?m)^/test (all|pull-tekton-operator-unit-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--unit-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-operator-integration-tests
+    agent: kubernetes
+    always_run: true
+    rerun_command: "/test pull-tekton-operator-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-operator-integration-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+        imagePullPolicy: Always
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--integration-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-operator-go-coverage
+    agent: kubernetes
+    always_run: true
+    rerun_command: "/test pull-tekton-operator-go-coverage"
+    trigger: "(?m)^/test (all|pull-tekton-operator-go-coverage),?(\\s+|$)"
+    optional: true
+    decorate: true
+    clone_uri: "https://github.com/tektoncd/operator.git"
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
+        imagePullPolicy: Always
+        command:
+        - "/coverage"
+        args:
+        - "--postsubmit-gcs-bucket=tekton-prow"
+        - "--postsubmit-job-name=post-tekton-operator-go-coverage"
+        - "--artifacts=$(ARTIFACTS)"
+        - "--profile-name=coverage_profile.txt"
+        - "--cov-target=."
+        - "--cov-threshold-percentage=80"
+        - "--github-token=/etc/github-token/oauth"
+        volumeMounts:
+        - name: github-token
+          mountPath: /etc/github-token
+          readOnly: true
+      volumes:
+      - name: github-token
+        secret:
+          secretName: oauth-token
   tektoncd/pipeline:
   - name: pull-tekton-pipeline-build-tests
     agent: kubernetes
@@ -813,6 +948,21 @@ postsubmits:
       - name: nightly-account
         secret:
           secretName: nightly-account
+  tektoncd/operator:
+  - name: post-tekton-operator-go-coverage
+    branches:
+    - master
+    agent: kubernetes
+    decorate: true
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+        imagePullPolicy: Always
+        command:
+        - "/coverage"
+        args:
+        - "--artifacts=$(ARTIFACTS)"
+        - "--cov-threshold-percentage=0"
   tektoncd/pipelines:
   - name: tekton-pipeline-publish-images
     always_run: true
