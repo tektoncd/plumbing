@@ -963,7 +963,7 @@ postsubmits:
         args:
         - "--artifacts=$(ARTIFACTS)"
         - "--cov-threshold-percentage=0"
-  tektoncd/pipelines:
+  tektoncd/pipeline:
   - name: tekton-pipeline-publish-images
     always_run: true
     spec:
