@@ -33,6 +33,7 @@ tide:
     - tektoncd/community
     - tektoncd/dashboard
     - tektoncd/experimental
+    - tektoncd/friends
     - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
@@ -50,6 +51,7 @@ tide:
     tektoncd/community: rebase
     tektoncd/dashboard: rebase
     tektoncd/experimental: rebase
+    tektoncd/friends: rebase
     tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
