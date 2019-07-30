@@ -19,4 +19,3 @@ test-runner:
 
 push: images
 	docker push gcr.io/tekton-releases/tests/test-runner
-	
