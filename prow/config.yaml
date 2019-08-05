@@ -426,10 +426,14 @@ presubmits:
           mountPath: /etc/test-account
           readOnly: true
         env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
           value: us-central1
+        securityContext:
+          privileged: true
       volumes:
       - name: test-account
         secret:
