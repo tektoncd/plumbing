@@ -1069,3 +1069,41 @@ postsubmits:
         args:
         - "--artifacts=$(ARTIFACTS)"
         - "--cov-threshold-percentage=0"
+periodics:
+  - cron: "5 2 * * *"
+    name: ci-tekton-pipeline-upgrade
+    agent: kubernetes
+    decorate: true
+    extra_refs:
+      - org: tekton
+        repo: pipeline
+        base_ref: master
+        path_alias: github.com/tektoncd/pipeline
+    spec:
+      containers:
+        - image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+          imagePullPolicy: Always
+          args:
+            - "--scenario=kubernetes_execute_bazel"
+            - "--clean"
+            - "--job=$(JOB_NAME)"
+            - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+            - "--root=/go/src"
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--upload=gs://tekton-prow/pr-logs"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "./test/e2e-tests-upgrade.sh"
+          volumeMounts:
+            - name: test-account
+              mountPath: /etc/test-account
+              readOnly: true
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/test-account/service-account.json
+            - name: E2E_CLUSTER_REGION
+              value: us-central1
+      volumes:
+        - name: test-account
+          secret:
+            secretName: test-account
