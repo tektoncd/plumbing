@@ -1028,12 +1028,17 @@ postsubmits:
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/nightly-account/service-account.json
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
       volumes:
       # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
       # images to gcr.io/tekton-nightly 👼
       - name: nightly-account
         secret:
           secretName: nightly-account
+      # FIXME(vdemeester): use kaniko or buildah to build+push instead
+      securityContext:
+        privileged: true
   - name: post-tekton-pipeline-go-coverage
     branches:
     - master
