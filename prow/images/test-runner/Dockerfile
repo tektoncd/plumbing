@@ -42,7 +42,7 @@ RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl
 
 # Temporarily add test-infra to the image to build custom tools
-RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
-    make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
-    cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper . && \
-    go install github.com/knative/test-infra/tools/dep-collector
+RUN mkdir -p /go/src/knative.dev/ && git clone https://github.com/knative/test-infra.git /go/src/knative.dev/test-infra && \
+    make -C /go/src/knative.dev/test-infra/tools/githubhelper && \
+    cp /go/src/knative.dev/test-infra/tools/githubhelper/githubhelper . && \
+    go install knative.dev/test-infra/tools/dep-collector
