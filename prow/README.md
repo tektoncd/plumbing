@@ -7,7 +7,7 @@ for CI automation.
 - Prow runs in [the tektoncd GCP project](../gcp.md)
 - [Ingress is configured to `prow.tekton.dev`](#ingress)
 - Prow results are displayed via [gubernator](../gubernator/README.md)
-- [Instructions for updating Prow](#updating-prow-itself)
+- [Instructions for updating Prow](#updating-prow-itself) and [Prow's Tekton Pipelines instance](#tekton-pipelines-with-prow)
 - [Instructions for updating Prow configuration](#updating-prow-configuration)
 
 _[Prow docs](https://github.com/kubernetes/test-infra/tree/master/prow)._
@@ -76,6 +76,31 @@ These values have been removed from the original
 - The `Role` values give `pod` permissions in the `default` namespace as well as `test-pods` -
   The intention seems to be that `test-pods` be used to run the pods themselves, but we
   don't currently have that configured in our [config.yaml](config.yaml).
+
+#### Tekton Pipelines with Prow
+
+[Tekton Pipelines](https://github.com/tektoncd/pipelines) is also installed in the `prow`
+cluster so that Prow can trigger the execution of
+[`PipelineRuns`](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md).
+
+[Since Prow only works with select versions of Tekton Pipelines](https://github.com/kubernetes/test-infra/issues/13948)
+the version currently installed in the cluster is v0.3.1:
+
+```bash
+kubectl apply --filename  https://storage.googleapis.com/tekton-releases/previous/v0.3.1/release.yaml
+```
+
+_See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)._
+
+##### Hello World Pipeline
+
+Since Prow + Pipelines in this org are a WIP (see
+[#922](https://github.com/tektoncd/pipeline/issues/922)),
+the only job that is currently configured is
+[the hello scott Pipeline](prow/helloscott.yaml).
+
+This `Pipeline` (`special-hi-scott-pipeline`) is executed on every PR to this repo
+(`plumbing`) via the `try-out-prow-plus-tekton` Prow job.
 
 ### Updating Prow configuration
 
