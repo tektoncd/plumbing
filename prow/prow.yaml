@@ -1,39 +1,3 @@
-# The content of this file is from https://github.com/kubernetes/test-infra/blob/master/prow/cluster/starter.yaml
-#---
-#
-# The content of the plugins ConfigMap lives in plugins.yaml and is updated with:
-# kubectl create configmap plugins --from-file=config.yaml=prow/plugins.yaml --dry-run -o yaml | kubectl replace configmap plugins -f -
-#
-#apiVersion: v1
-#kind: ConfigMap
-#metadata:
-#  namespace: default
-#  name: plugins
-#data:
-#  plugins.yaml: ""
-#---
-#
-# The content of the config ConfigMap lives in plugins.yaml and is updated with:
-# kubectl create configmap config --from-file=config.yaml=prow/config.yaml --dry-run -o yaml | kubectl replace configmap config -f -
-#
-#apiVersion: v1
-#kind: ConfigMap
-#metadata:
-#  namespace: default
-#  name: config
-#data:
-#  config.yaml: |
-#    prowjob_namespace: default
-#    pod_namespace: test-pods
-#    periodics:
-#    - interval: 10m
-#      agent: kubernetes
-#      name: echo-test
-#      spec:
-#        containers:
-#        - image: alpine
-#          command: ["/bin/date"]
-#---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -195,21 +159,24 @@ spec:
       - name: plugins
         configMap:
           name: plugins
-#---
-#
-# The configuration for this has been modified and applied manually.
-#
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  namespace: default
-#  name: hook
-#spec:
-#  selector:
-#    app: hook
-#  ports:
-#  - port: 8888
-#  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hook
+  namespace: default
+spec:
+  clusterIP: 10.55.254.214
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 30298
+    port: 8888
+    protocol: TCP
+    targetPort: 8888
+  selector:
+    app: hook
+  sessionAffinity: None
+  type: NodePort
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -336,22 +303,24 @@ spec:
       - name: config
         configMap:
           name: config
-#---
-#
-# The configuration for this has been modified and applied manually.
-#
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  namespace: default
-#  name: deck
-#spec:
-#  selector:
-#    app: deck
-#  ports:
-#  - port: 80
-#    targetPort: 8080
-#  type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deck
+  namespace: default
+spec:
+  clusterIP: 10.55.250.236
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31957
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: deck
+  sessionAffinity: None
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -431,46 +400,24 @@ spec:
       - name: config
         configMap:
           name: config
-#---
-#
-# The configuration for this has been modified and applied manually.
-#
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  namespace: default
-#  name: tide
-#spec:
-#  selector:
-#    app: tide
-#  ports:
-#  - port: 80
-#    targetPort: 8888
-#  type: NodePort
-#---
-#
-# The configuration for this is in ingress.yaml
-#
-#apiVersion: extensions/v1beta1
-#kind: Ingress
-#metadata:
-#  namespace: default
-#  name: ing
-#spec:
-#  backend: # specify the default backend for `ingress-gce` (https://cloud.google.com/kubernetes-engine/docs/concepts/ingress#default_backend)
-#    serviceName: deck
-#    servicePort: 80
-#  rules:
-#  - http:
-#      paths:
-#      - path: /
-#        backend:
-#          serviceName: deck
-#          servicePort: 80
-#      - path: /hook
-#        backend:
-#          serviceName: hook
-#          servicePort: 8888
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tide
+  namespace: default
+spec:
+  clusterIP: 10.55.243.29
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31878
+    port: 80
+    protocol: TCP
+    targetPort: 8888
+  selector:
+    app: tide
+  sessionAffinity: None
+  type: NodePort
 #---
 #
 # TODO(#54) This component was added after our initial Prow setup 
