@@ -193,11 +193,17 @@ kubectl apply --filename  https://storage.googleapis.com/tekton-releases/previou
 
 _See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)._
 
+#### Nightly Tekton Pipelines release
+
+The prow configuration includes a `periodic` job which invokes
+[the Tekton Pipelines nightly release Pipeline](https://github.com/tektoncd/pipeline/tree/master/tekton#nightly-releases).
+
 #### Hello World Pipeline
 
 Since Prow + Pipelines in this org are a WIP (see
 [#922](https://github.com/tektoncd/pipeline/issues/922)),
-the only job that is currently configured is
+the only job (besides [nightly releases](#nightly-tekton-pipelines-release))
+that is currently configured is
 [the hello scott Pipeline](prow/helloscott.yaml).
 
 This `Pipeline` (`special-hi-scott-pipeline`) is executed on every PR to this repo
