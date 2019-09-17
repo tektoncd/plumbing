@@ -15,7 +15,7 @@
 approve:
 - repos:
   - tektoncd
-  implicit_self_approve: true
+  implicit_self_approve: false
   review_acts_as_approve: true
 
 plugins:
