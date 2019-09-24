@@ -1,0 +1,109 @@
+# Tekton Resources for CI/CD
+
+This folder includes `Tasks`, `Pipelines` and other shared Tekton
+resource used to setup CI/CD pipelines for all repositories in the
+tektoncd org. It also includes `tektoncd/plumbing` specific tasks
+and pipelines.
+
+## Tasks
+
+### Install Tekton Release
+
+The task `install-tekton-release` installs a release of a Tekton project from the YAML file in the
+release bucket.
+
+Inputs are:
+- Param `projectName`: the name of the project (pipeline, trigger,
+dashboard, experimental)
+- Param `version`: the version to be installed, e.g. "v0.7.0"
+- A storage resource, that should point to the release bucket. The release file
+is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
+- A cluster resource, that points to the credentials for the target cluster
+
+The cluster resource pulls the token and cadata from a kubernetes secret like the
+following:
+
+```
+export CLUSTER_SECRET_NAME=<cluster-name>-secrets
+export SERVICE_ACCOUNT_SECRET=<service-account-secret>
+
+cat <<EOF > secret-for-the-cluster-resource.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: $CLUSTER_SECRET_NAME
+type: Opaque
+data:
+  cadataKey: $(kubectl get secret/$SERVICE_ACCOUNT_SECRET -o jsonpath="{.data.ca\.crt}")
+  tokenKey: $(kubectl get secret/$SERVICE_ACCOUNT_SECRET -o jsonpath="{.data.token}")
+EOF
+```
+
+The cluster resource itself:
+```
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: <cluster-name-DNS-valid>
+spec:
+  type: cluster
+  params:
+    - name: name
+      value: <cluster-name>
+    - name: url
+      value: <master-username>
+    - name: username
+      value: <service-account-name>
+  secrets:
+    - fieldName: token
+      secretKey: tokenKey
+      secretName: $CLUSTER_SECRET_NAME
+    - fieldName: cadata
+      secretKey: cadataKey
+      secretName: $CLUSTER_SECRET_NAME
+```
+
+The bucket resource can be read-only:
+
+```
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: tekton-bucket
+spec:
+  type: storage
+  params:
+   - name: type
+     value: gcs
+   - name: location
+     value: gs://tekton-releases
+   - name: dir
+     value: "y"
+```
+
+An example `TaskRun`:
+
+```
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: install-tekton-pipeline-
+spec:
+  taskRef:
+    name: install-tekton-release
+  inputs:
+    resources:
+      - name: release-bucket
+        resourceRef:
+          name: tekton-bucket
+      - name: k8s-cluster
+        resourceRef:
+          name: <cluster-name-DNS-valid>
+    params:
+      - name: projectName
+        value: pipeline
+      - name: version
+        value: v0.7.0
+```
+
+## Pipelines
