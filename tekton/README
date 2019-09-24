@@ -7,10 +7,66 @@ and pipelines.
 
 ## Tasks
 
+### Verify Tekton Release
+
+The task `verify-tekton-release-github` compares the YAML of the release
+stored in the GitHub release assets, with the YAML of the release stored in the bucket.
+
+Inputs are:
+- Param `projectName`: the name of the project (pipeline, trigger,
+dashboard, experimental)
+- Param `version`: the version to be installed, e.g. "v0.7.0"
+- A storage resource, that should point to the release bucket. The release file
+is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
+
 ### Install Tekton Release
 
 The task `install-tekton-release` installs a release of a Tekton project from the YAML file in the
 release bucket.
+
+Inputs are:
+- Param `projectName`: the name of the project (pipeline, trigger,
+dashboard, experimental)
+- Param `version`: the version to be installed, e.g. "v0.7.0"
+- A storage resource, that should point to the release bucket. The release file
+is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
+- A cluster resource, that points to the credentials for the target cluster
+
+An example `TaskRun`:
+
+```
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: install-tekton-pipeline-
+spec:
+  taskRef:
+    name: install-tekton-release
+  inputs:
+    resources:
+      - name: release-bucket
+        resourceRef:
+          name: tekton-bucket
+      - name: k8s-cluster
+        resourceRef:
+          name: <cluster-name-DNS-valid>
+    params:
+      - name: projectName
+        value: pipeline
+      - name: version
+        value: v0.7.0
+```
+
+## Pipelines
+
+### Verify Release
+
+The `pipeline-verify-release` verifies the release assets for a Tekton project.
+It does so by performing the following steps:
+* validate the release YAML from the bucket against that in GitHub
+* deploy the release against a test k8s cluster
+* wait for all the deployments and pods to be up and running (TBD)
+* run E2E tests and validate results (TBD)
 
 Inputs are:
 - Param `projectName`: the name of the project (pipeline, trigger,
@@ -81,29 +137,12 @@ spec:
      value: "y"
 ```
 
-An example `TaskRun`:
-
+The pipeline can be executed using the `tkn` client:
 ```
-apiVersion: tekton.dev/v1alpha1
-kind: TaskRun
-metadata:
-  generateName: install-tekton-pipeline-
-spec:
-  taskRef:
-    name: install-tekton-release
-  inputs:
-    resources:
-      - name: release-bucket
-        resourceRef:
-          name: tekton-bucket
-      - name: k8s-cluster
-        resourceRef:
-          name: <cluster-name-DNS-valid>
-    params:
-      - name: projectName
-        value: pipeline
-      - name: version
-        value: v0.7.0
+tkn pipeline start \
+  --param=version=<version> \
+  --param=projectName=<tekton-project> \
+  --resource=bucket=<tekton-bucket-resource> \
+  --resource=test-cluster=<test-cluster> \
+  pipeline-verify-release
 ```
-
-## Pipelines
