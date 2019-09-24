@@ -1,0 +1,52 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: install-tekton-release
+spec:
+  inputs:
+    resources:
+    - name: release-bucket
+      type: storage
+    - name: k8s-cluster
+      type: cluster
+    params:
+    - name: projectName
+      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+      default: pipeline
+    - name: version
+      description: The vX.Y.Z version that we want to install (including `v`)
+  steps:
+
+  - name: make-pipeline-folder # This is a hack to have a consistent folder structure
+    image: busybox
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      if [ "$(inputs.params.projectName)" == "pipeline" ]; then
+        mkdir -p "$(inputs.resources.release-bucket.path)/$(inputs.params.projectName)" || true
+        ln -s $(inputs.resources.release-bucket.path)/previous $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/
+      fi
+
+  - name: deploy-tekton-project
+    image: lachlanevenson/k8s-kubectl:latest # We may want to maintain our kubectl image
+    args:
+    - apply
+    - --filename
+    - $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml
+    - --kubeconfig
+    - /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
