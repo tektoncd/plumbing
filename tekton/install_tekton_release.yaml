@@ -50,3 +50,89 @@ spec:
     - $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml
     - --kubeconfig
     - /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: verify-tekton-release-github
+spec:
+  inputs:
+    resources:
+    - name: release-bucket
+      type: storage
+    params:
+    - name: projectName
+      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+      default: pipeline
+    - name: version
+      description: The vX.Y.Z version that we want to install (including `v`)
+  steps:
+
+  - name: make-pipeline-folder # This is a hack to have a consistent folder structure
+    image: busybox
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      if [ "$(inputs.params.projectName)" == "pipeline" ]; then
+        mkdir -p "$(inputs.resources.release-bucket.path)/$(inputs.params.projectName)" || true
+        ln -s $(inputs.resources.release-bucket.path)/previous $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/
+      fi
+
+  - name: compare-github-vs-bucket
+    image: dosowisko/curl:latest # We may want to maintain our curl image
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      curl -L https://github.com/tektoncd/$(inputs.params.projectName)/releases/download/$(inputs.params.version)/release.yaml > /workspace/release-github.yaml
+      diff \
+        /workspace/release-github.yaml \
+        $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml # Diff exists with 0 only if there is no difference
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: pipeline-verify-release
+spec:
+  params:
+  - name: projectName
+    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+    default: pipeline
+  - name: version
+    description: The vX.Y.Z version that we want to install (including `v`)
+  resources:
+  - name: bucket
+    type: storage
+  - name: test-cluster
+    type: cluster
+  tasks:
+    - name: verify
+      taskRef:
+        name: verify-tekton-release-github
+      params:
+        - name: projectName
+          value: ${params.projectName}
+        - name: version
+          value: ${params.version}
+      resources:
+        inputs:
+          - name: release-bucket
+            resource: bucket
+    - name: deploy
+      runAfter: [verify]
+      taskRef:
+        name: install-tekton-release
+      params:
+        - name: projectName
+          value: ${params.projectName}
+        - name: version
+          value: ${params.version}
+      resources:
+        inputs:
+          - name: release-bucket
+            resource: bucket
+          - name: k8s-cluster
+            resource: test-cluster
