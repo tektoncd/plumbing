@@ -43,3 +43,58 @@ spec:
         git version
         echo ">> bazel version"
         bazel version 2> /dev/null
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: e2e-tests
+spec:
+  inputs:
+    params:
+    - name: package
+      description: package (and its children) under test
+    - name: tests-path
+      description: path to the tests within "tests" git resource
+      default: ./test
+    - name: timeout
+      description: timeout for the go test runner
+      default: 20m
+    - name: container-registry
+      description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+    resources:
+    - name: plumbing-library
+      type: git
+    - name: tests
+      type: git
+      targetPath: src/$(inputs.params.package)
+    - name: test-cluster
+      type: cluster
+  outputs:
+    resources:
+    - name: results-bucket
+      type: storage
+  steps:
+    - name: run-e2e-tests
+      image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+      workingdir: /workspace/src/$(inputs.params.package)
+      env:
+      - name: REPO_ROOT_DIR
+        value: $(inputs.resources.tests.path)
+      - name: ARTIFACTS
+        value: $(outputs.resources.results-bucket.path)
+      - name: GOPATH
+        value: /workspace
+      - name: KO_DOCKER_REPO
+        value: $(inputs.params.container-registry)
+      command:
+      - /bin/bash
+      args:
+      - -ce
+      - |
+        # Setup
+        source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+        e2e_failed=0
+
+        header "Running Go e2e tests"
+        report_go_test -v -count=1 -tags=e2e -timeout=$(inputs.params.timeout) $(inputs.params.tests-path) -kubeconfig /workspace/$(inputs.resources.test-cluster.name)/kubeconfig || e2e_failed=1
+        echo ${e2e_failed} > ${ARTIFACTS}/e2e.result

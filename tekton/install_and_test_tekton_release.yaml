@@ -14,7 +14,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
-  name: verify-deploy-log-tekton-release
+  name: verify-deploy-test-tekton-release
 spec:
   params:
   - name: projectName
@@ -31,6 +31,10 @@ spec:
     type: cluster
   - name: plumbing
     type: git
+  - name: tests
+    type: git
+  - name: results-bucket
+    type: storage
   tasks:
     - name: verify
       taskRef:
@@ -71,3 +75,18 @@ spec:
         inputs:
           - name: plumbing-library
             resource: plumbing
+    - name: e2e-test
+      runAfter: [log]
+      taskRef:
+        name: e2e-tests
+      resources:
+        inputs:
+          - name: plumbing-library
+            resource: plumbing
+          - name: tests
+            resource: tests
+          - name: test-cluster
+            resource: test-cluster
+        outputs:
+          - name: results-bucket
+            resource: results-bucket
