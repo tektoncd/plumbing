@@ -1,0 +1,45 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: log-test-image-tools
+spec:
+  inputs:
+    resources:
+    - name: plumbing-library
+      type: git
+  steps:
+    - name: log-test-runner-tools-setup
+      image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+      command:
+      - /bin/bash
+      args:
+      - -ce
+      - |
+        source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+
+        # Disable gcloud update notifications
+        gcloud config set component_manager/disable_update_check true
+        header "Current test setup"
+        echo ">> gcloud SDK version"
+        gcloud version
+        echo ">> kubectl version"
+        kubectl version --client
+        echo ">> go version"
+        go version
+        echo ">> git version"
+        git version
+        echo ">> bazel version"
+        bazel version 2> /dev/null
