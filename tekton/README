@@ -61,26 +61,32 @@ spec:
 
 ### Verify Release
 
-The `verify-deploy-log-tekton-release` is an example pipeline to verify the
-release assets for a Tekton project. The test part of the pipeline depends on
-tasks defined in the specific repo, at least until we have more powerful ways to
-invoke tasks in a pipeline, so the complete pipeline must be also defined in the
-specific repos.
+The `verify-deploy-test-tekton-release` is a pipeline to verify the release
+assets for a Tekton project.
 
 This pipeline performs the following steps:
 * validate the release YAML from the bucket against that in GitHub
 * deploy the release against a test k8s cluster
 * wait for all the deployments and pods to be up and running
 * log the version of tools in the test running image
-* Not included: run E2E tests and validate results
+* run the e2e tests
+* cleanup resources
+* repeat deploy-to-log
+* run the YAML tests (if available)
+* check the overall results and log success or failure
 
-Inputs are:
+Params are:
 - Param `projectName`: the name of the project (pipeline, trigger,
 dashboard, experimental)
 - Param `version`: the version to be installed, e.g. "v0.7.0"
-- A storage resource, that should point to the release bucket. The release file
+
+Resources are:
+- A ro storage resource, that should point to the release bucket. The release file
 is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
 - A cluster resource, that points to the credentials for the target cluster
+- A git resource for the plumbing repo
+- A git resource for the repo that holds the tests
+- A rw storage resource where the test results and logs are written
 
 The cluster resource pulls the token and cadata from a kubernetes secret like the
 following:
@@ -125,7 +131,7 @@ spec:
       secretName: $CLUSTER_SECRET_NAME
 ```
 
-The bucket resource can be read-only:
+The read-only release bucket resource:
 ```
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
@@ -155,6 +161,38 @@ spec:
       value: master
     - name: url
       value: https://github.com/tektoncd/plumbing
+```
+
+The test git resource:
+```
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: pipeline-git-v0-7-0
+spec:
+  type: git
+  params:
+    - name: revision
+      value: v0.7.0
+    - name: url
+      value: https://github.com/tektoncd/pipeline
+```
+
+The read-write results bucket resource:
+```
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: tekton-results-bucket
+spec:
+  type: storage
+  params:
+   - name: type
+     value: gcs
+   - name: location
+     value: gs://tekton-test-results
+   - name: dir
+     value: "y"
 ```
 
 The pipeline can be executed using the `tkn` client:

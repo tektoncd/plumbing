@@ -70,8 +70,6 @@ spec:
     env:
       - name: KUBECONFIG
         value: /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
-      - name: REPO_NAME
-        value: tektoncd/$(inputs.params.projectName)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task

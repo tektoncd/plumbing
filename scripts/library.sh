@@ -33,8 +33,8 @@ fi
 # Useful environment variables
 [[ -n "${PROW_JOB_ID:-}" ]] && IS_PROW=1 || IS_PROW=0
 readonly IS_PROW
-readonly REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
-readonly REPO_NAME="$(basename ${REPO_ROOT_DIR})"
+readonly REPO_ROOT_DIR="${REPO_ROOT_DIR:-$(git rev-parse --show-toplevel 2> /dev/null)}"
+readonly REPO_NAME="${REPO_NAME:-$(basename ${REPO_ROOT_DIR} 2> /dev/null)}"
 
 # Set ARTIFACTS to an empty temp dir if unset
 if [[ -z "${ARTIFACTS:-}" ]]; then
