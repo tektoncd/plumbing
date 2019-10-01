@@ -61,12 +61,18 @@ spec:
 
 ### Verify Release
 
-The `pipeline-verify-release` verifies the release assets for a Tekton project.
-It does so by performing the following steps:
+The `verify-deploy-log-tekton-release` is an example pipeline to verify the
+release assets for a Tekton project. The test part of the pipeline depends on
+tasks defined in the specific repo, at least until we have more powerful ways to
+invoke tasks in a pipeline, so the complete pipeline must be also defined in the
+specific repos.
+
+This pipeline performs the following steps:
 * validate the release YAML from the bucket against that in GitHub
 * deploy the release against a test k8s cluster
-* wait for all the deployments and pods to be up and running (TBD)
-* run E2E tests and validate results (TBD)
+* wait for all the deployments and pods to be up and running
+* log the version of tools in the test running image
+* Not included: run E2E tests and validate results
 
 Inputs are:
 - Param `projectName`: the name of the project (pipeline, trigger,
@@ -120,7 +126,6 @@ spec:
 ```
 
 The bucket resource can be read-only:
-
 ```
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
@@ -137,12 +142,29 @@ spec:
      value: "y"
 ```
 
+The plumbing git resource:
+```
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: plumbing-git-master
+spec:
+  type: git
+  params:
+    - name: revision
+      value: master
+    - name: url
+      value: https://github.com/tektoncd/plumbing
+```
+
 The pipeline can be executed using the `tkn` client:
 ```
 tkn pipeline start \
   --param=version=<version> \
   --param=projectName=<tekton-project> \
+  --param=namespace=tekton-pipelines \
   --resource=bucket=<tekton-bucket-resource> \
   --resource=test-cluster=<test-cluster> \
-  pipeline-verify-release
+  --resource=plumbing=plumbing-git-master \
+  verify-deploy-log-tekton-release
 ```
