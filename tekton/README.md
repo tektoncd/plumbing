@@ -201,8 +201,13 @@ tkn pipeline start \
   --param=version=<version> \
   --param=projectName=<tekton-project> \
   --param=namespace=tekton-pipelines \
+  --param=resources="conditions pipelineresources tasks pipelines taskruns pipelineruns" \
+  --param=container-registry=docker-registry.default.svc:5000 \
+  --param=package=github.com/tektoncd/pipeline \
   --resource=bucket=<tekton-bucket-resource> \
   --resource=test-cluster=<test-cluster> \
   --resource=plumbing=plumbing-git-master \
-  verify-deploy-log-tekton-release
+  --resource=tests=pipeline-git-v0-7-0 \
+  --resource=results-bucket=tekton-results-bucket \
+  verify-deploy-test-tekton-release
 ```

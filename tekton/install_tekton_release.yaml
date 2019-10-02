@@ -33,6 +33,9 @@ spec:
       default: tekton-pipelines
     - name: version
       description: The vX.Y.Z version that we want to install (including `v`)
+    - name: default-service-account
+      description: Service account to be setup as default in Tekton configmap
+      default: default
   steps:
 
   - name: make-pipeline-folder # This is a hack to have a consistent folder structure
@@ -57,6 +60,20 @@ spec:
       kubectl apply \
       --filename $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml \
       --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+
+  - name: setup-default-service-account
+    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      kubectl patch \
+      cm/config-defaults -n "$(inputs.params.namespace)" \
+      -p '{"data": {"default-service-account": "$(inputs.params.default-service-account)"}}'
+
+      kubectl get pod -n "$(inputs.params.namespace)" -o name \
+      -l app.kubernetes.io/name=tekton-pipelines | xargs kubectl delete -n "$(inputs.params.namespace)"
 
   - name: wait-until-pods-running
     image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
@@ -111,3 +128,57 @@ spec:
       diff \
         /workspace/release-github.yaml \
         $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml # Diff exists with 0 only if there is no difference
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: cleanup-tekton-release
+spec:
+  inputs:
+    resources:
+    - name: k8s-cluster
+      type: cluster
+    - name: plumbing-library
+      type: git
+    params:
+    - name: projectName
+      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+      default: pipeline
+    - name: namespace
+      description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
+      default: tekton-pipelines
+    - name: version
+      description: The vX.Y.Z version that we want to install (including `v`)
+    - name: resources
+      description: space separated list of resources to be deleted
+  steps:
+
+  - name: cleanup-resources
+    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      # Make sure that everything is cleaned up in the current namespace.
+      for res in $(inputs.params.resources); do
+        kubectl delete --ignore-not-found=true ${res}.tekton.dev --all \
+        --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+      done
+
+  - name: uninstall-tekton-project
+    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    env:
+      - name: KUBECONFIG
+        value: /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+
+      kubectl delete --ignore-not-found=true -f "https://github.com/tektoncd/$(inputs.params.projectName)/releases/download/$(inputs.params.version)/release.yaml" \
+      --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+
+      wait_until_object_does_not_exist namespace $(inputs.params.namespace)
