@@ -1071,11 +1071,11 @@ postsubmits:
         - "--cov-threshold-percentage=0"
 periodics:
 - cron: "5 2 * * *"
-  name: ci-tekton-pipeline-upgrade
+  name: ci-tekton-pipeline-upgrade-tests
   agent: kubernetes
   decorate: true
   extra_refs:
-  - org: tekton
+  - org: tektoncd
     repo: pipeline
     base_ref: master
     path_alias: github.com/tektoncd/pipeline
