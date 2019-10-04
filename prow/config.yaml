@@ -1073,7 +1073,6 @@ periodics:
 - cron: "5 2 * * *"
   name: ci-tekton-pipeline-upgrade-tests
   agent: kubernetes
-  decorate: true
   extra_refs:
   - org: tektoncd
     repo: pipeline
