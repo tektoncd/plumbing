@@ -112,7 +112,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: gcr.io/k8s-prow/hook:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/hook:v20191001-edcabf6dd
         imagePullPolicy: Always
         args:
         - --dry-run=false
@@ -197,7 +197,7 @@ spec:
       serviceAccountName: "plank"
       containers:
       - name: plank
-        image: gcr.io/k8s-prow/plank:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/plank:v20191001-edcabf6dd
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
@@ -236,7 +236,7 @@ spec:
       serviceAccountName: "sinker"
       containers:
       - name: sinker
-        image: gcr.io/k8s-prow/sinker:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/sinker:v20191001-edcabf6dd
         args:
         - --config-path=/etc/config/config.yaml
         volumeMounts:
@@ -274,7 +274,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: deck
-        image: gcr.io/k8s-prow/deck:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/deck:v20191001-edcabf6dd
         args:
         - --config-path=/etc/config/config.yaml
         - --tide-url=http://tide/
@@ -345,7 +345,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: horologium
-        image: gcr.io/k8s-prow/horologium:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/horologium:v20191001-edcabf6dd
         args:
         - --config-path=/etc/config/config.yaml
         volumeMounts:
@@ -379,7 +379,7 @@ spec:
       serviceAccountName: "tide"
       containers:
       - name: tide
-        image: gcr.io/k8s-prow/tide:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/tide:v20191001-edcabf6dd
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
@@ -443,7 +443,7 @@ spec:
 #      terminationGracePeriodSeconds: 180
 #      containers:
 #      - name: statusreconciler
-#        image: gcr.io/k8s-prow/status-reconciler:v20190731-e3f7b9853
+#        image: gcr.io/k8s-prow/status-reconciler:v20191001-edcabf6dd
 #        args:
 #        - --dry-run=false
 #        - --continue-on-error=true
@@ -890,7 +890,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: crier
-        image: gcr.io/k8s-prow/crier:v20190814-9981dc3c5
+        image: gcr.io/k8s-prow/crier:v20191001-edcabf6dd
         args:
         - --github-workers=1
         - --config-path=/etc/config/config.yaml
@@ -978,7 +978,7 @@ spec:
       serviceAccountName: prow-pipeline
       containers:
       - name: pipeline
-        image: gcr.io/k8s-prow/pipeline:v20190814-9981dc3c5
+        image: gcr.io/k8s-prow/pipeline:v20191001-edcabf6dd
         args:
         - --all-contexts
         - --config=/etc/prow-config/config.yaml
