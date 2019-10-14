@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipelinerun-logs-deployment
+  labels:
+    app: pipelinerun-logs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipelinerun-logs
+  template:
+    metadata:
+      labels:
+        app: pipelinerun-logs
+    spec:
+      containers:
+      - name: pipelinerun-logs
+        image: gcr.io/tekton-releases/github.com/tektoncd/plumbing/pipelinerun-logs/cmd/http
+        command:
+        - "./pipelinerun-logs"
+        args:
+        - "--project"
+        - "tekton-releases"
+        - "--cluster"
+        - "dogfooding"
+        - "--namespace"
+        - "default"
+        - "--hostname"
+        - "0.0.0.0"
+        ports:
+        - containerPort: 80
