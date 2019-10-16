@@ -36,6 +36,11 @@ RUN go get -u github.com/jstemmer/go-junit-report
 RUN GO111MODULE="on" go get -u github.com/raviqqe/liche
 RUN go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
+ARG TKN_VERSION=0.4.0
+RUN curl -LO https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz && \
+    tar xvzf tkn_${TKN_VERSION}_Linux_x86_64.tar.gz -C /usr/local/bin tkn && \
+    rm tkn_${TKN_VERSION}_Linux_x86_64.tar.gz
+
 # Extra tools through gem
 RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl
