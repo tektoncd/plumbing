@@ -1,0 +1,49 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: kaniko
+spec:
+  inputs:
+    params:
+    - name: DOCKERFILE
+      description: Path to the Dockerfile to build.
+      default: ./Dockerfile
+    - name: CONTEXT
+      description: The build context used by Kaniko.
+      default: ./
+    resources:
+    - name: source
+      type: git
+
+  outputs:
+    resources:
+    - name: image
+      type: image
+
+  steps:
+  - name: build-and-push
+    workingdir: /workspace/source
+    image: gcr.io/kaniko-project/executor:v0.13.0
+    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+    # https://github.com/tektoncd/pipeline/pull/706
+    env:
+    - name: DOCKER_CONFIG
+      value: /builder/home/.docker
+    command:
+    - /kaniko/executor
+    - --dockerfile=${inputs.params.DOCKERFILE}
+    - --context=/workspace/source/${inputs.params.CONTEXT} # The user does not need to care the workspace and the source.
+    - --destination=${outputs.resources.image.url}
