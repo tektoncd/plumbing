@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FROM gcr.io/k8s-testimages/kubekins-e2e:v20190729-351ea95-master
-LABEL maintainer "Vincent Demeester <vdemeest@redhat.com>"
+LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Install Go 1.13
 ARG GO_VERSION=1.13
