@@ -13,10 +13,9 @@
 # limitations under the License.
 
 FROM gcr.io/k8s-testimages/kubekins-e2e:v20190729-351ea95-master
-LABEL maintainer "Adriano Cunha <adrcunha@google.com>"
+LABEL maintainer "Vincent Demeester <vdemeest@redhat.com>"
 
 # Install extras on top of base image
-
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 RUN gcloud components update
@@ -34,7 +33,7 @@ RUN go get -u github.com/google/ko/cmd/ko
 RUN go get -u github.com/golang/dep/cmd/dep
 RUN go get -u github.com/google/licenseclassifier
 RUN go get -u github.com/jstemmer/go-junit-report
-RUN go get -u github.com/raviqqe/liche
+RUN GO111MODULE="on" go get -u github.com/raviqqe/liche
 RUN go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # Extra tools through gem
