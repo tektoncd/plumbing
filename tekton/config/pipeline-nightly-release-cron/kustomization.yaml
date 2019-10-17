@@ -1,0 +1,5 @@
+bases:
+- ../cron
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-pipeline-nightly-release"
