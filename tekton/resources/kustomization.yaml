@@ -1,0 +1,7 @@
+commonLabels:
+  app: tekton/plumbing
+resources:
+- install_and_test_tekton_release.yaml
+- test_tekton_release.yaml
+- install_tekton_release.yaml
+- prerelease_checks.yaml
