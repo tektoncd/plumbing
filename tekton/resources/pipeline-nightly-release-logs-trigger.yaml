@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: publish-images-taskrun-to-release-logs
+spec:
+  params:
+  - name: pipelineRun
+    value: $(body.Data.taskRun.metadata.labels.tekton\.dev/pipelineRun)
+  - name: namespace
+    value: $(body.Data.taskRun.metadata.namespace)
+  - name: bucket
+    value: $(body.Data.taskRun.spec.outputs.resources.#(name=="bucket").resourceRef.name)
+  - name: versionTag
+    value: $(body.Data.taskRun.spec.inputs.params.#(name=="versionTag").value)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: pipeline-nightly-release-completion
+spec:
+  serviceAccountName: release-right-meow
+  triggers:
+    - name: log-collection
+      binding:
+        name: publish-images-taskrun-to-release-logs
+      template:
+        name: release-logs
+    # - name: release-testing
+    #   binding:
+    #     name: TBD
+    #   template:
+    #     name: TBD
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: release-logs
+spec:
+  params:
+  - name: pipelinerun
+    value: The name of the taskrun whose log we need to save
+  - name: namespace
+    value: The namespace of the taskrun
+  - name: bucket
+    value: The name of the bucket pipelineresource where to store the logs
+  - name: versionTag
+    value: The version tag to use within the bucket to store the logs
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: save-release-logs-$(uid)-
+    spec:
+      taskRef:
+        name: save-release-logs
+      inputs:
+        params:
+        - name: pipelinerun
+          value: $(params.pipelinerun)
+        - name: namespace
+          value: $(params.namespace)
+        - name: versionTag
+          value: $(params.versionTag)
+      outputs:
+        resources:
+        - name: bucket
+          resourceRef:
+            name: $(params.bucket)

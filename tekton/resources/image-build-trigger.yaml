@@ -1,0 +1,104 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-build-and-push-image
+spec:
+  params:
+  - name: gitRepository
+    value: $(body.gitRepository)
+  - name: gitRevision
+    value: $(body.gitRevision)
+  - name: contextPath
+    value: $(body.contextPath)
+  - name: targetImage
+    value: $(body.targetImage)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: image-builder
+spec:
+  serviceAccountName: release-right-meow
+  triggers:
+    - name: trigger
+      binding:
+        name: trigger-to-build-and-push-image
+      template:
+        name: build-and-push-image
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: build-and-push-image
+spec:
+  params:
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: targetImage
+    description: The fully qualifie image target e.g. repo/name:tag.
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: git-source-$(uid)
+    spec:
+      type: git
+      params:
+      - name: revision
+        value: $(params.gitRevision)
+      - name: url
+        value: http://$(params.gitRepository)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: target-image-$(uid)
+    spec:
+      type: image
+      params:
+      - name: url
+        value: $(params.targetImage)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: build-and-push-$(uid)-
+    spec:
+      taskSpec:
+        inputs:
+          params:
+          - name: contextPath
+            description: The path to the context
+          resources:
+          - name: source
+            type: git
+        outputs:
+          resources:
+          - name: image
+            type: image
+        steps:
+        - name: build-and-push
+          workingdir: $(inputs.resources.source.path)
+          image: gcr.io/kaniko-project/executor:v0.13.0
+          env:
+          - name: DOCKER_CONFIG
+            value: /builder/home/.docker
+          command:
+          - /kaniko/executor
+          - --dockerfile=Dockerfile
+          - --context=$(inputs.params.contextPath)
+          - --destination=$(params.targetImage)
+      inputs:
+        params:
+        - name: contextPath
+          value: $(params.contextPath)
+        resources:
+        - name: source
+          resourceRef:
+            name: git-source-$(uid)
+      outputs:
+        resources:
+        - name: image
+          resourceRef: target-image-$(uid)
