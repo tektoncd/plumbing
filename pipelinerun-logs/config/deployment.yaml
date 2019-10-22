@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: pipelinerun-logs
-        image: gcr.io/tekton-releases/github.com/tektoncd/plumbing/pipelinerun-logs/cmd/http
+        image: github.com/tektoncd/plumbing/pipelinerun-logs/cmd/http
         command:
         - "./pipelinerun-logs"
         args:

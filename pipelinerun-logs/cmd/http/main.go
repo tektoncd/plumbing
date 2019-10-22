@@ -8,7 +8,7 @@ import (
 
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
-	"github.com/sbwsg/loggingsvc/pkg/config"
+	"github.com/tektoncd/plumbing/pipelinerun-logs/pkg/config"
 )
 
 func main() {
