@@ -15,6 +15,14 @@
 FROM gcr.io/k8s-testimages/kubekins-e2e:v20190729-351ea95-master
 LABEL maintainer "Vincent Demeester <vdemeest@redhat.com>"
 
+# Install Go 1.13
+ARG GO_VERSION=1.13
+RUN rm -rf $(go env GOROOT) && \
+    curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
+    tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
+    rm go${GO_VERSION}.tar.gz
+
+
 # Install extras on top of base image
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
@@ -43,10 +51,11 @@ RUN curl -LO https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/t
 
 # Extra tools through gem
 RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
-RUN gem install mdl
+RUN gem install mdl -v 0.5.0
 
 # Temporarily add test-infra to the image to build custom tools
 RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
     make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
     cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper . && \
     go install github.com/knative/test-infra/tools/dep-collector
+
