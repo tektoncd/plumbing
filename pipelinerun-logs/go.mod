@@ -1,4 +1,4 @@
-module github.com/sbwsg/loggingsvc
+module github.com/tektoncd/plumbing/pipelinerun-logs
 
 go 1.12
 
