@@ -1,0 +1,4 @@
+commonLabels:
+  app: tekton.plumbing
+resources:
+- trigger-image-build.yaml

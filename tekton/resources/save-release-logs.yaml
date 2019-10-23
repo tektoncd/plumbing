@@ -19,20 +19,30 @@ spec:
   inputs:
     params:
     - name: pipelinerun
-      value: The name of the taskrun whose log we need to save
+      description: The name of the taskrun whose log we need to save
     - name: namespace
-      value: The namespace of the taskrun
-    - name: bucket
-      value: The name of the bucket pipelineresource where to store the logs
+      description: The namespace of the taskrun
     - name: versionTag
-      value: The version tag to use within the bucket to store the logs
+      description: The version tag to use within the bucket to store the logs
+    resources:
+    - name: release-bucket
+      type: storage
   outputs:
     resources:
     - name: release-bucket
       type: storage
   steps:
+  - name: prepare-the-output-folder
+    image: alpine:3.10
+    command:
+    - /bin/sh
+    args:
+    - -ce
+    - |
+      cp -r $(inputs.resources.release-bucket.path)/* \
+        $(outputs.resources.release-bucket.path)/
   - name: fetch-release-pipeline-logs
-    image: [some image with tkn]
+    image: gcr.io/tekton-releases/dogfooding/tkn
     command:
     - /bin/sh
     args:
@@ -41,7 +51,7 @@ spec:
       # This works with in cluster config. The service account used in the run must
       # have read access to the pipelinerun, taskrun and pod logs APIs
       tkn -n $(inputs.params.namespace) pr logs $(inputs.params.pipelinerun) --all > \
-        $(outputs.resources.release-bucket.path)/$(inputs.params.versionTag)/$(inputs.params.pipelinerun).log
+        $(outputs.resources.release-bucket.path)/previous/$(inputs.params.versionTag)/$(inputs.params.pipelinerun).log
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -52,7 +62,7 @@ rules:
   resources: ["pods", "pods/log"]
   verbs: ["get", "list"]
 - apiGroups: ["tekton.dev"]
-  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  resources: ["pipelines", "tasks", "pipelineruns", "pipelineresources", "taskruns", "conditions"]
   verbs: ["get"]
 ---
 apiVersion: v1
