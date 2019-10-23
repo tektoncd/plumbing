@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path"
 
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
@@ -37,6 +38,11 @@ func main() {
 		log.Fatalf("failed to create adminClient: %v", err)
 	}
 
-	server := NewServer(conf, client, adminClient, "templates/entries.html")
+	// When building with "ko", templates is deployed under KO_DATA_PATH
+	// If KO_DATA_PATH is not defined, the path will be a relatove one
+	basePath := os.Getenv("KO_DATA_PATH")
+	entries := path.Join(basePath, "templates/entries.html")
+
+	server := NewServer(conf, client, adminClient, entries)
 	server.Start()
 }
