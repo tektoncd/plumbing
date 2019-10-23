@@ -51,7 +51,7 @@ spec:
       - name: revision
         value: $(params.gitRevision)
       - name: url
-        value: http://$(params.gitRepository)
+        value: https://$(params.gitRepository)
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
@@ -83,13 +83,20 @@ spec:
           workingdir: $(inputs.resources.source.path)
           image: gcr.io/kaniko-project/executor:v0.13.0
           env:
-          - name: DOCKER_CONFIG
-            value: /builder/home/.docker
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secret/release.json
           command:
           - /kaniko/executor
           - --dockerfile=Dockerfile
           - --context=$(inputs.params.contextPath)
           - --destination=$(params.targetImage)
+          volumeMounts:
+            - name: gcp-secret
+              mountPath: /secret
+        volumes:
+          - name: gcp-secret
+            secret:
+              secretName: release-secret
       inputs:
         params:
         - name: contextPath
@@ -101,4 +108,5 @@ spec:
       outputs:
         resources:
         - name: image
-          resourceRef: target-image-$(uid)
+          resourceRef:
+            name: target-image-$(uid)

@@ -1,7 +1,11 @@
 commonLabels:
-  app: tekton/plumbing
+  app: tekton.plumbing
 resources:
+- image-build-trigger.yaml
 - install_and_test_tekton_release.yaml
-- test_tekton_release.yaml
 - install_tekton_release.yaml
+- pipeline-nightly-build-trigger.yaml
+- pipeline-nightly-release-logs-trigger.yaml
 - prerelease_checks.yaml
+- save-release-logs.yaml
+- test_tekton_release.yaml

@@ -5,18 +5,18 @@ metadata:
 spec:
   params:
   - name: pipelineRun
-    value: $(body.Data.taskRun.metadata.labels.tekton\.dev/pipelineRun)
+    value: $(body.taskRun.metadata.labels.tekton\.dev/pipelineRun)
   - name: namespace
-    value: $(body.Data.taskRun.metadata.namespace)
+    value: $(body.taskRun.metadata.namespace)
   - name: bucket
-    value: $(body.Data.taskRun.spec.outputs.resources.#(name=="bucket").resourceRef.name)
+    value: $(body.taskRun.spec.outputs.resources.#(name=="bucket").resourceRef.name)
   - name: versionTag
-    value: $(body.Data.taskRun.spec.inputs.params.#(name=="versionTag").value)
+    value: $(body.taskRun.spec.inputs.params.#(name=="versionTag").value)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: pipeline-nightly-release-completion
+  name: pipeline-release-post-processing
 spec:
   serviceAccountName: release-right-meow
   triggers:
@@ -25,11 +25,6 @@ spec:
         name: publish-images-taskrun-to-release-logs
       template:
         name: release-logs
-    # - name: release-testing
-    #   binding:
-    #     name: TBD
-    #   template:
-    #     name: TBD
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -37,32 +32,37 @@ metadata:
   name: release-logs
 spec:
   params:
-  - name: pipelinerun
-    value: The name of the taskrun whose log we need to save
+  - name: pipelineRun
+    description: The name of the taskrun whose log we need to save
   - name: namespace
-    value: The namespace of the taskrun
+    description: The namespace of the taskrun
   - name: bucket
-    value: The name of the bucket pipelineresource where to store the logs
+    description: The name of the bucket pipelineresource where to store the logs
   - name: versionTag
-    value: The version tag to use within the bucket to store the logs
+    description: The version tag to use within the bucket to store the logs
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
     metadata:
       generateName: save-release-logs-$(uid)-
     spec:
+      serviceAccountName: tekton-logs
       taskRef:
         name: save-release-logs
       inputs:
         params:
         - name: pipelinerun
-          value: $(params.pipelinerun)
+          value: $(params.pipelineRun)
         - name: namespace
           value: $(params.namespace)
         - name: versionTag
           value: $(params.versionTag)
+        resources:
+        - name: release-bucket
+          resourceRef:
+            name: $(params.bucket)
       outputs:
         resources:
-        - name: bucket
+        - name: release-bucket
           resourceRef:
             name: $(params.bucket)
