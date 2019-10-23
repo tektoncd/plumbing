@@ -14,7 +14,7 @@
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: kaniko
+  name: kaniko-test-runner
 spec:
   inputs:
     params:
@@ -39,11 +39,18 @@ spec:
     image: gcr.io/kaniko-project/executor:v0.13.0
     # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
     # https://github.com/tektoncd/pipeline/pull/706
+    volumeMounts:
+    - name: gcp-secret
+      mountPath: /secret
     env:
-    - name: DOCKER_CONFIG
-      value: /builder/home/.docker
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: /secret/release.json
     command:
     - /kaniko/executor
     - --dockerfile=${inputs.params.DOCKERFILE}
     - --context=/workspace/source/${inputs.params.CONTEXT} # The user does not need to care the workspace and the source.
     - --destination=${outputs.resources.image.url}
+  volumes:
+  - name: gcp-secret
+    secret:
+      secretName: release-secret

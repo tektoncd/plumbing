@@ -28,7 +28,7 @@ spec:
   tasks:
   - name: build
     taskRef:
-      name: kaniko
+      name: kaniko-test-runner
     params:
     - name: CONTEXT
       value: ${params.CONTEXT}
