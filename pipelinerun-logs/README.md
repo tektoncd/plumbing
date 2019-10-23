@@ -37,5 +37,5 @@ https://app-public-address/?buildid=12345678
 
 ## Deploying This App To Kubernetes
 
-You can deploy this app using `ko`. Simply run `ko apply -f ./config` from
+You can deploy this app using `ko`. Simply run `GO111MODULE=on ko apply -f ./config` from
 the 'pipelinerun-logs' directory of this repo.
