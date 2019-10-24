@@ -84,7 +84,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -118,7 +118,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-cross-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -152,7 +152,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -186,7 +186,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -251,7 +251,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -285,7 +285,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-dashboard-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -319,7 +319,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -354,7 +354,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-experimental-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -388,7 +388,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-experimental-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -422,7 +422,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-experimental-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -457,7 +457,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -495,7 +495,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -529,7 +529,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -594,7 +594,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -628,7 +628,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-pipeline-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -662,7 +662,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -727,7 +727,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -761,7 +761,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -795,7 +795,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -830,7 +830,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -864,7 +864,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-triggers-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -898,7 +898,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -947,7 +947,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -978,7 +978,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -1024,7 +1024,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+      - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -1080,7 +1080,7 @@ periodics:
     path_alias: github.com/tektoncd/pipeline
   spec:
     containers:
-    - image: gcr.io/tekton-releases/tests/test-runner@sha256:9486956d4ebb301d2e87cc87b56eb3c68a45ef100a08747c4d1a70afb5e2829b
+    - image: gcr.io/tekton-releases/tests/test-runner@sha256:f4eda04cd4ea9321452f885e913b1eaadc543521e5650d151d32aa3e45156b19
       imagePullPolicy: Always
       args:
       - "--scenario=kubernetes_execute_bazel"
