@@ -14,6 +14,8 @@
 FROM alpine:3.10
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ARG TKN_VERSION=0.6.0
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+RUN update-ca-certificates
 
-RUN wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar zxf - -C /usr/local/bin
+ARG KUBECTL_VERSION=1.16.2
+RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
