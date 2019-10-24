@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: resource-cd-trigger
+spec:
+  schedule: "12 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: SINK_URL
+                value: "http://el-prow-config-deployer.default.svc.cluster.local:8080"
+              - name: GIT_REPOSITORY
+                value: "github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "master"
+              - name: CONFIG_PATH
+                value: "prow/config.yaml"
+              - name: NAMESPACE
+                value: "default"
+              - name: CLUSTER_RESOURCE
+                value: "prow-cluster-config-bot"

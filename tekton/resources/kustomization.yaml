@@ -8,3 +8,4 @@ resources:
 - release/prerelease_checks.yaml
 - release/save-release-logs.yaml
 - release/test_tekton_release.yaml
+- cd/prow-config-cd.yaml
