@@ -56,6 +56,6 @@ RUN gem install mdl -v 0.5.0
 # Temporarily add test-infra to the image to build custom tools
 RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
     make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
-    cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper . && \
+    cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
     go install github.com/knative/test-infra/tools/dep-collector
 
