@@ -39,3 +39,16 @@ https://app-public-address/?buildid=12345678
 
 You can deploy this app using `ko`. Simply run `GO111MODULE=on ko apply -f ./config` from
 the 'pipelinerun-logs' directory of this repo.
+
+## Access to Stackdriver
+
+This app relies on access to the Stackdriver API in order to fetch log
+entries for a given Prow Build ID. This requires a cluster running on GKE
+with "Stackdriver Kubernetes Engine Monitoring" enabled.
+
+### Service Account
+
+This app's `ko` deployment is configured to use a service account named
+"pipelinerun-logs-viewer" when accessing the Stackdriver API. This service
+account has been added to the dogfooding cluster with a Workload Identity
+that ties it to an IAM service account in the Google Cloud Console.

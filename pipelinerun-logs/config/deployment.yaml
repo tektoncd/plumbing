@@ -14,6 +14,9 @@ spec:
       labels:
         app: pipelinerun-logs
     spec:
+      # this service account has access to the stackdriver API
+      # via workload identity
+      serviceAccountName: pipelinerun-logs-viewer
       containers:
       - name: pipelinerun-logs
         image: github.com/tektoncd/plumbing/pipelinerun-logs/cmd/http
@@ -30,3 +33,6 @@ spec:
         - "9999"
         ports:
         - containerPort: 9999
+      nodeSelector:
+        # Schedule this deployment onto nodes with workload identity enabled
+        iam.gke.io/gke-metadata-server-enabled: true
