@@ -381,6 +381,12 @@ repos:
         addedBy: humans
   tektoncd/pipeline:
     labels:
+    - color: e11d21
+      description: Categorizes issue or PR as related to the beta api
+      name: kind/beta-blocking
+      target: both
+      prowPlugin: label
+      addedBy: anyone
       - color: ffcdc4
         description: For consideration when planning the next milestone
         name: maybe-next-milestone
