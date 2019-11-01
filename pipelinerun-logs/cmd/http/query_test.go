@@ -41,38 +41,6 @@ func TestValidate(t *testing.T) {
 			BuildID:   "",
 		},
 		expectedError: "build id",
-	}, {
-		q: Query{
-			Project:   "FooProject",
-			Cluster:   "FooCluster",
-			Namespace: "FooNamespace",
-			BuildID:   "12345a6",
-		},
-		expectedError: "pattern",
-	}, {
-		q: Query{
-			Project:   "FooProject",
-			Cluster:   "FooCluster",
-			Namespace: "FooNamespace",
-			BuildID:   "alphabet",
-		},
-		expectedError: "pattern",
-	}, {
-		q: Query{
-			Project:   "FooProject",
-			Cluster:   "FooCluster",
-			Namespace: "FooNamespace",
-			BuildID:   "123456!",
-		},
-		expectedError: "pattern",
-	}, {
-		q: Query{
-			Project:   "FooProject",
-			Cluster:   "FooCluster",
-			Namespace: "FooNamespace",
-			BuildID:   " ",
-		},
-		expectedError: "pattern",
 	}} {
 		err := tc.q.Validate()
 		if err == nil || !strings.Contains(err.Error(), tc.expectedError) {
