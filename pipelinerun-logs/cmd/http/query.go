@@ -3,15 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"regexp"
 )
 
 const (
 	StackdriverBuildIDLabel = "k8s-pod/prow_k8s_io/build-id"
-)
-
-var (
-	buildIDRegex = regexp.MustCompile(`^[0-9]+$`)
 )
 
 type Query struct {
@@ -35,9 +30,6 @@ func (q *Query) Validate() error {
 	}
 	if q.BuildID == "" {
 		return errors.New("Invalid query: missing build id")
-	}
-	if !buildIDRegex.MatchString(q.BuildID) {
-		return errors.New("Invalid query: build id does not match expected pattern")
 	}
 	return nil
 }

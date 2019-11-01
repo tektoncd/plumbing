@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -39,6 +40,11 @@ const (
 	TektonTaskNameLabel              = "k8s-pod/tekton_dev/task"
 )
 
+var (
+	prowBuildIDPattern = regexp.MustCompile(`[0-9]+`)
+	uuidBuildIDPattern = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
+)
+
 // NewServer returns an instance of Server configured with provided params.
 func NewServer(conf *config.Config, client *logging.Client, adminClient *logadmin.Client, templatePath string) *Server {
 	return &Server{
@@ -62,11 +68,18 @@ func (s *Server) Start() {
 func (s *Server) serveLog(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s?%s", r.URL.Path, r.URL.RawQuery)
 
+	buildID := r.URL.Query().Get("buildid")
+	if err := s.validateBuildID(buildID); err != nil {
+		log.Printf("%v", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	query := &Query{
 		Project:   s.conf.Project,
 		Cluster:   s.conf.Cluster,
 		Namespace: s.conf.Namespace,
-		BuildID:   r.URL.Query().Get("buildid"),
+		BuildID:   buildID,
 	}
 
 	if err := query.Validate(); err != nil {
@@ -154,6 +167,13 @@ func (s *Server) structureEntry(entry *logging.Entry) (*RenderableEntry, error) 
 		ContainerName: extractContainerName(entry),
 		TimeStamp:     entry.Timestamp.UTC().Format(time.RFC3339),
 	}, nil
+}
+
+func (s *Server) validateBuildID(buildID string) error {
+	if uuidBuildIDPattern.MatchString(buildID) || prowBuildIDPattern.MatchString(buildID) {
+		return nil
+	}
+	return fmt.Errorf("build id not formatted as prow id or uuid: %q", buildID)
 }
 
 // parseEntryPayload takes a stackdriver logging entry and parses out the payload
