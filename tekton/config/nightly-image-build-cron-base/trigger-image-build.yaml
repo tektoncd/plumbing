@@ -24,6 +24,21 @@ spec:
           volumes:
           - name: workspace
             emptyDir: {}
+          initContainers:
+          - name: uuid
+            image: python:3.6-alpine3.9
+            command:
+            - /bin/sh
+            args:
+              - -ce
+              - |
+                TRIGGER_UUID=$(python -c 'import uuid; print(uuid.uuid4())')
+                cat <<EOF > /workspace/uuid
+                export TRIGGER_UUID=$TRIGGER_UUID
+                EOF
+            volumeMounts:
+            - mountPath: /workspace
+              name: workspace
           containers:
           - name: trigger
             image: curlimages/curl
@@ -32,8 +47,10 @@ spec:
             args:
               - -ce
               - |
+                . /workspace/uuid
                 cat <<EOF > /workspace/post-body.json
                 {
+                  "buildUUID": "$TRIGGER_UUID",
                   "gitRepository": "$GIT_REPOSITORY",
                   "gitRevision": "$GIT_REVISION",
                   "contextPath": "$CONTEXT_PATH",

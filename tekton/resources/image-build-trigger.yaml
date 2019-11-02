@@ -4,6 +4,8 @@ metadata:
   name: trigger-to-build-and-push-image
 spec:
   params:
+  - name: buildUUID
+    value: $(body.buildUUID)
   - name: gitRepository
     value: $(body.gitRepository)
   - name: gitRevision
@@ -65,6 +67,8 @@ spec:
     kind: TaskRun
     metadata:
       generateName: build-and-push-$(uid)-
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
     spec:
       taskSpec:
         inputs:

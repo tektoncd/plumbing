@@ -121,7 +121,7 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: GIT_REPOSITORY
-              value: github.com/tekton/plumbing
+              value: github.com/tektoncd/plumbing
             - name: GIT_REVISION
               value: master
             - name: TARGET_IMAGE
