@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  generateName: peribolos-run-
+spec:
+  taskRef:
+    name: peribolos
+  inputs:
+    resources:
+    - name: repo
+      resourceSpec:
+        type: git
+        params:
+        - name: url
+          value: https://github.com/tektoncd/community.git
