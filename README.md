@@ -10,6 +10,7 @@ This repo holds configuration for infrastructure used across the tektoncd org ðŸ
 - [Ingress](prow/README.md#ingress) configuration for access via `tekton.dev`
 - [Gubernator](gubernator/README.md) is used for holding and displaying [Prow](prow/README.md) logs
 - [Boskos](boskos/README.md) is used to control a pool of GCP projects which end to end tests can run against
+- [Peribolos](tekton/README.md#peribolos) is used to control org and repo permissions
 
 
 ## Support

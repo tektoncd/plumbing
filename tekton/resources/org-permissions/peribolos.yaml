@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: peribolos
+spec:
+  inputs:
+    resources:
+    - name: repo
+      type: git
+    params:
+    - name: configPath
+      default: org/org.yaml
+  steps:
+  - name: peribolos
+    image: gcr.io/k8s-prow/peribolos@sha256:64856665d286da72fe9481e9be99f828092ac501a4668a8cd966206d162ecea3
+    command:
+    - /bin/sh
+    args:
+    - -c
+    - |
+      set -ex
+      /peribolos -config-path /workspace/repo/$(inputs.params.configPath) -fix-org -fix-org-members -github-token-path /etc/github/bot-token -confirm=true
+    volumeMounts:
+    - name: github-oauth
+      mountPath: /etc/github
+  volumes:
+  - name: github-oauth
+    secret:
+      secretName: bot-token-github

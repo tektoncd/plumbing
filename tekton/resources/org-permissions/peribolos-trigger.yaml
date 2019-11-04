@@ -1,0 +1,60 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: peribolos-binding
+spec:
+  params:
+  - name: gitrevision
+    value: $(body.head_commit.id)
+  - name: gitrepositoryurl
+    value: $(body.repository.url)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: peribolos-template
+spec:
+  params:
+  - name: gitrevision
+    description: The git revision
+    default: master
+  - name: gitrepositoryurl
+    description: The git repository url
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: community-git-$(uid)
+    spec:
+      type: git
+      params:
+      - name: revision
+        value: $(params.gitrevision)
+      - name: url
+        value: $(params.gitrepositoryurl)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: peribolos-run-
+    spec:
+      taskRef:
+        name: peribolos
+      inputs:
+        resources:
+        - name: repo
+          resourceRef:
+            name: community-git-$(uid)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: peribolos-trigger
+spec:
+  serviceAccountName: release-right-meow
+  serviceType: LoadBalancer
+  triggers:
+    - name: peribolos-trigger
+      binding:
+        name: peribolos-binding
+      template:
+        name: peribolos-template
