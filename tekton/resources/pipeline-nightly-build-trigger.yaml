@@ -108,15 +108,6 @@ spec:
       - name: builtGitInitImage
         resourceRef:
           name: git-init-image
-      - name: builtNopImage
-        resourceRef:
-          name: nop-image
-      - name: builtBashImage
-        resourceRef:
-          name: bash-image
-      - name: builtGsutilImage
-        resourceRef:
-          name: gsutil-image
       - name: builtControllerImage
         resourceRef:
           name: controller-image
