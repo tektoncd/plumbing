@@ -38,7 +38,7 @@ spec:
       default: default
   steps:
 
-  - name: make-pipeline-folder # This is a hack to have a consistent folder structure
+  - name: make-pipeline-folder  # This is a hack to have a consistent folder structure
     image: busybox
     command:
     - /bin/sh
@@ -105,7 +105,7 @@ spec:
       description: The vX.Y.Z version that we want to install (including `v`)
   steps:
 
-  - name: make-pipeline-folder # This is a hack to have a consistent folder structure
+  - name: make-pipeline-folder  # This is a hack to have a consistent folder structure
     image: busybox
     command:
     - /bin/sh

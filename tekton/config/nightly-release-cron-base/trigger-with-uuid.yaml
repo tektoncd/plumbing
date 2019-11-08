@@ -16,7 +16,7 @@ kind: CronJob
 metadata:
   name: pipeline-cron-trigger
 spec:
-  schedule: "0 2 * * *" # Daily at 2am
+  schedule: "0 2 * * *"  # Daily at 2am
   jobTemplate:
     spec:
       template:
