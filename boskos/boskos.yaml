@@ -111,7 +111,7 @@ spec:
   - metadata:
       name: boskos-volume
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       storageClassName: boskos
       resources:
         requests:

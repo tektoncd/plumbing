@@ -21,4 +21,4 @@ spec:
       - backend:
           serviceName: hook
           servicePort: 8888
-        path: /hook    
+        path: /hook
