@@ -53,6 +53,9 @@ RUN curl -LO https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/t
 RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl -v 0.5.0
 
+# Extra tools through pip
+RUN pip install yamllint
+
 # Temporarily add test-infra to the image to build custom tools
 RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
     make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
