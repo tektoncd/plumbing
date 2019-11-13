@@ -114,7 +114,7 @@ function markdown_build_tests() {
   (( DISABLE_MD_LINTING && DISABLE_MD_LINK_CHECK )) && return 0
   # Get changed markdown files (ignore /vendor and deleted files)
   local mdfiles=""
-  for file in $(echo "${CHANGED_FILES}" | grep \.md$ | grep -v ^vendor/); do
+  for file in $(echo "${CHANGED_FILES}" | grep \.md$ | grep -v ^vendor/ | grep -v ^third_party/); do
     [[ -f "${file}" ]] && mdfiles="${mdfiles} ${file}"
   done
   [[ -z "${mdfiles}" ]] && return 0
@@ -153,7 +153,7 @@ function default_build_test_runner() {
   local failed=0
   # Check go code style with gofmt; exclude vendor/ files
   subheader "Checking go code style with gofmt"
-  gofmt_out=$(gofmt -d $(find * -name '*.go' ! -path 'vendor/*'))
+  gofmt_out=$(gofmt -d $(find * -name '*.go' ! -path 'vendor/*' ! -path 'third_party/*'))
   if [[ -n "$gofmt_out" ]]; then
     failed=1
   fi
@@ -172,7 +172,7 @@ function default_build_test_runner() {
   go build -v ./... || failed=1
   # Get all build tags in go code (ignore /vendor)
   local tags="$(grep -r '// +build' . \
-      | grep -v '^./vendor/' | cut -f3 -d' ' | sort | uniq | tr '\n' ' ')"
+      | grep -v '^./vendor/' | grep -v '^./third_party/' | grep -v "+build tools" | cut -f3 -d' ' | sort | uniq | tr '\n' ' ')"
   if [[ -n "${tags}" ]]; then
     go test -run=^$ -tags="${tags}" ./... || failed=1
   fi
