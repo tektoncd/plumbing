@@ -12,10 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-images: test-runner
+images: test-runner skopeo tkn
+
+skopeo:
+	docker build . -f tekton/images/skopeo/Dockerfile -t gcr.io/tekton-releases/dogfooding/skopeo
 
 test-runner:
-	docker build . -f prow/images/test-runner/Dockerfile -t gcr.io/tekton-releases/tests/test-runner
+	docker build . -f tekton/images/test-runner/Dockerfile -t gcr.io/tekton-releases/dogfooding/test-runner
+
+tkn:
+	docker build . -f tekton/images/tkn/Dockerfile -t gcr.io/tekton-releases/dogfooding/tkn
 
 push: images
-	docker push gcr.io/tekton-releases/tests/test-runner
+	docker push gcr.io/tekton-releases/dogfooding/skopeo
+	docker push gcr.io/tekton-releases/dogfooding/test-runner
+	docker push gcr.io/tekton-releases/dogfooding/tkn
