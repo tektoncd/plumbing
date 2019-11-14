@@ -138,7 +138,8 @@ function yaml_build_tests() {
   for file in $(echo "${CHANGED_FILES}" | grep '\.yaml$\|\.yml$' | grep -v ^vendor/); do
     [[ -f "${file}" ]] && yamlfiles="${yamlfiles} ${file}"
   done
-  yamllint "${yamlfiles}"
+  [[ -z "${yamlfiles}" ]] && return 0
+  yamllint ${yamlfiles}
 }
 
 # Default build test runner that:
