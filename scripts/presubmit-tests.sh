@@ -132,9 +132,13 @@ function markdown_build_tests() {
 
 # Perform yaml build tests if necessary, unless disabled.
 function yaml_build_tests() {
-    (( DISABLE_YAML_LINTING )) && return 0
-    subheader "Linting the yaml files"
-    yamllint "${CHANGED_FILES}"
+  (( DISABLE_YAML_LINTING )) && return 0
+  subheader "Linting the yaml files"
+  local yamlfiles=""
+  for file in $(echo "${CHANGED_FILES}" | grep '\.yaml$\|\.yml$' | grep -v ^vendor/); do
+    [[ -f "${file}" ]] && yamlfiles="${yamlfiles} ${file}"
+  done
+  yamllint "${yamlfiles}"
 }
 
 # Default build test runner that:
