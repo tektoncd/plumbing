@@ -1,0 +1,187 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: triggers-minimal
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "tasks", "taskruns"]
+  verbs: ["get"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mario-listener
+secrets:
+- name: mario-github-secret
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mario-releaser
+secrets:
+- name: release-secret
+- name: mario-github-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mario-releaser-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: mario-releaser
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mario-listener-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: mario-listener
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-build-and-push-image
+spec:
+  params:
+  - name: buildUUID
+    value: $(body.buildUUID)
+  - name: gitRepository
+    value: $(body.gitRepository)
+  - name: gitRevision
+    value: $(body.gitRevision)
+  - name: contextPath
+    value: $(body.contextPath)
+  - name: targetImage
+    value: $(body.targetImage)
+  - name: pullRequestID
+    value: $(body.pullRequestID)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: mario-image-builder
+spec:
+  serviceAccountName: mario-listener
+  serviceType: LoadBalancer
+  triggers:
+    - name: trigger
+      interceptor:
+        objectRef:
+          kind: Service
+          name: mario
+          apiVersion: v1
+          namespace: mario
+      binding:
+        name: trigger-to-build-and-push-image
+      template:
+        name: build-and-push-image
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: github-feedback-trigger
+spec:
+  type: cloudEvent
+  params:
+  - name: targetURI
+    value: http://el-github-feedback-trigger.mario:8080
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: build-and-push-image
+spec:
+  params:
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: targetImage
+    description: The fully qualifie image target e.g. repo/name:tag.
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: target-image-$(uid)
+    spec:
+      type: image
+      params:
+      - name: url
+        value: $(params.targetImage)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: build-and-push-$(uid)-
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        mario.bot/pull-request-id: $(params.pullRequestID)
+    spec:
+      serviceAccountName: mario-releaser
+      taskSpec:
+        inputs:
+          params:
+          - name: contextPath
+            description: The path to the context
+          resources:
+          - name: source
+            type: git
+        outputs:
+          resources:
+          - name: image
+            type: image
+          - name: endtrigger
+            type: cloudEvent
+        steps:
+        - name: build-and-push
+          workingdir: $(inputs.resources.source.path)
+          image: gcr.io/kaniko-project/executor:v0.13.0
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secret/release.json
+          command:
+          - /kaniko/executor
+          - --dockerfile=Dockerfile
+          - --context=$(inputs.params.contextPath)
+          - --destination=$(params.targetImage)
+          volumeMounts:
+            - name: gcp-secret
+              mountPath: /secret
+        volumes:
+          - name: gcp-secret
+            secret:
+              secretName: release-secret
+      inputs:
+        params:
+        - name: contextPath
+          value: $(params.contextPath)
+        resources:
+        - name: source
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: $(params.gitRevision)
+            - name: url
+              value: https://$(params.gitRepository)
+      outputs:
+        resources:
+        - name: image
+          resourceRef:
+            name: target-image-$(uid)
+        - name: endtrigger
+          resourceRef:
+            name: github-feedback-trigger

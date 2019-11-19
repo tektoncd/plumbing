@@ -1,0 +1,159 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-comment-github
+spec:
+  params:
+  - name: pullRequestID
+    value: $(body.taskRun.metadata.labels.mario\.bot/pull-request-id)
+  - name: buildUUID
+    value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
+  - name: gitURL
+    value: $(body.taskRun.spec.inputs.resources.#(name=="source").resourceSpec.params.#(name=="url").value)
+  - name: gitRevision
+    value: $(body.taskRun.spec.inputs.resources.#(name=="source").resourceSpec.params.#(name=="revision").value)
+  - name: targetImageResourceName
+    value: $(body.taskRun.spec.outputs.resources.#(name=="image").resourceRef.name)
+  - name: passedOrFailed
+    value: $(body.taskRun.status.conditions.#(type=="Succeeded").status)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-feedback-trigger
+spec:
+  serviceAccountName: mario-listener
+  triggers:
+    - name: trigger
+      binding:
+        name: trigger-to-comment-github
+      template:
+        name: mario-comment-github
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: mario-comment-github
+spec:
+  params:
+  - name: pullRequestID
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: gitURL
+    description: The URL of the git repo
+  - name: gitRevision
+    description: The git revision
+  - name: targetImageResourceName
+    description: The name of the target image pipelineresource
+  - name: passedOrFailed
+    description: Whether the triggering event was successful or not
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: pr-$(uid)
+    spec:
+      type: pullRequest
+      params:
+        - name: url
+          value: $(params.gitURL)/pull/$(params.pullRequestID)
+      secrets:
+        - fieldName: githubToken
+          secretName: mario-github-token
+          secretKey: GITHUB_TOKEN
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      generateName: mario-comment-github-$(uid)-
+    spec:
+      serviceAccountName: mario-listener
+      taskSpec:
+        inputs:
+          resources:
+          - name: source
+            type: git
+          - name: pr
+            type: pullRequest
+        outputs:
+          resources:
+          - name: image
+            type: image
+          - name: pr
+            type: pullRequest
+        steps:
+        - name: copy-pr-to-output
+          image: busybox
+          script: |
+            #!/bin/sh
+            mkdir -p $(outputs.resources.pr.path)
+            cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+        - name: setup-comment
+          image: python:3-alpine
+          script: |
+            #!/usr/bin/env python
+            import json
+            import random
+
+            marios_pics_root = 'https://storage.googleapis.com/mario-bot/pics'
+            ok_pics = ['mario', 'luigi', 'tekton']
+            failed_pics = ['goomba']
+            logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
+            successful = ("$(params.passedOrFailed)" == "True")
+            print("PassedOrFailed: {}".format("$(params.passedOrFailed)"))
+
+            # Service Image
+            comment_template = (
+              '<img width="200" alt="{pic_alt}" src="{pic_src}">'
+              ' at your service! </p>'
+            )
+
+            if successful:
+              chosen_pic = random.choice(ok_pics)
+            else:
+              chosen_pic = random.choice(failed_pics)
+            pic_url = "/".join([marios_pics_root, chosen_pic]) + '.png'
+            comment_params = dict(pic_alt=chosen_pic, pic_src=pic_url)
+
+            if successful:
+              comment_template += (
+                'Here is the image you requested: '
+                '<a href="https://{imageurl}">built image</a>|'
+              )
+              comment_params['imageurl'] = '$(outputs.resources.image.url)'
+            else:
+              comment_template += (
+                'Cloud not build the requested image. Please check the '
+              )
+
+            comment_template += (
+              '<a href="http://35.222.249.224/?buildid={buildid}&'
+              'namespace=mario">build logs</a>'
+            )
+            comment_params['buildid'] = '$(params.buildUUID)'
+
+            new_comment_path = "$(outputs.resources.pr.path)/comments/new.json"
+            comment_body = dict(body=comment_template.format(**comment_params))
+            with open(new_comment_path, "w") as comment:
+              json.dump(comment_body, comment)
+      inputs:
+        resources:
+        - name: source
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: $(params.gitRevision)
+            - name: url
+              value: $(params.gitURL)
+        - name: pr
+          resourceRef:
+            name: pr-$(uid)
+      outputs:
+        resources:
+        - name: image
+          resourceRef:
+            name: $(params.targetImageResourceName)
+        - name: pr
+          resourceRef:
+            name: pr-$(uid)
