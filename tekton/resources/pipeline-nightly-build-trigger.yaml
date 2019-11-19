@@ -21,8 +21,8 @@ spec:
   serviceAccountName: release-right-meow
   triggers:
     - name: cron-trigger
-      binding:
-        name: cron-to-pipeline-nightly-release
+      bindings:
+        - name: cron-to-pipeline-nightly-release
       template:
         name: pipeline-nightly-release
 ---

@@ -21,8 +21,8 @@ spec:
   serviceAccountName: release-right-meow
   triggers:
     - name: log-collection
-      binding:
-        name: publish-images-taskrun-to-release-logs
+      bindings:
+        - name: publish-images-taskrun-to-release-logs
       template:
         name: release-logs
 ---

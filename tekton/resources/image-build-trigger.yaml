@@ -23,8 +23,8 @@ spec:
   serviceAccountName: release-right-meow
   triggers:
     - name: trigger
-      binding:
-        name: trigger-to-build-and-push-image
+      bindings:
+        - name: trigger-to-build-and-push-image
       template:
         name: build-and-push-image
 ---
