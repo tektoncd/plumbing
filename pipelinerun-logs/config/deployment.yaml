@@ -35,4 +35,4 @@ spec:
         - containerPort: 9999
       nodeSelector:
         # Schedule this deployment onto nodes with workload identity enabled
-        iam.gke.io/gke-metadata-server-enabled: true
+        iam.gke.io/gke-metadata-server-enabled: "true"
