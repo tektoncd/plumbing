@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -23,12 +24,18 @@ type Server struct {
 	client      *logging.Client
 	adminClient *logadmin.Client
 	entriesTmpl *template.Template
+	namespaces  map[string]struct{}
 }
 
 type EntriesTemplateContext struct {
 	LogsJSON     []RenderableEntry
 	BuildID      string
 	PipelineName string
+}
+
+type logRequestParams struct {
+	namespace string
+	buildID   string
 }
 
 const (
@@ -47,12 +54,28 @@ var (
 
 // NewServer returns an instance of Server configured with provided params.
 func NewServer(conf *config.Config, client *logging.Client, adminClient *logadmin.Client, templatePath string) *Server {
-	return &Server{
+	s := &Server{
 		conf:        conf,
 		client:      client,
 		adminClient: adminClient,
 		entriesTmpl: template.Must(template.ParseFiles(templatePath)),
 	}
+	s.buildNamespaceSet()
+	return s
+}
+
+// buildNamespaceSet takes the namespaces passed in config and creates
+// a Set to efficiently check whether a given namespace is supported.
+func (s *Server) buildNamespaceSet() {
+	namespaces := make(map[string]struct{})
+	ns := strings.Split(s.conf.Namespace, ",")
+	for _, n := range ns {
+		namespace := strings.TrimSpace(n)
+		if namespace != "" {
+			namespaces[namespace] = struct{}{}
+		}
+	}
+	s.namespaces = namespaces
 }
 
 // Start begins serving logs over http
@@ -68,9 +91,9 @@ func (s *Server) Start() {
 func (s *Server) serveLog(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s?%s", r.URL.Path, r.URL.RawQuery)
 
-	buildID := r.URL.Query().Get("buildid")
-	if err := s.validateBuildID(buildID); err != nil {
-		log.Printf("%v", err)
+	params, err := s.getParams(r.URL)
+	if err != nil {
+		log.Printf("disallowing request for logs: %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -78,8 +101,8 @@ func (s *Server) serveLog(w http.ResponseWriter, r *http.Request) {
 	query := &Query{
 		Project:   s.conf.Project,
 		Cluster:   s.conf.Cluster,
-		Namespace: s.conf.Namespace,
-		BuildID:   buildID,
+		Namespace: params.namespace,
+		BuildID:   params.buildID,
 	}
 
 	if err := query.Validate(); err != nil {
@@ -169,11 +192,34 @@ func (s *Server) structureEntry(entry *logging.Entry) (*RenderableEntry, error) 
 	}, nil
 }
 
+// validateBuildID confirms that a build id string matches either uuid or
+// a prow formatted build id.
 func (s *Server) validateBuildID(buildID string) error {
 	if uuidBuildIDPattern.MatchString(buildID) || prowBuildIDPattern.MatchString(buildID) {
 		return nil
 	}
 	return fmt.Errorf("build id not formatted as prow id or uuid: %q", buildID)
+}
+
+// getParams returns the query parameters required to request logs from a
+// given url
+func (s *Server) getParams(url *url.URL) (*logRequestParams, error) {
+	buildID := url.Query().Get("buildid")
+	if err := s.validateBuildID(buildID); err != nil {
+		return nil, err
+	}
+
+	namespace := url.Query().Get("namespace")
+	if _, ok := s.namespaces[namespace]; !ok {
+		return nil, fmt.Errorf("unsupported namespace: %q", namespace)
+	}
+
+	params := &logRequestParams{
+		buildID:   buildID,
+		namespace: namespace,
+	}
+
+	return params, nil
 }
 
 // parseEntryPayload takes a stackdriver logging entry and parses out the payload
