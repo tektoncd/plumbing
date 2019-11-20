@@ -16,7 +16,7 @@ type Config struct {
 func (c *Config) ParseFlags() {
 	flag.StringVar(&c.Project, "project", "", "gke project to query")
 	flag.StringVar(&c.Cluster, "cluster", "", "cluster name to query for logs")
-	flag.StringVar(&c.Namespace, "namespace", "", "namespace name to query for logs")
+	flag.StringVar(&c.Namespace, "namespace", "", "comma-separated list of namespace names to allow queries against for logs")
 	flag.StringVar(&c.Hostname, "hostname", "localhost", "hostname to bind to")
 	flag.StringVar(&c.Port, "port", "9999", "port to bind to")
 	flag.Parse()

@@ -32,8 +32,12 @@ job_url_template to point at the public URL of the app. The app expects
 the Prow Build ID to be provided as a query parameter. Example url:
 
 ```
-https://app-public-address/?buildid=12345678
+https://app-public-address/?buildid=12345678&namespace=test-pods
 ```
+
+Both query parameters, `buildid` and `namespace`, are required when
+requesting logs. The namespace query param must match one passed to the
+`-namespace` flag when the app is started.
 
 ## Deploying This App To Kubernetes
 
