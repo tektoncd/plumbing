@@ -170,7 +170,10 @@ function default_build_test_runner() {
   # Ensure all the code builds
   subheader "Checking that go code builds"
   go build -v ./... || failed=1
-  # Get all build tags in go code (ignore /vendor)
+  # Get all build tags in go code. Ignore tags in /vendor, /third_party, and
+  # tools for compatibility to allow for Go modules binary tool tracking. See
+  # https://github.com/golang/go/wiki/Modules#how-can-i-track-tool-dependencies-for-a-module
+  # for more details.
   local tags="$(grep -r '// +build' . \
       | grep -v '^./vendor/' | grep -v '^./third_party/' | grep -v "+build tools" | cut -f3 -d' ' | sort | uniq | tr '\n' ' ')"
   if [[ -n "${tags}" ]]; then
