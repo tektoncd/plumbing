@@ -42,12 +42,14 @@ RUN go get -u github.com/golang/dep/cmd/dep
 RUN go get -u github.com/google/licenseclassifier
 RUN go get -u github.com/jstemmer/go-junit-report
 RUN GO111MODULE="on" go get -u github.com/raviqqe/liche
-RUN go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
-ARG TKN_VERSION=0.4.0
-RUN curl -LO https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz && \
-    tar xvzf tkn_${TKN_VERSION}_Linux_x86_64.tar.gz -C /usr/local/bin tkn && \
-    rm tkn_${TKN_VERSION}_Linux_x86_64.tar.gz
+# Install GolangCI linter: https://github.com/golangci/golangci-lint/
+ARG GOLANGCI_VERSION=1.21.0
+RUN curl -sL https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "*/golangci-lint"
+
+# Install the TektonCD CLI: https://github.com/tektoncd/cli/
+ARG TKN_VERSION=0.5.1
+RUN curl -sL https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar -C /usr/local/bin -xvzf - --wildcards "tkn"
 
 # Extra tools through gem
 RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
@@ -61,4 +63,3 @@ RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative
     make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
     cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
     go install github.com/knative/test-infra/tools/dep-collector
-
