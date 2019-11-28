@@ -47,13 +47,13 @@ spec:
   - name: contextPath
     description: The path to the context within 'gitRepository'
   - name: registry
-    description: The container registry: *registry*/namespace/name:tag
+    description: The container registry *registry*/namespace/name tag
   - name: namespace
-    description: The namespace (aka user, org, project): registry/*namespace*/name:tag
+    description: The namespace (aka user, org, project) registry/*namespace*/name tag
   - name: imageName
-    description: The image name (aka repository):  registry/namespace/*name*:tag
+    description: The image name (aka repository) registry/namespace/*name* tag
   - name: imageTag
-    description: The image tag: registry/namespace/name:*tag*
+    description: The image tag registry/namespace/name *tag*
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
@@ -83,7 +83,7 @@ spec:
           - /kaniko/executor
           - --dockerfile=Dockerfile
           - --context=$(params.contextPath)
-          - --destination=$(output.params.image.url)
+          - --destination=$(outputs.resources.image.url)
           volumeMounts:
             - name: gcp-secret
               mountPath: /secret
@@ -108,4 +108,4 @@ spec:
             type: image
             params:
             - name: url
-              value: $(params.registry)/$(params.namespace)/$(params.imageName):$(imageTag)
+              value: $(params.registry)/$(params.namespace)/$(params.imageName):$(params.imageTag)

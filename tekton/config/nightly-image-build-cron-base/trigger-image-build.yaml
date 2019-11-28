@@ -42,28 +42,32 @@ spec:
           containers:
           - name: trigger
             image: curlimages/curl
-            script: |
-              set -ex
+            command:
+            - /bin/sh
+            args:
+              - -ce
+              - |
+                set -ex
 
-              . /workspace/uuid
-              TAG=$(echo $TARGET_IMAGE | cut -d':' -f2)
-              NO_TAG=$(echo $TARGET_IMAGE | cut -d':' -f1)
-              IMAGE=$(echo $NO_TAG | rev | cut -d'/' -f1 | rev)
-              REGISTRY=$(echo $NO_TAG | cut -d'/' -f1)
-              NAMESPACE=$(echo $NO_TAG | cut -d'/' -f2- | rev | cut -d'/' -f2- | rev)
-              cat <<EOF > /workspace/post-body.json
-              {
-                "buildUUID": "$TRIGGER_UUID",
-                "gitRepository": "$GIT_REPOSITORY",
-                "gitRevision": "$GIT_REVISION",
-                "contextPath": "$CONTEXT_PATH",
-                "registry": "$REGISTRY",
-                "namespace": "$NAMESPACE",
-                "imageName": "$IMAGE",
-                "imageTag": "$TAG"
-              }
-              EOF
-              curl -d @/workspace/post-body.json $SINK_URL
+                . /workspace/uuid
+                TAG=$(echo $TARGET_IMAGE | cut -d':' -f2)
+                NO_TAG=$(echo $TARGET_IMAGE | cut -d':' -f1)
+                IMAGE=$(echo $NO_TAG | rev | cut -d'/' -f1 | rev)
+                REGISTRY=$(echo $NO_TAG | cut -d'/' -f1)
+                NAMESPACE=$(echo $NO_TAG | cut -d'/' -f2- | rev | cut -d'/' -f2- | rev)
+                cat <<EOF > /workspace/post-body.json
+                {
+                  "buildUUID": "$TRIGGER_UUID",
+                  "gitRepository": "$GIT_REPOSITORY",
+                  "gitRevision": "$GIT_REVISION",
+                  "contextPath": "$CONTEXT_PATH",
+                  "registry": "$REGISTRY",
+                  "namespace": "$NAMESPACE",
+                  "imageName": "$IMAGE",
+                  "imageTag": "$TAG"
+                }
+                EOF
+                curl -d @/workspace/post-body.json $SINK_URL
             volumeMounts:
             - mountPath: /workspace
               name: workspace
