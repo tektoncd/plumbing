@@ -12,8 +12,14 @@ spec:
     value: $(body.gitRevision)
   - name: contextPath
     value: $(body.contextPath)
-  - name: targetImage
-    value: $(body.targetImage)
+  - name: registry
+    value: $(body.registry)
+  - name: namespace
+    value: $(body.namespace)
+  - name: imageName
+    value: $(body.imageName)
+  - name: imageTag
+    value: $(body.imageTag)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -40,41 +46,25 @@ spec:
     description: The Git revision to be used.
   - name: contextPath
     description: The path to the context within 'gitRepository'
-  - name: targetImage
-    description: The fully qualifie image target e.g. repo/name:tag.
+  - name: registry
+    description: The container registry: *registry*/namespace/name:tag
+  - name: namespace
+    description: The namespace (aka user, org, project): registry/*namespace*/name:tag
+  - name: imageName
+    description: The image name (aka repository):  registry/namespace/*name*:tag
+  - name: imageTag
+    description: The image tag: registry/namespace/name:*tag*
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: git-source-$(uid)
-    spec:
-      type: git
-      params:
-      - name: revision
-        value: $(params.gitRevision)
-      - name: url
-        value: https://$(params.gitRepository)
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: target-image-$(uid)
-    spec:
-      type: image
-      params:
-      - name: url
-        value: $(params.targetImage)
   - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
     metadata:
-      generateName: build-and-push-$(uid)-
+      name: build-and-push-$(params.imageName)-$(uid)
       labels:
         prow.k8s.io/build-id: $(params.buildUUID)
+        plumbing.tekton.dev/image: $(params.imageName)
     spec:
       taskSpec:
         inputs:
-          params:
-          - name: contextPath
-            description: The path to the context
           resources:
           - name: source
             type: git
@@ -92,8 +82,8 @@ spec:
           command:
           - /kaniko/executor
           - --dockerfile=Dockerfile
-          - --context=$(inputs.params.contextPath)
-          - --destination=$(params.targetImage)
+          - --context=$(params.contextPath)
+          - --destination=$(output.params.image.url)
           volumeMounts:
             - name: gcp-secret
               mountPath: /secret
@@ -102,15 +92,20 @@ spec:
             secret:
               secretName: release-secret
       inputs:
-        params:
-        - name: contextPath
-          value: $(params.contextPath)
         resources:
         - name: source
-          resourceRef:
-            name: git-source-$(uid)
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: $(params.gitRevision)
+            - name: url
+              value: https://$(params.gitRepository)
       outputs:
         resources:
         - name: image
-          resourceRef:
-            name: target-image-$(uid)
+          resourceSpec:
+            type: image
+            params:
+            - name: url
+              value: $(params.registry)/$(params.namespace)/$(params.imageName):$(imageTag)
