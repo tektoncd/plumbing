@@ -2,8 +2,8 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   annotations:
-    certmanager.k8s.io/acme-http01-edit-in-place: "true"
-    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/acme-http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
   name: ing
   namespace: default
 spec:
