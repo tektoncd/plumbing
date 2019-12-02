@@ -46,14 +46,17 @@ spec:
         value: $(inputs.params.previous-release-tag)
   steps:
     - name: header
-      image: busybox
+      image: gcr.io/tekton-releases/dogfooding/hub
       script: |
-        #!/bin/sh
+        #!/bin/bash
         set -ex
-        TEKTON_PROJECT=$(filename $PROJECT | sed 's/.*/\u&/')
+        p=$(basename $PROJECT)
+        TEKTON_PROJECT=${p^}
 
         cat <<EOF | tee $HOME/release.md
-        # 🎉 Tekton $TEKTON_PROJECT release v${VERSION} "$(inputs.params.release-name)" 🎉
+        Tekton $TEKTON_PROJECT release v${VERSION} "$(inputs.params.release-name)"
+
+        # 🎉 [Tag Line - to be done] 🎉
 
         -[Docs @ v${VERSION}](https://github.com/${PROJECT}/tree/v${VERSION}/docs)
         -[Examples @ v${VERSION}](https://github.com/${PROJECT}/tree/v${VERSION}/examples)
@@ -76,7 +79,7 @@ spec:
 
         # Deprecation Notices
 
-        * 🚨 [Deprecation Notice Title]
+        * :rotating_light: [Deprecation Notice Title]
 
         [Detailed deprecation notice description] (#Number).
 
@@ -86,7 +89,7 @@ spec:
 
         In current release:
 
-        * 🚨 [Change Title]
+        * :rotating_light: [Change Title]
 
         [Detailed change description] (#Number).
 
@@ -116,6 +119,9 @@ spec:
       script: |
         #!/usr/bin/env bash
         set -e
+
+        # Restore full git history
+        git fetch --unshallow
 
         LOWER_THRESHOLD=$(git rev-list v${OLD_VERSION} | wc -l)
         UPPER_THRESHOLD=$(git rev-list $(inputs.resources.source.revision) | wc -l)
