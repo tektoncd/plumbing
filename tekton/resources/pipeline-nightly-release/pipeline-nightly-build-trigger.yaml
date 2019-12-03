@@ -13,12 +13,19 @@ spec:
   - name: versionTag
     value: $(body.versionTag)
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release-nightly-robot
+secrets:
+- name: nightly-account
+---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: pipeline-nightly-release-cron
 spec:
-  serviceAccountName: release-right-meow
+  serviceAccountName: release-nightly-robot
   triggers:
     - name: cron-trigger
       binding:
@@ -64,26 +71,26 @@ spec:
       - name: type
         value: gcs
       - name: location
-        value: gs://tekton-release-staging/pipeline/
+        value: gs://tekton-releases-nightly/pipeline
       - name: dir
         value: "y"
       type: storage
       secrets:
       - fieldName: GOOGLE_APPLICATION_CREDENTIALS
-        secretKey: release.json
-        secretName: release-secret
+        secretKey: service-account.json
+        secretName: nightly-account
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineRun
     metadata:
       generateName: pipeline-release-nightly-$(uid)-
     spec:
       pipelineRef:
-        name: pipeline-release-nightly-triggers
+        name: pipeline-release-nightly-no-unit-triggers
       params:
       - name: package
         value: $(params.gitrepository)
       - name: imageRegistry
-        value: gcr.io/tekton-releases/dogfooding/pipeline/nightly
+        value: gcr.io/tekton-nightly
       - name: versionTag
         value: $(params.versionTag)
       resources:
