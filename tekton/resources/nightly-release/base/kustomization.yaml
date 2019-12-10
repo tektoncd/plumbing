@@ -1,0 +1,10 @@
+namePrefix: nightly-release-
+commonAnnotations:
+  release: nightly
+resources:
+  - bindings.yaml
+  - serviceaccount.yaml
+  - template.yaml
+  - eventlistener.yaml
+configurations:
+- kustomizeconfig/eventlistener.yaml

@@ -1,0 +1,19 @@
+# Apply name prefix to resource refs.
+nameReference:
+- kind: TriggerBinding
+  fieldSpecs:
+  - path: spec/triggers/binding/name
+    kind: EventListener
+- kind: TriggerTemplate 
+  fieldSpecs:
+  - path: spec/triggers/template/name
+    kind: EventListener
+- kind: ServiceAccount
+  fieldSpecs:
+  - path: spec/serviceAccountName
+    kind: EventListener
+
+# Apply name prefix to sub-resources.
+namePrefix:
+- path: spec/triggers/name
+  kind: EventListener

@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: template
+spec:
+  params:
+  - name: buildID
+    description: The ID of the build. This is used to build artifact tracking.
+  - name: gitrevision
+    description: The Git revision to be used for the release.
+  - name: gitrepository
+    description: The Git repository to be used for the release.
+  - name: versionTag
+    description: The version tag to be applied to published images.
+  - name: imageRegistry
+    description: Registry where the images will be published to.
+    default: gcr.io/tekton-nightly
+  - name: projectName
+    description: Name of the Tekton project to release (e.g. pipeline, triggers, etc).
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: git-source-$(uid)
+    spec:
+      type: git
+      params:
+      - name: revision
+        value: $(params.gitrevision)
+      - name: url
+        value: http://$(params.gitrepository)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: tekton-bucket-nightly-$(uid)
+    spec:
+      params:
+      - name: type
+        value: gcs
+      - name: location
+        value: gs://tekton-releases-nightly/$(projectName)
+      - name: dir
+        value: "y"
+      type: storage
+      secrets:
+      - fieldName: GOOGLE_APPLICATION_CREDENTIALS
+        secretKey: service-account.json
+        secretName: nightly-account

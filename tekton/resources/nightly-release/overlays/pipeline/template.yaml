@@ -1,0 +1,57 @@
+- op: add
+  path: "/spec/resourcetemplates/-"
+  value:
+    apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      generateName: pipeline-release-nightly-$(uid)-
+    spec:
+      pipelineRef:
+        name: pipeline-release-nightly
+      params:
+      - name: package
+        value: $(params.gitrepository)
+      - name: imageRegistry
+        value: gcr.io/tekton-nightly
+      - name: versionTag
+        value: $(params.versionTag)
+      resources:
+      - name: source-repo
+        resourceRef:
+          name: git-source-$(uid)
+      - name: bucket
+        resourceRef:
+          name: tekton-bucket-nightly-$(uid)
+      - name: builtBaseImage
+        resourceRef:
+          name: base-image
+      - name: builtEntrypointImage
+        resourceRef:
+          name: entrypoint-image
+      - name: builtKubeconfigWriterImage
+        resourceRef:
+          name: kubeconfigwriter-image
+      - name: builtCredsInitImage
+        resourceRef:
+          name: creds-init-image
+      - name: builtGitInitImage
+        resourceRef:
+          name: git-init-image
+      - name: builtControllerImage
+        resourceRef:
+          name: controller-image
+      - name: builtWebhookImage
+        resourceRef:
+          name: webhook-image
+      - name: builtDigestExporterImage
+        resourceRef:
+          name: digest-exporter-image
+      - name: builtPullRequestInitImage
+        resourceRef:
+          name: pull-request-init-image
+      - name: builtGcsFetcherImage
+        resourceRef:
+          name: gcs-fetcher-image
+      - name: notification
+        resourceRef:
+          name: post-nightly-release-trigger

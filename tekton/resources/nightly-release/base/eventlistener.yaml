@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: cron
+spec:
+  serviceAccountName: robot
+  triggers:
+    - name: cron-trigger
+      binding:
+        name: binding
+      template:
+        name: template

@@ -1,0 +1,16 @@
+namePrefix: pipeline-
+bases:
+  - ../../base
+patchesJson6902:
+  - target:
+      group: tekton.dev
+      version: v1alpha1
+      kind: TriggerBinding
+      name: binding
+    path: bindings.yaml
+  - target:
+      group: tekton.dev
+      version: v1alpha1
+      kind: TriggerTemplate
+      name: template
+    path: template.yaml
