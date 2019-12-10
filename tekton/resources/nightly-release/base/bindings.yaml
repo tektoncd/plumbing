@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: binding
+spec:
+  params:
+  - name: buildID
+    value: $(body.buildUUID)
+  - name: gitrevision
+    value: $(body.gitrevision)
+  - name: gitrepository
+    value: $(body.gitrepository)
+  - name: versionTag
+    value: $(body.versionTag)
