@@ -85,7 +85,7 @@ spec:
       generateName: pipeline-release-nightly-$(uid)-
     spec:
       pipelineRef:
-        name: pipeline-release-nightly-no-unit-triggers
+        name: pipeline-release-nightly
       params:
       - name: package
         value: $(params.gitrepository)
@@ -130,9 +130,6 @@ spec:
       - name: builtGcsFetcherImage
         resourceRef:
           name: gcs-fetcher-image
-      - name: builtKoImage
-        resourceRef:
-          name: ko-image
       - name: notification
         resourceRef:
-          name: post-release-trigger
+          name: post-nightly-release-trigger
