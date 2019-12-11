@@ -1,0 +1,5 @@
+bases:
+- ../nightly-image-build-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-ko-gcloud
