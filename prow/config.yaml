@@ -617,6 +617,8 @@ presubmits:
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
           value: us-central1
+        - name: DISABLE_MD_LINK_CHECK
+          value: true
       volumes:
       - name: test-account
         secret:
