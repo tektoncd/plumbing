@@ -34,10 +34,10 @@ default:
       name: area/release
       target: issues
       addedBy: label
-    - color: "008672"
+    - color: 10677f
       description: Indicates an issue on dogfooding (aka using Pipeline to test Pipeline)
       name: area/dogfooding
-      target: issues
+      target: both
       addedBy: label
     - color: 10677f
       description: Issues or PRs related to the testing infrastructure
