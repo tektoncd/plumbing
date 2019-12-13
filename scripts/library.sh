@@ -339,7 +339,7 @@ function update_licenses() {
     # See https://github.com/google/go-licenses/issues/11
     chmod +w $(find ${dst} -type d)
   else
-    run_go_tool ./vendor/github.com/knative/test-infra/tools/dep-collector dep-collector $@ > ./${dst}
+    run_go_tool ./vendor/knative.dev/test-infra/tools/dep-collector dep-collector $@ > ./${dst}
   fi
 }
 
@@ -352,7 +352,7 @@ function check_licenses() {
     # Fetch the google/licenseclassifier for its license db
     go get -u github.com/google/licenseclassifier
     # Check that we don't have any forbidden licenses in our images.
-    run_go_tool ./vendor/github.com/knative/test-infra/tools/dep-collector dep-collector -check $@
+    run_go_tool ./vendor/knative.dev/test-infra/tools/dep-collector dep-collector -check $@
   fi
 }
 

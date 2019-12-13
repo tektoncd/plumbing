@@ -59,7 +59,7 @@ RUN gem install mdl -v 0.5.0
 RUN pip install yamllint
 
 # Temporarily add test-infra to the image to build custom tools
-RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
-    make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
-    cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
-    go install github.com/knative/test-infra/tools/dep-collector
+RUN mkdir -p /go/src/knative.dev/ && git clone https://knative.dev/test-infra.git /go/src/knative.dev/test-infra && \
+    make -C /go/src/knative.dev/test-infra/tools/githubhelper && \
+    cp /go/src/knative.dev/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
+    go install knative.dev/test-infra/tools/dep-collector
