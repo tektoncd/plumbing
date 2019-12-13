@@ -1,0 +1,4 @@
+bases:
+- ../../base
+patchesStrategicMerge:
+- config-artifact-bucket.yaml

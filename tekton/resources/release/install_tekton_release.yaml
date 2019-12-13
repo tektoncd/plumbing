@@ -36,38 +36,42 @@ spec:
     - name: default-service-account
       description: Service account to be setup as default in Tekton configmap
       default: default
+    - name: environment
+      description: Name of the target environment. Used to apply relevant overalys
+      default: dogfooding
   steps:
 
-  - name: make-pipeline-folder  # This is a hack to have a consistent folder structure
-    image: busybox
-    command:
-    - /bin/sh
-    args:
-    - -ce
-    - |
-      if [ "$(inputs.params.projectName)" == "pipeline" ]; then
-        mkdir -p "$(inputs.resources.release-bucket.path)/$(inputs.params.projectName)" || true
-        ln -s $(inputs.resources.release-bucket.path)/previous $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/
+  - name: deploy-tekton-project
+    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+    workingDir: $(inputs.resources.plumbing-library.path)/tekton/cd
+    script: |
+      #!/usr/bin/env bash
+      set -exo pipefail
+
+      if [ ! -d $(inputs.params.projectName) ]; then
+        # There are is not base or project for $(inputs.params.projectName)
+        # Apply the release as is
+        kubectl apply \
+          --filename $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/release.yaml \
+          --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+      else
+          # If the base exists, an overlay for the specified environment must exist
+          if [ ! -d $(inputs.params.projectName)/overlays/$(inputs.params.environment) ]; then
+            echo "Environment $(inputs.params.environment) not found for project $(inputs.params.projectName)"
+            exit 1
+          fi
+          cp $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/release.yaml $(inputs.params.projectName)/base/release.yaml
+          find .
+          kubectl apply \
+            --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig \
+            -k $(inputs.params.projectName)/overlays/$(inputs.params.environment)
       fi
 
-  - name: deploy-tekton-project
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
-    command:
-    - /bin/bash
-    args:
-    - -ce
-    - |
-      kubectl apply \
-      --filename $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml \
-      --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
-
   - name: setup-default-service-account
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
-    command:
-    - /bin/bash
-    args:
-    - -ce
-    - |
+    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+    script: |
+      #!/usr/bin/env bash
+      set -exo pipefail
       kubectl patch \
       cm/config-defaults -n "$(inputs.params.namespace)" \
       -p '{"data": {"default-service-account": "$(inputs.params.default-service-account)"}}'
@@ -76,12 +80,10 @@ spec:
       -l app.kubernetes.io/name=tekton-pipelines | xargs kubectl delete -n "$(inputs.params.namespace)"
 
   - name: wait-until-pods-running
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
-    command:
-    - /bin/bash
-    args:
-    - -ce
-    - |
+    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+    script: |
+      #!/usr/bin/env bash
+      set -exo pipefail
       source $(inputs.resources.plumbing-library.path)/scripts/library.sh
       wait_until_pods_running "$(inputs.params.namespace)"
     env:
@@ -105,20 +107,8 @@ spec:
       description: The vX.Y.Z version that we want to install (including `v`)
   steps:
 
-  - name: make-pipeline-folder  # This is a hack to have a consistent folder structure
-    image: busybox
-    command:
-    - /bin/sh
-    args:
-    - -ce
-    - |
-      if [ "$(inputs.params.projectName)" == "pipeline" ]; then
-        mkdir -p "$(inputs.resources.release-bucket.path)/$(inputs.params.projectName)" || true
-        ln -s $(inputs.resources.release-bucket.path)/previous $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/
-      fi
-
   - name: compare-github-vs-bucket
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    image: gcr.io/tekton-releases/tests/test-runner
     command:
     - /bin/sh
     args:
@@ -154,7 +144,7 @@ spec:
   steps:
 
   - name: cleanup-resources
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    image: gcr.io/tekton-releases/tests/test-runner
     command:
     - /bin/bash
     args:
@@ -167,7 +157,7 @@ spec:
       done
 
   - name: uninstall-tekton-project
-    image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
+    image: gcr.io/tekton-releases/tests/test-runner
     env:
       - name: KUBECONFIG
         value: /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
