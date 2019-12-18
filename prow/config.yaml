@@ -618,7 +618,7 @@ presubmits:
         - name: E2E_CLUSTER_REGION
           value: us-central1
         - name: DISABLE_MD_LINK_CHECK
-          value: true
+          value: "true"
       volumes:
       - name: test-account
         secret:
