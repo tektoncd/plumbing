@@ -61,12 +61,24 @@ default:
       prowPlugin: label
       addedBy: anyone
     
-    # Kinds and areas
+    # Areas
     - color: 0052cc
       description: Indicates an issue or PR that deals with the API.
       name: area/api
       target: issues
       addedBy: label
+    - color: 7057ff
+      description: Indicates an issue on release (process, tasks).
+      name: area/release
+      target: issues
+      addedBy: label
+    - color: 10677f
+      description: Issues or PRs related to the plumbing infrastructure but needing attention in a non-plumbing repo.
+      name: area/plumbing
+      target: both
+      addedBy: label
+    
+    # Kinds
     - color: e11d21
       description: Categorizes issue or PR as related to a bug.
       name: kind/bug
@@ -75,6 +87,9 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
+    - color: f7c6c7
+      description: Categorizes issue or PR as related to a flakey test. Please escalate this and treat it as an emergency.
+      name: kind/flake
     - color: c7def8
       description: Categorizes issue or PR as related to cleaning up code, process, or technical debt.
       name: kind/cleanup
@@ -105,6 +120,30 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
+    
+    # For further discussion in the next Productivity WG meeting
+
+    # Would like to understand when this label should be used vs. using GitHub syntax or ZenHub
+    - color: d455d0
+      description: Indicates an issue is a duplicate of other open issue.
+      name: triage/duplicate
+      previously:
+        - name: duplicate
+      target: both
+    # needs-information seems like it serves the same function as kind/question or "waiting for response"
+    - color: d455d0
+      description: Indicates an issue needs more information in order to work on it.
+      name: triage/needs-information
+      target: both
+      addedBy: humans
+    # If I was contributing to a repo, went to the trouble to create an issue or PR, and a maintainer
+    # responded by shrugging, I think it would make me feel my contribution wasn't appreciated
+    - color: f9d0c4
+      description: ¯\\\_(ツ)_/¯
+      name: "¯\\_(ツ)_/¯"
+      target: both
+      prowPlugin: shrug
+      addedBy: humans
 
     
     ##########################################################################
