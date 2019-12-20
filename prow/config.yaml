@@ -682,6 +682,9 @@ presubmits:
         - name: test-account
           mountPath: /etc/test-account
           readOnly: true
+        - name: e2e-secrets
+          mountPath: /etc/e2e-secret
+          readOnly: true
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
@@ -691,6 +694,9 @@ presubmits:
       - name: test-account
         secret:
           secretName: test-account
+      - name: e2e-secrets
+        secret:
+          secretName: e2e-secret
   - name: pull-tekton-pipeline-go-coverage
     agent: kubernetes
     always_run: true
