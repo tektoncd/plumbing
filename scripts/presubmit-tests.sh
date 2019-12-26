@@ -378,3 +378,9 @@ function main() {
 
   exit ${failed}
 }
+
+# Download module dependencies to the local cache.
+# This should only be slow on the first run, and fast on subsequent runs.
+# If this command fails for any reason (e.g. not ran in a modules enabled
+# repo), always result in true.
+go mod download || true
