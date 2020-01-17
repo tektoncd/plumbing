@@ -54,7 +54,7 @@ spec:
   serviceType: LoadBalancer
   triggers:
     - name: peribolos-trigger
-      binding:
-        name: peribolos-binding
+      bindings:
+        - name: peribolos-binding
       template:
         name: peribolos-template

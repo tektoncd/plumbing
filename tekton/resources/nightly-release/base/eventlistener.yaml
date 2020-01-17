@@ -6,7 +6,7 @@ spec:
   serviceAccountName: robot
   triggers:
     - name: cron-trigger
-      binding:
-        name: binding
+      bindings:
+        - name: binding
       template:
         name: template
