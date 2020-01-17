@@ -9,13 +9,13 @@ spec:
   - name: buildUUID
     value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
   - name: gitURL
-    value: $(body.taskRun.spec.inputs.resources.#(name=="source").resourceSpec.params.#(name=="url").value)
+    value: $(body.taskRun.spec.inputs.resources[?(@.name == 'source')].resourceSpec.params[?(@.name == 'url')].value)
   - name: gitRevision
-    value: $(body.taskRun.spec.inputs.resources.#(name=="source").resourceSpec.params.#(name=="revision").value)
+    value: $(body.taskRun.spec.inputs.resources[?(@.name == 'source')].resourceSpec.params[?(@.name == 'revision')].value)
   - name: targetImageResourceName
-    value: $(body.taskRun.spec.outputs.resources.#(name=="image").resourceRef.name)
+    value: $(body.taskRun.spec.outputs.resources[?(@.name == 'image')].resourceRef.name)
   - name: passedOrFailed
-    value: $(body.taskRun.status.conditions.#(type=="Succeeded").status)
+    value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -25,8 +25,8 @@ spec:
   serviceAccountName: mario-listener
   triggers:
     - name: trigger
-      binding:
-        name: trigger-to-comment-github
+      bindings:
+        - name: trigger-to-comment-github
       template:
         name: mario-comment-github
 ---

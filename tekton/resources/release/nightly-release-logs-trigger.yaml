@@ -9,9 +9,9 @@ spec:
   - name: namespace
     value: $(body.taskRun.metadata.namespace)
   - name: bucket
-    value: $(body.taskRun.spec.outputs.resources.#(name=="bucket").resourceRef.name)
+    value: $(body.taskRun.spec.outputs.resources[?(@.name == 'bucket')].resourceRef.name)
   - name: versionTag
-    value: $(body.taskRun.spec.inputs.params.#(name=="versionTag").value)
+    value: $(body.taskRun.spec.inputs.params[?(@.name == 'versionTag')].value)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
@@ -21,8 +21,8 @@ spec:
   serviceAccountName: release-right-meow
   triggers:
     - name: log-collection
-      binding:
-        name: publish-images-taskrun-to-release-logs
+      bindings:
+        - name: publish-images-taskrun-to-release-logs
       template:
         name: release-logs
 ---

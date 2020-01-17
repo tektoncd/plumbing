@@ -77,14 +77,15 @@ spec:
   serviceType: LoadBalancer
   triggers:
     - name: trigger
-      interceptor:
-        objectRef:
-          kind: Service
-          name: mario
-          apiVersion: v1
-          namespace: mario
-      binding:
-        name: trigger-to-build-and-push-image
+      interceptors:
+        - webhook:
+            objectRef:
+              kind: Service
+              name: mario
+              apiVersion: v1
+              namespace: mario
+      bindings:
+        - name: trigger-to-build-and-push-image
       template:
         name: build-and-push-image
 ---
