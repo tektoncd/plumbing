@@ -12,3 +12,5 @@ Resources are organised in folders:
 - The [resources](resources/README.md) folder contains Tekton resources used for
   various automation tasks: building container images, doing releases,
   maintaining the GitHub org and more.
+- The [cd](cd/README.md) folder contains kustomize overlays, used to deploy the
+  various Tekton projects to the infra clusters.
