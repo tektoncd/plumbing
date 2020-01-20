@@ -2,9 +2,9 @@
 nameReference:
 - kind: TriggerBinding
   fieldSpecs:
-  - path: spec/triggers/binding/name
+  - path: spec/triggers/bindings/name
     kind: EventListener
-- kind: TriggerTemplate 
+- kind: TriggerTemplate
   fieldSpecs:
   - path: spec/triggers/template/name
     kind: EventListener
