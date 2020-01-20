@@ -8,8 +8,8 @@ Tekton services can be deployed on-demand using a Tekton task called
 follows using the `tkn` client:
 
 ```
-# The RELEASE_BUCKET_RESOURCE is a storage PipelineResource that points to
-# the bucket where the release files are stored
+# The RELEASE_BUCKET_RESOURCE is a storage PipelineResource that points to the
+# bucket where the release files are stored e.g. gs://tekton-releases/pipeline
 export RELEASE_BUCKET_RESOURCE=<release-bucket>
 
 # The K8S_CLUSTER_RESOURCE is a cluster PipelineResource that points to the
