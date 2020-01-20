@@ -38,7 +38,7 @@ spec:
       - name: type
         value: gcs
       - name: location
-        value: gs://tekton-releases-nightly/$(projectName)
+        value: gs://tekton-releases-nightly/$(params.projectName)
       - name: dir
         value: "y"
       type: storage
