@@ -1,4 +1,6 @@
 namePrefix: nightly-release-
+commonLabels:
+  app: tekton.plumbing
 commonAnnotations:
   release: nightly
 resources:

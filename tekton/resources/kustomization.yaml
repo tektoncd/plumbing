@@ -8,4 +8,3 @@ resources:
 - release/prerelease_checks.yaml
 - release/save-release-logs.yaml
 - release/test_tekton_release.yaml
-- pipeline-nightly-release/pipeline-nightly-build-trigger.yaml

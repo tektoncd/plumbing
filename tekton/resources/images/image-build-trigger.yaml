@@ -54,6 +54,8 @@ spec:
     description: The image name (aka repository) registry/namespace/*name* tag
   - name: imageTag
     description: The image tag registry/namespace/name *tag*
+  - name: buildUUID
+    description: The build UUID is used for log collection
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
