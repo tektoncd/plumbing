@@ -3,9 +3,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: triggers-minimal
 rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: ["tekton.dev"]
   resources: ["eventlisteners", "triggerbindings", "triggertemplates", "tasks", "taskruns"]
-  verbs: ["get"]
+  verbs: ["get", "list"]
 - apiGroups: ["tekton.dev"]
   resources: ["pipelineruns", "pipelineresources", "taskruns"]
   verbs: ["create"]
@@ -105,6 +108,10 @@ metadata:
   name: build-and-push-image
 spec:
   params:
+  - name: pullRequestID
+    description: The pullRequestID
+  - name: buildUUID
+    description: the buildUUID for logging purposes
   - name: gitRepository
     description: The git repository that hosts context and Dockerfile
   - name: gitRevision
