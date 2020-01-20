@@ -43,10 +43,11 @@ spec:
 
   - name: deploy-tekton-project
     image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
-    workingDir: $(inputs.resources.plumbing-library.path)/tekton/cd
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
+
+      cd $(inputs.resources.plumbing-library.path)/tekton/cd
 
       if [ ! -d $(inputs.params.projectName) ]; then
         # There are is not base or project for $(inputs.params.projectName)
@@ -66,18 +67,6 @@ spec:
             --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig \
             -k $(inputs.params.projectName)/overlays/$(inputs.params.environment)
       fi
-
-  - name: setup-default-service-account
-    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
-    script: |
-      #!/usr/bin/env bash
-      set -exo pipefail
-      kubectl patch \
-      cm/config-defaults -n "$(inputs.params.namespace)" \
-      -p '{"data": {"default-service-account": "$(inputs.params.default-service-account)"}}'
-
-      kubectl get pod -n "$(inputs.params.namespace)" -o name \
-      -l app.kubernetes.io/name=tekton-pipelines | xargs kubectl delete -n "$(inputs.params.namespace)"
 
   - name: wait-until-pods-running
     image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
