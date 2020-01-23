@@ -23,7 +23,7 @@ spec:
     - name: release-name
       description: The name of the release (e.g. Cat + Robot for pipeline)
     - name: release-tag
-      description: Release number and git tag to be applied (e.g. 0.888.1, no 'v')
+      description: Release number and git tag to be applied (e.g. 0.888.1, with 'v')
     - name: previous-release-tag
       description: Previous release number - for author and PR list calculation
     resources:
@@ -54,12 +54,12 @@ spec:
         TEKTON_PROJECT=${p^}
 
         cat <<EOF | tee $HOME/release.md
-        Tekton $TEKTON_PROJECT release v${VERSION} "$(inputs.params.release-name)"
+        Tekton $TEKTON_PROJECT release ${VERSION} "$(inputs.params.release-name)"
 
         # 🎉 [Tag Line - to be done] 🎉
 
-        -[Docs @ v${VERSION}](https://github.com/${PROJECT}/tree/v${VERSION}/docs)
-        -[Examples @ v${VERSION}](https://github.com/${PROJECT}/tree/v${VERSION}/examples)
+        -[Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
+        -[Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
         EOF
     - name: body
       image: busybox
@@ -123,7 +123,7 @@ spec:
         # Restore full git history
         git fetch --unshallow
 
-        LOWER_THRESHOLD=$(git rev-list v${OLD_VERSION} | wc -l)
+        LOWER_THRESHOLD=$(git rev-list ${OLD_VERSION} | wc -l)
         UPPER_THRESHOLD=$(git rev-list $(inputs.resources.source.revision) | wc -l)
         echo "LOWER_THRESHOLD: $LOWER_THRESHOLD"
         echo "UPPER_THRESHOLD: $UPPER_THRESHOLD"
@@ -151,7 +151,7 @@ spec:
         cat <<EOF | tee -a $HOME/release.md
         ## Thanks
 
-        Thanks to these contributors who contributed to v${VERSION}!
+        Thanks to these contributors who contributed to ${VERSION}!
 
         EOF
         awk -F";" '{ print "- :heart: @"$1 }' $HOME/pr.csv | sort -u | tee -a $HOME/release.md
@@ -187,5 +187,5 @@ spec:
 
         hub release create --draft --prerelease \
           --commitish $(inputs.resources.source.revision) \
-          -a $(inputs.resources.release-bucket.path)/previous/v${VERSION}/release.yaml \
-          --file $HOME/release.md v${VERSION}
+          -a $(inputs.resources.release-bucket.path)/previous/${VERSION}/release.yaml \
+          --file $HOME/release.md ${VERSION}
