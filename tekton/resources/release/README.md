@@ -75,7 +75,8 @@ tkn task start \
   -o release-bucket=$TEKTON_BUCKET_RESOURCE \
   -p pipelinerun=$TEKTON_PIPELINERUN \
   -p namespace=$TEKTON_NAMESPACE \
-  -p versionTag=$TEKTON_VERSION
+  -p versionTag=$TEKTON_VERSION \
+  -s tekton-logs \
   save-release-logs
 ```
 
@@ -139,7 +140,7 @@ tkn task start \
   -p package=$TEKTON_PACKAGE \
   -p release-tag=$TEKTON_VERSION \
   -p previous-release-tag=$TEKTON_OLD_VERSION \
-  -p release-name=$TEKTON_RELEASE_NAME
+  -p release-name=$TEKTON_RELEASE_NAME \
   create-draft-release
 ```
 
