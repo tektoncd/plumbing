@@ -59,7 +59,7 @@ metadata:
   name: tekton-logs-reader
 rules:
 - apiGroups: [""]
-  resources: ["pods", "pods/log"]
+  resources: ["pods", "pods/log", "namespaces"]
   verbs: ["get", "list"]
 - apiGroups: ["tekton.dev"]
   resources: ["pipelines", "tasks", "pipelineruns", "pipelineresources", "taskruns", "conditions"]
