@@ -52,7 +52,7 @@ func main() {
 		log.Fatalf("No secret token given")
 	}
 	registry := os.Getenv(envRegistry)
-	if secretToken == "" {
+	if registry == "" {
 		registry = "gcr.io/tekton-releases/dogfooding"
 	}
 
