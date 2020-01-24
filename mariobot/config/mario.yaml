@@ -30,13 +30,15 @@ spec:
       serviceAccountName: mario-bot
       containers:
         - name: mario-interceptor
-          image: github.com/tektoncd/plumbing/cmd/mario
+          image: github.com/tektoncd/plumbing/mariobot/cmd/mario
           env:
             - name: GITHUB_SECRET_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: mario-github-secret
                   key: secret-token
+            - name: CONTAINER_REGISTRY
+              value: "gcr.io/tekton-releases/dogfooding"
 ---
 apiVersion: v1
 kind: Service
