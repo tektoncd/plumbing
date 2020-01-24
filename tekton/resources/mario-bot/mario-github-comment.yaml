@@ -59,7 +59,7 @@ spec:
         - name: url
           value: $(params.gitURL)/pull/$(params.pullRequestID)
       secrets:
-        - fieldName: githubToken
+        - fieldName: authToken
           secretName: mario-github-token
           secretKey: GITHUB_TOKEN
   - apiVersion: tekton.dev/v1alpha1

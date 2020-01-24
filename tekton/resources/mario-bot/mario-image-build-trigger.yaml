@@ -81,6 +81,13 @@ spec:
   triggers:
     - name: trigger
       interceptors:
+        - github:
+            secretRef:
+              secretName: mario-github-secret
+              secretKey: secret-token
+              namespace: mario
+            eventTypes:
+              - issue_comment
         - webhook:
             objectRef:
               kind: Service

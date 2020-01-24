@@ -32,6 +32,8 @@ import (
 const (
 	// Environment variable containing GitHub secret token
 	envSecret = "GITHUB_SECRET_TOKEN"
+	// Environment variable containing the target container registry
+	envRegistry = "CONTAINER_REGISTRY"
 )
 
 type triggerPayload struct {
@@ -48,6 +50,10 @@ func main() {
 	secretToken := os.Getenv(envSecret)
 	if secretToken == "" {
 		log.Fatalf("No secret token given")
+	}
+	registry := os.Getenv(envRegistry)
+	if secretToken == "" {
+		registry = "gcr.io/tekton-releases/dogfooding"
 	}
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
@@ -79,13 +85,14 @@ func main() {
 							GitRepository: "github.com/" + event.GetRepo().GetFullName(),
 							GitRevision:   "pull/" + prID + "/head",
 							ContextPath:   commandParts[2],
-							TargetImage:   "us.icr.io/knative/" + commandParts[3],
+							TargetImage:   registry + commandParts[3],
 							PullRequestID: prID,
 						}
 						tPayload, err := json.Marshal(triggerBody)
 						if err != nil {
 							log.Printf("Failed to marshal the trigger body. Error: %q", err)
 						}
+						log.Printf("Replying with payload %s", payload)
 						n, err := writer.Write(tPayload)
 						if err != nil {
 							log.Printf("Failed to write response for Github event ID: %s. Bytes writted: %d. Error: %q", id, n, err)
