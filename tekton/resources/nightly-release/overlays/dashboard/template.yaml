@@ -1,0 +1,29 @@
+- op: add
+  path: "/spec/resourcetemplates/-"
+  value:
+    apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      name: dashboard-release-nightly-$(uid)
+    spec:
+      pipelineRef:
+        name: dashboard-release
+      params:
+      - name: package
+        value: $(params.gitrepository)
+      - name: imageRegistry
+        value: gcr.io/tekton-nightly
+      - name: versionTag
+        value: $(params.versionTag)
+      - name: bucketName
+        value: latest
+      resources:
+      - name: source-repo
+        resourceRef:
+          name: git-source-$(uid)
+      - name: bucket
+        resourceRef:
+          name: tekton-bucket-nightly-$(uid)
+      - name: builtDashboardImage
+        resourceRef:
+          name: dashboard-image

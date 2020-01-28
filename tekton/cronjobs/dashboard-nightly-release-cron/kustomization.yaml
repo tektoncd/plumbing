@@ -1,0 +1,5 @@
+bases:
+- ../nightly-release-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-dashboard-nightly-release"
