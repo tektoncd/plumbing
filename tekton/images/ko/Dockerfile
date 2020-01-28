@@ -18,6 +18,6 @@ ENV GO111MODULE on
 RUN go get github.com/google/ko/cmd/ko@master
 
 RUN apk add --no-cache musl-dev gcc git
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.3.0
+RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
 
 
