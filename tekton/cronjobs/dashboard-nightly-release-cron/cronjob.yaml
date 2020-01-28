@@ -13,9 +13,9 @@ spec:
           - name: trigger
             env:
               - name: SINK_URL
-                value: el-pipeline-nightly-release-cron.default.svc.cluster.local:8080
+                value: el-dashboard-nightly-release-cron.default.svc.cluster.local:8080
           initContainers:
           - name: git
             env:
               - name: GIT_REPO
-                value: github.com/tektoncd/pipeline
+                value: github.com/tektoncd/dashboard

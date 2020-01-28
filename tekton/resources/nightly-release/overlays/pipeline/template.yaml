@@ -4,7 +4,7 @@
     apiVersion: tekton.dev/v1alpha1
     kind: PipelineRun
     metadata:
-      generateName: pipeline-release-nightly-$(uid)-
+      name: pipeline-release-nightly-$(uid)
     spec:
       pipelineRef:
         name: pipeline-release-nightly

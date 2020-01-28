@@ -14,7 +14,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: pipeline-cron-trigger
+  name: nightly-cron-trigger
 spec:
   schedule: "0 2 * * *"  # Daily at 2am
   jobTemplate:
