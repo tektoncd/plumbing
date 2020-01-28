@@ -55,7 +55,7 @@ roleRef:
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: trigger-to-build-and-push-image
+  name: mario-trigger-to-build-and-push-image
 spec:
   params:
   - name: buildUUID
@@ -95,9 +95,9 @@ spec:
               apiVersion: v1
               namespace: mario
       bindings:
-        - name: trigger-to-build-and-push-image
+        - name: mario-trigger-to-build-and-push-image
       template:
-        name: build-and-push-image
+        name: mario-build-and-push-image
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
@@ -112,7 +112,7 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: build-and-push-image
+  name: mario-build-and-push-image
 spec:
   params:
   - name: pullRequestID
