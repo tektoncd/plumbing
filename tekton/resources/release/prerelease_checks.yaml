@@ -52,7 +52,7 @@ spec:
       - |
         echo "Checking release file"
         # Check if the release file already exists
-        if [ -f $(inputs.resources.release-bucket.path)/previous/$(inputs.params.versionTag)/release.yaml ]; then
+        if [ -f $(inputs.resources.release-bucket.path)/pipeline/previous/$(inputs.params.versionTag)/release.yaml ]; then
           echo "Release file already exists for $(inputs.params.versionTag) in the release bucket,"
           echo "but no git tag was found. To continue remove the release file first."
           exit 1

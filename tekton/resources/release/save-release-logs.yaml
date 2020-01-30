@@ -51,7 +51,7 @@ spec:
       # This works with in cluster config. The service account used in the run must
       # have read access to the pipelinerun, taskrun and pod logs APIs
       tkn -n $(inputs.params.namespace) pr logs $(inputs.params.pipelinerun) --all > \
-        $(outputs.resources.release-bucket.path)/previous/$(inputs.params.versionTag)/$(inputs.params.pipelinerun).log
+        $(outputs.resources.release-bucket.path)/pipeline/previous/$(inputs.params.versionTag)/$(inputs.params.pipelinerun).log
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
