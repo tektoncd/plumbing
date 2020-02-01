@@ -45,8 +45,11 @@ type triggerPayload struct {
 	PullRequestID string `json:"pullRequestID,omitempty"`
 }
 
+type triggerErrorPayload struct {
+	ErrorMessage string `json:"errorMessage,omitempty"`
+}
+
 func main() {
-	errorMessage := ""
 	secretToken := os.Getenv(envSecret)
 	if secretToken == "" {
 		log.Fatalf("No secret token given")
@@ -58,6 +61,7 @@ func main() {
 
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		//TODO: We should probably send over the EL eventID as a X-Tekton-Event-Id header as well
+		errorMessage := ""
 		payload, err := github.ValidatePayload(request, []byte(secretToken))
 		id := github.DeliveryID(request)
 		if err != nil {
@@ -85,14 +89,14 @@ func main() {
 							GitRepository: "github.com/" + event.GetRepo().GetFullName(),
 							GitRevision:   "pull/" + prID + "/head",
 							ContextPath:   commandParts[2],
-							TargetImage:   registry + commandParts[3],
+							TargetImage:   registry + "/" + commandParts[3],
 							PullRequestID: prID,
 						}
 						tPayload, err := json.Marshal(triggerBody)
 						if err != nil {
 							log.Printf("Failed to marshal the trigger body. Error: %q", err)
 						}
-						log.Printf("Replying with payload %s", payload)
+						log.Printf("Replying with payload %s", tPayload)
 						n, err := writer.Write(tPayload)
 						if err != nil {
 							log.Printf("Failed to write response for Github event ID: %s. Bytes writted: %d. Error: %q", id, n, err)
@@ -110,8 +114,17 @@ func main() {
 			errorMessage = "Event type not supported"
 		}
 		if errorMessage != "" {
-			log.Printf(errorMessage)
-			http.Error(writer, fmt.Sprint(errorMessage), http.StatusBadRequest)
+			triggerBody := triggerErrorPayload{
+				ErrorMessage: errorMessage,
+			}
+			tPayload, err := json.Marshal(triggerBody)
+			log.Printf("%s", tPayload)
+			if err != nil {
+				log.Printf("Failed to marshal the trigger body. Error: %q", err)
+				http.Error(writer, "{}", http.StatusBadRequest)
+			} else {
+				http.Error(writer, string(tPayload[:]), http.StatusBadRequest)
+			}
 		}
 	})
 
