@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.10
+FROM alpine:3.11
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ARG HUB_VERSION=2.14.1
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk add --no-cache \
-    git=2.22.0-r0 \
-    bash=5.0.0-r0 \
+    git=2.24.1-r0 \
+    bash=5.0.11-r1 \
     hub=${HUB_VERSION}-r0
