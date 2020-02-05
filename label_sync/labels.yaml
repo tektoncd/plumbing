@@ -256,6 +256,13 @@ default:
       prowPlugin: size
       addedBy: prow
 repos:
+  tektoncd/catalog:
+    labels:
+      - color: DF0A6B
+        description: This issue needs attention from the buildpacks team
+        name: tasks/buildpacks
+        target: issues
+        addedBy: humans
   tektoncd/dashboard:
     labels:
       - color: 160a72
