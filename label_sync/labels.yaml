@@ -260,7 +260,7 @@ repos:
     labels:
       - color: DF0A6B
         description: This issue needs attention from the buildpacks team
-        name: tasks/buildpacks
+        name: area/buildpacks
         target: issues
         addedBy: humans
   tektoncd/dashboard:
