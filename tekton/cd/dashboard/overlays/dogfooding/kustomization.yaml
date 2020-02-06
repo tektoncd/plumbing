@@ -1,0 +1,6 @@
+bases:
+- ../../base
+patchesStrategicMerge:
+- tekton-dashboard-service.yaml
+resources:
+- ingress.yaml
