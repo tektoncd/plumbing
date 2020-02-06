@@ -30,6 +30,7 @@ The following images are built nightly:
 
 The following projects are released nightly:
 * [pipeline](pipeline-nightly-release-cron/README.md)
+* [triggers](triggers-nightly-release-cron/README.md)
 * [dashboard](dashboard-nightly-release-cron/README.md)
 
 ### Continuous Deployments

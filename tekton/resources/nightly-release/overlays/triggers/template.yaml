@@ -1,0 +1,33 @@
+- op: add
+  path: "/spec/resourcetemplates/-"
+  value:
+    apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
+    metadata:
+      name: triggers-release-nightly-$(uid)
+    spec:
+      pipelineRef:
+        name: triggers-release
+      params:
+      - name: package
+        value: $(params.gitrepository)
+      - name: imageRegistry
+        value: gcr.io/tekton-nightly
+      - name: versionTag
+        value: $(params.versionTag)
+      resources:
+      - name: source-repo
+        resourceRef:
+          name: git-source-$(uid)
+      - name: bucket
+        resourceRef:
+          name: tekton-bucket-nightly-$(uid)
+      - name: builtControllerImage
+        resourceRef:
+          name: triggers-controller-image
+      - name: builtWebhookImage
+        resourceRef:
+          name: triggers-webhook-image
+      - name: builtEventListenerSinkImage
+        resourceRef:
+          name: event-listener-sink-image
