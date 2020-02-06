@@ -1,6 +1,11 @@
-# Tekton buildcop slack bot
+# Tekton buildcop
 
-This is the Slack buildcop bot code and configuration
+This folder holds the Slack buildcop bot code and configuration.
+
+* [Build Cop Runbook](https://docs.google.com/document/d/1QJV0z2bMXdz_BZOkBwfxIP1BiktUb8c1lcifwqxF5wg/edit)
+* [Build Cop Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
+
+## Configuration
 
 ```yaml
 apiVersion: v1
