@@ -31,3 +31,6 @@
       - name: builtEventListenerSinkImage
         resourceRef:
           name: event-listener-sink-image
+      - name: notification
+        resourceRef:
+          name: post-nightly-release-trigger
