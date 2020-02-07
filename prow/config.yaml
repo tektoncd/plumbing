@@ -976,6 +976,8 @@ postsubmits:
         - "--cov-threshold-percentage=0"
   tektoncd/dashboard:
   - name: tekton-dashboard-publish-images
+    branches:
+    - master
     always_run: true
     spec:
       containers:
