@@ -21,7 +21,7 @@ spec:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
-      name: git-source-$(uid)
+      name: git-source-$(params.projectName)-$(uid)
     spec:
       type: git
       params:
@@ -32,7 +32,7 @@ spec:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
-      name: tekton-bucket-nightly-$(uid)
+      name: tekton-bucket-nightly-$(params.projectName)-$(uid)
     spec:
       params:
       - name: type
