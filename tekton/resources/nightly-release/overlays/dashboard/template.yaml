@@ -20,10 +20,10 @@
       resources:
       - name: source-repo
         resourceRef:
-          name: git-source-$(uid)
+          name: git-source-$(params.projectName)-$(uid)
       - name: bucket
         resourceRef:
-          name: tekton-bucket-nightly-$(uid)
+          name: tekton-bucket-nightly-$(params.projectName)-$(uid)
       - name: builtDashboardImage
         resourceRef:
           name: dashboard-image
