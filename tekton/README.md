@@ -14,15 +14,3 @@ Resources are organised in folders:
   maintaining the GitHub org and more.
 - The [cd](cd/README.md) folder contains kustomize overlays, used to deploy the
   various Tekton projects to the infra clusters.
-
-# Secrets
-
-Some of the resources require secrets to operate.
-- `GitHub` secrets: `bot-token-github` used for syncing label configuration and
-  org configuration requires, `github-token` used to create a draft release
-- `GCP` secrets: `nightly-account` is used by nightly releases to push releases
-  to the nightly bucket. It's a token for service account
-  `release-right-meow@tekton-releases.iam.gserviceaccount.com`.
-  `release-secret` is used by Tekton Pipeline to push pipeline artifacts to a
-  GCS bucket. It's also used to push images built by cron trigger (or Mario)
-  to the image registry on GCP.

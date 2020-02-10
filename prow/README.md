@@ -4,7 +4,7 @@
 [`Prow`](https://github.com/kubernetes/test-infra/tree/master/prow)
 for CI automation.
 
-- Prow runs in [the tektoncd GCP project](../gcp.md)
+- Prow runs in [the tektoncd GCP project](../docs/gcp.md)
 - [Ingress is configured to `prow.tekton.dev`](#ingress)
 - Prow results are displayed via [gubernator](../gubernator/README.md)
 - [Instructions for creating the Prow cluster](#creating-the-prow-cluster)
@@ -193,11 +193,6 @@ kubectl apply --filename  https://storage.googleapis.com/tekton-releases/previou
 
 _See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)._
 
-#### Nightly Tekton Pipelines release
-
-The prow configuration includes a `periodic` job which invokes
-[the Tekton Pipelines nightly release Pipeline](https://github.com/tektoncd/pipeline/tree/master/tekton#nightly-releases).
-
 #### Hello World Pipeline
 
 Since Prow + Pipelines in this org are a WIP (see
@@ -211,10 +206,11 @@ This `Pipeline` (`special-hi-scott-pipeline`) is executed on every PR to this re
 
 ## Updating Prow configuration
 
-TODO(#1) Apply config.yaml changes automatically
+Changes to [config.yaml](./config.yaml) are automatically applied to the Prow
+cluster via a [tekton task](../tekton/resources/cd/prow-condig-cd.yaml) that
+runs in the `dogfooding` cluster.
 
-Changes to [config.yaml](./config.yaml) are not automatically reflected in
-the Prow cluster and must be manually applied.
+To apply the configuration "manually":
 
 ```bash
 # Step 1: Configure kubectl to use the cluster, doesn't have to be via gcloud but gcloud makes it easy
