@@ -10,6 +10,9 @@ This repo holds configuration for infrastructure used across the tektoncd org ðŸ
 - [Boskos](boskos/README.md) is used to control a pool of GCP projects which end to end tests can run against
 - [Peribolos](tekton/resources/org-permissions/README.md) is used to control org and repo permissions
 
+More details on the infrastructure are available in the
+[documentation](docs/infrastructure.md).
+
 ## Support
 
 If you need support, reach out [in the tektoncd slack](https://github.com/tektoncd/community/blob/master/contact.md#slack)

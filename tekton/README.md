@@ -16,7 +16,3 @@ Resources are organised in folders:
   maintaining the GitHub org and more.
 - The [cd](cd/README.md) folder contains kustomize overlays, used to deploy the
   various Tekton projects to the infra clusters.
-
-## Secrets
-
-Some of the resources require [secrets](../README.md) to operate.

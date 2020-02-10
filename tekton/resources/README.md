@@ -11,5 +11,5 @@ Resources are organised in folders:
   resource used to manage the GitHub organisation
 - The [release](release/README.md) folder contains Tekton resources used to
   create and verify releases
-- The "pipeline-nightly-release" folder contains trigger resources used to
-  trigger nightly releases for the pipeline project
+- The "nightly-release" folder contains trigger resources used to
+  trigger nightly releases for the tektoncd projects
