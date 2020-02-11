@@ -1,0 +1,219 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: check-labels-trigger
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates"]
+  verbs: ["get", "list"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gh-pr-label-checker
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gh-pr-label-checker-rolebinding
+subjects:
+- apiGroup: ""
+  kind: ServiceAccount
+  name: gh-pr-label-checker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: check-labels-trigger
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-check-pr-labels
+spec:
+  params:
+  - name: labels
+    value: $(body.pull_request.labels)
+  - name: gitRepository
+    value: $(body.repository.html_url)
+  - name: pullRequestUrl
+    value: $(body.pull_request.html_url)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-pull-request-label-checker
+spec:
+  serviceAccountName: gh-pr-label-checker
+  triggers:
+    - name: trigger-check-pr-labels
+      interceptors:
+        - cel:
+            filter: >
+              header.match('X-GitHub-Event', 'pull_request') &&
+              (body.action == 'opened' ||
+              ((body.action == 'labeled' || body.action == 'unlabeled')
+              && body.label.name.contains('kind')))
+      bindings:
+        - name: trigger-to-check-pr-labels
+      template:
+        name: check-pull-request-labels
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: check-pull-request-labels
+spec:
+  params:
+  - name: labels
+    description: List of labels currently on the Pull Request
+    type: string
+  - name: gitRepository
+    type: string
+  - name: pullRequestUrl
+    type: string
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: check-pr-labels-$(uid)
+    spec:
+      taskSpec:
+        resources:
+          inputs:
+            - name: source
+              type: git
+            - name: pr
+              type: pullRequest
+          outputs:
+            - name: pr
+              type: pullRequest
+        params:
+        - name: labels
+          description: The labels attached to the Pull Request
+        - name: gitRepository
+          description: The URL of the git repository
+        - name: pullRequestUrl
+          description: The URL of the Pull Request
+        volumes:
+        - name: label-config-v2
+          configMap:
+            name: label-config-v2
+        steps:
+        - name: copy-pr-to-output
+          image: busybox
+          script: |
+            #!/bin/sh
+            mkdir -p $(outputs.resources.pr.path)
+            cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+        - name: install-pyyaml
+          image: python:3-alpine
+          script: |
+            pip install pyyaml --user
+        - name: check-labels
+          image: python:3-alpine
+          volumeMounts:
+            - name: label-config-v2
+              mountPath: /etc/config
+          script: |
+            #!/usr/bin/env python
+
+            import json
+            import yaml
+
+            prLabels = json.loads('$(params.labels)')
+            labelNames = list(map(lambda e: e["name"], prLabels))
+            kindLabels = list(filter(lambda e: "kind" in e, labelNames))
+
+            availableLabels = None
+            with open("/etc/config/labels.yaml", "r") as stream:
+              availableLabels = yaml.safe_load(stream)["default"]["labels"]
+
+            availableKindLabels = list(filter(lambda e: "kind/" in e["name"], availableLabels))
+            availableKindNamesAndDescriptions = map(lambda e: "`" +str(e["name"])+ "`" + ":  " + str(e["description"]), availableKindLabels)
+
+            comment_template=""
+            if (len(kindLabels) > 1 or len(kindLabels) == 0):
+              comment_template += """
+            **This PR cannot be merged:** expecting exactly one kind/ label
+
+            <details>
+
+            Available `kind/` labels are:
+
+            """
+
+              for i in availableKindNamesAndDescriptions:
+                comment_template += i + "\n"
+
+              comment_template += """
+
+            </details>
+            """
+              new_comment_path = "$(outputs.resources.pr.path)/comments/new.json"
+              comment_body = dict(body=comment_template)
+              with open(new_comment_path, "w") as comment:
+                json.dump(comment_body, comment)
+
+              fail_check = {
+                "State": "failure",
+                "Label": "check-pr-has-kind-label",
+                "Desc": "The PR requires exactly one kind/ label to merge"
+              }
+
+              new_check_path = "$(outputs.resources.pr.path)/status/check-pr-has-kind-label.json"
+              with open(new_check_path, "w") as check:
+                json.dump(fail_check, check)
+            else:
+              success_check = {
+                "State": "success",
+                "Label": "check-pr-has-kind-label",
+                "Desc": "This PR has exactly one kind/ label"
+              }
+              new_check_path = "$(outputs.resources.pr.path)/status/check-pr-has-kind-label.json"
+              with open(new_check_path, "w") as check:
+                json.dump(success_check, check)
+      inputs:
+        resources:
+        - name: source
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: master
+            - name: url
+              value: $(params.gitRepository)
+        - name: pr
+          resourceSpec:
+            type: pullRequest
+            params:
+            - name: url
+              value: $(params.pullRequestUrl)
+            secrets:
+            - fieldName: authToken
+              secretName: github-token
+              secretKey: oauth
+        params:
+        - name: labels
+          value: $(params.labels)
+        - name: gitRepository
+          value: $(params.gitRepository)
+        - name: pullRequestUrl
+          value: $(params.pullRequestUrl)
+      outputs:
+        resources:
+        - name: pr
+          resourceSpec:
+            type: pullRequest
+            params:
+            - name: url
+              value: $(params.pullRequestUrl)
+            secrets:
+            - fieldName: authToken
+              secretName: github-token
+              secretKey: oauth
