@@ -4,4 +4,4 @@ metadata:
   name: tekton-dashboard
   namespace: tekton-pipelines
 spec:
-  type: nodePort
+  type: NodePort
