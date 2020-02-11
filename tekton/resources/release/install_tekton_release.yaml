@@ -39,6 +39,9 @@ spec:
     - name: environment
       description: Name of the target environment. Used to apply relevant overalys
       default: dogfooding
+    - name: release-file
+      description: Name of the release file
+      default: release.yaml
   steps:
 
   - name: deploy-tekton-project
@@ -53,7 +56,7 @@ spec:
         # There are is not base or project for $(inputs.params.projectName)
         # Apply the release as is
         kubectl apply \
-          --filename $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/release.yaml \
+          --filename $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/$(inputs.params.release-file) \
           --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
       else
           # If the base exists, an overlay for the specified environment must exist
@@ -61,7 +64,7 @@ spec:
             echo "Environment $(inputs.params.environment) not found for project $(inputs.params.projectName)"
             exit 1
           fi
-          cp $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/release.yaml $(inputs.params.projectName)/base/release.yaml
+          cp $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/$(inputs.params.release-file) $(inputs.params.projectName)/base/release.yaml
           find .
           kubectl apply \
             --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig \
