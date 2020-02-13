@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,7 +26,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v29/github"
 	"github.com/google/uuid"
 )
 
@@ -46,8 +47,10 @@ type triggerPayload struct {
 }
 
 type triggerErrorPayload struct {
-	ErrorMessage string `json:"errorMessage,omitempty"`
+	Error string `json:"errorMessage,omitempty"`
 }
+
+const defaultRegistry = "gcr.io/tekton-releases/dogfooding"
 
 func main() {
 	secretToken := os.Getenv(envSecret)
@@ -56,77 +59,94 @@ func main() {
 	}
 	registry := os.Getenv(envRegistry)
 	if registry == "" {
-		registry = "gcr.io/tekton-releases/dogfooding"
+		registry = defaultRegistry
 	}
 
-	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/", makeMarioHandler(secretToken, registry))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
+}
+
+func makeMarioHandler(secret, registry string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		//TODO: We should probably send over the EL eventID as a X-Tekton-Event-Id header as well
-		errorMessage := ""
-		payload, err := github.ValidatePayload(request, []byte(secretToken))
-		id := github.DeliveryID(request)
+		payload, err := github.ValidatePayload(r, []byte(secret))
+		id := github.DeliveryID(r)
 		if err != nil {
-			log.Printf("Error handling Github Event with delivery ID %s : %q", id, err)
-			http.Error(writer, fmt.Sprint(err), http.StatusBadRequest)
+			log.Printf("error handling Github Event with delivery ID %s : %q", id, err)
+			marshalError(err, w)
+			return
 		}
-		event, err := github.ParseWebHook(github.WebHookType(request), payload)
+		event, err := github.ParseWebHook(github.WebHookType(r), payload)
 		if err != nil {
-			log.Printf("Error handling Github Event with delivery ID %s : %q", id, err)
-			http.Error(writer, fmt.Sprint(err), http.StatusBadRequest)
+			log.Printf("error handling Github Event with delivery ID %s : %q", id, err)
+			marshalError(err, w)
+			return
 		}
+
+		var handlingErr error
 		switch event := event.(type) {
 		case *github.IssueCommentEvent:
-			if event.GetAction() == "created" {
-				eventBody := event.GetComment().GetBody()
-				if strings.HasPrefix(eventBody, "/mario") {
-					log.Printf("Handling Mario command with delivery ID: %s; Comment: %s", id, eventBody)
-					commandParts := strings.Fields(eventBody)
-					command := commandParts[1]
-					if command == "build" {
-						// No validation here. Anything beyond commandParts[3] is ignored
-						prID := strconv.Itoa(int(event.GetIssue().GetNumber()))
-						triggerBody := triggerPayload{
-							BuildUUID:     uuid.New().String(),
-							GitRepository: "github.com/" + event.GetRepo().GetFullName(),
-							GitRevision:   "pull/" + prID + "/head",
-							ContextPath:   commandParts[2],
-							TargetImage:   registry + "/" + commandParts[3],
-							PullRequestID: prID,
-						}
-						tPayload, err := json.Marshal(triggerBody)
-						if err != nil {
-							log.Printf("Failed to marshal the trigger body. Error: %q", err)
-						}
-						log.Printf("Replying with payload %s", tPayload)
-						n, err := writer.Write(tPayload)
-						if err != nil {
-							log.Printf("Failed to write response for Github event ID: %s. Bytes writted: %d. Error: %q", id, n, err)
-						}
-					} else {
-						errorMessage = "Unknown Mario command"
-					}
-				} else {
-					errorMessage = "Not a Mario command"
-				}
-			} else {
-				errorMessage = "Only new comments are supported"
-			}
+			handlingErr = handleIssueComment(id, registry, event, w)
 		default:
-			errorMessage = "Event type not supported"
+			handlingErr = errors.New("event type not supported")
 		}
-		if errorMessage != "" {
-			triggerBody := triggerErrorPayload{
-				ErrorMessage: errorMessage,
-			}
-			tPayload, err := json.Marshal(triggerBody)
-			log.Printf("%s", tPayload)
-			if err != nil {
-				log.Printf("Failed to marshal the trigger body. Error: %q", err)
-				http.Error(writer, "{}", http.StatusBadRequest)
-			} else {
-				http.Error(writer, string(tPayload[:]), http.StatusBadRequest)
-			}
-		}
-	})
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
+		if handlingErr != nil {
+			marshalError(handlingErr, w)
+		}
+
+	}
+}
+
+func marshalError(err error, w http.ResponseWriter) {
+	if err != nil {
+		triggerBody := triggerErrorPayload{
+			Error: err.Error(),
+		}
+		tPayload, err := json.Marshal(triggerBody)
+		if err != nil {
+			log.Printf("Failed to marshal the trigger body. Error: %q", err)
+			http.Error(w, "{}", http.StatusBadRequest)
+			return
+		}
+		http.Error(w, string(tPayload[:]), http.StatusBadRequest)
+	}
+}
+
+func handleIssueComment(id string, registry string, evt *github.IssueCommentEvent, w http.ResponseWriter) error {
+	if evt.GetAction() != "created" {
+		return errors.New("only new comments are supported")
+	}
+	evtBody := evt.GetComment().GetBody()
+	if !strings.HasPrefix(evtBody, "/mario") {
+		return errors.New("not a Mario command")
+	}
+	log.Printf("handling Mario command with delivery ID: %s; Comment: %s", id, evtBody)
+	commandParts := strings.Fields(evtBody)
+	command := commandParts[1]
+	switch command {
+	case "build":
+		// No validation here. Anything beyond commandParts[3] is ignored
+		prID := strconv.Itoa(int(evt.GetIssue().GetNumber()))
+		triggerBody := triggerPayload{
+			BuildUUID:     uuid.New().String(),
+			GitRepository: "github.com/" + evt.GetRepo().GetFullName(),
+			GitRevision:   "pull/" + prID + "/head",
+			ContextPath:   commandParts[2],
+			TargetImage:   registry + "/" + commandParts[3],
+			PullRequestID: prID,
+		}
+		tPayload, err := json.Marshal(triggerBody)
+		if err != nil {
+			log.Printf("Failed to marshal the trigger body. Error: %q", err)
+		}
+		log.Printf("Replying with payload %s", tPayload)
+		n, err := w.Write(tPayload)
+		if err != nil {
+			log.Printf("Failed to write response for Github evt ID: %s. Bytes writted: %d. Error: %q", id, n, err)
+		}
+	default:
+		return errors.New("unknown Mario command")
+	}
+	return nil
 }
