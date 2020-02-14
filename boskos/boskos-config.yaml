@@ -17,6 +17,7 @@ data:
       - tekton-prow-11
       - tekton-prow-12
       - tekton-prow-13
+      - tekton-prow-14
       state: dirty
       type: gke-project
 kind: ConfigMap
