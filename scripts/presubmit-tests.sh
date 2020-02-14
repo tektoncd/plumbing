@@ -47,6 +47,9 @@ WORK_DIR=""
 # yamllint config file to override some rules, see https://git.io/JvLom
 YAML_LINT_CONFIG=${YAML_LINT_CONFIG:-}
 
+# goflags to use to override default behavior (if a go.mod file and a vendor folder exists, set it "-mod=vendor")
+GOFLAGS=${GOFLAGS:-}
+
 # Returns true if PR only contains the given file regexes.
 # Parameters: $1 - file regexes, space separated.
 function pr_only_contains() {
@@ -325,6 +328,8 @@ function main() {
   if function_exists extra_initialization; then
      extra_initialization
   fi
+
+  [[ -z "${GOFLAGS}" ]] && [[ -e go.mod ]] && [[ -d vendor/ ]] && export GOFLAGS="-mod=vendor"
 
   [[ -z $1 ]] && set -- "--all-tests"
 
