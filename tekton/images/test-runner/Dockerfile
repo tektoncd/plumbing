@@ -40,6 +40,7 @@ RUN apt-get install -y rubygems  # for mdl
 RUN go get -u github.com/google/ko/cmd/ko
 RUN go get -u github.com/golang/dep/cmd/dep
 RUN go get -u github.com/google/licenseclassifier
+RUN go get -u github.com/google/go-licenses
 RUN go get -u github.com/jstemmer/go-junit-report
 RUN GO111MODULE="on" go get -u github.com/raviqqe/liche
 
