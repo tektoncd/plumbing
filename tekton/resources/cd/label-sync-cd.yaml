@@ -1,0 +1,117 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-deploy-label-sync
+spec:
+  params:
+  - name: gitRepository
+    value: $(body.gitRepository)
+  - name: gitRevision
+    value: $(body.gitRevision)
+  - name: configPath
+    value: $(body.configPath)
+  - name: namespace
+    value: $(body.namespace)
+  - name: clusterResource
+    value: $(body.clusterResource)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: label-sync-deployer
+spec:
+  serviceAccountName: release-right-meow
+  triggers:
+    - name: trigger
+      bindings:
+        - name: trigger-to-deploy-label-sync
+      template:
+        name: deploy-label-sync
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: deploy-label-sync
+spec:
+  params:
+  - name: gitRepository
+    description: URL of the repository that holds the prow configuration
+  - name: gitRevision
+    description: Git revision
+  - name: namespace
+    description: Namespace to deploy to in the target cluster
+  - name: configPath
+    description: Path in the git repo that holds prow configs
+  - name: clusterResource
+    description: Name of the cluster resource that points to the target cluster
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: git-source-$(uid)
+    spec:
+      type: git
+      params:
+      - name: revision
+        value: $(params.gitRevision)
+      - name: url
+        value: https://$(params.gitRepository)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      name: deploy-prow-config-$(uid)
+    spec:
+      taskSpec:
+        inputs:
+          params:
+          - name: configPath
+            description: Path in the git repo that holds prow configs
+          - name: namespace
+            description: Namespace to deploy to in the target cluster
+          resources:
+          - name: source
+            type: git
+          - name: prow-cluster
+            type: cluster
+        stepTemplate:
+          env:
+          - name: KUBECONFIG
+            value: /workspace/$(inputs.resources.prow-cluster.name)/kubeconfig
+        steps:
+        - name: fetch-current-config
+          image: gcr.io/tekton-releases/dogfooding/kubectl
+          script: |
+            #!/bin/sh
+            set -ex
+            kubectl get configmap labels-config-v2 -o template --template='{{ index .data labels.yaml" }}' \
+              > /workspace/labels.yaml
+        - name: deploy
+          image: gcr.io/tekton-releases/dogfooding/kubectl
+          script: |
+            #!/bin/sh
+            set -ex
+            echo "diff [current-config] [new config]"
+            has_diff=0
+            diff /workspace/labels.yaml $(inputs.resources.source.path)/$(inputs.params.configPath) || has_diff=1
+            if [ $has_diff -eq 0 ]; then
+              echo "No change in config detected. Nothing to be done."
+              exit 0
+            fi
+            # Apply configuration changes
+            kubectl create configmap labels-config-v2 \
+              --from-file=config.yaml=$(inputs.resources.source.path)/$(inputs.params.configPath) \
+              --dry-run -o yaml | \
+              kubectl replace configmap labels-config-v2 -n $(inputs.params.namespace) -f -
+      inputs:
+        params:
+        - name: configPath
+          value: $(params.configPath)
+        - name: namespace
+          value: $(params.namespace)
+        resources:
+        - name: source
+          resourceRef:
+            name: git-source-$(uid)
+        - name: prow-cluster
+          resourceRef:
+            name: $(params.clusterResource)
