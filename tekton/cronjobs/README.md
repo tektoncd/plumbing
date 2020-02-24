@@ -37,6 +37,7 @@ The following projects are released nightly:
 
 The following resources are deployed continuously:
 * [prow config](prow-config-cd-hourly-cron/README.md)
+* [labels sync](labels-sync-cron/README.md)
 
 ## Adding a new cron job
 
@@ -77,7 +78,7 @@ metadata:
   name: resource-cd-trigger # <-- This should not be changed!
 spec:
   schedule: "*/1 * * * *"  # <-- Change the schedule here
-  concurrencyPolicy: Forbid  
+  concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
