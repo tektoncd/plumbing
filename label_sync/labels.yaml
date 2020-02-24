@@ -60,7 +60,7 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
-    
+
     # Areas
     - color: 0052cc
       description: Indicates an issue or PR that deals with the API.
@@ -77,7 +77,7 @@ default:
       name: area/plumbing
       target: both
       addedBy: label
-    
+
     # Kinds
     - color: e11d21
       description: Categorizes issue or PR as related to a bug.
@@ -88,7 +88,7 @@ default:
       prowPlugin: label
       addedBy: anyone
     - color: f7c6c7
-      description: Categorizes issue or PR as related to a flakey test. Please escalate this and treat it as an emergency.
+      description: Categorizes issue or PR as related to a flakey test # Please escalate this and treat it as an emergency.
       name: kind/flake
     - color: c7def8
       description: Categorizes issue or PR as related to cleaning up code, process, or technical debt.
@@ -120,7 +120,7 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
-    
+
     # For further discussion in the next Productivity WG meeting
 
     # Would like to understand when this label should be used vs. using GitHub syntax or ZenHub
@@ -145,7 +145,7 @@ default:
       prowPlugin: shrug
       addedBy: humans
 
-    
+
     ##########################################################################
     # These labels are modified by automation and should not be added manually
     ##########################################################################
@@ -278,7 +278,7 @@ repos:
         target: both
         prowPlugin: label
         addedBy: anyone
-      
+
       # This label is automatically added by ZenHub
       - color: 3E4B9E
         description: Issues that should be considered as Epics (aka multiple sub-tasks, …)
@@ -324,6 +324,12 @@ repos:
         addedBy: label
   tektoncd/website:
     labels:
+      - color: e11d21
+        description: Categorizes issue or PR as related to the beta api
+        name: kind/beta-blocking
+        target: both
+        prowPlugin: label
+        addedBy: anyone
       - color: 0ffa16
         description: Issues or PRs related to the Tektoncd Blog subproject
         name: area/blog
