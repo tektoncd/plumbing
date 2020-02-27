@@ -18,10 +18,10 @@
       - name: bucketName
         value: latest
       resources:
-      - name: source-repo
+      - name: dashboard-source-repo
         resourceRef:
           name: git-source-$(params.projectName)-$(uid)
-      - name: bucket
+      - name: bucket-for-dashboard
         resourceRef:
           name: tekton-bucket-nightly-$(params.projectName)-$(uid)
       - name: builtDashboardImage
