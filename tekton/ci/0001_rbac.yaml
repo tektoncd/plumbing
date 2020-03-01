@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tektonci
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: triggers-minimal
+  namespace: tektonci
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "tasks", "taskruns"]
+  verbs: ["get", "list"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-ci-listener
+  namespace: tektonci
+secrets:
+- name: ci-webhook
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-ci-jobs
+  namespace: tektonci
+secrets:
+- name: ci-webhook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-listener-triggers-minimal
+  namespace: tektonci
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-listener
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-jobs-triggers-minimal
+  namespace: tektonci
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-jobs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal

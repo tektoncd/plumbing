@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: github-check-done
+  namespace: tektonci
+spec:
+  params:
+  - name: targetURI
+    value: http://el-github-check-done.tektonci:8080
+  type: cloudEvent
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: github-check-start
+  namespace: tektonci
+spec:
+  params:
+  - name: targetURI
+    value: http://el-github-check-start.tektonci:8080
+  type: cloudEvent

@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: tekton-noop
+  namespace: tektonci
+  description: |
+    Example CI Job that does nothing interesting.
+spec:
+  inputs:
+    params:
+      - name: message
+        description: A message to log
+        type: string
+      - name: passorfail
+        description: whether it should 'pass' or 'fail'
+        type: string
+        default: 'pass'
+    resources:
+    - name: source
+      type: git
+  outputs:
+    resources:
+    - name: endtrigger
+      type: cloudEvent
+  steps:
+  - name: noop
+    image: busybox
+    script: |
+      #!/bin/sh
+      set -ex
+      echo "$(inputs.params.message)"
+      echo
+      sleep 120
+      echo "Content of the repo:"
+      ls $(inputs.resources.source.path)
+      [[ "$(inputs.params.passorfail)" == "pass" ]]
