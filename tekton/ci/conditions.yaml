@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: check-git-files-changed
+  namespace: tektonci
+  annotations:
+    description: |
+      Succeeds if any of the files changed in the last N commits from the
+      revision defined in the git resource matches the regular expression
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits + 1
+    - name: regex
+      description: Regular expression to match files changed
+  resources:
+    - name: source
+      type: git
+  check:
+    image: alpine/git
+    script: |
+      #!/bin/sh
+      set -ex
+      set -o pipefail
+
+      BACK="HEAD~$(( $(params.gitCloneDepth) - 1 ))"
+
+      cd $(resources.source.path)
+      git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
+          grep -E '$(params.regex)'

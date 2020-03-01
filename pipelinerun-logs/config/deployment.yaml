@@ -29,6 +29,8 @@ spec:
         - "default"
         - "--namespace"
         - "mario"
+        - "--namespace"
+        - "tektonci"
         - "--hostname"
         - "0.0.0.0"
         - "--port"

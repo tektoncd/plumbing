@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: tekton-ci-reset-check-status
+  namespace: tektonci
+  description: |
+    Triggers the reset of the status of a check before the check is executed.
+spec:
+  inputs:
+    params:
+      - name: checkName
+        description: Name of the check being reset
+        type: string
+  outputs:
+    resources:
+    - name: trigger
+      type: cloudEvent
+  steps:
+  - name: noop
+    image: busybox
+    script: |
+      #!/bin/sh
+      echo "Trigger the reset of status for $(inputs.params.checkName)"

@@ -1,0 +1,101 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-github-check-update
+  namespace: tektonci
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: gitURL
+    description: The gitURL (https://org/repo)
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: checkStatus
+    description: Can be 'pending' or 'complete'
+  - name: checkDescription
+    description: A description to be displayed for the status of the check
+  - name: checkResult
+    description: Whether the triggering event was successful or not
+  - name: pipelineRunName
+    description: The name of the pipeline run that triggered this
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: pr-$(params.checkStatus)-$(uid)
+    spec:
+      type: pullRequest
+      params:
+        - name: url
+          value: $(params.gitURL)/pull/$(params.pullRequestNumber)
+      secrets:
+        - fieldName: authToken
+          secretName: bot-token-github
+          secretKey: bot-token
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      name: $(params.checkName)-pr-$(params.checkStatus)-$(uid)
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      taskSpec:
+        inputs:
+          resources:
+          - name: pr
+            type: pullRequest
+        outputs:
+          resources:
+          - name: pr
+            type: pullRequest
+        steps:
+        - name: copy-pr-to-output
+          image: busybox
+          script: |
+            #!/bin/sh
+            mkdir -p $(outputs.resources.pr.path)
+            cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+        - name: setup-comment
+          image: python:3-alpine
+          script: |
+            #!/usr/bin/env python
+            import json
+            import random
+
+            check_status = "$(params.checkStatus)"
+
+            if (check_status == "complete"):
+              logs_url = 'http://logs.dogfooding.tekton.dev/?buildid=$(params.buildUUID)&namespace=tektonci'
+              if ("$(params.checkResult)" == "True"):
+                check_status = "success"
+              elif ("$(params.checkResult)" == "False"):
+                check_status = "failure"
+              else:
+                check_status = "error"
+            else:
+              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/pipelineruns/$(params.pipelineRunName)'
+
+            # Build Status
+            status_body = dict(
+              State=check_status,
+              Label="$(params.checkName)",
+              Desc="$(params.checkDescription)",
+              Target=logs_url)
+
+            # we may need to URLEncode the check name
+            status_path = "$(outputs.resources.pr.path)/status/$(params.checkName).json"
+            with open(status_path, "w") as status:
+              json.dump(status_body, status)
+      inputs:
+        resources:
+        - name: pr
+          resourceRef:
+            name: pr-$(params.checkStatus)-$(uid)
+      outputs:
+        resources:
+        - name: pr
+          resourceRef:
+            name: pr-$(params.checkStatus)-$(uid)
