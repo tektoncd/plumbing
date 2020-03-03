@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: prow-cluster-config-bot
+  namespace: default
+spec:
+  params:
+  - name: url
+    value: https://104.198.136.199
+  - name: username
+    value: prow-config-bot
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: prow-config-bot-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: prow-config-bot-token
+  type: cluster
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: prow-github-admin-default
+  namespace: default
+spec:
+  params:
+  - name: url
+    value: https://104.198.136.199
+  - name: username
+    value: default
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: prow-github-admin-default-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: prow-github-admin-default-token
+  type: cluster
