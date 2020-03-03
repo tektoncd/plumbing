@@ -83,7 +83,7 @@ spec:
           script: |
             #!/bin/sh
             set -ex
-            kubectl get configmap label-config-v2 -o template --template='{{ index .data labels.yaml" }}' \
+            kubectl -n github-admin get configmap label-config-v2 -o template --template='{{ index .data labels.yaml" }}' \
               > /workspace/labels.yaml
         - name: deploy
           image: gcr.io/tekton-releases/dogfooding/kubectl
@@ -98,10 +98,10 @@ spec:
               exit 0
             fi
             # Apply configuration changes
-            kubectl create configmap label-config-v2 \
+            kubectl -n github-admin create configmap label-config-v2 \
               --from-file=config.yaml=$(inputs.resources.source.path)/$(inputs.params.configPath) \
               --dry-run -o yaml | \
-              kubectl replace configmap label-config-v2 -n $(inputs.params.namespace) -f -
+              kubectl -n github-admin replace configmap label-config-v2 -n $(inputs.params.namespace) -f -
       inputs:
         params:
         - name: configPath
