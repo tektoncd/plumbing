@@ -77,6 +77,16 @@ default:
       name: area/plumbing
       target: both
       addedBy: label
+    - color: c91856
+      description: Issues that are part of the project (or organization) roadmap (usually an epic)
+      name: area/roadmap
+      target: issues
+      addedBy: label
+    - color: 3E4B9E
+      description: Issues that should be considered as Epics (aka multiple sub-tasks, …)
+      name: area/epic
+      target: issues
+      addedBy: label
 
     # Kinds
     - color: e11d21
