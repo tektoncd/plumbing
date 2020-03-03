@@ -23,4 +23,4 @@ spec:
               - name: NAMESPACE
                 value: "github-admin"
               - name: CLUSTER_RESOURCE
-                value: "prow-cluster-config-bot"
+                value: "prow-github-admin-default"

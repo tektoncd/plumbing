@@ -83,8 +83,8 @@ spec:
           script: |
             #!/bin/sh
             set -ex
-            kubectl get configmap label-config-v2 -o template --template='{{ index .data labels.yaml" }}' \
-              > /workspace/labels.yaml
+            kubectl get configmap -n $(inputs.params.namespace) label-config-v2 \
+            -o template --template='{{ index .data "labels.yaml" }}' > /workspace/labels.yaml
         - name: deploy
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
