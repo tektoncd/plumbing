@@ -187,6 +187,6 @@ spec:
 
         hub release create --draft --prerelease \
           --commitish $(inputs.resources.source.revision) \
-          -a $(inputs.resources.release-bucket.path)/previous/v${VERSION}/release.yaml \
-          -a $(inputs.resources.release-bucket.path)/previous/v${VERSION}/release.notags.yaml \
+          -a $(inputs.resources.release-bucket.path)/previous/${VERSION}/release.yaml \
+          -a $(inputs.resources.release-bucket.path)/previous/${VERSION}/release.notags.yaml \
           --file $HOME/release.md ${VERSION}
