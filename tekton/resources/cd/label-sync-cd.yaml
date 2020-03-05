@@ -99,7 +99,7 @@ spec:
             fi
             # Apply configuration changes
             kubectl create configmap label-config-v2 \
-              --from-file=config.yaml=$(inputs.resources.source.path)/$(inputs.params.configPath) \
+              --from-file=labels.yaml=$(inputs.resources.source.path)/$(inputs.params.configPath) \
               --dry-run -o yaml | \
               kubectl replace configmap label-config-v2 -n $(inputs.params.namespace) -f -
       inputs:
