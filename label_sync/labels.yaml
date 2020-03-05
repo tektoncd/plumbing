@@ -223,6 +223,12 @@ default:
       target: prs
       prowPlugin: needs-rebase
       addedBy: prow
+    - color: 790604
+      description: Indicates a PR needs to be cherry-pick to a release branch
+      name: needs-cherry-pick
+      target: prs
+      prowPlugin: needs-cherry-pick
+      addedBy: anyone
     - color: 15dd18
       description: Indicates a non-member PR verified by an org member that is safe to test.  # This is the opposite of needs-ok-to-test and should be mutually exclusive.
       name: ok-to-test
