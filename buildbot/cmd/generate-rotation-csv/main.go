@@ -32,6 +32,8 @@ type config struct {
 	startDate time.Time
 	// the number of days to print entries for
 	days uint
+	// a map of dates to usernames that override whatever would be generated
+	overrides map[string]string
 }
 
 func main() {
@@ -78,7 +80,12 @@ func generateRotationCSV(c config, out io.Writer) error {
 			iter = iter.AddDate(0, 0, 1)
 			continue
 		}
-		if err := w.Write([]string{iter.Format(expectedDateFormat), c.names[n]}); err != nil {
+		date := iter.Format(expectedDateFormat)
+		user := c.names[n]
+		if userOverride, ok := c.overrides[date]; ok {
+			user = userOverride
+		}
+		if err := w.Write([]string{date, user}); err != nil {
 			return err
 		}
 		n++
@@ -94,18 +101,24 @@ func generateRotationCSV(c config, out io.Writer) error {
 // validateConfig checks that c is suitably populated for generating a valid
 // rotation.
 func validateConfig(c config) error {
+	names := make(map[string]struct{})
+	for _, n := range c.names {
+		names[n] = struct{}{}
+	}
 	if c.startName == "" {
 		return errors.New("missing starting name")
-	} else {
-		found := false
-		for _, n := range c.names {
-			if c.startName == n {
-				found = true
-				break
+	}
+	if _, ok := names[c.startName]; !ok {
+		return errors.New("starting name does not appear in list of user names")
+	}
+	if len(c.overrides) != 0 {
+		for date, name := range c.overrides {
+			if name == "" { // blank name indicates nobody should be on rotation that day
+				continue
 			}
-		}
-		if !found {
-			return errors.New("starting name does not appear in list of user names")
+			if _, ok := names[name]; !ok {
+				return fmt.Errorf("override %s,%s: user does not appear in list of user names", date, name)
+			}
 		}
 	}
 	return nil
@@ -118,11 +131,13 @@ func parseFlags() (config, error) {
 	namesInput := ""
 	startDateInput := ""
 	defaultStartDate := time.Now().Format(expectedDateFormat)
+	overridesPath := ""
 
 	flag.StringVar(&namesInput, "names", "", "comma-separated list of user names to generate rotation from.")
 	flag.StringVar(&c.startName, "start-name", "", "the user name to begin the rotation. (defaults to the first provided name in -names list)")
 	flag.StringVar(&startDateInput, "start-date", defaultStartDate, "date to begin the rotation from in YYYY-MM-DD format. starts today if left blank.")
 	flag.UintVar(&c.days, "days", 365, "number of days to run the rotation for.")
+	flag.StringVar(&overridesPath, "overrides", "", "path to a csv file in YYYY-MM-DD,user format that should override whatever this program generates for that date.")
 	flag.Usage = func() {
 		log.Printf(strings.TrimSpace(usageMessage) + "\n\n")
 		flag.PrintDefaults()
@@ -137,15 +152,56 @@ func parseFlags() (config, error) {
 		}
 	}
 
-	if d, err := time.Parse(expectedDateFormat, startDateInput); err != nil {
-		return c, fmt.Errorf("error parsing start date of %q", startDateInput)
-	} else {
-		c.startDate = d
+	d, err := time.Parse(expectedDateFormat, startDateInput)
+	if err != nil {
+		return c, fmt.Errorf("error parsing start date of %q: %v", startDateInput, err)
 	}
+	c.startDate = d
 
 	if c.startName == "" && len(c.names) > 0 {
 		c.startName = c.names[0]
 	}
 
+	if overridesPath != "" {
+		f, err := os.Open(overridesPath)
+		if err != nil {
+			return c, fmt.Errorf("unable to open overrides %q: %v", overridesPath, err)
+		}
+		c.overrides, err = loadOverrides(f)
+		if err != nil {
+			return c, err
+		}
+	}
+
 	return c, nil
+}
+
+// loadOverrides parses records from the in io.Reader and returns the parsed contents
+// as a map from string date to string user name. Each record in the csv is expected to be
+// 2 or more fields. Field 1 is expected to be a date, Field 2 is expected to be a
+// username and Fields 3+ can be comments or anything else.
+func loadOverrides(in io.Reader) (map[string]string, error) {
+	r := csv.NewReader(in)
+	out := make(map[string]string)
+	n := 0
+	for {
+		n++
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			if errors.Is(err, csv.ErrFieldCount) && len(record) < 2 {
+				return out, err
+			}
+			if !errors.Is(err, csv.ErrFieldCount) {
+				return out, err
+			}
+		}
+		if n == 1 && strings.ToLower(record[0]) == "date" {
+			continue
+		}
+		out[record[0]] = record[1]
+	}
+	return out, nil
 }
