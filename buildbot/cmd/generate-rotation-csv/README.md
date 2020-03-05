@@ -37,6 +37,40 @@ go run ./main.go -h
     	date to begin the rotation from in YYYY-MM-DD format. starts today if left blank.
   -start-name string
     	the user name to begin the rotation. defaults to the first provided name in -names list
+  -overrides string
+    	path to a csv file in YYYY-MM-DD,user format that should override whatever this program generates for that date.
+
+## Overrides
+
+Specify an overrides file with the -overrides flag. This allows
+for rotation swaps and global holidays to be recorded somewhere.
+
+Each override entry will replace whatever value is generated
+for a given date.
+
+Th file should be CSV with each record having at least two fields, one
+for date and one for user name.
+
+Override entries can include extra fields for comments or other
+additional info. Extra fields will be ignored.
+
+Here's an example overrides.csv for the holiday season of 2020. bob
+swaps with sbws on 23rd / 24th and then nobody is on rotation from
+24th Dec until 2nd of Jan, when the rotation will resume:
+
+```
+Date,User
+2020-12-23,bob,Swapping with sbws tomorrow
+2020-12-24,sbws,Covering for bobs first day of vacation
+2020-12-25,
+2020-12-26,
+2020-12-27,
+2020-12-28,
+2020-12-29,
+2020-12-30,
+2020-12-31,
+2020-1-1,,Happy New Year!
+```
 
 ## Example Output
 
