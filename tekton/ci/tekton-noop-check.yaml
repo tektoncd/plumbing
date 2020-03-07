@@ -13,6 +13,10 @@ spec:
       description: Number of commits in the change + 1
     - name: fileFilterRegex
       description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
   resources:
     - name: source
       type: git
@@ -26,7 +30,7 @@ spec:
         name: tekton-ci-reset-check-status
       params:
         - name: checkName
-          value: tekton-noop-check
+          value: $(params.checkName)
       resources:
         outputs:
           - name: trigger
@@ -41,6 +45,12 @@ spec:
         resources:
           - name: source
             resource: source
+      - conditionRef: "check-name-matches"
+        params:
+          - name: gitHubCommand
+            value: $(params.gitHubCommand)
+          - name: checkName
+            value: $(params.checkName)
     - name: ci-job
       taskRef:
         name: tekton-noop
@@ -50,6 +60,72 @@ spec:
           value: $(params.message)
         - name: passorfail
           value: $(params.passorfail)
+      resources:
+        inputs:
+          - name: source
+            resource: source
+        outputs:
+          - name: endtrigger
+            resource: endtrigger
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: tekton-random-check
+  namespace: tektonci
+spec:
+  params:
+    - name: message
+      description: Message to be logged in the CI Job
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+  resources:
+    - name: source
+      type: git
+    - name: starttrigger
+      type: cloudEvent
+    - name: endtrigger
+      type: cloudEvent
+  tasks:
+    - name: check-reset
+      taskRef:
+        name: tekton-ci-reset-check-status
+      params:
+        - name: checkName
+          value: $(params.checkName)
+      resources:
+        outputs:
+          - name: trigger
+            resource: starttrigger
+      conditions:
+      - conditionRef: "check-git-files-changed"
+        params:
+          - name: gitCloneDepth
+            value: $(params.gitCloneDepth)
+          - name: regex
+            value: $(params.fileFilterRegex)
+        resources:
+          - name: source
+            resource: source
+      - conditionRef: "check-name-matches"
+        params:
+          - name: gitHubCommand
+            value: $(params.gitHubCommand)
+          - name: checkName
+            value: $(params.checkName)
+    - name: ci-job
+      taskRef:
+        name: tekton-fails-sometimes
+      runAfter: [check-reset]
+      params:
+        - name: message
+          value: $(params.message)
       resources:
         inputs:
           - name: source

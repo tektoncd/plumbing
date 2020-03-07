@@ -34,3 +34,36 @@ spec:
       echo "Content of the repo:"
       ls $(inputs.resources.source.path)
       [[ "$(inputs.params.passorfail)" == "pass" ]]
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: tekton-fails-sometimes
+  namespace: tektonci
+  description: |
+    Example CI Job that fails ~50% of the times
+spec:
+  inputs:
+    params:
+      - name: message
+        description: A message to log
+        type: string
+    resources:
+    - name: source
+      type: git
+  outputs:
+    resources:
+    - name: endtrigger
+      type: cloudEvent
+  steps:
+  - name: noop
+    image: busybox
+    script: |
+      #!/bin/sh
+      set -ex
+      echo "$(inputs.params.message)"
+      echo
+      sleep 30
+      echo "Content of the repo:"
+      ls $(inputs.resources.source.path)
+      exit $(( $(date +"%s") % 2 ))

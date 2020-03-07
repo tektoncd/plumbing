@@ -17,6 +17,12 @@ spec:
     description: The Git revision to be used.
   - name: gitCloneDepth
     description: Number of commits in the change + 1
+  - name: gitHubCommand
+    description: |
+      The GitHub command that was used a trigger. This is only available when
+      this template is triggered by a comment. The default value is for the
+      case of a pull_request event.
+    default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineRun
@@ -42,6 +48,10 @@ spec:
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
           value: ".*"
+        - name: checkName
+          value: tekton-noop-check
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
@@ -62,10 +72,10 @@ spec:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineRun
     metadata:
-      name: tekton-noop-check-fail-$(uid)
+      name: tekton-random-check-$(uid)
       labels:
         prow.k8s.io/build-id: $(params.buildUUID)
-        tekton.dev/check-name: tekton-noop-check-fail
+        tekton.dev/check-name: tekton-random-check
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(params.pullRequestNumber)
       annotations:
@@ -73,16 +83,18 @@ spec:
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
-        name: tekton-noop-check
+        name: tekton-random-check
       params:
-        - name: passorfail
-          value: fail
         - name: message
           value: "BuildUUID#: $(params.buildUUID), Package: $(params.package), Repo: $(params.gitRepository), Revision: $(params.gitRevision)"
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
           value: "(tekton/ci|tekton-demo)"
+        - name: checkName
+          value: tekton-random-check
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:

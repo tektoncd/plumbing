@@ -16,8 +16,29 @@ spec:
   - name: pullRequestNumber
     value: $(body.pull_request.number)
   - name: gitCloneDepth
-    value: "10"
-    # value: $(body.extensions.git_clone_depth)
+    value: $(body.extensions.git_clone_depth)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-comment
+  namespace: tektonci
+spec:
+  params:
+  - name: buildUUID
+    value: $(header.X-GitHub-Delivery)
+  - name: package
+    value: $(body.repository.full_name)
+  - name: gitRepository
+    value: $(body.repository.html_url)
+  - name: gitRevision
+    value: $(body.add_pr_body.pull_request_body.head.sha)
+  - name: pullRequestNumber
+    value: $(body.add_pr_body.pull_request_body.number)
+  - name: gitCloneDepth
+    value: $(body.extensions.git_clone_depth)
+  - name: gitHubCommand
+    value: $(body.comment.body)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
