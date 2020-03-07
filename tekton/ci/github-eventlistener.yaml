@@ -1,0 +1,36 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-check-done
+  namespace: tektonci
+spec:
+  serviceAccountName: tekton-ci-listener
+  triggers:
+    - name: github-check-done
+      interceptors:
+        - cel:
+            filter: "body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci'"
+      bindings:
+        - name: tekton-ci-taskrun-cloudevent
+        - name: tekton-ci-check-complete
+      template:
+        name: tekton-ci-github-check-update
+---
+apiVersion: tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-check-start
+  namespace: tektonci
+spec:
+  serviceAccountName: tekton-ci-listener
+  triggers:
+    - name: github-check-start
+      interceptors:
+        - cel:
+            filter: "body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci'"
+      bindings:
+        - name: tekton-ci-taskrun-cloudevent
+        - name: tekton-ci-check-pending
+      template:
+        name: tekton-ci-github-check-update

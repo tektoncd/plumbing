@@ -9,7 +9,7 @@ spec:
   inputs:
     params:
       - name: checkName
-        description: Name of the check being reset
+        description: Description of the check being reset
         type: string
   outputs:
     resources:

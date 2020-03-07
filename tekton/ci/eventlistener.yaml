@@ -17,47 +17,43 @@ spec:
             eventTypes:
               - pull_request
         - cel:
-            filter: "body.action == 'opened' || body.action == 'synchronize'"
-            # overlays:
-            # - key: extensions.git_clone_depth
-            #   expression: "body.pull_request.commits + 1"
+            filter: >-
+              body.action == 'opened' || body.action == 'synchronize'
+            overlays:
+            - key: extensions.git_clone_depth
+              expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - name: tekton-ci-webhook-pull-request
       template:
         name: tekton-ci-pipeline
----
-apiVersion: tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: github-check-done
-  namespace: tektonci
-spec:
-  serviceAccountName: tekton-ci-listener
-  triggers:
-    - name: github-check-done
+    - name: comment-trigger
       interceptors:
+        - github:
+            secretRef:
+              secretName: ci-webhook
+              secretKey: secret
+            eventTypes:
+              - issue_comment
         - cel:
-            filter: "body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci'"
-      bindings:
-        - name: tekton-ci-taskrun-cloudevent
-        - name: tekton-ci-check-complete
-      template:
-        name: tekton-ci-github-check-update
----
-apiVersion: tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: github-check-start
-  namespace: tektonci
-spec:
-  serviceAccountName: tekton-ci-listener
-  triggers:
-    - name: github-check-start
-      interceptors:
+            filter: >-
+              body.action == 'created' &&
+              'pull_request' in body.issue &&
+              body.issue.state == 'open' &&
+              body.comment.body.matches('^/test($| [^ ]*[ ]*$)')
+            overlays:
+            - key: add_pr_body.pull_request_url
+              expression: "body.issue.pull_request.url"
+        - webhook:
+            objectRef:
+              kind: Service
+              name: add-pr-body
+              apiVersion: v1
+              namespace: tektonci
         - cel:
-            filter: "body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci'"
+            overlays:
+            - key: extensions.git_clone_depth
+              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
-        - name: tekton-ci-taskrun-cloudevent
-        - name: tekton-ci-check-pending
+        - name: tekton-ci-webhook-comment
       template:
-        name: tekton-ci-github-check-update
+        name: tekton-ci-pipeline
