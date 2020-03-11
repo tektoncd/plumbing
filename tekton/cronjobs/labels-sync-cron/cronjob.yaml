@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: resource-cd-trigger
+  name: configmap-cd-trigger
 spec:
   schedule: "12 * * * *"
   concurrencyPolicy: Forbid
@@ -12,8 +12,6 @@ spec:
           containers:
           - name: trigger
             env:
-              - name: SINK_URL
-                value: "http://el-label-sync-deployer.default.svc.cluster.local:8080"
               - name: GIT_REPOSITORY
                 value: "github.com/tektoncd/plumbing"
               - name: GIT_REVISION
@@ -24,3 +22,9 @@ spec:
                 value: "github-admin"
               - name: CLUSTER_RESOURCE
                 value: "prow-github-admin-default"
+              - name: CONFIGMAP_NAME
+                value: "label-config-v2"
+              - name: CONFIGMAP_KEY
+                value: "labels.yaml"
+              - name: CONFIGMAP_DESCRIPTION
+                value: "github-labels"

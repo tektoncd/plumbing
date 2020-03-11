@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: resource-cd-trigger
+  name: configmap-cd-trigger
 spec:
   schedule: "12 * * * *"
   concurrencyPolicy: Forbid
@@ -12,8 +12,6 @@ spec:
           containers:
           - name: trigger
             env:
-              - name: SINK_URL
-                value: "http://el-prow-config-deployer.default.svc.cluster.local:8080"
               - name: GIT_REPOSITORY
                 value: "github.com/tektoncd/plumbing"
               - name: GIT_REVISION
@@ -24,3 +22,9 @@ spec:
                 value: "default"
               - name: CLUSTER_RESOURCE
                 value: "prow-cluster-config-bot"
+              - name: CONFIGMAP_NAME
+                value: "config"
+              - name: CONFIGMAP_KEY
+                value: "config.yaml"
+              - name: CONFIGMAP_DESCRIPTION
+                value: "prow-config"

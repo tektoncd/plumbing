@@ -1,5 +1,5 @@
 bases:
-- ../resource-cd-cron-base
+- ../configmap-cd-cron-base
 patchesStrategicMerge:
 - cronjob.yaml
 nameSuffix: "-prow-config"
