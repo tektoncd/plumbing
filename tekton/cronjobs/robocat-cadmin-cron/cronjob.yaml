@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: folder-cd-trigger
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: GIT_REPOSITORY
+                value: "github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "master"
+              - name: NAMESPACE
+                value: ""
+              - name: CLUSTER_RESOURCE
+                value: "robocat-cadmin"
+              - name: FOLDER_PATH
+                value: "robocat/cadmin"
+              - name: FOLDER_DESCRIPTION
+                value: "robocat-cadmin"

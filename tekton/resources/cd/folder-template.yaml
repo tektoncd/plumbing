@@ -1,0 +1,106 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: deploy-from-folder
+spec:
+  params:
+  - name: gitRepository
+    description: URL of the repository that holds the folder
+  - name: gitRevision
+    description: Git revision
+  - name: namespace
+    description: Namespace to deploy to in the target cluster
+  - name: clusterResource
+    description: Name of the cluster resource that points to the target cluster
+  - name: folderPath
+    description: Path in the git repo the folder
+  - name: folderDescription
+    description: Used for a descriptive TaskRun name
+  - name: deployMethod
+    description: One of "apply", "create" or "replace"
+    default: "apply"
+  - name: isOverlay
+    description: Whether the folder is a kustomize overlay "true" or "false"
+    default: "false"
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: PipelineResource
+    metadata:
+      name: git-source-$(uid)
+    spec:
+      type: git
+      params:
+      - name: revision
+        value: $(params.gitRevision)
+      - name: url
+        value: https://$(params.gitRepository)
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      name: deploy-resources-$(params.folderDescription)-$(uid)
+    spec:
+      taskSpec:
+        inputs:
+          params:
+          - name: folderPath
+          - name: namespace
+          - name: deployMethod
+          - name: isOverlay
+          resources:
+          - name: source
+            type: git
+          - name: targetCluster
+            type: cluster
+        stepTemplate:
+          env:
+          - name: KUBECONFIG
+            value: /workspace/$(inputs.resources.targetCluster.name)/kubeconfig
+        steps:
+        - name: deploy-from-folder
+          image: gcr.io/tekton-releases/dogfooding/kubectl
+          script: |
+            #!/bin/sh
+            set -ex
+
+            # Determine whether to deploy a normal folder or a kustomize overlay
+            METHOD_PARAM="-f"
+            [[ "$(inputs.params.isOverlay)" == "true" ]] && METHOD_PARAM="-k"
+
+            # Determine whether to enforce namespace across resources
+            NAMESPACE_PARAM="-n $(inputs.params.namespace)"
+            [[ "$(inputs.params.namespace)" == "" ]] && NAMESPACE_PARAM=""
+
+            # Run the deployment
+            kubectl "$(inputs.params.deployMethod)" \
+              $NAMESPACE_PARAM $METHOD_PARAM \
+              $(inputs.resources.source.path)/$(inputs.params.folderPath)
+      inputs:
+        params:
+        - name: folderPath
+          value: $(params.folderPath)
+        - name: namespace
+          value: $(params.namespace)
+        - name: deployMethod
+          value: $(params.deployMethod)
+        - name: isOverlay
+          value: $(params.isOverlay)
+        resources:
+        - name: source
+          resourceRef:
+            name: git-source-$(uid)
+        - name: targetCluster
+          resourceRef:
+            name: $(params.clusterResource)

@@ -1,0 +1,64 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: deploy-target-details
+spec:
+  params:
+  - name: namespace
+    value: $(body.namespace)
+  - name: clusterResource
+    value: $(body.cluster-resource)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: deploy-source-git
+spec:
+  params:
+  - name: gitRepository
+    value: $(body.git.repository)
+  - name: gitRevision
+    value: $(body.git.revision)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: configmap-details
+spec:
+  params:
+  - name: configMapName
+    value: $(body.configmap.name)
+  - name: configMapKey
+    value: $(body.configmap.key)
+  - name: configMapDescription
+    value: $(body.configmap.description)
+  - name: configPath
+    value: $(body.configmap.path)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: folder-details
+spec:
+  params:
+  - name: folderPath
+    value: $(body.folder.path)
+  - name: folderDescription
+    value: $(body.folder.description)
+  - name: deployMethod
+    value: $(body.folder.method)
+  - name: isOverlay
+    value: $(body.folder.is-overlay)

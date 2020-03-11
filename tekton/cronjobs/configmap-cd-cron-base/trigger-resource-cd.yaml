@@ -14,7 +14,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: resource-cd-trigger
+  name: configmap-cd-trigger
 spec:
   schedule: "12 * * * *" # Houly at *:12
   jobTemplate:
@@ -34,11 +34,18 @@ spec:
               - |
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "gitRepository": "$GIT_REPOSITORY",
-                  "gitRevision": "$GIT_REVISION",
-                  "configPath": "$CONFIG_PATH",
+                  "git": {
+                    "repository": "$GIT_REPOSITORY",
+                    "revision": "$GIT_REVISION"
+                  },
                   "namespace": "$NAMESPACE",
-                  "clusterResource": "$CLUSTER_RESOURCE"
+                  "cluster-resource": "$CLUSTER_RESOURCE",
+                  "configmap": {
+                      "name": "$CONFIGMAP_NAME",
+                      "key": "$CONFIGMAP_KEY",
+                      "description": "$CONFIGMAP_DESCRIPTION",
+                      "path": "$CONFIG_PATH"
+                  }
                 }
                 EOF
                 curl -d @/workspace/post-body.json $SINK_URL
@@ -47,7 +54,7 @@ spec:
               name: workspace
             env:
               - name: SINK_URL
-                value: "sink-url"
+                value: "http://el-tekton-cd.default.svc.cluster.local:8080"
               - name: GIT_REPOSITORY
                 value: "github.com/tektoncd/plumbing"
               - name: GIT_REVISION
@@ -58,4 +65,10 @@ spec:
                 value: "default"
               - name: CLUSTER_RESOURCE
                 value: "not-a-real-cluster"
+              - name: CONFIGMAP_NAME
+                value: "name"
+              - name: CONFIGMAP_KEY
+                value: "key"
+              - name: CONFIGMAP_DESCRIPTION
+                value: "description"
           restartPolicy: Never

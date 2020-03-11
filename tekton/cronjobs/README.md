@@ -35,9 +35,12 @@ The following projects are released nightly:
 
 ### Continuous Deployments
 
-The following resources are deployed continuously:
+The following configuration maps are deployed continuously:
 * [prow config](prow-config-cd-hourly-cron/README.md)
 * [labels sync](labels-sync-cron/README.md)
+
+The following folders are deployed continuously:
+* [robotcat cadmin](robocat-cadmin-cron/README.md)
 
 ## Adding a new cron job
 
@@ -47,7 +50,7 @@ Example folders structure:
 ```
 cronjobs
 ├── README.md
-├── resource-cd-cron-base (existing)
+├── configmap-cd-cron-base (existing)
 │   ├── kustomization.yaml
 │   └── trigger.yaml
 └── myresource-cd-daily-cron (added)
