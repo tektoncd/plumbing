@@ -62,3 +62,20 @@ spec:
     value: $(body.folder.method)
   - name: isOverlay
     value: $(body.folder.is-overlay)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: helm-details
+spec:
+  params:
+  - name: chartName
+    value: $(body.helm.name)
+  - name: chartVersion
+    value: $(body.helm.version)
+  - name: chartRepo
+    value: $(body.helm.repo)
+  - name: chartParams
+    value: $(body.helm.params)
+  - name: chartDescription
+    value: $(body.helm.description)

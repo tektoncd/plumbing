@@ -11,13 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: tekton-pipelines
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: eu-geo # Used for Minio
+commonLabels:
+  app: tekton.plumbing
+resources:
+- trigger-resource-cd.yaml

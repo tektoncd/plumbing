@@ -12,6 +12,7 @@ resources:
 - cd/configmap-template.yaml
 - cd/eventListener.yaml
 - cd/folder-template.yaml
+- cd/helm-template.yaml
 - cd/serviceaccount.yaml
 - org-permissions/peribolos.yaml
 - org-permissions/peribolos-trigger.yaml
