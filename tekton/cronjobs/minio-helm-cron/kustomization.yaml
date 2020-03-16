@@ -1,0 +1,5 @@
+bases:
+- ../helm-cd-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-minio-helm"

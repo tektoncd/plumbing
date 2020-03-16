@@ -40,3 +40,13 @@ spec:
         - name: folder-details
       template:
         name: deploy-from-folder
+    - name: helm
+      interceptors:
+        - cel:
+            filter: >-
+              'helm' in body
+      bindings:
+        - name: deploy-target-details
+        - name: helm-details
+      template:
+        name: deploy-helm-chart
