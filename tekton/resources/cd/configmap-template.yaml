@@ -75,12 +75,21 @@ spec:
             set -ex
             kubectl get configmap -n $(inputs.params.namespace) \
               $(inputs.params.configMapName) -o template \
-              --template='{{ index .data "$(inputs.params.configMapKey)" }}' > /workspace/$(inputs.params.configMapKey)
+              --template='{{ index .data "$(inputs.params.configMapKey)" }}' > \
+               /workspace/$(inputs.params.configMapKey) || \
+               rm /workspace/$(inputs.params.configMapKey)
         - name: deploy
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
             set -ex
+            if [ ! -f /workspace/$(inputs.params.configMapKey) ]; then
+              echo "First time deployment"
+              kubectl create configmap $(inputs.params.configMapName) \
+                --from-file=$(inputs.params.configMapKey)=$(inputs.resources.source.path)/$(inputs.params.configPath) \
+                -n $(inputs.params.namespace)
+                exit 0
+            fi
             echo "diff [current-config] [new config]"
             has_diff=0
             diff /workspace/$(inputs.params.configMapKey) \
