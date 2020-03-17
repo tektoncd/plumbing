@@ -50,22 +50,30 @@ spec:
       #!/usr/bin/env bash
       set -exo pipefail
 
+      OVERLAY_ROOT=$(inputs.params.projectName)/overlays/$(inputs.params.environment)
+      RELEASE_ROOT=$(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)
+
       cd $(inputs.resources.plumbing-library.path)/tekton/cd
 
       if [ ! -d $(inputs.params.projectName) ]; then
         # There are is not base or project for $(inputs.params.projectName)
         # Apply the release as is
         kubectl apply \
-          --filename $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/$(inputs.params.release-file) \
+          --filename $RELEASE_ROOT/$(inputs.params.release-file) \
           --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
       else
           # If the base exists, an overlay for the specified environment must exist
-          if [ ! -d $(inputs.params.projectName)/overlays/$(inputs.params.environment) ]; then
+          if [ ! -d  "$OVERLAY_ROOT" ]; then
             echo "Environment $(inputs.params.environment) not found for project $(inputs.params.projectName)"
             exit 1
           fi
-          cp $(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)/$(inputs.params.release-file) $(inputs.params.projectName)/base/release.yaml
+          cp $RELEASE_ROOT/$(inputs.params.release-file) $(inputs.params.projectName)/base/release.yaml
           find .
+
+          # Execute pre-deploy scripts if any
+          scripts=$(find ${OVERLAY_ROOT}/pre -name '*.sh' 2> /dev/null || true)
+          for script in $scripts; do $script; done
+
           kubectl apply \
             --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig \
             -k $(inputs.params.projectName)/overlays/$(inputs.params.environment)

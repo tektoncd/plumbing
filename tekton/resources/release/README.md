@@ -44,7 +44,28 @@ tkn task start \
   -i release-bucket=$TEKTON_BUCKET_RESOURCE \
   -i k8s-cluser=$TEKTON_CLUSTER_RESOURCE \
   -p projectName=$TEKTON_PROJECT \
-  -p version=$TEKTON_VERSION
+  -p version=$TEKTON_VERSION \
+  install-tekton-release
+```
+
+The release task can use a `kustomize` overlay if available. The name of the
+ovelay folder is specified via the `environment` parameter.
+The overlay folder must contain a `kustomize.yaml` configuration file. It may
+also contain a `pre` folder. Any `*.sh` script found in the folder will be
+executed before the release is installed.
+
+```
+TEKTON_BUCKET_RESOURCE=tekton-bucket
+TEKTON_CLUSTER_RESOURCE=k8s-cluster
+TEKTON_PROJECT=pipeline
+TEKTON_VERSION=v0.9.0
+
+tkn task start \
+  -i release-bucket=$TEKTON_BUCKET_RESOURCE \
+  -i k8s-cluser=$TEKTON_CLUSTER_RESOURCE \
+  -p projectName=$TEKTON_PROJECT \
+  -p version=$TEKTON_VERSION \
+  -p environment=robocat \
   install-tekton-release
 ```
 
