@@ -146,6 +146,11 @@ default:
       name: triage/needs-information
       target: both
       addedBy: humans
+    - color: d455d0
+      description: Indicates an issue that needs to be discussed during a working group call.
+      name: triage/wg-discuss
+      target: both
+      addedBy: humans
     # If I was contributing to a repo, went to the trouble to create an issue or PR, and a maintainer
     # responded by shrugging, I think it would make me feel my contribution wasn't appreciated
     - color: f9d0c4
