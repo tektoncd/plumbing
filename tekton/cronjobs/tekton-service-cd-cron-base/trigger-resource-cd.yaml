@@ -34,18 +34,28 @@ spec:
               - |
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "namespace": "$NAMESPACE",
-                  "cluster-resource": "$CLUSTER_RESOURCE",
-                  "tekton": {
-                    "project": "$TEKTON_PROJECT",
-                    "version": "$TEKTON_VERSION",
-                    "environment": "$TEKTON_CLUSTER",
-                    "bucket": "$RELEASE_BUCKET",
-                    "file": "$RELEASE_FILE"
-                  },
-                  "plumbing": {
-                    "repository": "$PLUMBING_REPOSITORY",
-                    "revision": "$PLUMBING_REVISION"
+                  "trigger-template": "tekton",
+                  "params": {
+                    "git": {
+                      "repository": "$GIT_REPOSITORY",
+                      "revision": "$GIT_REVISION"
+                    },
+                    "target": {
+                      "namespace": "$NAMESPACE",
+                      "cluster-resource": "$CLUSTER_RESOURCE"
+                    },
+                    "tekton": {
+                      "project": "$TEKTON_PROJECT",
+                      "version": "$TEKTON_VERSION",
+                      "environment": "$TEKTON_CLUSTER",
+                      "bucket": "$RELEASE_BUCKET",
+                      "file": "$RELEASE_FILE",
+                      "extra-path": "$RELEASE_EXTRA_PATH"
+                    },
+                    "plumbing": {
+                      "repository": "$PLUMBING_REPOSITORY",
+                      "revision": "$PLUMBING_REVISION"
+                    }
                   }
                 }
                 EOF
@@ -64,6 +74,8 @@ spec:
                 value: "gs://tekton-releases"
               - name: RELEASE_FILE
                 value: "release.yaml"
+              - name: RELEASE_EXTRA_PATH
+                value: ""
               - name: NAMESPACE
                 value: "tekton-pipelines"
               - name: CLUSTER_RESOURCE

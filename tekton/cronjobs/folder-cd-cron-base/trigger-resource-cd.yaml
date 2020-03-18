@@ -34,17 +34,22 @@ spec:
               - |
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "git": {
-                    "repository": "$GIT_REPOSITORY",
-                    "revision": "$GIT_REVISION"
-                  },
-                  "namespace": "$NAMESPACE",
-                  "cluster-resource": "$CLUSTER_RESOURCE",
-                  "folder": {
-                      "path": "$FOLDER_PATH",
-                      "description": "$FOLDER_DESCRIPTION",
-                      "method": "$FOLDER_METHOD",
-                      "is-overlay": "$FOLDER_OVERLAY"
+                  "trigger-template": "folders",
+                  "params": {
+                    "git": {
+                      "repository": "$GIT_REPOSITORY",
+                      "revision": "$GIT_REVISION"
+                    },
+                    "target": {
+                      "namespace": "$NAMESPACE",
+                      "cluster-resource": "$CLUSTER_RESOURCE"
+                    },
+                    "folder": {
+                        "path": "$FOLDER_PATH",
+                        "description": "$FOLDER_DESCRIPTION",
+                        "method": "$FOLDER_METHOD",
+                        "is-overlay": "$FOLDER_OVERLAY"
+                    }
                   }
                 }
                 EOF
