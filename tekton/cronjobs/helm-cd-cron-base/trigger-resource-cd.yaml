@@ -46,7 +46,8 @@ spec:
                         "version": "$CHART_VERSION",
                         "repo": "$CHART_REPO",
                         "params": "$CHART_PARAMS",
-                        "description": "$CHART_DESCRIPTION"
+                        "description": "$CHART_DESCRIPTION",
+                        "pre-deploy-resources": "$PRE_DEPLOY_RESOURCES"
                     }
                   }
                 }
@@ -60,6 +61,8 @@ spec:
                 value: "http://el-tekton-cd.default.svc.cluster.local:8080"
               - name: NAMESPACE
                 value: "default"
+              - name: PRE_DEPLOY_RESOURCES
+                value: ""
               - name: CLUSTER_RESOURCE
                 value: "not-a-real-cluster"
               - name: CHART_NAME

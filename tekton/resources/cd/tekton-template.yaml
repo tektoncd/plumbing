@@ -27,6 +27,9 @@ spec:
   - name: releaseFile
     description: Name of the release file
     default: release.yaml
+  - name: releaseExtraPath
+    description: Any extra path after bucket/project, starting with a "/"
+    default: ""
   - name: tektonProject
     description: Name of the project to deploy (pipeline, triggers, dashboard)
   - name: tektonVersion
@@ -65,7 +68,7 @@ spec:
               - name: type
                 value: gcs
               - name: location
-                value: $(params.releaseBucket)/$(params.tektonProject)
+                value: $(params.releaseBucket)/$(params.tektonProject)$(params.releaseExtraPath)
               - name: dir
                 value: "y"
           - name: k8s-cluster

@@ -1,0 +1,5 @@
+bases:
+- ../folder-cd-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-robotcat-cluster-issuer"

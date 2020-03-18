@@ -79,6 +79,8 @@ spec:
     value: $(body.params.helm.params)
   - name: chartDescription
     value: $(body.params.helm.description)
+  - name: preDeployResources
+    value: $(body.params.helm.pre-deploy-resources)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -96,6 +98,8 @@ spec:
     value: $(body.params.tekton.project)
   - name: tektonVersion
     value: $(body.params.tekton.version)
+  - name: releaseExtraPath
+    value: $(body.params.tekton.extra-path)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
