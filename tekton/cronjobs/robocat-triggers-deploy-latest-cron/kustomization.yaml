@@ -1,0 +1,5 @@
+bases:
+- ../tekton-service-cd-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-robotcat-triggers"
