@@ -34,9 +34,6 @@ spec:
     - name: version
       description: The vX.Y.Z version that we want to install (including `v`)
       default: latest
-    - name: default-service-account
-      description: Service account to be setup as default in Tekton configmap
-      default: default
     - name: environment
       description: Name of the target environment. Used to apply relevant overalys
       default: dogfooding
@@ -51,9 +48,10 @@ spec:
       #!/usr/bin/env bash
       set -exo pipefail
 
-      KUBECONFIG=/workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+      # Export KUBECONFIG so that it's available to pre-scripts too
+      export KUBECONFIG=/workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
       # Set up RELEASE_ROOT
-      if [[ "$(inputs.params.version)" == "latest "]]; then
+      if [[ "$(inputs.params.version)" == "latest" ]]; then
         RELEASE_ROOT=$(inputs.resources.release-bucket.path)/$(inputs.params.version)
       else
         RELEASE_ROOT=$(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)

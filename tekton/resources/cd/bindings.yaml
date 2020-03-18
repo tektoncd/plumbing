@@ -79,3 +79,31 @@ spec:
     value: $(body.helm.params)
   - name: chartDescription
     value: $(body.helm.description)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-details
+spec:
+  params:
+  - name: targetCluster
+    value: $(body.tekton.environment)
+  - name: releaseBucket
+    value: $(body.tekton.bucket)
+  - name: releaseFile
+    value: $(body.tekton.file)
+  - name: tektonProject
+    value: $(body.tekton.project)
+  - name: tektonVersion
+    value: $(body.tekton.version)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: plumbing-git
+spec:
+  params:
+  - name: plumbingRepository
+    value: $(body.plumbing.repository)
+  - name: plumbingRevision
+    value: $(body.plumbing.revision)

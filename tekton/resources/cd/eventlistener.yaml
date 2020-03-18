@@ -50,3 +50,14 @@ spec:
         - name: helm-details
       template:
         name: deploy-helm-chart
+    - name: tekton
+      interceptors:
+        - cel:
+            filter: >-
+              'tekton' in body
+      bindings:
+        - name: deploy-target-details
+        - name: tekton-details
+        - name: plumbing-git
+      template:
+        name: deploy-tekton-release

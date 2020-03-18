@@ -1,0 +1,81 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: deploy-tekton-release
+spec:
+  params:
+  - name: clusterResource
+    description: Name of the cluster resource that points to the target cluster
+  - name: targetCluster
+    description: Name of the target cluster, used for the overlay
+  - name: releaseBucket
+    description: Base URL of the bucket where the release file is stored
+    default: gs://tekton-releases
+  - name: releaseFile
+    description: Name of the release file
+    default: release.yaml
+  - name: tektonProject
+    description: Name of the project to deploy (pipeline, triggers, dashboard)
+  - name: tektonVersion
+    description: Version of the project to deploy
+  - name: namespace
+    description: Target namespace. Not enforeced, for verification.
+  - name: plumbingRepository
+    description: URL of the repository that holds plumbing scripts
+  - name: plumbingRevision
+    description: Git revision of the repository that holds plumbing scripts
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1alpha1
+    kind: TaskRun
+    metadata:
+      name: deploy-$(params.tektonProject)-release-$(params.targetCluster)-$(uid)
+    spec:
+      taskRef:
+        name: install-tekton-release
+      inputs:
+        params:
+        - name: projectName
+          value: $(params.tektonProject)
+        - name: namespace
+          value: $(params.namespace)
+        - name: version
+          value: $(params.tektonVersion)
+        - name: environment
+          value: $(params.targetCluster)
+        - name: release-file
+          value: $(params.releaseFile)
+        resources:
+          - name: release-bucket
+            resourceSpec:
+              type: storage
+              params:
+              - name: type
+                value: gcs
+              - name: location
+                value: $(params.releaseBucket)/$(params.tektonProject)
+              - name: dir
+                value: "y"
+          - name: k8s-cluster
+            resourceRef:
+              name: $(params.clusterResource)
+          - name: plumbing-library
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(params.plumbingRevision)
+              - name: url
+                value: https://$(params.plumbingRepository)
