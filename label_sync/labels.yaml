@@ -151,14 +151,6 @@ default:
       name: triage/wg-discuss
       target: both
       addedBy: humans
-    # If I was contributing to a repo, went to the trouble to create an issue or PR, and a maintainer
-    # responded by shrugging, I think it would make me feel my contribution wasn't appreciated
-    - color: f9d0c4
-      description: ¯\\\_(ツ)_/¯
-      name: "¯\\_(ツ)_/¯"
-      target: both
-      prowPlugin: shrug
-      addedBy: humans
 
 
     ##########################################################################
