@@ -8,9 +8,9 @@ MINIO_NAMESPACE=${MINIO_NAMESPACE:-eu-geo}
 MINIO_SECRET=${MINIO_SECRET:-s3}
 
 MINIO_ACCESS_KEY=$(kubectl get -n $MINIO_NAMESPACE secret/$MINIO_SECRET \
-  -o jsonpath='{ .data.accesskey }' | base64 -D)
+  -o jsonpath='{ .data.accesskey }' | base64 -d)
 MINIO_SECRET_KEY=$(kubectl get -n $MINIO_NAMESPACE secret/$MINIO_SECRET \
-  -o jsonpath='{ .data.secretkey }' | base64 -D)
+  -o jsonpath='{ .data.secretkey }' | base64 -d)
 
 sed -e 's/__MINIO_ACCESS_KEY__/'$MINIO_ACCESS_KEY'/g' \
   -e 's/__MINIO_SECRET_KEY__/'$MINIO_SECRET_KEY'/g' \

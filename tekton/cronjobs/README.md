@@ -42,6 +42,13 @@ The following configuration maps are deployed continuously:
 The following folders are deployed continuously:
 * [robotcat cadmin](robocat-cadmin-cron/README.md)
 
+The following helm charts are deployed continuously:
+* [minio](minio-helm-cron/README.md)
+
+The following Tekton services are deployed continuously:
+* [pipeline on robocat](robocat-pipeline-deploy-latest-cron/README.md)
+
+
 ## Adding a new cron job
 
 To add a new cronjob for an existing base, follow these steps.
