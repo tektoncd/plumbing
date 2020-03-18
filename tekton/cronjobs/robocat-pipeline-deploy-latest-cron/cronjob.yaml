@@ -20,3 +20,5 @@ spec:
                 value: "latest"
               - name: TEKTON_CLUSTER
                 value: "robocat"
+              - name: RELEASE_BUCKET
+                value: "gs://tekton-releases-nightly"

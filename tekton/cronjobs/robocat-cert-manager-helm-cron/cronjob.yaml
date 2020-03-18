@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: helm-cd-trigger
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: NAMESPACE
+                value: "cert-manager"
+              - name: CLUSTER_RESOURCE
+                value: "robocat-cadmin"
+              - name: CHART_NAME
+                value: "cert-manager"
+              - name: CHART_VERSION
+                value: "v0.14.0"
+              - name: CHART_PARAMS
+                value: fullnameOverride=cert-manager
+              - name: CHART_DESCRIPTION
+                value: "cert-manager"
+              - name: CHART_REPO
+                value: https://charts.jetstack.io
+              - name: PRE_DEPLOY_RESOURCES
+                value: "https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.crds.yaml"
