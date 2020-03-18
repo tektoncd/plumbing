@@ -34,7 +34,6 @@ plugins:
   - lgtm
   - lifecycle
   - milestone
-  - shrug
   - size
   - skip
   - trigger
