@@ -35,18 +35,22 @@ spec:
                 CHART_PARAMS=$(echo $CHART_PARAMS | sed 's/, /,/g')
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "namespace": "$NAMESPACE",
-                  "cluster-resource": "$CLUSTER_RESOURCE",
-                  "helm": {
-                      "name": "$CHART_NAME",
-                      "version": "$CHART_VERSION",
-                      "repo": "$CHART_REPO",
-                      "params": "$CHART_PARAMS",
-                      "description": "$CHART_DESCRIPTION"
+                  "trigger-template": "folders",
+                  "params": {
+                    "target": {
+                      "namespace": "$NAMESPACE",
+                      "cluster-resource": "$CLUSTER_RESOURCE"
+                    },
+                    "helm": {
+                        "name": "$CHART_NAME",
+                        "version": "$CHART_VERSION",
+                        "repo": "$CHART_REPO",
+                        "params": "$CHART_PARAMS",
+                        "description": "$CHART_DESCRIPTION"
+                    }
                   }
                 }
                 EOF
-                # Drop empty params that have a default in the template trigger
                 curl -d @/workspace/post-body.json $SINK_URL
             volumeMounts:
             - mountPath: /workspace

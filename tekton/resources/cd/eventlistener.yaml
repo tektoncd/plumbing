@@ -22,7 +22,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              'configmap' in body
+              'trigger-template' in body &&
+              body['trigger-template'] == 'configmap'
       bindings:
         - name: deploy-target-details
         - name: deploy-source-git
@@ -33,7 +34,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              'folder' in body
+              'trigger-template' in body &&
+              body['trigger-template'] == 'folders'
       bindings:
         - name: deploy-target-details
         - name: deploy-source-git
@@ -44,7 +46,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              'helm' in body
+              'trigger-template' in body &&
+              body['trigger-template'] == 'helm'
       bindings:
         - name: deploy-target-details
         - name: helm-details
@@ -54,7 +57,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              'tekton' in body
+              'trigger-template' in body &&
+              body['trigger-template'] == 'tekton'
       bindings:
         - name: deploy-target-details
         - name: tekton-details

@@ -34,17 +34,22 @@ spec:
               - |
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "git": {
-                    "repository": "$GIT_REPOSITORY",
-                    "revision": "$GIT_REVISION"
-                  },
-                  "namespace": "$NAMESPACE",
-                  "cluster-resource": "$CLUSTER_RESOURCE",
-                  "configmap": {
-                      "name": "$CONFIGMAP_NAME",
-                      "key": "$CONFIGMAP_KEY",
-                      "description": "$CONFIGMAP_DESCRIPTION",
-                      "path": "$CONFIG_PATH"
+                  "trigger-template": "configmaps",
+                  "params": {
+                    "git": {
+                      "repository": "$GIT_REPOSITORY",
+                      "revision": "$GIT_REVISION"
+                    },
+                    "target": {
+                      "namespace": "$NAMESPACE",
+                      "cluster-resource": "$CLUSTER_RESOURCE",
+                    },
+                    "configmap": {
+                        "description": "$CONFIGMAP_DESCRIPTION",
+                        "path": "$CONFIG_PATH"
+                        "name": "$CONFIGMAP_NAME",
+                        "key": "$CONFIGMAP_KEY"
+                    },
                   }
                 }
                 EOF

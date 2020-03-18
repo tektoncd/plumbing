@@ -18,9 +18,9 @@ metadata:
 spec:
   params:
   - name: namespace
-    value: $(body.namespace)
+    value: $(body.params.target.namespace)
   - name: clusterResource
-    value: $(body.cluster-resource)
+    value: $(body.params.target.cluster-resource)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -29,9 +29,9 @@ metadata:
 spec:
   params:
   - name: gitRepository
-    value: $(body.git.repository)
+    value: $(body.params.git.repository)
   - name: gitRevision
-    value: $(body.git.revision)
+    value: $(body.params.git.revision)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -40,13 +40,13 @@ metadata:
 spec:
   params:
   - name: configMapName
-    value: $(body.configmap.name)
+    value: $(body.params.configmap.name)
   - name: configMapKey
-    value: $(body.configmap.key)
+    value: $(body.params.configmap.key)
   - name: configMapDescription
-    value: $(body.configmap.description)
+    value: $(body.params.configmap.description)
   - name: configPath
-    value: $(body.configmap.path)
+    value: $(body.params.configmap.path)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -55,13 +55,13 @@ metadata:
 spec:
   params:
   - name: folderPath
-    value: $(body.folder.path)
+    value: $(body.params.folder.path)
   - name: folderDescription
-    value: $(body.folder.description)
+    value: $(body.params.folder.description)
   - name: deployMethod
-    value: $(body.folder.method)
+    value: $(body.params.folder.method)
   - name: isOverlay
-    value: $(body.folder.is-overlay)
+    value: $(body.params.folder.is-overlay)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -70,15 +70,15 @@ metadata:
 spec:
   params:
   - name: chartName
-    value: $(body.helm.name)
+    value: $(body.params.helm.name)
   - name: chartVersion
-    value: $(body.helm.version)
+    value: $(body.params.helm.version)
   - name: chartRepo
-    value: $(body.helm.repo)
+    value: $(body.params.helm.repo)
   - name: chartParams
-    value: $(body.helm.params)
+    value: $(body.params.helm.params)
   - name: chartDescription
-    value: $(body.helm.description)
+    value: $(body.params.helm.description)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -87,15 +87,15 @@ metadata:
 spec:
   params:
   - name: targetCluster
-    value: $(body.tekton.environment)
+    value: $(body.params.tekton.environment)
   - name: releaseBucket
-    value: $(body.tekton.bucket)
+    value: $(body.params.tekton.bucket)
   - name: releaseFile
-    value: $(body.tekton.file)
+    value: $(body.params.tekton.file)
   - name: tektonProject
-    value: $(body.tekton.project)
+    value: $(body.params.tekton.project)
   - name: tektonVersion
-    value: $(body.tekton.version)
+    value: $(body.params.tekton.version)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -104,6 +104,6 @@ metadata:
 spec:
   params:
   - name: plumbingRepository
-    value: $(body.plumbing.repository)
+    value: $(body.params.plumbing.repository)
   - name: plumbingRevision
-    value: $(body.plumbing.revision)
+    value: $(body.params.plumbing.revision)
