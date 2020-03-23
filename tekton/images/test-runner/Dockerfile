@@ -15,8 +15,8 @@
 FROM gcr.io/k8s-testimages/kubekins-e2e:v20190729-351ea95-master
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-# Install Go 1.13
-ARG GO_VERSION=1.13.8
+# Install Go 1.14.1
+ARG GO_VERSION=1.14.1
 RUN rm -rf $(go env GOROOT) && \
     curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
