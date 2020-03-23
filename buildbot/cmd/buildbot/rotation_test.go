@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetBuildCop(t *testing.T) {
-	r := NewRotation("testdata/rotation.csv")
+	r := NewRotationFromFile("testdata/rotation.csv")
 
 	for _, c := range []struct {
 		desc        string
@@ -35,7 +35,7 @@ func TestGetBuildCop(t *testing.T) {
 }
 
 func TestGetBuildCop_Invalid(t *testing.T) {
-	r := NewRotation("testdata/rotation-invalid.csv")
+	r := NewRotationFromFile("testdata/rotation-invalid.csv")
 	cop := r.GetBuildCop(time.Date(2019, time.December, 4, 0, 0, 0, 0, time.UTC))
 	if cop != "nobody" {
 		t.Errorf("Expected build cop nobody when file is invalid but got %s", cop)
