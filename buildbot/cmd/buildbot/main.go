@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
 	"log"
 	"os"
@@ -19,21 +18,7 @@ var (
 	channelID  string
 
 	vdemeest string
-	cops     = map[string]struct{}{}
-	rotation = map[string]string{}
 )
-
-func init() {
-	// When building with "ko", templates is deployed under KO_DATA_PATH
-	// If KO_DATA_PATH is not defined, the path will be a relatove one
-	basePath := os.Getenv("KO_DATA_PATH")
-	csvfile := path.Join(basePath, "rotation.csv")
-	if r, err := readRotation(csvfile); err != nil {
-		panic("Cannot read rotation.csv… bailing 😓")
-	} else {
-		rotation = r
-	}
-}
 
 func main() {
 	token = os.Getenv("SLACKTOKEN")
@@ -62,16 +47,19 @@ func main() {
 		if user.Name == "vdemeest" {
 			vdemeest = user.ID
 		}
-		if _, ok := cops[user.Name]; ok {
-			copsID[user.Name] = user.ID
-		}
+		copsID[user.Name] = user.ID
 	}
 
-	currentCop = getBuildCop(time.Now())
+	// When building with "ko", templates is deployed under KO_DATA_PATH
+	// If KO_DATA_PATH is not defined, the path will be a relative one
+	basePath := os.Getenv("KO_DATA_PATH")
+	csvfile := path.Join(basePath, "rotation.csv")
+	r := NewRotation(csvfile)
+	currentCop = copsID[r.GetBuildCop(time.Now())]
 
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
-	go dailyPing(rtm, copsID)
+	go dailyPing(rtm, copsID, r)
 
 	for msg := range rtm.IncomingEvents {
 		switch ev := msg.Data.(type) {
@@ -156,11 +144,11 @@ func getMessages(messages []string, botID string, direct bool) []string {
 	return ms
 }
 
-func dailyPing(rtm *slack.RTM, cops map[string]string) {
+func dailyPing(rtm *slack.RTM, copsID map[string]string, r Rotation) {
 	jt := NewJobTicker()
 	for {
 		<-jt.t.C
-		currentCop = cops[getBuildCop(time.Now())]
+		currentCop = copsID[r.GetBuildCop(time.Now())]
 		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the buildcop :cop:\nBuildcop log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCop), channelID))
 		jt.updateJobTicker()
 	}
@@ -185,41 +173,4 @@ func NewJobTicker() jobTicker {
 
 func (jt jobTicker) updateJobTicker() {
 	jt.t.Reset(getNextTickDuration())
-}
-
-func getBuildCop(t time.Time) string {
-	tf := t.Format("2006-01-02") // Mon Jan 2 15:04:05 MST 2006
-	if b, ok := rotation[tf]; ok {
-		fmt.Println(b)
-		return b
-	}
-	return "nobody"
-}
-
-func readRotation(filename string) (map[string]string, error) {
-	rotation := map[string]string{}
-	// Open CSV file
-	f, err := os.Open(filename)
-	if err != nil {
-		return rotation, err
-	}
-	defer f.Close()
-
-	// Read File into a Variable
-	lines, err := csv.NewReader(f).ReadAll()
-	if err != nil {
-		return rotation, err
-	}
-
-	for i, line := range lines {
-		if i == 0 {
-			fmt.Println("skip header")
-			continue
-		}
-		if _, ok := cops[line[1]]; !ok {
-			cops[line[1]] = struct{}{}
-		}
-		rotation[line[0]] = line[1]
-	}
-	return rotation, nil
 }
