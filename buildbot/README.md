@@ -18,3 +18,12 @@ data:
   BOTID: URCPZNB37
   CHANNELID: CPY3T4YHM
 ```
+
+## Deploying
+
+When connected to [the dogfood cluster](https://github.com/tektoncd/plumbing/blob/master/gcp.md):
+
+```bash
+# must be run from the `buildbot` dir or it will use the go.mod file one level up
+buildbot$ KO_DOCKER_REPO=gcr.io/tekton-releases/buildbot ko --context dogfood apply -f config/deployment.yaml
+```
