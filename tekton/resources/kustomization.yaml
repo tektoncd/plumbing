@@ -10,7 +10,7 @@ resources:
 - cd/bindings.yaml
 - cd/clusters.yaml
 - cd/configmap-template.yaml
-- cd/eventListener.yaml
+- cd/eventlistener.yaml
 - cd/folder-template.yaml
 - cd/helm-template.yaml
 - cd/tekton-template.yaml
