@@ -49,7 +49,7 @@ ARG GOLANGCI_VERSION=1.24.0
 RUN curl -sL https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "*/golangci-lint"
 
 # Install the TektonCD CLI: https://github.com/tektoncd/cli/
-ARG TKN_VERSION=0.7.1
+ARG TKN_VERSION=0.8.0
 RUN curl -sL https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar -C /usr/local/bin -xvzf - --wildcards "tkn"
 
 # Extra tools through gem
