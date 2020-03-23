@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"strings"
 	"time"
 
 	"github.com/nlopes/slack"
 )
+
+const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/master/buildbot/rotation.csv"
 
 var (
 	currentCop string
@@ -50,11 +51,7 @@ func main() {
 		copsID[user.Name] = user.ID
 	}
 
-	// When building with "ko", templates is deployed under KO_DATA_PATH
-	// If KO_DATA_PATH is not defined, the path will be a relative one
-	basePath := os.Getenv("KO_DATA_PATH")
-	csvfile := path.Join(basePath, "rotation.csv")
-	r := NewRotation(csvfile)
+	r := NewRotationFromURL(rotationURL)
 	currentCop = copsID[r.GetBuildCop(time.Now())]
 
 	rtm := api.NewRTM()

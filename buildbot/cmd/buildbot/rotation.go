@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -9,41 +12,61 @@ import (
 )
 
 // The Rotation object which knows how to dynamically find the correct build cop from
-// the file it is initialized with.
+// the file getter f it is initialized with.
 type Rotation struct {
-	file string
+	f GetFile
 }
 
-// NewRotation returns a new Rotation object which will read from file.
-func NewRotation(file string) Rotation {
-	return Rotation{file: file}
+// GetFile is the signature of a function that knows how to retrieve the bytes from a file
+type GetFile func() (io.ReadCloser, error)
+
+// NewRotationFromFile returns a new Rotation object which will read from file.
+func NewRotationFromFile(file string) Rotation {
+	return Rotation{f: func() (io.ReadCloser, error) {
+		f, err := os.Open(file)
+		if err != nil {
+			return nil, fmt.Errorf("Could not open file %s: %v", file, err)
+		}
+		return f, nil
+	}}
+}
+
+// NewRotationFromURL returns a new Rotation object which will read from url.
+func NewRotationFromURL(url string) Rotation {
+	return Rotation{f: func() (io.ReadCloser, error) {
+		resp, err := http.Get(url)
+		if err != nil {
+			return nil, fmt.Errorf("Could not open url %s: %v", url, err)
+		}
+		return resp.Body, nil
+	}}
 }
 
 // GetBuildCop returns the name of the build cop for the requested time
 func (r Rotation) GetBuildCop(t time.Time) string {
 	tf := t.Format("2006-01-02") // Mon Jan 2 15:04:05 MST 2006
-	rotation, err := readRotation(r.file)
+	f, err := r.f()
 	if err != nil {
-		log.Errorf("Could not read from build cop rotation file %s: %v", r.file, err)
+		log.Errorf("Could not read from build cop rotation: %v", err)
+		return "nobody"
+	}
+	defer f.Close()
+	rotation, err := parseRotation(f)
+
+	if err != nil {
+		log.Errorf("Could not read rotation from build cop rotation: %v", err)
 		return "nobody"
 	}
 	b, ok := rotation[tf]
 	if !ok {
-		log.Errorf("Couldn't find anyone in rotation %s for time %s", r.file, tf)
+		log.Errorf("Couldn't find anyone in rotation for time %s", tf)
 		return "nobody"
 	}
 	return b
 }
 
-func readRotation(filename string) (map[string]string, error) {
+func parseRotation(f io.Reader) (map[string]string, error) {
 	rotation := map[string]string{}
-	// Open CSV file
-	f, err := os.Open(filename)
-	if err != nil {
-		return rotation, err
-	}
-	defer f.Close()
-
 	// Read File into a Variable
 	lines, err := csv.NewReader(f).ReadAll()
 	if err != nil {
