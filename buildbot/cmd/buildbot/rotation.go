@@ -4,10 +4,9 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
-
-	"k8s.io/kubernetes/pkg/kubelet/kubeletconfig/util/log"
 )
 
 // The Rotation object which knows how to dynamically find the correct build cop from
@@ -41,19 +40,19 @@ func (r Rotation) GetBuildCop(t time.Time) string {
 	tf := t.Format("2006-01-02") // Mon Jan 2 15:04:05 MST 2006
 	f, err := r.f()
 	if err != nil {
-		log.Errorf("Could not read from build cop rotation: %v", err)
+		log.Printf("Could not read from build cop rotation: %v", err)
 		return "nobody"
 	}
 	defer f.Close()
 	rotation, err := parseRotation(f)
 
 	if err != nil {
-		log.Errorf("Could not read rotation from build cop rotation: %v", err)
+		log.Printf("Could not read rotation from build cop rotation: %v", err)
 		return "nobody"
 	}
 	b, ok := rotation[tf]
 	if !ok {
-		log.Errorf("Couldn't find anyone in rotation for time %s", tf)
+		log.Printf("Couldn't find anyone in rotation for time %s", tf)
 		return "nobody"
 	}
 	return b
