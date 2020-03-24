@@ -1,12 +1,25 @@
 package main
 
 import (
+	"fmt"
+	"io"
+	"os"
 	"testing"
 	"time"
 )
 
+func fromFile(file string) GetFile {
+	return func() (io.ReadCloser, error) {
+		f, err := os.Open(file)
+		if err != nil {
+			return nil, fmt.Errorf("Could not open file %s: %v", file, err)
+		}
+		return f, nil
+	}
+}
+
 func TestGetBuildCop(t *testing.T) {
-	r := NewRotationFromFile("testdata/rotation.csv")
+	r := NewRotation(fromFile("testdata/rotation.csv"))
 
 	for _, c := range []struct {
 		desc        string
@@ -34,10 +47,18 @@ func TestGetBuildCop(t *testing.T) {
 	}
 }
 
-func TestGetBuildCop_Invalid(t *testing.T) {
-	r := NewRotationFromFile("testdata/rotation-invalid.csv")
+func TestGetBuildCop_InvalidFile(t *testing.T) {
+	r := NewRotation(fromFile("testdata/rotation-invalid.csv"))
 	cop := r.GetBuildCop(time.Date(2019, time.December, 4, 0, 0, 0, 0, time.UTC))
 	if cop != "nobody" {
 		t.Errorf("Expected build cop nobody when file is invalid but got %s", cop)
+	}
+}
+
+func TestGetBuildCop_MissingFile(t *testing.T) {
+	r := NewRotation(fromFile("testdata/rotation-missing.csv"))
+	cop := r.GetBuildCop(time.Date(2019, time.December, 4, 0, 0, 0, 0, time.UTC))
+	if cop != "nobody" {
+		t.Errorf("Expected build cop nobody when file is not found but got %s", cop)
 	}
 }
