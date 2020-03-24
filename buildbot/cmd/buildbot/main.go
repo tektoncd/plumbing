@@ -51,7 +51,7 @@ func main() {
 		copsID[user.Name] = user.ID
 	}
 
-	r := NewRotationFromURL(rotationURL)
+	r := NewRotation(FromURL(rotationURL))
 	currentCop = copsID[r.GetBuildCop(time.Now())]
 
 	rtm := api.NewRTM()

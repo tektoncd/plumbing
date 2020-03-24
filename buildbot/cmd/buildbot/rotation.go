@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"time"
 
 	"k8s.io/kubernetes/pkg/kubelet/kubeletconfig/util/log"
@@ -20,26 +19,21 @@ type Rotation struct {
 // GetFile is the signature of a function that knows how to retrieve the bytes from a file
 type GetFile func() (io.ReadCloser, error)
 
-// NewRotationFromFile returns a new Rotation object which will read from file.
-func NewRotationFromFile(file string) Rotation {
-	return Rotation{f: func() (io.ReadCloser, error) {
-		f, err := os.Open(file)
-		if err != nil {
-			return nil, fmt.Errorf("Could not open file %s: %v", file, err)
-		}
-		return f, nil
-	}}
-}
-
-// NewRotationFromURL returns a new Rotation object which will read from url.
-func NewRotationFromURL(url string) Rotation {
-	return Rotation{f: func() (io.ReadCloser, error) {
+// FromURL is a GetFile that knows how to read a file from a url.
+func FromURL(url string) GetFile {
+	return func() (io.ReadCloser, error) {
 		resp, err := http.Get(url)
 		if err != nil {
 			return nil, fmt.Errorf("Could not open url %s: %v", url, err)
 		}
 		return resp.Body, nil
-	}}
+	}
+}
+
+// NewRotation returns a new Rotation object which uses f to retrieve the rotation
+// file as needed.
+func NewRotation(f GetFile) Rotation {
+	return Rotation{f: f}
 }
 
 // GetBuildCop returns the name of the build cop for the requested time
