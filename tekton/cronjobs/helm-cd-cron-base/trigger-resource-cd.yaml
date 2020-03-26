@@ -35,7 +35,7 @@ spec:
                 CHART_PARAMS=$(echo $CHART_PARAMS | sed 's/, /,/g')
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "trigger-template": "folders",
+                  "trigger-template": "helm",
                   "params": {
                     "target": {
                       "namespace": "$NAMESPACE",
