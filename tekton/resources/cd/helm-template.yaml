@@ -89,7 +89,7 @@ spec:
             echo "with $(inputs.params.chartParams)"
             helm upgrade \
               --debug \
-              tektoncd-maintained \
+              $(inputs.params.chartName)-tektoncd-maintained \
               $(inputs.params.chartName) \
               --install \
               --version $(inputs.params.chartVersion) \

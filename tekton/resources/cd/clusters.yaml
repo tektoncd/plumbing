@@ -59,7 +59,7 @@ metadata:
 spec:
   params:
   - name: url
-    value: https://35.228.235.122
+    value: https://35.228.156.151
   - name: username
     value: tekton-deployer
   secrets:
@@ -79,7 +79,7 @@ metadata:
 spec:
   params:
   - name: url
-    value: https://35.228.235.122
+    value: https://35.228.156.151
   - name: username
     value: cadmin
   secrets:
