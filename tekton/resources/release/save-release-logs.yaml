@@ -11,26 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: save-release-logs
 spec:
-  inputs:
-    params:
-    - name: pipelinerun
-      description: The name of the taskrun whose log we need to save
-    - name: namespace
-      description: The namespace of the taskrun
-    - name: versionTag
-      description: The version tag to use within the bucket to store the logs
-    resources:
-    - name: release-bucket
-      type: storage
-  outputs:
-    resources:
-    - name: release-bucket
-      type: storage
+  params:
+  - name: pipelinerun
+    description: The name of the taskrun whose log we need to save
+  - name: namespace
+    description: The namespace of the taskrun
+  - name: versionTag
+    description: The version tag to use within the bucket to store the logs
+  resources:
+    inputs:
+      - name: release-bucket
+        type: storage
+    outputs:
+      - name: release-bucket
+        type: storage
   steps:
   - name: prepare-the-output-folder
     image: alpine:3.10
@@ -39,8 +38,8 @@ spec:
     args:
     - -ce
     - |
-      cp -r $(inputs.resources.release-bucket.path)/* \
-        $(outputs.resources.release-bucket.path)/
+      cp -r $(resources.inputs.release-bucket.path)/* \
+        $(resources.outputs.release-bucket.path)/
   - name: fetch-release-pipeline-logs
     image: gcr.io/tekton-releases/dogfooding/tkn
     command:
@@ -50,8 +49,8 @@ spec:
     - |
       # This works with in cluster config. The service account used in the run must
       # have read access to the pipelinerun, taskrun and pod logs APIs
-      tkn -n $(inputs.params.namespace) pr logs $(inputs.params.pipelinerun) --all > \
-        $(outputs.resources.release-bucket.path)/previous/$(inputs.params.versionTag)/$(inputs.params.pipelinerun).log
+      tkn -n $(params.namespace) pr logs $(params.pipelinerun) --all > \
+        $(resources.outputs.release-bucket.path)/previous/$(params.versionTag)/$(params.pipelinerun).log
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1

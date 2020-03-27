@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: tekton-noop
@@ -6,36 +6,35 @@ metadata:
   description: |
     Example CI Job that does nothing interesting.
 spec:
-  inputs:
-    params:
-      - name: message
-        description: A message to log
-        type: string
-      - name: passorfail
-        description: whether it should 'pass' or 'fail'
-        type: string
-        default: 'pass'
-    resources:
-    - name: source
-      type: git
-  outputs:
-    resources:
-    - name: endtrigger
-      type: cloudEvent
+  params:
+    - name: message
+      description: A message to log
+      type: string
+    - name: passorfail
+      description: whether it should 'pass' or 'fail'
+      type: string
+      default: 'pass'
+  resources:
+    inputs:
+      - name: source
+        type: git
+    outputs:
+      - name: endtrigger
+        type: cloudEvent
   steps:
   - name: noop
     image: busybox
     script: |
       #!/bin/sh
       set -ex
-      echo "$(inputs.params.message)"
+      echo "$(params.message)"
       echo
       sleep 120
       echo "Content of the repo:"
-      ls $(inputs.resources.source.path)
-      [[ "$(inputs.params.passorfail)" == "pass" ]]
+      ls $(resources.inputs.source.path)
+      [[ "$(params.passorfail)" == "pass" ]]
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: tekton-fails-sometimes
@@ -43,27 +42,26 @@ metadata:
   description: |
     Example CI Job that fails ~50% of the times
 spec:
-  inputs:
-    params:
-      - name: message
-        description: A message to log
-        type: string
-    resources:
-    - name: source
-      type: git
-  outputs:
-    resources:
-    - name: endtrigger
-      type: cloudEvent
+  params:
+    - name: message
+      description: A message to log
+      type: string
+  resources:
+    inputs:
+      - name: source
+        type: git
+    outputs:
+      - name: endtrigger
+        type: cloudEvent
   steps:
   - name: noop
     image: busybox
     script: |
       #!/bin/sh
       set -ex
-      echo "$(inputs.params.message)"
+      echo "$(params.message)"
       echo
       sleep 30
       echo "Content of the repo:"
-      ls $(inputs.resources.source.path)
+      ls $(resources.inputs.source.path)
       exit $(( $(date +"%s") % 2 ))

@@ -41,26 +41,26 @@ spec:
   - name: plumbingRevision
     description: Git revision of the repository that holds plumbing scripts
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: deploy-$(params.tektonProject)-release-$(params.targetCluster)-$(uid)
     spec:
       taskRef:
         name: install-tekton-release
-      inputs:
-        params:
-        - name: projectName
-          value: $(params.tektonProject)
-        - name: namespace
-          value: $(params.namespace)
-        - name: version
-          value: $(params.tektonVersion)
-        - name: environment
-          value: $(params.targetCluster)
-        - name: release-file
-          value: $(params.releaseFile)
-        resources:
+      params:
+      - name: projectName
+        value: $(params.tektonProject)
+      - name: namespace
+        value: $(params.namespace)
+      - name: version
+        value: $(params.tektonVersion)
+      - name: environment
+        value: $(params.targetCluster)
+      - name: release-file
+        value: $(params.releaseFile)
+      resources:
+        inputs:
           - name: release-bucket
             resourceSpec:
               type: storage

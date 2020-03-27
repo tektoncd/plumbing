@@ -137,7 +137,7 @@ spec:
       params:
       - name: url
         value: $(params.targetImage)
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       generateName: build-and-push-$(uid)-
@@ -147,22 +147,21 @@ spec:
     spec:
       serviceAccountName: mario-releaser
       taskSpec:
-        inputs:
-          params:
+        params:
           - name: contextPath
             description: The path to the context
-          resources:
-          - name: source
-            type: git
-        outputs:
-          resources:
-          - name: image
-            type: image
-          - name: endtrigger
-            type: cloudEvent
+        resources:
+          inputs:
+            - name: source
+              type: git
+          outputs:
+            - name: image
+              type: image
+            - name: endtrigger
+              type: cloudEvent
         steps:
         - name: build-and-push
-          workingdir: $(inputs.resources.source.path)
+          workingdir: $(resources.inputs.source.path)
           image: gcr.io/kaniko-project/executor:v0.13.0
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
@@ -170,7 +169,7 @@ spec:
           command:
           - /kaniko/executor
           - --dockerfile=Dockerfile
-          - --context=$(inputs.params.contextPath)
+          - --context=$(params.contextPath)
           - --destination=$(params.targetImage)
           volumeMounts:
             - name: gcp-secret
@@ -179,24 +178,23 @@ spec:
           - name: gcp-secret
             secret:
               secretName: release-secret
-      inputs:
-        params:
-        - name: contextPath
-          value: $(params.contextPath)
-        resources:
-        - name: source
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(params.gitRevision)
-            - name: url
-              value: https://$(params.gitRepository)
-      outputs:
-        resources:
-        - name: image
-          resourceRef:
-            name: target-image-$(uid)
-        - name: endtrigger
-          resourceRef:
-            name: github-feedback-trigger
+      params:
+      - name: contextPath
+        value: $(params.contextPath)
+      resources:
+        inputs:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(params.gitRevision)
+              - name: url
+                value: https://$(params.gitRepository)
+        outputs:
+          - name: image
+            resourceRef:
+              name: target-image-$(uid)
+          - name: endtrigger
+            resourceRef:
+              name: github-feedback-trigger

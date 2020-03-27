@@ -46,77 +46,77 @@ spec:
         value: $(params.gitRevision)
       - name: url
         value: https://$(params.gitRepository)
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: deploy-configmap-$(params.configMapDescription)-$(uid)
     spec:
       taskSpec:
-        inputs:
-          params:
+        params:
           - name: configPath
           - name: namespace
           - name: configMapName
           - name: configMapKey
-          resources:
-          - name: source
-            type: git
-          - name: targetCluster
-            type: cluster
+        resources:
+          inputs:
+            - name: source
+              type: git
+            - name: targetCluster
+              type: cluster
         stepTemplate:
           env:
           - name: KUBECONFIG
-            value: /workspace/$(inputs.resources.targetCluster.name)/kubeconfig
+            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
         steps:
         - name: fetch-current-config
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
             set -ex
-            kubectl get configmap -n $(inputs.params.namespace) \
-              $(inputs.params.configMapName) -o template \
-              --template='{{ index .data "$(inputs.params.configMapKey)" }}' > \
-               /workspace/$(inputs.params.configMapKey) || \
-               rm /workspace/$(inputs.params.configMapKey)
+            kubectl get configmap -n $(params.namespace) \
+              $(params.configMapName) -o template \
+              --template='{{ index .data "$(params.configMapKey)" }}' > \
+               /workspace/$(params.configMapKey) || \
+               rm /workspace/$(params.configMapKey)
         - name: deploy
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
             set -ex
-            if [ ! -f /workspace/$(inputs.params.configMapKey) ]; then
+            if [ ! -f /workspace/$(params.configMapKey) ]; then
               echo "First time deployment"
-              kubectl create configmap $(inputs.params.configMapName) \
-                --from-file=$(inputs.params.configMapKey)=$(inputs.resources.source.path)/$(inputs.params.configPath) \
-                -n $(inputs.params.namespace)
+              kubectl create configmap $(params.configMapName) \
+                --from-file=$(params.configMapKey)=$(resources.inputs.source.path)/$(params.configPath) \
+                -n $(params.namespace)
                 exit 0
             fi
             echo "diff [current-config] [new config]"
             has_diff=0
-            diff /workspace/$(inputs.params.configMapKey) \
-              $(inputs.resources.source.path)/$(inputs.params.configPath) || has_diff=1
+            diff /workspace/$(params.configMapKey) \
+              $(resources.inputs.source.path)/$(params.configPath) || has_diff=1
             if [ $has_diff -eq 0 ]; then
               echo "No change in config detected. Nothing to be done."
               exit 0
             fi
             # Apply configuration changes
-            kubectl create configmap $(inputs.params.configMapName) \
-              --from-file=$(inputs.params.configMapKey)=$(inputs.resources.source.path)/$(inputs.params.configPath) \
+            kubectl create configmap $(params.configMapName) \
+              --from-file=$(params.configMapKey)=$(resources.inputs.source.path)/$(params.configPath) \
               --dry-run -o yaml | \
-              kubectl replace configmap $(inputs.params.configMapName) -n $(inputs.params.namespace) -f -
-      inputs:
-        params:
-        - name: configPath
-          value: $(params.configPath)
-        - name: namespace
-          value: $(params.namespace)
-        - name: configMapName
-          value: $(params.configMapName)
-        - name: configMapKey
-          value: $(params.configMapKey)
-        resources:
-        - name: source
-          resourceRef:
-            name: git-source-$(uid)
-        - name: targetCluster
-          resourceRef:
-            name: $(params.clusterResource)
+              kubectl replace configmap $(params.configMapName) -n $(params.namespace) -f -
+      params:
+      - name: configPath
+        value: $(params.configPath)
+      - name: namespace
+        value: $(params.namespace)
+      - name: configMapName
+        value: $(params.configMapName)
+      - name: configMapKey
+        value: $(params.configMapKey)
+      resources:
+        inputs:
+          - name: source
+            resourceRef:
+              name: git-source-$(uid)
+          - name: targetCluster
+            resourceRef:
+              name: $(params.clusterResource)

@@ -5,11 +5,11 @@ metadata:
 spec:
   taskRef:
     name: peribolos
-  inputs:
-    resources:
-    - name: repo
-      resourceSpec:
-        type: git
-        params:
-        - name: url
-          value: https://github.com/tektoncd/community.git
+  resources:
+    inputs:
+      - name: repo
+        resourceSpec:
+          type: git
+          params:
+          - name: url
+            value: https://github.com/tektoncd/community.git

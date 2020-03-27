@@ -11,35 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: install-tekton-release
 spec:
-  inputs:
-    resources:
-    - name: release-bucket
-      type: storage
-    - name: k8s-cluster
-      type: cluster
-    - name: plumbing-library
-      type: git
-    params:
-    - name: projectName
-      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
-      default: pipeline
-    - name: namespace
-      description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
-      default: tekton-pipelines
-    - name: version
-      description: The vX.Y.Z version that we want to install (including `v`)
-      default: latest
-    - name: environment
-      description: Name of the target environment. Used to apply relevant overalys
-      default: dogfooding
-    - name: release-file
-      description: Name of the release file
-      default: release.yaml
+  params:
+  - name: projectName
+    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+    default: pipeline
+  - name: namespace
+    description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
+    default: tekton-pipelines
+  - name: version
+    description: The vX.Y.Z version that we want to install (including `v`)
+    default: latest
+  - name: environment
+    description: Name of the target environment. Used to apply relevant overalys
+    default: dogfooding
+  - name: release-file
+    description: Name of the release file
+    default: release.yaml
+  resources:
+    inputs:
+      - name: release-bucket
+        type: storage
+      - name: k8s-cluster
+        type: cluster
+      - name: plumbing-library
+        type: git
   steps:
 
   - name: deploy-tekton-project
@@ -49,31 +49,31 @@ spec:
       set -exo pipefail
 
       # Export KUBECONFIG so that it's available to pre-scripts too
-      export KUBECONFIG=/workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+      export KUBECONFIG=/workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
       # Set up RELEASE_ROOT
-      if [[ "$(inputs.params.version)" == "latest" ]]; then
-        RELEASE_ROOT=$(inputs.resources.release-bucket.path)/$(inputs.params.version)
+      if [[ "$(params.version)" == "latest" ]]; then
+        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/$(params.version)
       else
-        RELEASE_ROOT=$(inputs.resources.release-bucket.path)/previous/$(inputs.params.version)
+        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/$(params.version)
       fi
 
       # Handle Overlays
-      OVERLAY_FOLDER=$(inputs.params.projectName)/overlays/$(inputs.params.environment)
+      OVERLAY_FOLDER=$(inputs.params.projectName)/overlays/$(params.environment)
       APPLY_MODE="-k $OVERLAY_FOLDER"
 
-      cd $(inputs.resources.plumbing-library.path)/tekton/cd
+      cd $(resources.inputs.plumbing-library.path)/tekton/cd
 
-      if [ ! -d $(inputs.params.projectName) ]; then
-        # There are is not base or project for $(inputs.params.projectName)
+      if [ ! -d $(params.projectName) ]; then
+        # There are is not base or project for $(params.projectName)
         # Apply the release as is
-        APPLY_MODE="--filename $RELEASE_ROOT/$(inputs.params.release-file)"
+        APPLY_MODE="--filename $RELEASE_ROOT/$(params.release-file)"
       else
         # If the base exists, an overlay for the specified environment must exist
         if [ ! -d  "$OVERLAY_FOLDER" ]; then
-          echo "Environment $(inputs.params.environment) not found for project $(inputs.params.projectName)"
+          echo "Environment $(params.environment) not found for project $(params.projectName)"
           exit 1
         fi
-        cp $RELEASE_ROOT/$(inputs.params.release-file) $(inputs.params.projectName)/base/release.yaml
+        cp $RELEASE_ROOT/$(params.release-file) $(params.projectName)/base/release.yaml
         find .
 
         # Execute pre-deploy scripts if any
@@ -87,27 +87,27 @@ spec:
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
-      source $(inputs.resources.plumbing-library.path)/scripts/library.sh
-      wait_until_pods_running "$(inputs.params.namespace)"
+      source $(resources.inputs.plumbing-library.path)/scripts/library.sh
+      wait_until_pods_running "$(params.namespace)"
     env:
       - name: KUBECONFIG
-        value: /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+        value: /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: verify-tekton-release-github
 spec:
-  inputs:
-    resources:
-    - name: release-bucket
-      type: storage
-    params:
-    - name: projectName
-      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
-      default: pipeline
-    - name: version
-      description: The vX.Y.Z version that we want to install (including `v`)
+  params:
+  - name: projectName
+    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+    default: pipeline
+  - name: version
+    description: The vX.Y.Z version that we want to install (including `v`)
+  resources:
+    inputs:
+      - name: release-bucket
+        type: storage
   steps:
 
   - name: compare-github-vs-bucket
@@ -117,33 +117,33 @@ spec:
     args:
     - -ce
     - |
-      curl -L https://github.com/tektoncd/$(inputs.params.projectName)/releases/download/$(inputs.params.version)/release.yaml > /workspace/release-github.yaml
+      curl -L https://github.com/tektoncd/$(params.projectName)/releases/download/$(params.version)/release.yaml > /workspace/release-github.yaml
       diff \
         /workspace/release-github.yaml \
-        $(inputs.resources.release-bucket.path)/$(inputs.params.projectName)/previous/$(inputs.params.version)/release.yaml # Diff exists with 0 only if there is no difference
+        $(resources.inputs.release-bucket.path)/$(params.projectName)/previous/$(params.version)/release.yaml # Diff exists with 0 only if there is no difference
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: cleanup-tekton-release
 spec:
-  inputs:
-    resources:
-    - name: k8s-cluster
-      type: cluster
-    - name: plumbing-library
-      type: git
-    params:
-    - name: projectName
-      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
-      default: pipeline
-    - name: namespace
-      description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
-      default: tekton-pipelines
-    - name: version
-      description: The vX.Y.Z version that we want to install (including `v`)
-    - name: resources
-      description: space separated list of resources to be deleted
+  params:
+  - name: projectName
+    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+    default: pipeline
+  - name: namespace
+    description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
+    default: tekton-pipelines
+  - name: version
+    description: The vX.Y.Z version that we want to install (including `v`)
+  - name: resources
+    description: space separated list of resources to be deleted
+  resources:
+    inputs:
+      - name: k8s-cluster
+        type: cluster
+      - name: plumbing-library
+        type: git
   steps:
 
   - name: cleanup-resources
@@ -154,24 +154,24 @@ spec:
     - -ce
     - |
       # Make sure that everything is cleaned up in the current namespace.
-      for res in $(inputs.params.resources); do
+      for res in $(params.resources); do
         kubectl delete --ignore-not-found=true ${res}.tekton.dev --all \
-        --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+        --kubeconfig /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
       done
 
   - name: uninstall-tekton-project
     image: gcr.io/tekton-releases/tests/test-runner
     env:
       - name: KUBECONFIG
-        value: /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+        value: /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
     command:
     - /bin/bash
     args:
     - -ce
     - |
-      source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+      source $(resources.inputs.plumbing-library.path)/scripts/library.sh
 
-      kubectl delete --ignore-not-found=true -f "https://github.com/tektoncd/$(inputs.params.projectName)/releases/download/$(inputs.params.version)/release.yaml" \
-      --kubeconfig /workspace/$(inputs.resources.k8s-cluster.name)/kubeconfig
+      kubectl delete --ignore-not-found=true -f "https://github.com/tektoncd/$(params.projectName)/releases/download/$(params.version)/release.yaml" \
+      --kubeconfig /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
 
-      wait_until_object_does_not_exist namespace $(inputs.params.namespace)
+      wait_until_object_does_not_exist namespace $(params.namespace)

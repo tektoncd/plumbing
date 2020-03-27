@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: log-test-image-tools
 spec:
-  inputs:
-    resources:
-    - name: plumbing-library
-      type: git
+  resources:
+    inputs:
+      - name: plumbing-library
+        type: git
   steps:
     - name: log-test-runner-tools-setup
       image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
@@ -28,7 +28,7 @@ spec:
       args:
       - -ce
       - |
-        source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+        source $(resources.inputs.plumbing-library.path)/scripts/library.sh
 
         # Disable gcloud update notifications
         gcloud config set component_manager/disable_update_check true
@@ -44,100 +44,98 @@ spec:
         echo ">> bazel version"
         bazel version 2> /dev/null
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: e2e-tests
 spec:
-  inputs:
-    params:
-    - name: package
-      description: package (and its children) under test
-    - name: tests-path
-      description: path to the tests within "tests" git resource
-      default: ./test
-    - name: timeout
-      description: timeout for the go test runner
-      default: 20m
-    - name: container-registry
-      description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
-    resources:
-    - name: plumbing-library
-      type: git
-    - name: tests
-      type: git
-      targetPath: src/$(inputs.params.package)
-    - name: test-cluster
-      type: cluster
-  outputs:
-    resources:
-    - name: results-bucket
-      type: storage
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: tests-path
+    description: path to the tests within "tests" git resource
+    default: ./test
+  - name: timeout
+    description: timeout for the go test runner
+    default: 20m
+  - name: container-registry
+    description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+  resources:
+    inputs:
+      - name: plumbing-library
+        type: git
+      - name: tests
+        type: git
+        targetPath: src/$(params.package)
+      - name: test-cluster
+        type: cluster
+    outputs:
+      - name: results-bucket
+        type: storage
   steps:
     - name: run-e2e-tests
       image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
-      workingdir: /workspace/src/$(inputs.params.package)
+      workingdir: /workspace/src/$(params.package)
       env:
       - name: REPO_ROOT_DIR
-        value: $(inputs.resources.tests.path)
+        value: $(resources.inputs.tests.path)
       - name: ARTIFACTS
-        value: $(outputs.resources.results-bucket.path)
+        value: $(resources.outputs.results-bucket.path)
       - name: GOPATH
         value: /workspace
       - name: KO_DOCKER_REPO
-        value: $(inputs.params.container-registry)
+        value: $(params.container-registry)
       command:
       - /bin/bash
       args:
       - -ce
       - |
         # Setup
-        source $(inputs.resources.plumbing-library.path)/scripts/library.sh
+        source $(resources.inputs.plumbing-library.path)/scripts/library.sh
         e2e_failed=0
 
         header "Running Go e2e tests"
-        report_go_test -v -count=1 -tags=e2e -timeout=$(inputs.params.timeout) $(inputs.params.tests-path) -kubeconfig /workspace/$(inputs.resources.test-cluster.name)/kubeconfig || e2e_failed=1
+        report_go_test -v -count=1 -tags=e2e -timeout=$(params.timeout) $(params.tests-path) -kubeconfig /workspace/$(resources.inputs.test-cluster.name)/kubeconfig || e2e_failed=1
         echo ${e2e_failed} > ${ARTIFACTS}/e2e.result
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: e2e-yaml-tests
 spec:
-  inputs:
-    params:
-    - name: yamls-path
-      description: path to the tests within "tests" git resource
-      default: ./examples
-    - name: timeout
-      description: timeout for the go test runner
-      default: 20m
-    - name: container-registry
-      description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
-    resources:
-    - name: plumbing-library
-      type: git
-    - name: tests
-      type: git
-    - name: test-cluster
-      type: cluster
-  outputs:
-    resources:
-    - name: results-bucket
-      type: storage
+  params:
+  - name: yamls-path
+    description: path to the tests within "tests" git resource
+    default: ./examples
+  - name: timeout
+    description: timeout for the go test runner
+    default: 20m
+  - name: container-registry
+    description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+  resources:
+    inputs:
+      - name: plumbing-library
+        type: git
+      - name: tests
+        type: git
+      - name: test-cluster
+        type: cluster
+    outputs:
+      - name: results-bucket
+        type: storage
   steps:
     - name: run-e2e-yaml-tests
       image: gcr.io/tekton-releases/tests/test-runner@sha256:a4a64b2b70f85a618bbbcc6c0b713b313b2e410504dee24c9f90ec6fe3ebf63f
       env:
       - name: REPO_ROOT_DIR
-        value: $(inputs.resources.tests.path)
+        value: $(resources.inputs.tests.path)
       - name: ARTIFACTS
-        value: $(outputs.resources.results-bucket.path)
+        value: $(resources.outputs.results-bucket.path)
       - name: KO_DOCKER_REPO
-        value: $(inputs.params.container-registry)
+        value: $(params.container-registry)
       - name: KUBECONFIG
-        value: /workspace/$(inputs.resources.test-cluster.name)/kubeconfig
-      workingDir: $(inputs.resources.plumbing-library.path)/scripts
+        value: /workspace/$(resources.inputs.test-cluster.name)/kubeconfig
+      workingDir: $(resources.inputs.plumbing-library.path)/scripts
       command:
       - /bin/bash
       args:
@@ -159,15 +157,15 @@ spec:
         done
         echo ${e2e_failed} > ${ARTIFACTS}/e2e-yaml.result
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: test-results
 spec:
-  inputs:
-    resources:
-    - name: results-bucket
-      type: storage
+  resources:
+    inputs:
+      - name: results-bucket
+        type: storage
   steps:
     - name: aggregate-test-results
       image: alpine
@@ -176,4 +174,4 @@ spec:
       args:
       - -ce
       - |
-        cat $(inputs.resources.results-bucket.path)/*.result | paste -s -d+ - | bc | egrep '^0$'
+        cat $(resources.inputs.results-bucket.path)/*.result | paste -s -d+ - | bc | egrep '^0$'
