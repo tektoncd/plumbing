@@ -41,7 +41,7 @@ spec:
   - name: versionTag
     description: The version tag to use within the bucket to store the logs
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       generateName: save-release-logs-$(uid)-
@@ -49,20 +49,19 @@ spec:
       serviceAccountName: tekton-logs
       taskRef:
         name: save-release-logs
-      inputs:
-        params:
-        - name: pipelinerun
-          value: $(params.pipelineRun)
-        - name: namespace
-          value: $(params.namespace)
-        - name: versionTag
-          value: $(params.versionTag)
+      params:
+      - name: pipelinerun
+        value: $(params.pipelineRun)
+      - name: namespace
+        value: $(params.namespace)
+      - name: versionTag
+        value: $(params.versionTag)
         resources:
         - name: release-bucket
           resourceRef:
             name: $(params.bucket)
-      outputs:
-        resources:
-        - name: release-bucket
-          resourceRef:
-            name: $(params.bucket)
+      resources:
+        outputs:
+          - name: release-bucket
+            resourceRef:
+              name: $(params.bucket)

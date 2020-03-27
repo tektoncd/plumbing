@@ -40,27 +40,27 @@ spec:
       When provided this should be the URL to a YAML file with resources.
     default: ""
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: deploy-helm-$(params.chartDescription)-$(uid)
     spec:
       taskSpec:
-        inputs:
-          params:
-          - name: chartName
-          - name: chartVersion
-          - name: chartRepo
-          - name: chartParams
-          - name: namespace
-          - name: preDeployResources
-          resources:
-          - name: targetCluster
-            type: cluster
+        params:
+        - name: chartName
+        - name: chartVersion
+        - name: chartRepo
+        - name: chartParams
+        - name: namespace
+        - name: preDeployResources
+        resources:
+          inputs:
+            - name: targetCluster
+              type: cluster
         stepTemplate:
           env:
           - name: KUBECONFIG
-            value: /workspace/$(inputs.resources.targetCluster.name)/kubeconfig
+            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
         steps:
         - name: pre-deploy-from-url
           image: gcr.io/tekton-releases/dogfooding/kubectl
@@ -69,7 +69,7 @@ spec:
             set -ex
 
             # Check if we have something to be done
-            if [ "$(inputs.params.preDeployResources)" == "" ]; then
+            if [ "$(params.preDeployResources)" == "" ]; then
               echo "No pre-deploy resources to deploy, continue"
               exit 0
             fi
@@ -77,8 +77,8 @@ spec:
             # Apply the resources to the same namespace
             kubectl apply \
               --validate=false \
-              -n $(inputs.params.namespace) \
-              -f $(inputs.params.preDeployResources)
+              -n $(params.namespace) \
+              -f $(params.preDeployResources)
 
         - name: helm-deploy
           image: alpine/helm:3.1.2
@@ -86,32 +86,32 @@ spec:
             #!/bin/sh
             set -ex
             echo "Running install/upgrade"
-            echo "with $(inputs.params.chartParams)"
+            echo "with $(params.chartParams)"
             helm upgrade \
               --debug \
-              $(inputs.params.chartName)-tektoncd-maintained \
-              $(inputs.params.chartName) \
+              $(params.chartName)-tektoncd-maintained \
+              $(params.chartName) \
               --install \
-              --version $(inputs.params.chartVersion) \
-              --repo $(inputs.params.chartRepo) \
-              --namespace=$(inputs.params.namespace) \
-              --set "$(inputs.params.chartParams)" \
+              --version $(params.chartVersion) \
+              --repo $(params.chartRepo) \
+              --namespace=$(params.namespace) \
+              --set "$(params.chartParams)" \
               --wait --timeout 5m
-      inputs:
-        params:
-        - name: chartName
-          value: $(params.chartName)
-        - name: chartVersion
-          value: $(params.chartVersion)
-        - name: chartRepo
-          value: $(params.chartRepo)
-        - name: chartParams
-          value: $(params.chartParams)
-        - name: namespace
-          value: $(params.namespace)
-        - name: preDeployResources
-          value: $(params.preDeployResources)
-        resources:
-        - name: targetCluster
-          resourceRef:
-            name: $(params.clusterResource)
+      params:
+      - name: chartName
+        value: $(params.chartName)
+      - name: chartVersion
+        value: $(params.chartVersion)
+      - name: chartRepo
+        value: $(params.chartRepo)
+      - name: chartParams
+        value: $(params.chartParams)
+      - name: namespace
+        value: $(params.namespace)
+      - name: preDeployResources
+        value: $(params.preDeployResources)
+      resources:
+        inputs:
+          - name: targetCluster
+            resourceRef:
+              name: $(params.clusterResource)

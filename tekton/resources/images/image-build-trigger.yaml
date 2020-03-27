@@ -57,7 +57,7 @@ spec:
   - name: buildUUID
     description: The build UUID is used for log collection
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: build-and-push-$(params.imageName)-$(uid)
@@ -66,17 +66,16 @@ spec:
         plumbing.tekton.dev/image: $(params.imageName)
     spec:
       taskSpec:
-        inputs:
-          resources:
-          - name: source
-            type: git
-        outputs:
-          resources:
-          - name: image
-            type: image
+        resources:
+          inputs:
+            - name: source
+              type: git
+          outputs:
+            - name: image
+              type: image
         steps:
         - name: build-and-push
-          workingdir: $(inputs.resources.source.path)
+          workingdir: $(resources.inputs.source.path)
           image: gcr.io/kaniko-project/executor:v0.13.0
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
@@ -85,7 +84,7 @@ spec:
           - /kaniko/executor
           - --dockerfile=Dockerfile
           - --context=$(params.contextPath)
-          - --destination=$(outputs.resources.image.url)
+          - --destination=$(resources.outputs.image.url)
           volumeMounts:
             - name: gcp-secret
               mountPath: /secret
@@ -93,21 +92,20 @@ spec:
           - name: gcp-secret
             secret:
               secretName: release-secret
-      inputs:
-        resources:
-        - name: source
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(params.gitRevision)
-            - name: url
-              value: https://$(params.gitRepository)
-      outputs:
-        resources:
-        - name: image
-          resourceSpec:
-            type: image
-            params:
-            - name: url
-              value: $(params.registry)/$(params.namespace)/$(params.imageName):$(params.imageTag)
+      resources:
+        inputs:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(params.gitRevision)
+              - name: url
+                value: https://$(params.gitRepository)
+        outputs:
+          - name: image
+            resourceSpec:
+              type: image
+              params:
+              - name: url
+                value: $(params.registry)/$(params.namespace)/$(params.imageName):$(params.imageTag)

@@ -1,7 +1,7 @@
 - op: add
   path: "/spec/resourcetemplates/-"
   value:
-    apiVersion: tekton.dev/v1alpha1
+    apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
       name: pipeline-release-nightly-$(uid)

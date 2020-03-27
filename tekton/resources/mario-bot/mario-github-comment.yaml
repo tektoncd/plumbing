@@ -62,32 +62,31 @@ spec:
         - fieldName: authToken
           secretName: mario-github-token
           secretKey: GITHUB_TOKEN
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       generateName: mario-comment-github-$(uid)-
     spec:
       serviceAccountName: mario-listener
       taskSpec:
-        inputs:
-          resources:
-          - name: source
-            type: git
-          - name: pr
-            type: pullRequest
-        outputs:
-          resources:
-          - name: image
-            type: image
-          - name: pr
-            type: pullRequest
+        resources:
+          inputs:
+            - name: source
+              type: git
+            - name: pr
+              type: pullRequest
+          outputs:
+            - name: image
+              type: image
+            - name: pr
+              type: pullRequest
         steps:
         - name: copy-pr-to-output
           image: busybox
           script: |
             #!/bin/sh
-            mkdir -p $(outputs.resources.pr.path)
-            cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+            mkdir -p $(resources.outputs.pr.path)
+            cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
         - name: setup-comment
           image: python:3-alpine
           script: |
@@ -120,7 +119,7 @@ spec:
                 'Here is the image you requested: '
                 '<a href="https://{imageurl}">built image</a>|'
               )
-              comment_params['imageurl'] = '$(outputs.resources.image.url)'
+              comment_params['imageurl'] = '$(resources.outputs.image.url)'
             else:
               comment_template += (
                 'Cloud not build the requested image. Please check the '
@@ -132,28 +131,27 @@ spec:
             )
             comment_params['buildid'] = '$(params.buildUUID)'
 
-            new_comment_path = "$(outputs.resources.pr.path)/comments/new.json"
+            new_comment_path = "$(resources.outputs.pr.path)/comments/new.json"
             comment_body = dict(body=comment_template.format(**comment_params))
             with open(new_comment_path, "w") as comment:
               json.dump(comment_body, comment)
-      inputs:
-        resources:
-        - name: source
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(params.gitRevision)
-            - name: url
-              value: $(params.gitURL)
-        - name: pr
-          resourceRef:
-            name: pr-$(uid)
-      outputs:
-        resources:
-        - name: image
-          resourceRef:
-            name: $(params.targetImageResourceName)
-        - name: pr
-          resourceRef:
-            name: pr-$(uid)
+      resources:
+        inputs:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(params.gitRevision)
+              - name: url
+                value: $(params.gitURL)
+          - name: pr
+            resourceRef:
+              name: pr-$(uid)
+        outputs:
+          - name: image
+            resourceRef:
+              name: $(params.targetImageResourceName)
+          - name: pr
+            resourceRef:
+              name: pr-$(uid)

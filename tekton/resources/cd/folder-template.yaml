@@ -47,27 +47,27 @@ spec:
         value: $(params.gitRevision)
       - name: url
         value: https://$(params.gitRepository)
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: deploy-resources-$(params.folderDescription)-$(uid)
     spec:
       taskSpec:
-        inputs:
-          params:
-          - name: folderPath
-          - name: namespace
-          - name: deployMethod
-          - name: isOverlay
-          resources:
-          - name: source
-            type: git
-          - name: targetCluster
-            type: cluster
+        params:
+        - name: folderPath
+        - name: namespace
+        - name: deployMethod
+        - name: isOverlay
+        resources:
+          inputs:
+            - name: source
+              type: git
+            - name: targetCluster
+              type: cluster
         stepTemplate:
           env:
           - name: KUBECONFIG
-            value: /workspace/$(inputs.resources.targetCluster.name)/kubeconfig
+            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
         steps:
         - name: deploy-from-folder
           image: gcr.io/tekton-releases/dogfooding/kubectl
@@ -77,30 +77,30 @@ spec:
 
             # Determine whether to deploy a normal folder or a kustomize overlay
             METHOD_PARAM="-f"
-            [[ "$(inputs.params.isOverlay)" == "true" ]] && METHOD_PARAM="-k"
+            [[ "$(params.isOverlay)" == "true" ]] && METHOD_PARAM="-k"
 
             # Determine whether to enforce namespace across resources
-            NAMESPACE_PARAM="-n $(inputs.params.namespace)"
-            [[ "$(inputs.params.namespace)" == "" ]] && NAMESPACE_PARAM=""
+            NAMESPACE_PARAM="-n $(params.namespace)"
+            [[ "$(params.namespace)" == "" ]] && NAMESPACE_PARAM=""
 
             # Run the deployment
-            kubectl "$(inputs.params.deployMethod)" \
+            kubectl "$(params.deployMethod)" \
               $NAMESPACE_PARAM $METHOD_PARAM \
-              $(inputs.resources.source.path)/$(inputs.params.folderPath)
-      inputs:
-        params:
-        - name: folderPath
-          value: $(params.folderPath)
-        - name: namespace
-          value: $(params.namespace)
-        - name: deployMethod
-          value: $(params.deployMethod)
-        - name: isOverlay
-          value: $(params.isOverlay)
-        resources:
-        - name: source
-          resourceRef:
-            name: git-source-$(uid)
-        - name: targetCluster
-          resourceRef:
-            name: $(params.clusterResource)
+              $(resources.inputs.source.path)/$(params.folderPath)
+      params:
+      - name: folderPath
+        value: $(params.folderPath)
+      - name: namespace
+        value: $(params.namespace)
+      - name: deployMethod
+        value: $(params.deployMethod)
+      - name: isOverlay
+        value: $(params.isOverlay)
+      resources:
+        inputs:
+          - name: source
+            resourceRef:
+              name: git-source-$(uid)
+          - name: targetCluster
+            resourceRef:
+              name: $(params.clusterResource)

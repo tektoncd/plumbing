@@ -36,28 +36,27 @@ spec:
         - fieldName: authToken
           secretName: bot-token-github
           secretKey: bot-token
-  - apiVersion: tekton.dev/v1alpha1
+  - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       name: $(params.checkName)-pr-$(params.checkStatus)-$(uid)
     spec:
       serviceAccountName: tekton-ci-jobs
       taskSpec:
-        inputs:
-          resources:
-          - name: pr
-            type: pullRequest
-        outputs:
-          resources:
-          - name: pr
-            type: pullRequest
+        resources:
+          inputs:
+            - name: pr
+              type: pullRequest
+          outputs:
+            - name: pr
+              type: pullRequest
         steps:
         - name: copy-pr-to-output
           image: busybox
           script: |
             #!/bin/sh
-            mkdir -p $(outputs.resources.pr.path)
-            cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+            mkdir -p $(resources.outputs.pr.path)
+            cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
         - name: setup-comment
           image: python:3-alpine
           script: |
@@ -86,16 +85,15 @@ spec:
               Target=logs_url)
 
             # we may need to URLEncode the check name
-            status_path = "$(outputs.resources.pr.path)/status/$(params.checkName).json"
+            status_path = "$(resources.outputs.pr.path)/status/$(params.checkName).json"
             with open(status_path, "w") as status:
               json.dump(status_body, status)
-      inputs:
-        resources:
-        - name: pr
-          resourceRef:
-            name: pr-$(params.checkStatus)-$(uid)
-      outputs:
-        resources:
-        - name: pr
-          resourceRef:
-            name: pr-$(params.checkStatus)-$(uid)
+      resources:
+        inputs:
+          - name: pr
+            resourceRef:
+              name: pr-$(params.checkStatus)-$(uid)
+        outputs:
+          - name: pr
+            resourceRef:
+              name: pr-$(params.checkStatus)-$(uid)

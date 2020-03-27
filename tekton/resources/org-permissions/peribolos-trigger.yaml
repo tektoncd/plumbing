@@ -39,11 +39,11 @@ spec:
     spec:
       taskRef:
         name: peribolos
-      inputs:
-        resources:
-        - name: repo
-          resourceRef:
-            name: community-git-$(uid)
+      resources:
+        inputs:
+          - name: repo
+            resourceRef:
+              name: community-git-$(uid)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
