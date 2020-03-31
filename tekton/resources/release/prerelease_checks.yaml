@@ -39,7 +39,7 @@ spec:
         echo "Checking git tag"
         # Look for the tag in the list of tags
         git ls-remote --tags https://$(inputs.params.package) | \
-          grep $(inputs.params.versionTag) || exit 0
+          grep "$(inputs.params.versionTag)$" || exit 0
         # If the version was found fail
         echo "Version $(inputs.params.versionTag) already tagged for $(inputs.params.package)"
         exit 1
@@ -70,7 +70,7 @@ spec:
         wget -q -O- --header 'Accept: application/vnd.github.v3+json' \
           https://api.github.com/repos/${PACKAGE}/releases | \
           python -c 'import sys; import json; print("\n".join([x["tag_name"] for x in json.load(sys.stdin)]))' | \
-          grep $(inputs.params.versionTag) || exit 0
+          grep "$(inputs.params.versionTag)$" || exit 0
         echo "Release $(inputs.params.versionTag) already exists for $(inputs.params.package)"
         exit 1
     - name: success-confirmation
