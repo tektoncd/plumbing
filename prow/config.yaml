@@ -449,6 +449,36 @@ presubmits:
       - name: test-account
         secret:
           secretName: test-account
+  - name: pull-tekton-experimental-helm-lint
+    agent: tekton-pipeline
+    always_run: true
+    rerun_command: /run tekton-experimental-helm-lint
+    trigger: "(?m)^/run (all|tekton-experimental-helm-lint),?(\\s+|$)"
+    pipeline_run_spec:
+      pipelineSpec:
+        resources:
+          - name: src
+            type: git
+        tasks:
+          - taskSpec:
+              inputs:
+                resources:
+                  - name: src
+                    type: git
+              steps:
+                - image: alpine/helm:3.1.2
+                  workingDir: /workspace/src/helm
+                  script: |
+                    #!/usr/bin/env sh
+                    helm lint ./pipeline
+            resources:
+              inputs:
+                - name: src
+                  resource: src
+      resources:
+        - name: src
+          resourceRef:
+            name: PROW_IMPLICIT_GIT_REF
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
