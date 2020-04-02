@@ -26,6 +26,7 @@ RUN rm -rf $(go env GOROOT) && \
 # Install extras on top of base image
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
+RUN apt-get install -y python3 python3-dev python3-pip python3-openssl
 RUN gcloud components update
 
 # Docker
@@ -57,7 +58,7 @@ RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl -v 0.5.0
 
 # Extra tools through pip
-RUN pip install yamllint
+RUN pip3 install yamllint
 
 # Temporarily add test-infra to the image to build custom tools
 RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
