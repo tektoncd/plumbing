@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: deploy-target-details
@@ -22,7 +22,7 @@ spec:
   - name: clusterResource
     value: $(body.params.target.cluster-resource)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: deploy-source-git
@@ -33,7 +33,7 @@ spec:
   - name: gitRevision
     value: $(body.params.git.revision)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: configmap-details
@@ -48,7 +48,7 @@ spec:
   - name: configPath
     value: $(body.params.configmap.path)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: folder-details
@@ -63,7 +63,7 @@ spec:
   - name: isOverlay
     value: $(body.params.folder.is-overlay)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: helm-details
@@ -82,7 +82,7 @@ spec:
   - name: preDeployResources
     value: $(body.params.helm.pre-deploy-resources)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-details
@@ -101,7 +101,7 @@ spec:
   - name: releaseExtraPath
     value: $(body.params.tekton.extra-path)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: plumbing-git

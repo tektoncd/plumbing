@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: trigger-to-comment-github
@@ -17,7 +17,7 @@ spec:
   - name: passedOrFailed
     value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: github-feedback-trigger
@@ -30,7 +30,7 @@ spec:
       template:
         name: mario-comment-github
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: mario-comment-github
