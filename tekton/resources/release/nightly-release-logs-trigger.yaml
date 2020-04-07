@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: publish-images-taskrun-to-release-logs
@@ -13,7 +13,7 @@ spec:
   - name: versionTag
     value: $(body.taskRun.spec.inputs.params[?(@.name == 'versionTag')].value)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: pipeline-release-post-processing
@@ -26,7 +26,7 @@ spec:
       template:
         name: release-logs
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: release-logs

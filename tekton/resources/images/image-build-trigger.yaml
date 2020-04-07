@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: trigger-to-build-and-push-image
@@ -21,7 +21,7 @@ spec:
   - name: imageTag
     value: $(body.imageTag)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: image-builder
@@ -34,7 +34,7 @@ spec:
       template:
         name: build-and-push-image
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: build-and-push-image

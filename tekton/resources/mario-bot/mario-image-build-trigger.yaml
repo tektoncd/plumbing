@@ -6,8 +6,8 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "list", "watch"]
-- apiGroups: ["tekton.dev"]
-  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "tasks", "taskruns"]
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates"]
   verbs: ["get", "list"]
 - apiGroups: ["tekton.dev"]
   resources: ["pipelineruns", "pipelineresources", "taskruns"]
@@ -52,7 +52,7 @@ roleRef:
   kind: Role
   name: triggers-minimal
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: mario-trigger-to-build-and-push-image
@@ -71,7 +71,7 @@ spec:
   - name: pullRequestID
     value: $(body.pullRequestID)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: mario-image-builder
@@ -109,7 +109,7 @@ spec:
   - name: targetURI
     value: http://el-github-feedback-trigger.mario:8080
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: mario-build-and-push-image

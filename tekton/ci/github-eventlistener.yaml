@@ -1,5 +1,5 @@
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: github-check-done
@@ -17,7 +17,7 @@ spec:
       template:
         name: tekton-ci-github-check-update
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: github-check-start

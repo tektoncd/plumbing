@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-webhook-pull-request
@@ -18,7 +18,7 @@ spec:
   - name: gitCloneDepth
     value: $(body.extensions.git_clone_depth)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-webhook-comment
@@ -40,7 +40,7 @@ spec:
   - name: gitHubCommand
     value: $(body.comment.body)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-taskrun-cloudevent
@@ -60,7 +60,7 @@ spec:
   - name: pipelineRunName
     value: $(body.taskRun.metadata.ownerReferences[?(@.kind == 'PipelineRun')].name)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-check-pending
@@ -72,7 +72,7 @@ spec:
   - name: checkDescription
     value: "Job Triggered."
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-check-complete
