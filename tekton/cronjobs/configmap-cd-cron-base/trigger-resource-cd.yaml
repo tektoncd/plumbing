@@ -34,7 +34,7 @@ spec:
               - |
                 cat <<EOF > /workspace/post-body.json
                 {
-                  "trigger-template": "configmaps",
+                  "trigger-template": "configmap",
                   "params": {
                     "git": {
                       "repository": "$GIT_REPOSITORY",
@@ -42,14 +42,14 @@ spec:
                     },
                     "target": {
                       "namespace": "$NAMESPACE",
-                      "cluster-resource": "$CLUSTER_RESOURCE",
+                      "cluster-resource": "$CLUSTER_RESOURCE"
                     },
                     "configmap": {
                         "description": "$CONFIGMAP_DESCRIPTION",
-                        "path": "$CONFIG_PATH"
+                        "path": "$CONFIG_PATH",
                         "name": "$CONFIGMAP_NAME",
                         "key": "$CONFIGMAP_KEY"
-                    },
+                    }
                   }
                 }
                 EOF
