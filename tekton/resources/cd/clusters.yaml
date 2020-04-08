@@ -90,3 +90,23 @@ spec:
     secretKey: ca.crt
     secretName: robocat-tektoncd-cadmin-token
   type: cluster
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: dogfooding-tekton-deployer
+  namespace: default
+spec:
+  params:
+  - name: url
+    value: https://35.222.251.168
+  - name: username
+    value: tekton-deployer
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: dogfooding-tekton-deployer-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: dogfooding-tekton-deployer-token
+  type: cluster
