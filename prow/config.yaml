@@ -462,6 +462,7 @@ presubmits:
       - image: alpine/helm:3.1.2
         imagePullPolicy: IfNotPresent
         args:
+        - helm
         - lint
         - ./helm/pipeline
   tektoncd/operator:
