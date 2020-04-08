@@ -87,6 +87,11 @@ default:
       name: area/epic
       target: issues
       addedBy: label
+    - color: 009900
+      description: Issues that are related to automation aspects of the website or other projects.
+      name: area/automation
+      target: issues
+      addedBy: label
 
     # Kinds
     - color: e11d21
