@@ -58,7 +58,7 @@ spec:
       fi
 
       # Handle Overlays
-      OVERLAY_FOLDER=$(inputs.params.projectName)/overlays/$(params.environment)
+      OVERLAY_FOLDER=$(params.projectName)/overlays/$(params.environment)
       APPLY_MODE="-k $OVERLAY_FOLDER"
 
       cd $(resources.inputs.plumbing-library.path)/tekton/cd
