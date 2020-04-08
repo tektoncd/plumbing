@@ -151,3 +151,35 @@ Login to Netifly and create a new DNS `A` record:
 ```
 dashboard.robotcat.tekton.dev   3600   IN   A   <PLUBLIC_IP>
 ```
+
+# Set up `robocat` to drive deployments to the `dogfooding` cluster
+
+Prerequisite for this step is that the `tekton-deployer` service account has
+been created in the `dogfooding` cluster as well. Once that is in place, create
+the secret in the `robocat` cluster that holds the service account credentials
+need to use `tekton-deployer` on `dogfooding`:
+
+```
+# Fetch the secret data from robocat
+TD_SECRET=$(kubectl --cluster gke_tekton-releases_us-central1-a_dogfooding \
+  get -n tekton-pipelines sa/tekton-deployer -o jsonpath='{.secrets[0].name}')
+CA_CRT=$(kubectl --cluster gke_tekton-releases_us-central1-a_dogfooding \
+  get -n tekton-pipelines secret/$TD_SECRET -o jsonpath='{.data.ca\.crt}')
+TOKEN=$(kubectl --cluster gke_tekton-releases_us-central1-a_dogfooding \
+  get -n tekton-pipelines secret/$TD_SECRET -o jsonpath='{.data.token}')
+
+# Create the secret on robocat
+cat <<EOF | kubectl --cluster gke_tekton-nightly_europe-north1-a_robocat create -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dogfooding-tekton-deployer-token
+type: Opaque
+data:
+  ca.crt: $CA_CRT
+  token: $TOKEN
+EOF
+```
+
+The `cluster` type `PipelineResource` is already deployed on `robocat` and it
+uses the secret `dogfooding-tekton-deployer-token`.
