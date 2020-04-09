@@ -86,7 +86,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -120,7 +120,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-cross-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -154,7 +154,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -188,7 +188,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -253,7 +253,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -287,7 +287,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-dashboard-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -321,7 +321,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -356,7 +356,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-experimental-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -390,7 +390,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-experimental-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -424,7 +424,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-experimental-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -473,7 +473,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -511,7 +511,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -545,7 +545,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -610,7 +610,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -646,7 +646,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-pipeline-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -680,7 +680,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -745,7 +745,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -779,7 +779,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -813,7 +813,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-catalog-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -848,7 +848,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -882,7 +882,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-triggers-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -916,7 +916,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -983,7 +983,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -997,7 +997,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -1028,7 +1028,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -1062,7 +1062,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1074,7 +1074,7 @@ postsubmits:
     always_run: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -1112,7 +1112,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1127,7 +1127,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1145,7 +1145,7 @@ periodics:
     path_alias: github.com/tektoncd/pipeline
   spec:
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
       imagePullPolicy: Always
       args:
       - "--scenario=kubernetes_execute_bazel"
