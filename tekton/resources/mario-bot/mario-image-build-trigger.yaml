@@ -4,7 +4,7 @@ metadata:
   name: triggers-minimal
 rules:
 - apiGroups: [""]
-  resources: ["configmaps"]
+  resources: ["configmaps", "secrets"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["triggers.tekton.dev"]
   resources: ["eventlisteners", "triggerbindings", "triggertemplates"]
@@ -77,7 +77,7 @@ metadata:
   name: mario-image-builder
 spec:
   serviceAccountName: mario-listener
-  serviceType: LoadBalancer
+  serviceType: NodePort
   triggers:
     - name: trigger
       interceptors:
