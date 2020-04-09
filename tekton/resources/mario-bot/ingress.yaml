@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  name: ing
+  namespace: mario
+spec:
+  tls:
+  - secretName: mario-dogfooding-tekton-dev-tls
+    hosts:
+    - mario.dogfooding.tekton.dev
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: el-mario-image-builder
+          servicePort: 8080
+        path: /*
