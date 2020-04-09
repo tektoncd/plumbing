@@ -22,7 +22,7 @@ git clone https://github.com/kubernetes/test-infra
 
 # actually start bootstrap and the job, under the runner (which handles dind etc.)
 /usr/local/bin/runner.sh \
-    ./test-infra/jenkins/bootstrap.py \
+    python2 ./test-infra/jenkins/bootstrap.py \
         --job="${JOB_NAME}" \
         --service-account="${GOOGLE_APPLICATION_CREDENTIALS}" \
         --upload='gs://kubernetes-jenkins/logs' \
