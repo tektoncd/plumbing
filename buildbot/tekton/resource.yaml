@@ -1,0 +1,12 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: tekton-plumbing-git
+spec:
+  type: git
+  params:
+  - name: url
+    value: https://github.com/tektoncd/plumbing
+  - name: revision
+    value: master  # REPLACE with the commit you want to release
+

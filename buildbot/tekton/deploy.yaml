@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildbot-deploy
+spec:
+  resources:
+    inputs:
+    - name: source
+      type: git
+      targetPath: go/src/github.com/tektoncd/plumbing
+  params:
+  - name: imageRegistry
+    default: "gcr.io/dibyo-spinnaker-dev/pipeline"
+  steps:
+  - name: buildbot-build-push-deploy
+    image: gcr.io/tekton-nightly/ko-ci
+    env:
+    - name: KO_DOCKER_REPO
+      value: $(params.imageRegistry)
+    - name: GOPATH
+      value: /workspace/go
+    - name: CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE
+      value: /secret/release.json
+    script: |
+      #!/bin/sh
+      set -ex
+      gcloud auth configure-docker
+
+      cd /workspace/go/src/github.com/tektoncd/plumbing/buildbot
+      ko apply -f config/
+    volumeMounts:
+      - name: gcp-secret
+        mountPath: /secret
+  volumes:
+    - name: gcp-secret
+      secret:
+        secretName: gcp-secret
