@@ -253,8 +253,8 @@ presubmits:
   - name: pull-tekton-cli-integration-tests-0_10
     agent: kubernetes
     always_run: true
-    rerun_command: "/test pull-tekton-cli-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-cli-integration-tests-0_10"
+    trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests-0_10),?(\\s+|$)"
     spec:
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
