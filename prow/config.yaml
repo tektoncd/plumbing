@@ -535,7 +535,9 @@ presubmits:
         args:
         - helm
         - lint
+        - ./helm/dashboard
         - ./helm/pipeline
+        - ./helm/triggers
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
