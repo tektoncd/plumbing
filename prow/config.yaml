@@ -276,7 +276,7 @@ presubmits:
           mountPath: /etc/test-account
           readOnly: true
         env:
-        - env: RELEASE_YAML
+        - name: RELEASE_YAML
           value: https://github.com/tektoncd/pipeline/releases/download/v0.10.2/release.yaml
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
