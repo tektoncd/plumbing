@@ -89,7 +89,36 @@ export SOURCE_DATE_EPOCH
 
 # actually start bootstrap and the job
 set -o xtrace
+
+while [[ $# -ne 0 ]]; do
+    case $1 in
+        # FIXME(vdemeester) Remove those
+        --scenario=*) echo "scenario";;
+        --clean) echo "clean";;
+        --job=*) echo "job";;
+        --repo=*) echo "repo";;
+        --root=*) echo "root";;
+        --upload=*) echo "upload";;
+        --service-account=*)
+            echo "do something with it"
+            gcloud auth activate-service-account --key-file=$(cut -d "=" -f2 <<< "$1")
+            ;;
+        --)
+            shift
+            # Remove extra '--'
+            [[ $1 == "--" ]] && shift
+            break
+            ;;
+        *)
+            echo "error: unknown option $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 "$@"
+
 EXIT_VALUE=$?
 set +o xtrace
 
