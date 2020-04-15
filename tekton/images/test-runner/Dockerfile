@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Build kubetest independently of the rest
+FROM golang:1.14 as kubetest
+RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
+# Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
+# uses needs extract credentials.
+# FIXME: use kind and kops to run provision e2e tests clusters instead of kubetest
+RUN cd /go/src/k8s.io/test-infra && \
+    git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
+    go install k8s.io/test-infra/kubetest
+
 FROM debian:buster
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ENV DEBIAN_FRONTEND noninteractive
-
-WORKDIR /workspace
-RUN mkdir -p /workspace
-ENV WORKSPACE=/workspace \
+ENV DEBIAN_FRONTEND noninteractive \
     TERM=xterm
 
 # common util tools
@@ -35,10 +41,6 @@ RUN apt update && apt install -y --no-install-recommends \
     openssh-client \
     pkg-config \
     procps \
-    python \
-    python-dev \
-    python-openssl \
-    python-pip \
     python3 \
     python3-dev \
     python3-openssl \
@@ -67,15 +69,14 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.ta
         --bash-completion=false \
         --path-update=false \
         --usage-reporting=false && \
-    gcloud components install alpha beta kubectl && \
+    gcloud components update && \
+    gcloud components install alpha beta kubectl docker-credential-gcr && \
     gcloud info | tee /workspace/gcloud-info.txt
-
+RUN docker-credential-gcr configure-docker
 
 #
 # BEGIN: DOCKER IN DOCKER SETUP
-#
-
-# Install Docker deps, some of these are already installed in the image but
+# Install Docker deps, some of there are already installed in the image but
 # that's fine since they won't re-install and we can reuse the code below
 # for another image someday.
 RUN apt update && apt install -y --no-install-recommends \
@@ -119,40 +120,17 @@ RUN mkdir /docker-graph
 # END: DOCKER IN DOCKER SETUP
 #
 
-# hint to kubetest that it is in CI
-ENV KUBETEST_IN_DOCKER="true"
 # Go standard envs
-ENV GOPATH /go
+ENV GOPATH /home/prow/go
 ENV PATH /usr/local/go/bin:$PATH
 
-RUN mkdir -p /go/bin
+RUN mkdir -p /home/prow/go/bin
 ENV PATH $GOPATH/bin:$PATH
 
-# setup k8s repo symlink
-RUN mkdir -p /go/src/k8s.io/kubernetes \
-    && ln -s /go/src/k8s.io/kubernetes /workspace/kubernetes
-
 # preinstall:
-# - graphviz package for graphing profiles
 # - bc for shell to junit
-# - rpm for building RPMs with Bazel
-RUN apt update && apt install -y bc \
-    graphviz \
-    rpm && \
+RUN apt update && apt install -y bc && \
     rm -rf /var/lib/apt/lists/*
-# preinstall this for kops tests xref kubetest prepareAws(...)
-# TODO(krzyzacy,justisb,chrislovecnm): remove this
-RUN python -m pip install awscli
-
-# install cfssl to prevent https://github.com/kubernetes/kubernetes/issues/55589
-# The invocation at the end is to prevent download failures downloads as in the bug.
-# TODO(porridge): bump CFSSL_VERSION to one where cfssljson supports the -version flag and test it as well.
-ARG CFSSL_VERSION="R1.2"
-RUN wget -q -O cfssl "https://pkg.cfssl.org/${CFSSL_VERSION}/cfssl_linux-amd64" && \
-    wget -q -O cfssljson "https://pkg.cfssl.org/${CFSSL_VERSION}/cfssljson_linux-amd64" && \
-    chmod +x cfssl cfssljson && \
-    mv cfssl cfssljson /usr/local/bin && \
-    cfssl version
 
 # replace kubectl with one from K8S_RELEASE
 ARG K8S_RELEASE=latest
@@ -166,10 +144,6 @@ ADD ["https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/get
     "/workspace/"]
 RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 
-# note the runner is also responsible for making docker in docker function if
-# env DOCKER_IN_DOCKER_ENABLED is set and similarly responsible for generating
-COPY ["entrypoint.sh", "runner.sh", "/usr/local/bin/"]
-
 # END: test-infra import
 
 # Install Go 1.14.1
@@ -179,25 +153,17 @@ RUN rm -rf $(go env GOROOT) && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
 
-
-# Install extras on top of base image
-RUN gcloud components update
-
-# Docker
-RUN gcloud components install docker-credential-gcr
-RUN docker-credential-gcr configure-docker
-
 # Extra tools through apt
 RUN apt update && apt install -y uuid-runtime  # for uuidgen
 RUN apt update && apt install -y rubygems  # for mdl
 
 # Extra tools through go get
-RUN go get -u github.com/google/ko/cmd/ko
-RUN go get -u github.com/golang/dep/cmd/dep
-RUN go get -u github.com/google/licenseclassifier
-RUN go get -u github.com/google/go-licenses
-RUN go get -u github.com/jstemmer/go-junit-report
-RUN GO111MODULE="on" go get -u github.com/raviqqe/liche
+RUN go get -u github.com/google/ko/cmd/ko && \
+    go get -u github.com/golang/dep/cmd/dep && \
+    go get -u github.com/google/licenseclassifier && \
+    go get -u github.com/google/go-licenses && \
+    go get -u github.com/jstemmer/go-junit-report && \
+    GO111MODULE="on" go get -u github.com/raviqqe/liche
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
 ARG GOLANGCI_VERSION=1.24.0
@@ -215,9 +181,13 @@ RUN gem install mdl -v 0.5.0
 RUN python -m pip install yamllint
 
 # Temporarily add test-infra to the image to build custom tools
-RUN mkdir -p /go/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra && \
-    make -C /go/src/github.com/knative/test-infra/tools/githubhelper && \
-    cp /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
+RUN mkdir -p /${GOPATH}/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /${GOPATH}/src/github.com/knative/test-infra && \
+    make -C /${GOPATH}/src/github.com/knative/test-infra/tools/githubhelper && \
+    cp /${GOPATH}/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
     go install github.com/knative/test-infra/tools/dep-collector
 
+COPY --from=kubetest /go/bin/kubetest /usr/local/bin
+# note the runner is also responsible for making docker in docker function if
+# env DOCKER_IN_DOCKER_ENABLED is set and similarly responsible for generating
+COPY ["entrypoint.sh", "runner.sh", "/usr/local/bin/"]
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
