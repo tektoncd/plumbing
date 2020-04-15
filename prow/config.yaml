@@ -1150,7 +1150,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1165,7 +1165,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:safe # we may want ours here
+      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
         imagePullPolicy: Always
         command:
         - "/coverage"
