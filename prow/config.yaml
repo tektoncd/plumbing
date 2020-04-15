@@ -538,6 +538,18 @@ presubmits:
         - ./helm/dashboard
         - ./helm/pipeline
         - ./helm/triggers
+  - name: pull-tekton-experimental-helm-docs
+    agent: kubernetes
+    always_run: true
+    rerun_command: /run tekton-experimental-helm-docs
+    trigger: "(?m)^/run (all|tekton-experimental-helm-docs),?(\\s+|$)"
+    decorate: true
+    spec:
+      containers:
+      - image: jnorwood/helm-docs:v0.12.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - ./helm/.hack/check-helm-docs.sh
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
