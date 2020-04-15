@@ -1079,7 +1079,7 @@ postsubmits:
         - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
         - "--root=/go/src"
         - "--service-account=/etc/nightly-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
+        - "--upload=gs://tekton-prow/logs"
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/publish-images.sh"
@@ -1110,7 +1110,7 @@ postsubmits:
         - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
         - "--root=/go/src"
         - "--service-account=/etc/nightly-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
+        - "--upload=gs://tekton-prow/logs"
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/publish-images.sh"
@@ -1156,7 +1156,7 @@ postsubmits:
         - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
         - "--root=/go/src"
         - "--service-account=/etc/nightly-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
+        - "--upload=gs://tekton-prow/logs"
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./hack/nightly.sh"
