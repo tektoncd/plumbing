@@ -48,6 +48,7 @@ tide:
     - do-not-merge/work-in-progress
     - needs-rebase
     - needs-ok-to-test
+    - do-not-merge/requires-pipelines-0.12
   merge_method:
     tektoncd/catalog: rebase
     tektoncd/cli: rebase
