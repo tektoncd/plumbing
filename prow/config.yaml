@@ -553,6 +553,18 @@ presubmits:
         imagePullPolicy: IfNotPresent
         args:
         - ./helm/.hack/check-helm-docs.sh
+  - name: pull-tekton-experimental-helm-version
+    agent: kubernetes
+    always_run: true
+    rerun_command: /run tekton-experimental-helm-version
+    trigger: "(?m)^/run (all|tekton-experimental-helm-version),?(\\s+|$)"
+    decorate: true
+    spec:
+      containers:
+      - image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - ./helm/.hack/check-version.sh
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
