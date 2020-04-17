@@ -276,6 +276,11 @@ default:
 repos:
   tektoncd/catalog:
     labels:
+      - color: e11d21
+        description: This pull-request can't be merged because it requires a specific version of pipeline
+        name: do-not-merge/requires-unreleased-pipelines
+        target: prs
+        addedBy: humans
       - color: DF0A6B
         description: This issue needs attention from the buildpacks team
         name: area/buildpacks
