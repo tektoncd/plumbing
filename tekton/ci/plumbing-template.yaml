@@ -135,11 +135,11 @@ spec:
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-yamllint
         - name: gitHubCommand
           value: $(params.gitHubCommand)
         - name: folders
-          value: */config/ boskos gubernator label_sync prow robocat tekton
+          value: "*/config/ boskos gubernator label_sync prow robocat tekton"
       resources:
       - name: source
         resourceSpec:
