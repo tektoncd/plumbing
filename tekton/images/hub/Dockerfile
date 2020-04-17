@@ -17,6 +17,6 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 ARG HUB_VERSION=2.14.2
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk add --no-cache \
-    git=2.22.2-r0 \
-    bash=5.0.0-r0 \
+    git=2.24.2-r0 \
+    bash=5.0.11-r1 \
     hub=${HUB_VERSION}-r0
