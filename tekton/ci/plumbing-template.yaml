@@ -112,3 +112,48 @@ spec:
       - name: endtrigger
         resourceRef:
           name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: tekton-yamllint-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-yamllint
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-yamllint
+      params:
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: ".*"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: folders
+          value: */config/ boskos gubernator label_sync prow robocat tekton
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done

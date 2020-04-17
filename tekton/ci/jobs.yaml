@@ -65,3 +65,29 @@ spec:
       echo "Content of the repo:"
       ls $(resources.inputs.source.path)
       exit $(( $(date +"%s") % 2 ))
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: yamllint
+  namespace: tektonci
+  description: |
+    Lint yamls
+spec:
+  params:
+  - name: folders
+    description: The folders to lint with yamllint
+  resources:
+    inputs:
+      - name: source
+        type: git
+    outputs:
+      - name: endtrigger
+        type: cloudEvent
+  steps:
+  - name: lint
+    image: gcr.io/tekton-releases/dogfooding/yamllint:latest
+    script: |
+      #!/bin/sh
+      set -ex
+      yamllint ${params.folders}
