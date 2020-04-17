@@ -47,7 +47,7 @@ spec:
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
-          value: ".*"
+          value: "(tekton-demo)"
         - name: checkName
           value: tekton-noop-check
         - name: gitHubCommand
@@ -90,7 +90,7 @@ spec:
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "(tekton/ci|tekton-demo)"
+          value: "(tekton-demo)"
         - name: checkName
           value: tekton-random-check
         - name: gitHubCommand
