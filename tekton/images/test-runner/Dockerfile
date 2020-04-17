@@ -22,6 +22,12 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
+# Build knative-tools independently of the rest
+FROM golang:1.14 as knative-tools
+RUN git clone https://github.com/knative/test-infra.git /go/src/github.com/knative/test-infra
+RUN make -C /go/src/github.com/knative/test-infra/tools/githubhelper
+RUN go install github.com/knative/test-infra/tools/dep-collector
+
 FROM debian:buster
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
@@ -71,7 +77,7 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.ta
         --usage-reporting=false && \
     gcloud components update && \
     gcloud components install alpha beta kubectl docker-credential-gcr && \
-    gcloud info | tee /workspace/gcloud-info.txt
+    gcloud info | tee /gcloud-info.txt
 RUN docker-credential-gcr configure-docker
 
 #
@@ -180,12 +186,8 @@ RUN gem install mdl -v 0.5.0
 # Extra tools through pip
 RUN python -m pip install yamllint
 
-# Temporarily add test-infra to the image to build custom tools
-RUN mkdir -p /${GOPATH}/src/github.com/knative/ && git clone https://github.com/knative/test-infra.git /${GOPATH}/src/github.com/knative/test-infra && \
-    make -C /${GOPATH}/src/github.com/knative/test-infra/tools/githubhelper && \
-    cp /${GOPATH}/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin && \
-    go install github.com/knative/test-infra/tools/dep-collector
-
+COPY --from=knative-tools /go/bin/dep-collector /usr/local/bin
+COPY --from=knative-tools /go/src/github.com/knative/test-infra/tools/githubhelper/githubhelper /usr/local/bin
 COPY --from=kubetest /go/bin/kubetest /usr/local/bin
 # note the runner is also responsible for making docker in docker function if
 # env DOCKER_IN_DOCKER_ENABLED is set and similarly responsible for generating

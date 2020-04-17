@@ -88,19 +88,19 @@ SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct || true)
 export SOURCE_DATE_EPOCH
 
 # actually start bootstrap and the job
+echo "== Running ./runner.sh backward compatibility test runner ==="
 set -o xtrace
 
 while [[ $# -ne 0 ]]; do
     case $1 in
         # FIXME(vdemeester) Remove those
-        --scenario=*) echo "scenario";;
-        --clean) echo "clean";;
-        --job=*) echo "job";;
-        --repo=*) echo "repo";;
-        --root=*) echo "root";;
-        --upload=*) echo "upload";;
+        --scenario=*) ;;
+        --clean) ;;
+        --job=*) ;;
+        --repo=*) ;;
+        --root=*) ;;
+        --upload=*) ;;
         --service-account=*)
-            echo "do something with it"
             gcloud auth activate-service-account --key-file=$(cut -d "=" -f2 <<< "$1")
             ;;
         --)
