@@ -103,7 +103,7 @@ presubmits:
           secretName: test-account
   - name: try-out-prow-plus-tekton
     agent: tekton-pipeline
-    always_run: true
+    always_run: false
     rerun_command: "/run try-out-tekton"
     trigger: "(?m)^/run (all|try-out-tekton),?(\\s+|$)"
     pipeline_run_spec:
