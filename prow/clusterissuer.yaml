@@ -7,8 +7,8 @@ spec:
     email: dlorenc@google.com
     privateKeySecretRef:
       name: letsencrypt-prod
-    server: https://acme-v02.api.letsencrypt.org/directory 
+    server: https://acme-v02.api.letsencrypt.org/directory
     solvers:
     - http01:
         ingress:
-          class: nginx  
+          class: nginx

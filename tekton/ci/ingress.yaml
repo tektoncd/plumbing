@@ -5,7 +5,7 @@ metadata:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
   name: ing
-  namespace: tektonci  
+  namespace: tektonci
 spec:
   tls:
   - secretName: webhook-draft-ci-dogfooding-tekton-dev-tls
