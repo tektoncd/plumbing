@@ -90,4 +90,4 @@ spec:
     script: |
       #!/bin/sh
       set -ex
-      yamllint ${params.folders}
+      yamllint $(params.folders)
