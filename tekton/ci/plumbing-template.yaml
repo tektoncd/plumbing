@@ -135,7 +135,7 @@ spec:
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-yamllint
         - name: gitHubCommand
           value: $(params.gitHubCommand)
         - name: folders
