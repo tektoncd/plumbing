@@ -87,6 +87,7 @@ spec:
   steps:
   - name: lint
     image: gcr.io/tekton-releases/dogfooding/yamllint:latest
+    workingDir: $(resources.inputs.source.path)
     script: |
       #!/bin/sh
       set -ex
