@@ -425,12 +425,13 @@ presubmits:
   tektoncd/experimental:
   - name: pull-tekton-experimental-build-tests
     agent: kubernetes
+    decorate: true
     always_run: true
     rerun_command: "/test pull-tekton-experimental-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-experimental-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -460,11 +461,12 @@ presubmits:
   - name: pull-tekton-experimental-unit-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test tekton-experimental-unit-tests"
     trigger: "(?m)^/test (all|tekton-experimental-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -494,11 +496,12 @@ presubmits:
   - name: pull-tekton-experimental-integration-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-experimental-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-experimental-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
