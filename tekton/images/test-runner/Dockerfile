@@ -128,10 +128,8 @@ RUN mkdir /docker-graph
 
 # Go standard envs
 ENV GOPATH /home/prow/go
+ENV GOBIN /usr/local/go/bin
 ENV PATH /usr/local/go/bin:$PATH
-
-RUN mkdir -p /home/prow/go/bin
-ENV PATH $GOPATH/bin:$PATH
 
 # preinstall:
 # - bc for shell to junit
