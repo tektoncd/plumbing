@@ -1162,10 +1162,13 @@ postsubmits:
     branches:
     - master
     always_run: true
+    decorate: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -1193,10 +1196,13 @@ postsubmits:
   tektoncd/experimental:
   - name: tekton-dashboard-publish-images
     always_run: true
+    decorate: true
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -1277,8 +1283,10 @@ periodics:
     path_alias: github.com/tektoncd/pipeline
   spec:
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
       imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
       args:
       - "--scenario=kubernetes_execute_bazel"
       - "--clean"
