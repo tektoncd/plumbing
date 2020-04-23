@@ -561,9 +561,9 @@ presubmits:
   - name: pull-tekton-experimental-helm-lint
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: /run tekton-experimental-helm-lint
     trigger: "(?m)^/run (all|tekton-experimental-helm-lint),?(\\s+|$)"
-    decorate: true
     spec:
       containers:
       - image: alpine/helm:3.1.2
@@ -577,9 +577,9 @@ presubmits:
   - name: pull-tekton-experimental-helm-docs
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: /run tekton-experimental-helm-docs
     trigger: "(?m)^/run (all|tekton-experimental-helm-docs),?(\\s+|$)"
-    decorate: true
     spec:
       containers:
       - image: jnorwood/helm-docs:v0.12.0
@@ -589,9 +589,9 @@ presubmits:
   - name: pull-tekton-experimental-helm-version
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: /run tekton-experimental-helm-version
     trigger: "(?m)^/run (all|tekton-experimental-helm-version),?(\\s+|$)"
-    decorate: true
     spec:
       containers:
       - image: alpine:latest
