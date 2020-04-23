@@ -120,12 +120,15 @@ presubmits:
   - name: pull-tekton-cli-build-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -154,12 +157,15 @@ presubmits:
   - name: pull-tekton-cli-build-cross-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-build-cross-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-build-cross-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -188,12 +194,15 @@ presubmits:
   - name: pull-tekton-cli-unit-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-unit-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -222,12 +231,15 @@ presubmits:
   - name: pull-tekton-cli-integration-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -256,12 +268,15 @@ presubmits:
   - name: pull-tekton-cli-integration-tests-0_10
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-integration-tests-0_10"
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests-0_10),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -292,10 +307,10 @@ presubmits:
   - name: pull-tekton-cli-go-coverage
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-cli-go-coverage"
     trigger: "(?m)^/test (all|pull-tekton-cli-go-coverage),?(\\s+|$)"
     optional: true
-    decorate: true
     clone_uri: "https://github.com/tektoncd/cli.git"
     spec:
       containers:
