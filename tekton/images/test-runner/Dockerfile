@@ -173,6 +173,10 @@ RUN go get -u github.com/google/ko/cmd/ko && \
 ARG GOLANGCI_VERSION=1.24.0
 RUN curl -sL https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "*/golangci-lint"
 
+# Install Kustomize:
+ARG KUSTOMIZE_VERSION=3.5.4
+RUN curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "kustomize"
+
 # Install the TektonCD CLI: https://github.com/tektoncd/cli/
 ARG TKN_VERSION=0.8.0
 RUN curl -sL https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar -C /usr/local/bin -xvzf - --wildcards "tkn"
