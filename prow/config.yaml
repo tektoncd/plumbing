@@ -746,12 +746,15 @@ presubmits:
   - name: pull-tekton-pipeline-build-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-pipeline-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -782,12 +785,15 @@ presubmits:
   - name: pull-tekton-pipeline-unit-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test tekton-pipeline-unit-tests"
     trigger: "(?m)^/test (all|tekton-pipeline-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -816,12 +822,15 @@ presubmits:
   - name: pull-tekton-pipeline-integration-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-pipeline-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -850,10 +859,10 @@ presubmits:
   - name: pull-tekton-pipeline-go-coverage
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-pipeline-go-coverage"
     trigger: "(?m)^/test (all|pull-tekton-pipeline-go-coverage),?(\\s+|$)"
     optional: true
-    decorate: true
     clone_uri: "https://github.com/tektoncd/pipeline.git"
     spec:
       containers:
