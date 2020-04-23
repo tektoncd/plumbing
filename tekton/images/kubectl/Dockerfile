@@ -17,5 +17,5 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 RUN update-ca-certificates
 
-ARG KUBECTL_VERSION=1.16.2
+ARG KUBECTL_VERSION=1.16.4
 RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
