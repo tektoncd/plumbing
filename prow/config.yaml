@@ -449,8 +449,8 @@ presubmits:
   tektoncd/experimental:
   - name: pull-tekton-experimental-build-tests
     agent: kubernetes
-    decorate: true
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-experimental-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-experimental-build-tests),?(\\s+|$)"
     spec:
@@ -602,12 +602,15 @@ presubmits:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-operator-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-operator-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -640,11 +643,12 @@ presubmits:
   - name: pull-tekton-operator-unit-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-operator-unit-tests"
     trigger: "(?m)^/test (all|pull-tekton-operator-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         args:
         - "--scenario=kubernetes_execute_bazel"
@@ -674,12 +678,15 @@ presubmits:
   - name: pull-tekton-operator-integration-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-operator-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-operator-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -708,10 +715,10 @@ presubmits:
   - name: pull-tekton-operator-go-coverage
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-operator-go-coverage"
     trigger: "(?m)^/test (all|pull-tekton-operator-go-coverage),?(\\s+|$)"
     optional: true
-    decorate: true
     clone_uri: "https://github.com/tektoncd/operator.git"
     spec:
       containers:
