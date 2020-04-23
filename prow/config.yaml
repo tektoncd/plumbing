@@ -890,12 +890,15 @@ presubmits:
   - name: pull-tekton-catalog-build-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-catalog-build-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -924,12 +927,15 @@ presubmits:
   - name: pull-tekton-catalog-unit-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-catalog-unit-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
@@ -958,12 +964,15 @@ presubmits:
   - name: pull-tekton-catalog-integration-tests
     agent: kubernetes
     always_run: true
+    decorate: true
     rerun_command: "/test pull-tekton-catalog-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-catalog-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:safe
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
