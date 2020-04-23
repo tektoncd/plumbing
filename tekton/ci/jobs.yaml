@@ -97,6 +97,9 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: build-push-kaniko
+  namespace: tektonci
+  description: |
+    CI Job that builds a container images and pushes it to a CR using kaniko
 spec:
   params:
   - name: IMAGE

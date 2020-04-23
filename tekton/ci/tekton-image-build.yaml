@@ -18,6 +18,8 @@ spec:
       default: gcr.io/tekton-nightly/dogfooding/ci/
     - name: gitHubCommand
       description: The command that was used to trigger testing
+    - name: pullRequestNumber
+      description: The number of the pull request
   resources:
     - name: source
       type: git
@@ -52,7 +54,7 @@ spec:
         value: $(params.gitHubCommand)
       - name: checkName
         value: $(params.checkName)
-  - name: build-ko
+  - name: build-image
     runAfter: [check-reset]
     conditions:
     - conditionRef: "check-git-files-changed"
@@ -62,9 +64,8 @@ spec:
       - name: regex
         value: $(params.fileFilterRegex)
       resources:
-        inputs:
-        - name: source
-          resource: source
+      - name: source
+        resource: source
     taskRef:
       name: build-push-kaniko
     params:
