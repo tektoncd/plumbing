@@ -72,10 +72,10 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-random-check-$(uid)
+      name: plumbing-ko-build-$(uid)
       labels:
         prow.k8s.io/build-id: $(params.buildUUID)
-        tekton.dev/check-name: tekton-random-check
+        tekton.dev/check-name: plumbing-ko-build
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(params.pullRequestNumber)
       annotations:
@@ -83,16 +83,288 @@ spec:
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
-        name: tekton-random-check
+        name: tekton-image-build
       params:
-        - name: message
-          value: "BuildUUID#: $(params.buildUUID), Package: $(params.package), Repo: $(params.gitRepository), Revision: $(params.gitRevision)"
+        - name: imageName
+          value: ko
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "(tekton-demo)"
+          value: "tekton/images/ko/**"
         - name: checkName
-          value: tekton-random-check
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-ko-gcloud-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-ko-gcloud-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: ko-gcloud
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/ko-gcloud/**"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-hub-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-hub-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: hub
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/hub/**"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-kubectl-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-kubectl-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: kubectl
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/kubectl/**"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-skopeo-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-skopeo-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: skopeo
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/skopeo/**"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-test-runner-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-test-runner-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: test-runner
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/test-runner/**"
+        - name: checkName
+          value: plumbing-images-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-tkn-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-tkn-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: tkn
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/tkn/**"
+        - name: checkName
+          value: plumbing-images-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
