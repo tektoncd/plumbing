@@ -650,6 +650,8 @@ presubmits:
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
         args:
         - "--scenario=kubernetes_execute_bazel"
         - "--clean"
