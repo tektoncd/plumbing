@@ -314,7 +314,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/cli.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
+      - image: gcr.io/knative-tests/test-infra/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -724,7 +724,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/operator.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
+      - image: gcr.io/knative-tests/test-infra/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -868,7 +868,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/pipeline.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
+      - image: gcr.io/knative-tests/test-infra/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1122,7 +1122,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/triggers.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:v20190612-ae60484
+      - image: gcr.io/knative-tests/test-infra/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
