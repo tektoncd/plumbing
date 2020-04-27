@@ -324,7 +324,7 @@ presubmits:
         - "--artifacts=$(ARTIFACTS)"
         - "--profile-name=coverage_profile.txt"
         - "--cov-target=."
-        - "--cov-threshold-percentage=80"
+        - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
         volumeMounts:
         - name: github-token
@@ -734,7 +734,7 @@ presubmits:
         - "--artifacts=$(ARTIFACTS)"
         - "--profile-name=coverage_profile.txt"
         - "--cov-target=."
-        - "--cov-threshold-percentage=80"
+        - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
         volumeMounts:
         - name: github-token
@@ -878,7 +878,7 @@ presubmits:
         - "--artifacts=$(ARTIFACTS)"
         - "--profile-name=coverage_profile.txt"
         - "--cov-target=."
-        - "--cov-threshold-percentage=80"
+        - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
         volumeMounts:
         - name: github-token
@@ -1132,7 +1132,7 @@ presubmits:
         - "--artifacts=$(ARTIFACTS)"
         - "--profile-name=coverage_profile.txt"
         - "--cov-target=."
-        - "--cov-threshold-percentage=80"
+        - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
         volumeMounts:
         - name: github-token
