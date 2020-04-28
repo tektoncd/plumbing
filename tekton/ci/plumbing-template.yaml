@@ -94,7 +94,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/ko/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-ko-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -139,7 +139,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/ko-gcloud/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-ko-gcloud-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -184,7 +184,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/hub/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-hub-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -229,7 +229,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/kubectl/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-kubectl-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -274,7 +274,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/skopeo/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-skopeo-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -319,7 +319,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/test-runner/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-test-runner-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
@@ -364,7 +364,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/images/tkn/**"
         - name: checkName
-          value: plumbing-images-build
+          value: plumbing-tkn-build
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
