@@ -135,6 +135,12 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
+    - color: ef8fd9
+      name: kind/misc
+      description: Categorizes issue or PR as a miscellaneuous one.
+      target: both
+      prowPlugin: label
+      addedBy: anyone
 
     # For further discussion in the next Productivity WG meeting
 
