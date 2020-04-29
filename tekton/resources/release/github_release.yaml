@@ -60,18 +60,72 @@ spec:
 
         -[Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
         -[Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
+
+        ## Installation one-liner
+
+        \`\`\`
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/${PROJECT}/previous/${VERSION}/release.yaml
+        \`\`\`
+
+        ## Upgrade Notices
+
+        [TBD]
+
+        ## Changes
         EOF
+    - name: filter-data
+      image: gcr.io/tekton-releases/dogfooding/hub
+      workingdir: $(resources.inputs.source.path)
+      script: |
+        #!/usr/bin/env bash
+        set -ex
+
+        # Restore full git history
+        git fetch --unshallow
+
+        # UPPER_THRESHOLD is the newest sha we are interested in
+        UPPER_THRESHOLD=$(inputs.resources.source.revision)
+        # COMMON_ANCESTOR is the common ancestore between the OLD_VERSION and UPPER_THRESHOLD
+        COMMON_ANCESTOR=$(git merge-base ${OLD_VERSION} ${UPPER_THRESHOLD})
+        # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from master
+        OLD_RELEASE_SUBJECTS=$HOME/old_subjects.txt
+        echo "Cherry-picked commits:"
+        git log --format="%s" $COMMON_ANCESTOR..$OLD_VERSION | sort -u | tee $OLD_RELEASE_SUBJECTS
+        echo "OLD_VERSION: $OLD_VERSION"
+        echo "COMMON_ANCESTOR: $COMMON_ANCESTOR"
+        echo "UPPER_THRESHOLD: $UPPER_THRESHOLD"
+
+        # Save the PR data in CSV. Only consider PRs whose sha verifies the condition
+        # COMMON_ANCESTOR is ancestor of SHA is ancestor of UPPER_THRESHOLD
+        # And title no in the OLD_VERSION branch.
+        # Working Assumptions:
+        #   - there are no duplicate titles in commits
+        #   - we always cherry-pick full PRs, never commits out of a multi-commit PR
+        # Format of output data:
+        # "author;number;title"
+        hub pr list --state merged -L 300 -f "%sm;%au;%i;%t;%L%n" | \
+          while read pr; do
+            SHA=$(echo $pr | cut -d';' -f1)
+            SUBJECT=$(git log -1 --format="%s" $SHA || echo "__NOT_FOUND__")
+            git merge-base --is-ancestor $SHA $UPPER_THRESHOLD && \
+            git merge-base --is-ancestor $COMMON_ANCESTOR $SHA && \
+            ! $(egrep "^${SUBJECT}$" $OLD_RELEASE_SUBJECTS &> /dev/null) &&
+            echo $pr | cut -d';' -f2-
+          done > $HOME/pr.csv || true  # We do not want to fail is the last of the loop is not a match
+
+        echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
+        cat $HOME/pr.csv
     - name: body
       image: busybox
       script: |
         #!/bin/sh
-        set -ex
+        set -e
         cat <<EOF | tee -a $HOME/release.md
-        ## Changes
 
-        ### Features
+        # Features
 
         * :sparkles: [Feature Title]
+        $(awk -F";" '/kind\/feature/{ print "* :sparkles: "$3" ("$2")" }' $HOME/pr.csv)
 
         [Detailed feature description] (#Number).
 
@@ -98,50 +152,27 @@ spec:
         # Fixes
 
         * :bug: [Description (#Number)]
+        $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr.csv)
+        $(awk -F";" '/kind\/flake/{ print "* :flake: "$3" ("$2")" }' $HOME/pr.csv)
 
         [Fill list here]
 
         # Misc
 
         * :hammer: [Description (#Number)]
+        $(awk -F";" '/kind\/cleanup/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr.csv)
+        $(awk -F";" '/kind\/misc/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr.csv)
 
         [Fill list here]
 
         # Docs
 
         * :book: [Description (#Number)]
+        $(awk -F";" '/kind\/documentation/{ print "* :book: "$3" ("$2")" }' $HOME/pr.csv)
 
         [Fill list here]
         EOF
-    - name: filter-data
-      image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(resources.inputs.source.path)
-      script: |
-        #!/usr/bin/env bash
-        set -e
 
-        # Restore full git history
-        git fetch --unshallow
-
-        LOWER_THRESHOLD=$(git rev-list ${OLD_VERSION} | wc -l)
-        UPPER_THRESHOLD=$(git rev-list $(inputs.resources.source.revision) | wc -l)
-        echo "LOWER_THRESHOLD: $LOWER_THRESHOLD"
-        echo "UPPER_THRESHOLD: $UPPER_THRESHOLD"
-
-        # Save the PR data in CSV. Only consider PRs whose number of ancestors
-        # is greater than the number of ancerstors of the commit sha of the
-        # previous PR.
-        # "author;number;title"
-        hub pr list --state merged -f "%sm;%au;%i;%t%n" | \
-          while read pr; do
-            SHA=$(echo $pr | cut -d';' -f1)
-            echo "$(git rev-list $SHA | wc -l);$(echo $pr | cut -d';' -f2-)"
-          done | \
-          awk -F";" '$1 > '${LOWER_THRESHOLD}' && $1 <= '${UPPER_THRESHOLD}' { print }' |\
-          sort -n | cut -d';' -f2- > $HOME/pr.csv
-
-        echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
-        cat $HOME/pr.csv
     - name: authors
       image: gcr.io/tekton-releases/dogfooding/hub
       workingdir: $(resources.inputs.source.path)
@@ -177,7 +208,7 @@ spec:
         Backward Incompatible Changes, Fixes, Docs, Misc.
 
         EOF
-        awk -F";" '{ print "- "$3" ("$2")" }' $HOME/pr.csv | tee -a $HOME/release.md
+        egrep -v 'kind(/feature|/documentation|cleanup|flake|bug)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }' | tee -a $HOME/release.md
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
       workingdir: $(resources.inputs.source.path)
