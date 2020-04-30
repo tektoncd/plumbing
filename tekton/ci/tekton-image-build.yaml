@@ -15,7 +15,7 @@ spec:
       description: The imageName to build
     - name: imagePrefix
       description: The prefix for the image reference to build
-      default: gcr.io/tekton-nightly/dogfooding/ci/
+      default: gcr.io/tekton-nightly/dogfooding/ci
     - name: gitHubCommand
       description: The command that was used to trigger testing
     - name: pullRequestNumber
