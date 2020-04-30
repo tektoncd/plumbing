@@ -153,7 +153,7 @@ spec:
 
         * :bug: [Description (#Number)]
         $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr.csv)
-        $(awk -F";" '/kind\/flake/{ print "* :flake: "$3" ("$2")" }' $HOME/pr.csv)
+        $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr.csv)
 
         [Fill list here]
 
@@ -208,7 +208,7 @@ spec:
         Backward Incompatible Changes, Fixes, Docs, Misc.
 
         EOF
-        egrep -v 'kind(/feature|/documentation|cleanup|flake|bug)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }' | tee -a $HOME/release.md
+        egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }' | tee -a $HOME/release.md
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
       workingdir: $(resources.inputs.source.path)
