@@ -152,8 +152,7 @@ RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 
 # Install Go 1.14.1
 ARG GO_VERSION=1.14.1
-RUN rm -rf $(go env GOROOT) && \
-    curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
+RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
 
