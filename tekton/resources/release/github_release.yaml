@@ -64,7 +64,7 @@ spec:
         ## Installation one-liner
 
         \`\`\`
-        kubectl apply -f https://storage.googleapis.com/tekton-releases/${PROJECT}/previous/${VERSION}/release.yaml
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
         \`\`\`
 
         ## Upgrade Notices
