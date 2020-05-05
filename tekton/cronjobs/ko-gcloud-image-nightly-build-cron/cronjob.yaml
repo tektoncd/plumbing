@@ -19,6 +19,6 @@ spec:
             - name: GIT_REVISION
               value: master
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+              value: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
             - name: CONTEXT_PATH
               value: tekton/images/ko-gcloud

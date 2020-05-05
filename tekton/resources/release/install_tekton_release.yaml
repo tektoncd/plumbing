@@ -43,7 +43,7 @@ spec:
   steps:
 
   - name: deploy-tekton-project
-    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
