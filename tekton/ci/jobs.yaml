@@ -144,6 +144,7 @@ spec:
     - --context=$(resources.inputs.source.path)/$(params.CONTEXT)  # The user does not need to care the workspace and the source.
     - --destination=$(params.IMAGE)
     - --oci-layout-path=$(resources.inputs.source.path)/image-digest
+    - --no-push
     securityContext:
       runAsUser: 0
     volumeMounts:
