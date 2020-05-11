@@ -1,40 +1,8 @@
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: check-labels-trigger
-rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["tekton.dev"]
-  resources: ["eventlisteners", "triggerbindings", "triggertemplates"]
-  verbs: ["get", "list"]
-- apiGroups: ["tekton.dev"]
-  resources: ["pipelineruns", "pipelineresources", "taskruns"]
-  verbs: ["create"]
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: gh-pr-label-checker
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: gh-pr-label-checker-rolebinding
-subjects:
-- apiGroup: ""
-  kind: ServiceAccount
-  name: gh-pr-label-checker
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: check-labels-trigger
----
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: trigger-to-check-pr-labels
+  namespace: tektonci
 spec:
   params:
   - name: labels
@@ -45,29 +13,10 @@ spec:
     value: $(body.pull_request.html_url)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: github-pull-request-label-checker
-spec:
-  serviceAccountName: gh-pr-label-checker
-  triggers:
-    - name: trigger-check-pr-labels
-      interceptors:
-        - cel:
-            filter: >
-              header.match('X-GitHub-Event', 'pull_request') &&
-              (body.action == 'opened' ||
-              ((body.action == 'labeled' || body.action == 'unlabeled')
-              && body.label.name.contains('kind')))
-      bindings:
-        - name: trigger-to-check-pr-labels
-      template:
-        name: check-pull-request-labels
----
-apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: check-pull-request-labels
+  namespace: tektonci
 spec:
   params:
   - name: labels
@@ -178,8 +127,8 @@ spec:
               new_check_path = "$(outputs.resources.pr.path)/status/check-pr-has-kind-label.json"
               with open(new_check_path, "w") as check:
                 json.dump(success_check, check)
-      inputs:
-        resources:
+      resources:
+        inputs:
         - name: source
           resourceSpec:
             type: git
@@ -196,17 +145,9 @@ spec:
               value: $(params.pullRequestUrl)
             secrets:
             - fieldName: authToken
-              secretName: github-token
+              secretName: bot-token-github
               secretKey: oauth
-        params:
-        - name: labels
-          value: $(params.labels)
-        - name: gitRepository
-          value: $(params.gitRepository)
-        - name: pullRequestUrl
-          value: $(params.pullRequestUrl)
-      outputs:
-        resources:
+        outputs:
         - name: pr
           resourceSpec:
             type: pullRequest
@@ -215,5 +156,12 @@ spec:
               value: $(params.pullRequestUrl)
             secrets:
             - fieldName: authToken
-              secretName: github-token
+              secretName: bot-token-github
               secretKey: oauth
+      params:
+      - name: labels
+        value: $(params.labels)
+      - name: gitRepository
+        value: $(params.gitRepository)
+      - name: pullRequestUrl
+        value: $(params.pullRequestUrl)

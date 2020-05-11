@@ -1,0 +1,5 @@
+bases:
+- ../configmap-cd-cron-base
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-label-sync-dogfooding"

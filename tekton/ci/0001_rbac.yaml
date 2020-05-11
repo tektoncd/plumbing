@@ -60,3 +60,26 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: triggers-minimal
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: config-map-admin
+  namespace: tektonci
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default-config-map-admin
+  namespace: tektonci
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: config-map-admin
