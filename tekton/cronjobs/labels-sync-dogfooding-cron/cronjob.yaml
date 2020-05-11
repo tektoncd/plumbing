@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: configmap-cd-trigger
+spec:
+  schedule: "12 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: GIT_REPOSITORY
+                value: "github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "master"
+              - name: CONFIG_PATH
+                value: "label_sync/labels.yaml"
+              - name: NAMESPACE
+                value: "tektonci"
+              - name: CLUSTER_RESOURCE
+                value: "dogfooding-tektonci-default"
+              - name: CONFIGMAP_NAME
+                value: "label-config-v2"
+              - name: CONFIGMAP_KEY
+                value: "labels.yaml"
+              - name: CONFIGMAP_DESCRIPTION
+                value: "github-labels"

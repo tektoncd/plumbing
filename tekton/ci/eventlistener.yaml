@@ -57,3 +57,20 @@ spec:
         - name: tekton-ci-webhook-comment
       template:
         name: tekton-ci-pipeline
+    - name: trigger-check-pr-labels
+      interceptors:
+        - github:
+            secretRef:
+              secretName: ci-webhook
+              secretKey: secret
+            eventTypes:
+              - pull_request
+        - cel:
+            filter: >-
+              (body.action == 'opened' ||
+               body.action == 'labeled' ||
+               body.action == 'unlabeled')
+      bindings:
+        - name: trigger-to-check-pr-labels
+      template:
+        name: check-pull-request-labels
