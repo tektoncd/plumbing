@@ -1,11 +1,16 @@
-# Setting up the Robocat cluster from scratch
+# The robocat cluster
+
+The robocat cluster [lives in the tekton-nightly GCP project](.../README.md#gcp-projects) and is
+used to deploy nightly versions of Tekton components for testing.
+
+## Setting up the Robocat cluster from scratch
 
 These are step by step instructions on how to setup the `robocat` cluster using
 the available automation. The automation is based on Tekton, so it requires
 a "driver" cluster with Tekton deployed, which will run the tasks required to setup
 the `robocat` cluster. This "driver" cluster is the `dogfooding` cluster.
 
-# Point your cluster config to `robocat`
+### Point your cluster config to `robocat`
 
 The initial step is done on the `robocat` cluster directly, so point your
 configuration to it:
@@ -14,7 +19,7 @@ configuration to it:
 kubectl config use-context gke_tekton-nightly_europe-north1-a_robocat
 ```
 
-# Create a Cluster Admin service account
+### Create a Cluster Admin service account
 
 To setup the [cluster admin](root/README.md) service account, authenticate to
 the cluster with an admin user, and apply the content of the `root` folder:
@@ -47,7 +52,7 @@ data:
 EOF
 ```
 
-# Verify the robocat cluster resources
+### Verify the robocat cluster resources
 
 Obtain the URL of the cluster:
 
@@ -59,7 +64,7 @@ Ensure that the [`robocat-tekton-deployer`](https://github.com/tektoncd/plumbing
 and the [`robocat-cadmin`](https://github.com/tektoncd/plumbing/blob/5f9cb51b8530f9bfc5e97e235980767ae53cdec9/tekton/resources/cd/clusters.yaml#L77) resources point to the correct URL of the cluster.
 If not fix them in git and re-apply them to the `dogfooding` cluster.
 
-# Wait... or not
+### Wait... or not
 
 Almost everything else is setup automatically via cronjobs scheduled in the
 `dogfooding` cluster. Since the setup of the DNS entry and the creation of the
@@ -68,7 +73,7 @@ to run through the setup "manually" by triggering the various cronjobs
 one by one, at least for the initial setup.
 Future hanges to the resources will be deployed nightly from git.
 
-## Point your cluster config to `dogfooding`
+### Point your cluster config to `dogfooding`
 
 From this point on, most of the work will be done on the `dogfooding` cluster,
 so switch your configuration to point to it:
@@ -77,7 +82,7 @@ so switch your configuration to point to it:
 kubectl config use-context gke_tekton-releases_us-central1-a_dogfooding
 ```
 
-## Run the cronjobs
+### Run the cronjobs
 
 Cronjobs can be used to deploy a folder or resources, a config map, an Helm
 chart or a Tekton services from a release.
@@ -136,7 +141,7 @@ Monitor the progress by looking at the logs of recent `TaskRuns`:
 tkn tr logs -f
 ```
 
-# Set up the DNS name for the dashboard
+### Set up the DNS name for the dashboard
 
 The Tekton dashboard is publicly available, to that end an ingress it attached
 to it. To get the public IP check the ingress:
@@ -152,7 +157,7 @@ Login to Netifly and create a new DNS `A` record:
 dashboard.robotcat.tekton.dev   3600   IN   A   <PLUBLIC_IP>
 ```
 
-# Set up `robocat` to drive deployments to the `dogfooding` cluster
+### Set up `robocat` to drive deployments to the `dogfooding` cluster
 
 Prerequisite for this step is that the `tekton-deployer` service account has
 been created in the `dogfooding` cluster as well. Once that is in place, create

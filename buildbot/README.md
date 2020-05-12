@@ -21,7 +21,7 @@ data:
 
 ## Deploying
 
-When connected to [the dogfood cluster](https://github.com/tektoncd/plumbing/blob/master/gcp.md):
+When connected to [the dogfood cluster](https://github.com/tektoncd/plumbing/blob/master/README.md#gcp-projects):
 
 ```bash
 # must be run from the `buildbot` dir or it will use the go.mod file one level up
