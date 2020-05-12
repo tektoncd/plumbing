@@ -4,7 +4,7 @@
 addpermissions.py gives users access to the Tekton GCP projects
 
 In order to interact with GCP resources
-(https://github.com/tektoncd/plumbing/blob/master/gcp.md)
+(https://github.com/tektoncd/plumbing/blob/master/README.md#gcp-projects)
 folks sometimes need to be able to do actions like push images and view
 a project in the web console.
 

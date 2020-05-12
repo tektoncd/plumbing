@@ -4,7 +4,7 @@
 [`Prow`](https://github.com/kubernetes/test-infra/tree/master/prow)
 for CI automation.
 
-- Prow runs in [the tektoncd GCP project](../gcp.md)
+- Prow runs in [the tektoncd GCP project](../README.md#gcp-projects)
 - [Ingress is configured to `prow.tekton.dev`](#ingress)
 - Prow results are displayed via [gubernator](../gubernator/README.md)
 - [Instructions for creating the Prow cluster](#creating-the-prow-cluster)
@@ -28,7 +28,7 @@ running inside), you will need to:
 
 ### Creating the cluster
 
-To create a cluster of the right size, using [the same GCP project](../gcp.md):
+To create a cluster of the right size, using [the same GCP project](../README.md#gcp-projects):
 
 ```bash
 export PROJECT_ID=tekton-releases
