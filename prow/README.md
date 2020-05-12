@@ -2,7 +2,8 @@
 
 `tektoncd` uses
 [`Prow`](https://github.com/kubernetes/test-infra/tree/master/prow)
-for CI automation.
+for CI automation, though we are moving this over to
+[use our own dogfooding](../README.md#the-dogfooding-cluster).
 
 - Prow runs in [the tektoncd GCP project](../README.md#gcp-projects)
 - [Ingress is configured to `prow.tekton.dev`](#ingress)
