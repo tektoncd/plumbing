@@ -22,7 +22,7 @@ If you need to re-create the Prow cluster (which includes [the boskos](../boskos
 running inside), you will need to:
 
 1. [Create a new cluster](#creating-the-cluster)
-2. [Create the necessary secrets](#creating-the-secrets)
+2. Create [the necessary secrets](../README.md#prow-secrets)
 3. [Apply the new Prow and Boskos](#start-it)
 4. [Setup ingress](#ingress)
 4. [Update GitHub webhook(s)](#update-github-webhook)
@@ -46,34 +46,6 @@ gcloud container clusters create $CLUSTER_NAME \
  --num-nodes=8 \
  --cluster-version=latest
 ```
-
-### Creating the secrets
-
-In order to operate, Prow needs the following secrets, which are referred
-to by the following names in our config:
-
-- `GCP` secret: `test-account` is a token for the service account
-  `prow-account@tekton-releases.iam.gserviceaccount.com`. This account can
-   interact with GCP resources such as uploading Prow results to GCS
-   (which is done directly from the containers started by Prow, configured in [config.yaml](config.yaml)) and
-   [interacting with boskos clusters](../boskos/README.md).
-- `Github` secrets: `hmac-token` for authenticating GitHub and `oauth-token` which is a
-   GitHub access token for [`tekton-robot`](https://github.com/tekton-robot),
-   used by Prow itself as well as by containers started by Prow via [the Prow config](config.yaml).
-   See [the GitHub secret Prow docs](https://github.com/kubernetes/test-infra/blob/068e83ba2f8e9261c0af4cee598c70b92775945f/prow/getting_started_deploy.md#create-the-github-secrets).
-- Nightly release secret: `nightly-account` a token for the nightly-release GCP service account
-
-```bash
-kubectl apply -f oauth-token.yaml
-kubectl apply -f hmac-token.yaml
-kubectl apply -f gcp-token.yaml
-kubectl apply -f nightly.yaml
-```
-
-
-_To verify that you have gotten all the secrets, you can look for referenced secrets
-and service accounts in [the Prow setup](prow.yaml), [the Prow config](config.yaml)
-and [the boskos config](../boskos)._
 
 ### Start it
 
