@@ -54,9 +54,20 @@ we are trying to [dogfood](#the-dogfooding-cluster) more and more.
 
 Secrets which have been applied to the prow cluster but are not committed here are:
 
-- `GitHub` secrets:
+- `GitHub` personal access tokens:
  - `bot-token-github` in the default namespace
  - `bot-token-github` in the github-admin namespace
+ - `hmac-token` for authenticating GitHub
+ - `oauth-token` which is a GitHub access token for [`tekton-robot`](https://github.com/tekton-robot),
+   used by Prow itself as well as by containers started by Prow via [the Prow config](config.yaml).
+   See [the GitHub secret Prow docs](https://github.com/kubernetes/test-infra/blob/068e83ba2f8e9261c0af4cee598c70b92775945f/prow/getting_started_deploy.md#create-the-github-secrets).
+- `GCP` secrets:
+  - `test-account` is a token for the service account
+    `prow-account@tekton-releases.iam.gserviceaccount.com`. This account can
+     interact with GCP resources such as uploading Prow results to GCS
+     (which is done directly from the containers started by Prow, configured in [config.yaml](config.yaml)) and
+     [interacting with boskos clusters](boskos/README.md).
+  - Nightly release secret: `nightly-account` a token for the nightly-release GCP service account
 
 ### The robocat cluster
 
@@ -80,7 +91,7 @@ in [the tekton folder](tekton). This cluster is part of
 
 Secrets which have been applied to the dogfooding cluster but are not committed here are:
 
-- `GitHub` secrets:
+- `GitHub` personal access tokens:
   - In the default namespace:
     - `bot-token-github` used for syncing label configuration and org configuration
     - `github-token` used to create a draft release
