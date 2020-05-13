@@ -18,14 +18,15 @@ spec:
               - pull_request
         - cel:
             filter: >-
-              body.action == 'opened' || body.action == 'synchronize'
+              body.repository.full_name == 'tektoncd/plumbing' &&
+              (body.action == 'opened' || body.action == 'synchronize')
             overlays:
             - key: extensions.git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - name: tekton-ci-webhook-pull-request
       template:
-        name: tekton-ci-pipeline
+        name: tekton-plumbing-ci-pipeline
     - name: comment-trigger
       interceptors:
         - github:
@@ -36,6 +37,7 @@ spec:
               - issue_comment
         - cel:
             filter: >-
+              body.repository.full_name == 'tektoncd/plumbing' &&
               body.action == 'created' &&
               'pull_request' in body.issue &&
               body.issue.state == 'open' &&
@@ -56,7 +58,7 @@ spec:
       bindings:
         - name: tekton-ci-webhook-comment
       template:
-        name: tekton-ci-pipeline
+        name: tekton-plumbing-ci-pipeline
     - name: trigger-check-pr-labels
       interceptors:
         - github:
@@ -67,6 +69,8 @@ spec:
               - pull_request
         - cel:
             filter: >-
+              body.repository.full_name.startsWith('tektoncd/') &&
+              body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'catalog', 'hub'] &&
               (body.action == 'opened' ||
                body.action == 'labeled' ||
                body.action == 'unlabeled')
