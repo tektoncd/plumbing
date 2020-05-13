@@ -15,7 +15,7 @@ This repo holds configuration for infrastructure used across the tektoncd org ðŸ
 If you need support, reach out [in the tektoncd slack](https://github.com/tektoncd/community/blob/master/contact.md#slack)
 via the `#plumbing` channel.
 
-[Members of the Tekton governing board](goverance.md)
+[Members of the Tekton governing board](governance.md)
 [have access to the underlying resources](https://github.com/tektoncd/community/blob/master/governance.md#permissions-and-access).
 
 ## Clusters
@@ -86,8 +86,11 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
     - `github-token` used to create a draft release
   - In the `tektonci` namespace:
     - `bot-token-github` used for ?
+    - `ci-webhook` contains the secret used to verify pull request webhook requests for
+      plumbing CI.
   - In the [mario](../../mariobot) namespace:
-    - `mario-github-secret` contains the secret used to verify requests are coming from github
+    - `mario-github-secret` contains the secret used to verify comment webhook requests to
+      the mario service are coming from github
     - `mario-github-token` used for updating PRs
 - `GCP` secrets:
   - `nightly-account` is used by nightly releases to push releases
