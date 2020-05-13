@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-ci-pipeline
+  name: tekton-plumbing-ci-pipeline
   namespace: tektonci
 spec:
   params:
