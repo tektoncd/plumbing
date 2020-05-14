@@ -72,6 +72,7 @@ spec:
               body.repository.full_name.startsWith('tektoncd/') &&
               body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'catalog', 'hub'] &&
               (body.action == 'opened' ||
+               body.action == 'synchronize' ||
                body.action == 'labeled' ||
                body.action == 'unlabeled')
       bindings:
