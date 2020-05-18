@@ -25,7 +25,6 @@ RUN cd /go/src/k8s.io/test-infra && \
 # Build knative-tools independently of the rest
 FROM golang:1.14 as knative-tools
 RUN git clone https://github.com/knative/test-infra.git /go/src/knative.dev/test-infra
-RUN make -C /go/src/knative.dev/test-infra/tools/githubhelper
 RUN go install knative.dev/test-infra/tools/dep-collector
 
 FROM debian:buster
@@ -188,8 +187,8 @@ RUN gem install mdl -v 0.5.0
 RUN python -m pip install yamllint
 
 COPY --from=knative-tools /go/bin/dep-collector /usr/local/bin
-COPY --from=knative-tools /go/src/knative.dev/test-infra/tools/githubhelper/githubhelper /usr/local/bin
 COPY --from=kubetest /go/bin/kubetest /usr/local/bin
+
 # note the runner is also responsible for making docker in docker function if
 # env DOCKER_IN_DOCKER_ENABLED is set and similarly responsible for generating
 COPY ["entrypoint.sh", "runner.sh", "/usr/local/bin/"]
