@@ -598,6 +598,157 @@ presubmits:
         imagePullPolicy: IfNotPresent
         args:
         - ./helm/.hack/check-version.sh
+  ####
+  tektoncd/hub:
+  - name: pull-tekton-hub-build-tests
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-hub-build-tests"
+    trigger: "(?m)^/test (all|pull-tekton-hub-build-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--build-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+        securityContext:
+          privileged: true
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-hub-unit-tests
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-hub-unit-tests"
+    trigger: "(?m)^/test (all|pull-tekton-hub-unit-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--unit-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-hub-integration-tests
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-hub-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-hub-integration-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--integration-tests"
+        volumeMounts:
+        - name: test-account
+          mountPath: /etc/test-account
+          readOnly: true
+        env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /etc/test-account/service-account.json
+        - name: E2E_CLUSTER_REGION
+          value: us-central1
+      volumes:
+      - name: test-account
+        secret:
+          secretName: test-account
+  - name: pull-tekton-hub-go-coverage
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-hub-go-coverage"
+    trigger: "(?m)^/test (all|pull-tekton-hub-go-coverage),?(\\s+|$)"
+    optional: true
+    clone_uri: "https://github.com/tektoncd/hub.git"
+    spec:
+      containers:
+      - image: gcr.io/knative-tests/test-infra/coverage:latest
+        imagePullPolicy: Always
+        command:
+        - "/coverage"
+        args:
+        - "--postsubmit-gcs-bucket=tekton-prow"
+        - "--postsubmit-job-name=post-tekton-hub-go-coverage"
+        - "--artifacts=$(ARTIFACTS)"
+        - "--profile-name=coverage_profile.txt"
+        - "--cov-target=."
+        - "--cov-threshold-percentage=0"
+        - "--github-token=/etc/github-token/oauth"
+        volumeMounts:
+        - name: github-token
+          mountPath: /etc/github-token
+          readOnly: true
+      volumes:
+      - name: github-token
+        secret:
+          secretName: oauth-token
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
