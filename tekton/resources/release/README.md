@@ -35,10 +35,10 @@ is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
 An example using `tkn`:
 
 ```
-TEKTON_BUCKET_RESOURCE=tekton-bucket
-TEKTON_CLUSTER_RESOURCE=k8s-cluster
-TEKTON_PROJECT=pipeline
-TEKTON_VERSION=v0.9.0
+export TEKTON_BUCKET_RESOURCE=tekton-bucket
+export TEKTON_CLUSTER_RESOURCE=k8s-cluster
+export TEKTON_PROJECT=pipeline
+export TEKTON_VERSION=v0.9.0
 
 tkn task start \
   -i release-bucket=$TEKTON_BUCKET_RESOURCE \
@@ -55,10 +55,10 @@ also contain a `pre` folder. Any `*.sh` script found in the folder will be
 executed before the release is installed.
 
 ```
-TEKTON_BUCKET_RESOURCE=tekton-bucket
-TEKTON_CLUSTER_RESOURCE=k8s-cluster
-TEKTON_PROJECT=pipeline
-TEKTON_VERSION=v0.9.0
+export TEKTON_BUCKET_RESOURCE=tekton-bucket
+export TEKTON_CLUSTER_RESOURCE=k8s-cluster
+export TEKTON_PROJECT=pipeline
+export TEKTON_VERSION=v0.9.0
 
 tkn task start \
   -i release-bucket=$TEKTON_BUCKET_RESOURCE \
@@ -86,10 +86,10 @@ needed both as input and output of the task.
 An example using `tkn`:
 
 ```
-TEKTON_BUCKET_RESOURCE=tekton-bucket-nightly-4csms
-TEKTON_PIPELINERUN=pipeline-release-nightly-zrgdp-6n44c
-TEKTON_VERSION=v20191203-883dd4d5df
-TEKTON_NAMESPACE=default
+export TEKTON_BUCKET_RESOURCE=tekton-bucket-nightly-4csms
+export TEKTON_PIPELINERUN=pipeline-release-nightly-zrgdp-6n44c
+export TEKTON_VERSION=v20191203-883dd4d5df
+export TEKTON_NAMESPACE=default
 
 tkn task start \
   -i release-bucket=$TEKTON_BUCKET_RESOURCE \
@@ -148,12 +148,12 @@ release.
 An example using `tkn`:
 
 ```
-TEKTON_RELEASE_GIT_RESOURCE=pipeline-git-v0-9-0
-TEKTON_BUCKET_RESOURCE=tekton-bucket
-TEKTON_PACKAGE=tektoncd/pipeline
-TEKTON_VERSION=v0.9.0
-TEKTON_OLD_VERSION=v0.8.0
-TEKTON_RELEASE_NAME="Bengal Bender"
+export TEKTON_RELEASE_GIT_RESOURCE=pipeline-git-v0-9-0
+export TEKTON_BUCKET_RESOURCE=pipeline-tekton-bucket
+export TEKTON_PACKAGE=tektoncd/pipeline
+export TEKTON_VERSION=v0.9.0
+export TEKTON_OLD_VERSION=v0.8.0
+export TEKTON_RELEASE_NAME="Bengal Bender"
 
 tkn task start \
   -i source=$TEKTON_RELEASE_GIT_RESOURCE \
@@ -167,20 +167,21 @@ tkn task start \
 
 The bucket resource:
 ```
-$ tkn resource describe tekton-bucket-nightly-4csms
-Name:                    tekton-bucket-nightly-4csms
+$ tkn resource describe pipeline-tekton-bucket
+Name:                    pipeline-tekton-bucket
 Namespace:               default
 PipelineResource Type:   storage
 
 Params
-NAME       VALUE
-type       gcs
-location   gs://tekton-release-nightly/pipeline/
-dir        y
+
+ NAME         VALUE
+ ∙ type       gcs
+ ∙ location   gs://tekton-releases/pipeline
+ ∙ dir        y
 
 Secret Params
-FIELDNAME                        SECRETNAME
-GOOGLE_APPLICATION_CREDENTIALS   xyz
+
+ No secret params
 ```
 
 
