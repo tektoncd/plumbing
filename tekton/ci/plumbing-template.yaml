@@ -517,3 +517,48 @@ spec:
       - name: endtrigger
         resourceRef:
           name: github-check-done
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: plumbing-alpine-git-nonroot-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: plumbing-alpine-git-nonroot-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: alpine-git-nonroot
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/alpine-git-nonroot/**"
+        - name: checkName
+          value: plumbing-alpine-git-nonroot-build
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(params.gitRevision)
+          - name: url
+            value: $(params.gitRepository)
+          - name: depth
+            value: $(params.gitCloneDepth)
+      - name: starttrigger
+        resourceRef:
+          name: github-check-start
+      - name: endtrigger
+        resourceRef:
+          name: github-check-done
