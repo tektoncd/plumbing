@@ -50,11 +50,10 @@ spec:
       script: |
         #!/bin/bash
         set -ex
-        p=$(basename $PROJECT)
-        TEKTON_PROJECT=${p^}
+        TEKTON_PROJECT=$(basename $PROJECT)
 
         cat <<EOF | tee $HOME/release.md
-        Tekton $TEKTON_PROJECT release ${VERSION} "$(params.release-name)"
+        Tekton ${TEKTON_PROJECT^} release ${VERSION} "$(params.release-name)"
 
         # 🎉 [Tag Line - to be done] 🎉
 
