@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: nightly-cron-trigger
 spec:
-  schedule: "0 2 * * *"
+  schedule: "0 3 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
