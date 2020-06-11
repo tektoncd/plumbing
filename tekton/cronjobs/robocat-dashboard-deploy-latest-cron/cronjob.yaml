@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: tekton-release-cd-trigger
 spec:
-  schedule: "0 3 * * *"
+  schedule: "0 4 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
