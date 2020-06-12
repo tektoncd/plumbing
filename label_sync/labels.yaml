@@ -92,6 +92,11 @@ default:
       name: area/automation
       target: issues
       addedBy: label
+    - color: 9933ff
+      description: Issues or PRs that are related to performance aspects.
+      name: area/performance
+      target: both
+      addedBy: label
 
     # Kinds
     - color: e11d21
