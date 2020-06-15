@@ -25,9 +25,9 @@ spec:
               'trigger-template' in body &&
               body['trigger-template'] == 'configmap'
       bindings:
-        - name: deploy-target-details
-        - name: deploy-source-git
-        - name: configmap-details
+        - ref: deploy-target-details
+        - ref: deploy-source-git
+        - ref: configmap-details
       template:
         name: deploy-configmap
     - name: folders
@@ -37,9 +37,9 @@ spec:
               'trigger-template' in body &&
               body['trigger-template'] == 'folders'
       bindings:
-        - name: deploy-target-details
-        - name: deploy-source-git
-        - name: folder-details
+        - ref: deploy-target-details
+        - ref: deploy-source-git
+        - ref: folder-details
       template:
         name: deploy-from-folder
     - name: helm
@@ -49,8 +49,8 @@ spec:
               'trigger-template' in body &&
               body['trigger-template'] == 'helm'
       bindings:
-        - name: deploy-target-details
-        - name: helm-details
+        - ref: deploy-target-details
+        - ref: helm-details
       template:
         name: deploy-helm-chart
     - name: tekton
@@ -60,8 +60,8 @@ spec:
               'trigger-template' in body &&
               body['trigger-template'] == 'tekton'
       bindings:
-        - name: deploy-target-details
-        - name: tekton-details
-        - name: plumbing-git
+        - ref: deploy-target-details
+        - ref: tekton-details
+        - ref: plumbing-git
       template:
         name: deploy-tekton-release

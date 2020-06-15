@@ -55,6 +55,6 @@ spec:
   triggers:
     - name: peribolos-trigger
       bindings:
-        - name: peribolos-binding
+        - ref: peribolos-binding
       template:
         name: peribolos-template
