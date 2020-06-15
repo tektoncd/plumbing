@@ -40,3 +40,10 @@ plugins:
   - verify-owners
   - wip
   - yuks
+
+external_plugins:
+  tektoncd:
+  - name: needs-rebase
+    events:
+      - issue_comment
+      - pull_request
