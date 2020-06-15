@@ -112,3 +112,17 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
     to the image registry on GCP.
 - Lots of other secrets, hopefully we can add more documentation on them
   here as we go.
+
+#### Dogfooding Node Pools
+
+Dogfooding is comprised of two node pools. One is used for workloads that operate with Workload Identity,
+a feature of GKE which maps Kubernetes Service Accounts to Google Cloud IAM Service Accounts. The other
+is used for workloads that don't use Workload Identity and rely instead on mechanisms like mounted Secrets
+or that run unauthenticated. Choosing the correct pool for a workload should really only depend on whether
+it utilizes the Workload Identity feature or not.
+
+- `default-pool` is used for most workloads. It doesn't have the GKE Metadata Server enabled
+and therefore doesn't support workloads running with Workload Identity.
+- `workload-id` has the GKE Metadata Server enabled and is used for workloads operating with
+Workload Identity. The only workload that currently requires Workload Identity is "pipelinerun-logs"
+which shows Stackdriver log entries for PipelineRuns.
