@@ -45,7 +45,7 @@ func main() {
 func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		payload := []byte(`{}`)
+		var payload []byte
 		var err error
 
 		// Get the payload
@@ -53,19 +53,19 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 			defer r.Body.Close()
 			payload, err = ioutil.ReadAll(r.Body)
 			if err != nil {
-				log.Printf("failed to read request body: %w", err)
+				log.Printf("failed to read request body: %q", err)
 				marshalError(err, w)
 				return
 			}
 			if len(payload) == 0 {
 				bodyError := errors.New("empty body, cannot add a pull request")
-				log.Printf("No body received: %w", bodyError)
+				log.Printf("No body received: %q", bodyError)
 				marshalError(bodyError, w)
 				return
 			}
 		} else {
 			bodyError := errors.New("empty body, cannot add a pull request")
-			log.Printf("failed to read request body: %w", err)
+			log.Printf("failed to read request body: %q", err)
 			marshalError(bodyError, w)
 			return
 		}
@@ -73,21 +73,21 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 		// Get the json body
 		jsonBody, err := decodeBody(payload)
 		if err != nil {
-			log.Printf("failed to decode the body: %w", err)
+			log.Printf("failed to decode the body: %q", err)
 			marshalError(err, w)
 			return
 		}
 		// Get the URL from the body
 		prUrl, err := getPrUrl(jsonBody)
 		if err != nil {
-			log.Printf("failed to extract the PR URL from the body: %w", err)
+			log.Printf("failed to extract the PR URL from the body: %q", err)
 			marshalError(err, w)
 			return
 		}
 		// Get the PR Body from the URL
 		prBody, err := urlFetcherDecoder(prUrl)
 		if err != nil {
-			log.Printf("failed to get the PR body: %w", err)
+			log.Printf("failed to get the PR body: %q", err)
 			marshalError(err, w)
 			return
 		}
@@ -97,7 +97,7 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 		// Marshal the body
 		responseBytes, err := json.Marshal(jsonBody)
 		if err != nil {
-			log.Printf("failed marshal the response body: %w", err)
+			log.Printf("failed marshal the response body: %q", err)
 			marshalError(err, w)
 			return
 		}
@@ -166,8 +166,4 @@ func getPrBody(prUrl string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return decodeBody(body)
-}
-
-func addPrBody(prBody, originalBody map[string]interface{}) map[string]interface{} {
-	return originalBody
 }
