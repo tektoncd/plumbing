@@ -24,7 +24,7 @@ spec:
             - key: extensions.git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
-        - name: tekton-ci-webhook-pull-request
+        - ref: tekton-ci-webhook-pull-request
       template:
         name: tekton-plumbing-ci-pipeline
     - name: comment-trigger
@@ -56,7 +56,7 @@ spec:
             - key: extensions.git_clone_depth
               expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
-        - name: tekton-ci-webhook-comment
+        - ref: tekton-ci-webhook-comment
       template:
         name: tekton-plumbing-ci-pipeline
     - name: trigger-check-pr-labels
@@ -76,6 +76,6 @@ spec:
                body.action == 'labeled' ||
                body.action == 'unlabeled')
       bindings:
-        - name: trigger-to-check-pr-labels
+        - ref: trigger-to-check-pr-labels
       template:
         name: check-pull-request-labels

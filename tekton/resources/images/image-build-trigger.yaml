@@ -30,7 +30,7 @@ spec:
   triggers:
     - name: trigger
       bindings:
-        - name: trigger-to-build-and-push-image
+        - ref: trigger-to-build-and-push-image
       template:
         name: build-and-push-image
 ---

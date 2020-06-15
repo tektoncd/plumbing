@@ -78,7 +78,7 @@ spec:
               apiVersion: v1
               namespace: mario
       bindings:
-        - name: mario-trigger-binding
+        - ref: mario-trigger-binding
       template:
         name: mario-trigger-template
 ```

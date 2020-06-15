@@ -22,7 +22,7 @@ spec:
   triggers:
     - name: log-collection
       bindings:
-        - name: publish-images-taskrun-to-release-logs
+        - ref: publish-images-taskrun-to-release-logs
       template:
         name: release-logs
 ---
