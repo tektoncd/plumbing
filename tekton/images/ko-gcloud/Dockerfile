@@ -22,7 +22,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 # Install ko
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go get github.com/google/ko/cmd/ko@v0.5.0
+RUN go get github.com/google/ko/cmd/ko@v0.5.1
 
 # Install Kustomize
 RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
