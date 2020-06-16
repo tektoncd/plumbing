@@ -34,12 +34,16 @@ plugins:
   - lgtm
   - lifecycle
   - milestone
+  - project
+  - retitle
   - size
   - skip
   - trigger
   - verify-owners
   - wip
   - yuks
+  tektoncd/pipeline:
+  - release-note
 
 external_plugins:
   tektoncd:

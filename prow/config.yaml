@@ -46,11 +46,12 @@ tide:
     - approved
     missingLabels:
     - do-not-merge/hold
-    - do-not-merge/work-in-progress
     - do-not-merge/invalid-owners-file
-    - needs-rebase
-    - needs-ok-to-test
+    - do-not-merge/release-note-label-needed
     - do-not-merge/requires-unreleased-pipelines
+    - do-not-merge/work-in-progress
+    - needs-ok-to-test
+    - needs-rebase
   merge_method:
     tektoncd/catalog: rebase
     tektoncd/chains: rebase
