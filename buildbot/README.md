@@ -5,6 +5,11 @@ This folder holds the Slack buildcop bot code and configuration.
 * [Build Cop Runbook](https://docs.google.com/document/d/1QJV0z2bMXdz_BZOkBwfxIP1BiktUb8c1lcifwqxF5wg/edit)
 * [Build Cop Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
 
+## Rotation
+
+* The rotation is stored in [rotation.csv](rotation.csv).
+* Update the rotation with [generate-rotation-csv](generate-rotation-csv).
+
 ## Configuration
 
 ```yaml
