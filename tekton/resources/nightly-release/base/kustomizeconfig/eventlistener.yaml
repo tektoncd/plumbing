@@ -2,7 +2,7 @@
 nameReference:
 - kind: TriggerBinding
   fieldSpecs:
-  - path: spec/triggers/bindings/name
+  - path: spec/triggers/bindings/ref
     kind: EventListener
 - kind: TriggerTemplate
   fieldSpecs:
