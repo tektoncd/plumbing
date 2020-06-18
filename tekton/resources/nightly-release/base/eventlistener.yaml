@@ -7,6 +7,6 @@ spec:
   triggers:
     - name: cron-trigger
       bindings:
-        - name: binding
+        - ref: binding
       template:
         name: template
