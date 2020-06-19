@@ -77,7 +77,7 @@ spec:
   params:
   - name: version
     description: golangci-lint version to use
-    default: "v1.26.0"
+    default: "v1.27.0"
   - name: flags
     description: flags to use for the golangci-lint run command
     default: --verbose
