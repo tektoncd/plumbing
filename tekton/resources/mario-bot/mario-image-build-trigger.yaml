@@ -95,7 +95,7 @@ spec:
               apiVersion: v1
               namespace: mario
       bindings:
-        - name: mario-trigger-to-build-and-push-image
+        - ref: mario-trigger-to-build-and-push-image
       template:
         name: mario-build-and-push-image
 ---
