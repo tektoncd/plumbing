@@ -11,7 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM google/cloud-sdk:latest
+FROM golang:1.13-alpine3.12 as build
+LABEL description="Build container"
+
+RUN apk update && apk add --no-cache alpine-sdk
+
+# Install Kustomize
+ENV GOBIN=/usr/local/go/bin
+ENV GO111MODULE on
+RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
+
+FROM google/cloud-sdk:296.0.0-alpine
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Install golang
@@ -24,5 +34,5 @@ ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
 RUN go get github.com/google/ko/cmd/ko@v0.5.0
 
-# Install Kustomize
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
+# Get Kustomize from the build image
+COPY --from=build /usr/local/go/bin/kustomize /usr/local/go/bin
