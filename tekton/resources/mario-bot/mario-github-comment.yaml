@@ -26,7 +26,7 @@ spec:
   triggers:
     - name: trigger
       bindings:
-        - name: trigger-to-comment-github
+        - ref: trigger-to-comment-github
       template:
         name: mario-comment-github
 ---
