@@ -798,36 +798,6 @@ presubmits:
       - name: test-account
         secret:
           secretName: test-account
-  - name: pull-tekton-hub-go-coverage
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-hub-go-coverage"
-    trigger: "(?m)^/test (all|pull-tekton-hub-go-coverage),?(\\s+|$)"
-    optional: true
-    clone_uri: "https://github.com/tektoncd/hub.git"
-    spec:
-      containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
-        imagePullPolicy: Always
-        command:
-        - "/coverage"
-        args:
-        - "--postsubmit-gcs-bucket=tekton-prow"
-        - "--postsubmit-job-name=post-tekton-hub-go-coverage"
-        - "--artifacts=$(ARTIFACTS)"
-        - "--profile-name=coverage_profile.txt"
-        - "--cov-target=."
-        - "--cov-threshold-percentage=0"
-        - "--github-token=/etc/github-token/oauth"
-        volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-          readOnly: true
-      volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
     agent: kubernetes
