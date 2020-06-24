@@ -130,3 +130,23 @@ spec:
     secretKey: ca.crt
     secretName: dogfooding-tektonci-default-token
   type: cluster
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: dogfooding-tektoncd-cleaner
+  namespace: default
+spec:
+  params:
+  - name: url
+    value: https://35.222.251.168
+  - name: username
+    value: tekton-cleaner
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: dogfooding-tekton-cleaner-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: dogfooding-tekton-cleaner-token
+  type: cluster

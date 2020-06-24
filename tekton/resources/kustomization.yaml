@@ -15,5 +15,6 @@ resources:
 - cd/helm-template.yaml
 - cd/tekton-template.yaml
 - cd/serviceaccount.yaml
+- cd/cleanup-template.yaml
 - org-permissions/peribolos.yaml
 - org-permissions/peribolos-trigger.yaml

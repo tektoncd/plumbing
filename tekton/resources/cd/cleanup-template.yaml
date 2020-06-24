@@ -1,0 +1,72 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: cleanup-runs
+spec:
+  params:
+  - name: namespace
+    description: Namespace to cleanup to in the target cluster
+  - name: clusterResource
+    description: Name of the cluster resource that points to the target cluster
+  - name: keep
+    description: Amount of old resources to keep
+    default: "200"
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: cleanup-runs-$(params.clusterResource)-$(params.namespace)-$(uid)
+    spec:
+      taskSpec:
+        params:
+        - name: keep
+        - name: namespace
+        resources:
+          inputs:
+            - name: targetCluster
+              type: cluster
+        stepTemplate:
+          env:
+          - name: KUBECONFIG
+            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+        steps:
+        - name: cleanup-pr-tr
+          image: gcr.io/tekton-releases/dogfooding/tkn
+          script: |
+            #!/bin/sh
+            set -ex
+
+            # A safety check, to avoid deleting too much!
+            if [[ $(params.keep) -eq 0 || $(params.keep) == "" ]]; then
+              echo "This task cannot be used to delete *all* resources from a cluster" >&2
+              echo "Please specifcy a value for keep > 0"
+              exit 1
+            fi
+
+            # Cleanup pipelineruns first, as this will delete tasksruns too
+            tkn pr delete -n $(params.namespace) --all --keep $(params.keep)
+            # Keep double the amount of tr, for standalone trs
+            tkn tr delete -n $(params.namespace) --all --keep $(( $(params.keep) * 2 ))
+      params:
+      - name: keep
+        value: $(params.keep)
+      - name: namespace
+        value: $(params.namespace)
+      resources:
+        inputs:
+          - name: targetCluster
+            resourceRef:
+              name: $(params.clusterResource)
