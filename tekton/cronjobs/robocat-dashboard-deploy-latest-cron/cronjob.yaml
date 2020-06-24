@@ -17,12 +17,13 @@ spec:
               - name: TEKTON_PROJECT
                 value: "dashboard"
               - name: TEKTON_VERSION
-                value: "beta"
+                value: "latest"
               - name: TEKTON_CLUSTER
                 value: "robocat"
               - name: RELEASE_FILE
+                # We deploy the read-only dashboard since it will be exposed to
+                # the public. This prevents public visitors from modifying resources
+                # in our cluster.
                 value: "tekton-dashboard-release-readonly.yaml"
               - name: RELEASE_BUCKET
-                value: "gs://tekton-releases"
-              - name: RELEASE_EXTRA_PATH
-                value: "/adambeta4/adambeta4"
+                value: "gs://tekton-releases-nightly"
