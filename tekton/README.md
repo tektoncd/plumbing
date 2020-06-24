@@ -4,7 +4,7 @@ This folder includes `Tasks`, `Pipelines` and other shared resources used to
 setup CI/CD pipelines for all repositories in the tektoncd org. It also
 includes `tektoncd/plumbing` specific tasks and pipelines.
 
-These resources are applied to [the dogfooding cluster](../README.md#the-dogfooding-cluster).
+These resources are applied to [the dogfooding cluster](../docs/dogfooding.md).
 
 Resources are organised in folders:
 - The [config](config/README.md) folder holds `CronJobs` definition for regular
