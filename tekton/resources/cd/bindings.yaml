@@ -111,3 +111,12 @@ spec:
     value: $(body.params.plumbing.repository)
   - name: plumbingRevision
     value: $(body.params.plumbing.revision)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: cleanup-details
+spec:
+  params:
+  - name: keep
+    value: $(body.params.cleanup.keep)

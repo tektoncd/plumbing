@@ -65,3 +65,14 @@ spec:
         - ref: plumbing-git
       template:
         name: deploy-tekton-release
+    - name: cleanup
+      interceptors:
+        - cel:
+            filter: >-
+              'trigger-template' in body &&
+              body['trigger-template'] == 'cleanup'
+      bindings:
+        - ref: deploy-target-details
+        - ref: cleanup-details
+      template:
+        name: cleanup-runs
