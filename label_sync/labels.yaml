@@ -99,6 +99,14 @@ default:
       addedBy: label
 
     # Kinds
+    - color: d876e3
+      description: Issues or PRs that are questions around the project or a particular feature
+      name: kind/question
+      previously:
+        - name: question
+      target: issues
+      prowPlugin: label
+      addedBy: anyone
     - color: e11d21
       description: Categorizes issue or PR as related to a bug.
       name: kind/bug
