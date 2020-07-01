@@ -190,7 +190,7 @@ default:
       prowPlugin: releasenote
       addedBy: prow
     - color: c2e0c6
-      description: Denotes a PR that doesn't merit a release note.  # will be ignored when it comes time to generate release notes.
+      description: Denotes a PR that doesnt merit a release note.  # will be ignored when it comes time to generate release notes.
       name: release-note-none
       target: prs
       prowPlugin: releasenote
@@ -315,7 +315,7 @@ repos:
   tektoncd/catalog:
     labels:
       - color: e11d21
-        description: This pull-request can't be merged because it requires a specific version of pipeline
+        description: This pull-request cant be merged because it requires a specific version of pipeline
         name: do-not-merge/requires-unreleased-pipelines
         target: prs
         addedBy: humans
