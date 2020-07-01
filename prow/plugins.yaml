@@ -44,6 +44,8 @@ plugins:
   - yuks
   tektoncd/pipeline:
   - release-note
+  tektoncd/cli:
+  - release-note
 
 external_plugins:
   tektoncd:
