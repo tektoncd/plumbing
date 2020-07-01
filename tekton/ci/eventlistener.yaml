@@ -68,6 +68,10 @@ spec:
             eventTypes:
               - pull_request
         - cel:
+            overlays:
+            - key: extensions.safe_labels
+              expression: body.pull_request.labels.map(s, s['name'])
+        - cel:
             filter: >-
               body.repository.full_name.startsWith('tektoncd/') &&
               body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'catalog', 'hub'] &&

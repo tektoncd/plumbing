@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
   - name: labels
-    value: $(body.pull_request.labels)
+    value: $(extensions.safe_labels)
   - name: gitRepository
     value: $(body.repository.html_url)
   - name: pullRequestUrl
