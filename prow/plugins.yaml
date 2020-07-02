@@ -46,6 +46,8 @@ plugins:
   - release-note
   tektoncd/cli:
   - release-note
+  tektoncd/operator:
+  - release-note
 
 external_plugins:
   tektoncd:
