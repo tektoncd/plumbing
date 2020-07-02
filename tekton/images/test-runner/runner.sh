@@ -54,7 +54,7 @@ if [[ "${DOCKER_IN_DOCKER_ENABLED}" == "true" ]]; then
     service docker start
     # the service can be started but the docker socket not ready, wait for ready
     WAIT_N=0
-    MAX_WAIT=5
+    MAX_WAIT=15
     while true; do
         # docker ps -q should only work if the daemon is ready
         docker ps -q > /dev/null 2>&1 && break
