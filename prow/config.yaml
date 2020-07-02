@@ -701,6 +701,16 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-build-tests),?(\\s+|$)"
     spec:
       containers:
+      - image: postgres:latest
+        command: ["docker-entrypoint.sh"]
+        args: ["postgres"]
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: hub
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         command:
@@ -722,8 +732,6 @@ presubmits:
           mountPath: /etc/test-account
           readOnly: true
         env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
@@ -742,6 +750,16 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-unit-tests),?(\\s+|$)"
     spec:
       containers:
+      - image: postgres:latest
+        command: ["docker-entrypoint.sh"]
+        args: ["postgres"]
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: hub
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         command:
@@ -763,8 +781,6 @@ presubmits:
           mountPath: /etc/test-account
           readOnly: true
         env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
@@ -781,6 +797,16 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-integration-tests),?(\\s+|$)"
     spec:
       containers:
+      - image: postgres:latest
+        command: ["docker-entrypoint.sh"]
+        args: ["postgres"]
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: hub
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
         imagePullPolicy: Always
         command:
@@ -802,8 +828,6 @@ presubmits:
           mountPath: /etc/test-account
           readOnly: true
         env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
