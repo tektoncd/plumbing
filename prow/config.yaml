@@ -769,6 +769,8 @@ presubmits:
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
           value: us-central1
+        securityContext:
+          privileged: true
       volumes:
       - name: test-account
         secret:
@@ -808,6 +810,8 @@ presubmits:
           value: /etc/test-account/service-account.json
         - name: E2E_CLUSTER_REGION
           value: us-central1
+        securityContext:
+          privileged: true
       volumes:
       - name: test-account
         secret:
