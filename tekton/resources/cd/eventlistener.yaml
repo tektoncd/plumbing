@@ -76,3 +76,22 @@ spec:
         - ref: cleanup-details
       template:
         name: cleanup-runs
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: tekton-events
+spec:
+  serviceAccountName: tektoncd
+  triggers:
+    - name: configmap-deploy-successful-slack
+      interceptors:
+        - cel:
+            filter: >-
+              header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1') &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] == 'configmaps'
+      bindings:
+      - ref: configmap-deploy-details
+      template:
+        name: hello-world
