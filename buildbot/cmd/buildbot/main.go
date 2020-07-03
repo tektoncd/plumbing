@@ -146,7 +146,10 @@ func dailyPing(rtm *slack.RTM, copsID map[string]string, r Rotation) {
 	for {
 		<-jt.t.C
 		currentCop = copsID[r.GetBuildCop(time.Now())]
-		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the buildcop :cop:\nBuildcop log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCop), channelID))
+		if currentCop != "" {
+			// Only send the daily ping if there is actually a buildcop.
+			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the buildcop :cop:\nBuildcop log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCop), channelID))
+		}
 		jt.updateJobTicker()
 	}
 }
