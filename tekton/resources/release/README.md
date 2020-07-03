@@ -148,17 +148,18 @@ release.
 An example using `tkn`:
 
 ```
-export TEKTON_RELEASE_GIT_RESOURCE=pipeline-git-v0-9-0
 export TEKTON_BUCKET_RESOURCE=pipeline-tekton-bucket
 export TEKTON_PACKAGE=tektoncd/pipeline
 export TEKTON_VERSION=v0.9.0
+export TEKTON_REVISION=agitcommithash
 export TEKTON_OLD_VERSION=v0.8.0
 export TEKTON_RELEASE_NAME="Bengal Bender"
 
 tkn task start \
-  -i source=$TEKTON_RELEASE_GIT_RESOURCE \
+  --workspace=name=source,claimName=pipeline-release-pvc \
   -i release-bucket=$TEKTON_BUCKET_RESOURCE \
   -p package=$TEKTON_PACKAGE \
+  -p revision=$TEKTON_REVISION \
   -p release-tag=$TEKTON_VERSION \
   -p previous-release-tag=$TEKTON_OLD_VERSION \
   -p release-name=$TEKTON_RELEASE_NAME \

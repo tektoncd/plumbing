@@ -22,10 +22,10 @@ spec:
     default: github.com/tektoncd/pipeline
   - name: versionTag
     description: The X.Y.Z version that the artifacts would be tagged with
+  workspaces:
+  - name: source
   resources:
     inputs:
-      - name: source-to-release
-        type: git
       - name: release-bucket
         type: storage
   steps:
