@@ -14,7 +14,11 @@
 FROM golang:1.13-alpine3.12 as build
 LABEL description="Build container"
 
-RUN apk update && apk add --no-cache alpine-sdk
+RUN apk update && apk add --no-cache alpine-sdk ca-certificates
+RUN update-ca-certificates
+
+ARG KUBECTL_VERSION=1.16.2
+RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
 
 # Install Kustomize
 ENV GOBIN=/usr/local/go/bin
@@ -34,5 +38,6 @@ ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
 RUN go get github.com/google/ko/cmd/ko@v0.5.0
 
-# Get Kustomize from the build image
+# Get Kubectl and Kustomize from the build image
+COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=build /usr/local/go/bin/kustomize /usr/local/go/bin
