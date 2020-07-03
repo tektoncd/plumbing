@@ -83,7 +83,7 @@ spec:
       kubectl apply --kubeconfig $KUBECONFIG $APPLY_MODE
 
   - name: wait-until-pods-running
-    image: gcr.io/tekton-releases/dogfooding/ko:gcloud-latest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
