@@ -160,7 +160,7 @@ RUN apt update && apt install -y uuid-runtime  # for uuidgen
 RUN apt update && apt install -y rubygems  # for mdl
 
 # Extra tools through go get
-RUN go get -u github.com/google/ko/cmd/ko && \
+RUN GO111MODULE="on" go get -u github.com/google/ko/cmd/ko@v0.5.1 && \
     go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/google/licenseclassifier && \
     go get -u github.com/google/go-licenses && \
