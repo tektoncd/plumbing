@@ -15,7 +15,7 @@ FROM golang:1.14.2-alpine3.11
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GO111MODULE on
-RUN go get github.com/google/ko/cmd/ko@master
+RUN go get github.com/google/ko/cmd/ko@v0.5.1
 
 RUN apk add --no-cache musl-dev gcc git
 RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
