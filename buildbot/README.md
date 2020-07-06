@@ -6,7 +6,7 @@ This folder holds the Slack buildcop bot code and configuration.
 * [Build Cop Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
 
 Current buildcops are:
-- Andrea Fritolli @afritolli (andrea.fritolli)
+- Andrea Frittoli @afrittoli (andrea.frittoli)
 - Billy Lynch @wlynch (wlynch)
 - Christie Wilson @bobcatfish (christiewilson)
 - Dibyo Mukherjee @dibyom (dibyo)
