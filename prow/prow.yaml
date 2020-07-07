@@ -433,7 +433,7 @@ spec:
   type: NodePort
 #---
 #
-# TODO(#54) This component was added after our initial Prow setup 
+# TODO(#54) This component was added after our initial Prow setup
 #
 #apiVersion: apps/v1
 #kind: Deployment
@@ -810,7 +810,7 @@ subjects:
   name: "tide"
 #---
 #
-# TODO(#54) The statusreconciler component was added after our initial Prow setup 
+# TODO(#54) The statusreconciler component was added after our initial Prow setup
 #
 #apiVersion: v1
 #kind: ServiceAccount
@@ -819,7 +819,7 @@ subjects:
 #  name: "statusreconciler"
 #---
 #
-# TODO(#54) The statusreconciler component was added after our initial Prow setup 
+# TODO(#54) The statusreconciler component was added after our initial Prow setup
 #
 #kind: Role
 #apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -835,7 +835,7 @@ subjects:
 #      - create
 #---
 #
-# TODO(#54) The statusreconciler component was added after our initial Prow setup 
+# TODO(#54) The statusreconciler component was added after our initial Prow setup
 #
 #kind: RoleBinding
 #apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -907,7 +907,6 @@ spec:
         args:
         - --github-workers=1
         - --config-path=/etc/config/config.yaml
-        - --github-endpoint=http://ghproxy
         - --github-endpoint=https://api.github.com
         volumeMounts:
         - name: config
@@ -1002,4 +1001,53 @@ spec:
       volumes:
       - name: prow-config
         configMap:
-          name: config                           
+          name: config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  name: needs-rebase
+  labels:
+    app: needs-rebase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: needs-rebase
+  template:
+    metadata:
+      labels:
+        app: needs-rebase
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+      - name: needs-rebase
+        image: gcr.io/k8s-prow/needs-rebase:v20190731-e3f7b9853
+        imagePullPolicy: Always
+        args:
+        - --dry-run=false
+        - --github-endpoint=https://api.github.com
+        ports:
+          - name: http
+            containerPort: 8888
+        volumeMounts:
+        - name: hmac
+          mountPath: /etc/webhook
+          readOnly: true
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        - name: plugins
+          mountPath: /etc/plugins
+          readOnly: true
+      volumes:
+      - name: hmac
+        secret:
+          secretName: hmac-token
+      - name: oauth
+        secret:
+          secretName: oauth-token
+      - name: plugins
+        configMap:
+          name: plugins
