@@ -121,12 +121,31 @@ spec:
   - name: keep
     value: $(body.params.cleanup.keep)
 ---
----
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: configmap-deploy-details
 spec:
   params:
-  - name: gitSHA
-    value: $(body.taskRun.status.resourcesResult[?(@.key == 'commit')].resourceRef.name)
+  - name: gitResource
+    value: $(body.taskRun.spec.resources.inputs[?(@.name == 'source')].resourceRef.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: taskrun-meta
+spec:
+  params:
+  - name: taskRunName
+    value: $(body.taskRun.metadata.name)
+  - name: taskRunNamespace
+    value: $(body.taskRun.metadata.namespace)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: dashboard-url-dogfooding
+spec:
+  params:
+  - name: dashboardBaseURL
+    value: https://dashboard.dogfooding.tekton.dev

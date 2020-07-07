@@ -84,14 +84,16 @@ metadata:
 spec:
   serviceAccountName: tektoncd
   triggers:
-    - name: configmap-deploy-successful-slack
+    - name: configmap-deploy-failed
       interceptors:
         - cel:
             filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1') &&
+              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
               body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] == 'configmaps'
       bindings:
       - ref: configmap-deploy-details
+      - ref: taskrun-meta
+      - ref: dashboard-url-dogfooding
       template:
-        name: hello-world
+        name: configmap-deploy-failed-slack
