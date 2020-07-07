@@ -14,21 +14,29 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: hello-world
+  name: configmap-deploy-failed-slack
 spec:
   params:
-  - name: gitSHA
+  - name: taskRunName
+    description: The name of the TaskRun
+  - name: taskRunNamespace
+    description: The namespace of the TaskRun
+  - name: dashboardBaseURL
+    description: The base URL of the Tekton dashboard
+  - name: gitResource
     description: The git sha of the deployed resource
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: hello-world-$(uid)
+      name: send-to-webhook-slack-$(uid)
     spec:
-      taskSpec:
-        steps:
-        - name: hello-world
-          image: busybox
-          script: |
-            echo 'Hello, World!'
-            echo 'We deployed $(params.gitSHA)'
+      taskRef:
+        name: send-to-webhook-slack
+      params:
+        - name: webhook-secret
+          value: robocat-slack-app-webhook
+        - name: message
+          value: >-
+            :boom: The TaskRun <$(params.dashboardBaseURL)/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)|$(params.taskRunNamespace)/$(params.taskRunName)>
+            failed to deploy <$(params.dashboardBaseURL)/#/namespaces/$(params.taskRunNamespace)/pipelineresources/$(params.gitResource)|$(params.taskRunNamespace)/$(params.gitResource)>
