@@ -1,0 +1,5 @@
+resources:
+- labels-sync-hourly
+- prow-labels-sync-hourly
+- prow-config-hourly
+- prow-plugins-hourly

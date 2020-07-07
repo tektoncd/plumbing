@@ -19,3 +19,4 @@ resources:
 - cd/notification-template.yaml
 - org-permissions/peribolos.yaml
 - org-permissions/peribolos-trigger.yaml
+- nightly-release

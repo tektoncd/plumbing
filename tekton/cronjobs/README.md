@@ -1,93 +1,107 @@
 # Tekton Cron Jobs
 
 This folder holds kustomize overlays, that are used to maintain cron job
-configurations. To add a new cron job to be deployed to the `dogfooding`
-cluster, create a folder and add a `kustomization.yaml` into it, along with the
-cronjob overlay.
+configurations. To add a new cron job to be deployed to a cluster,
+create a folder and add a `kustomization.yaml` into it, along with the
+cronjob overlay. Add the created folder to the `kustomization.yaml` of
+the containg folder.
 
-There are three base cron jobs available:
-* `nightly-image-build-cron-base` which can be used to build container images
-  on a regular basis and push them to a container repo (by default
+There are several [base cron jobs](bases/) available, each linked to a
+dedicated trigger template:
+
+* [`release`](../resources/nightly-releases): trigger the pipeline repo
+  nightly builds
+* [`image-build`](../resources/images/image-build-trigger.yaml): build
+  container images and push them to a container repo (by default
   gcr.io/tekton-releases/dogfooding/myimage)
-* `nighyly-release-cron-base` which is used to trigger the pipeline repo nightly
-  builds
-* `resource-cd-cron-base` which is used to trigger deployment of a resource
+* [`folder`](../resources/cd/folder-template.yaml): trigger deployment
+  of manifests or overlays in a folder
+* [`configmap`](../resources/cd/configmap-template.yaml): trigger
+  deployment a configmap from a YAML stored in git
+* [`cleanup`](../resources/cd/cleanup-template.yaml): trigger cleanup
+  of `*Run` resources from a namespace
+* [`helm`](../resources/cd/helm-template.yaml): trigger deployment of
+  an helm chart
+* [`tekton-service`](../resources/cd/tekton-template.yaml): deploy a
+  Tekton service from a release file with an optional overlay from git
+
+Cronjobs are organized per cluster where they are deployed and run.
+Note that a cronjob deployed to a cluster may act on a different one.
+
+```bash
+cronjobs
+├── dogfooding
+├── prow
+├── robocat
+├── kustomization.yaml
+└── README.md
+```
 
 ## Existing cron jobs
 
 ### Container Images
 
-The following images are built nightly:
-* [hub](hub-image-nightly-build-cron/README.md)
-* [ko](ko-image-nightly-build-cron/README.md)
-* [ko + gcloud](ko-gcloud-image-nightly-build-cron/README.md)
-* [kubectl](kubectl-image-nightly-build-cron/README.md)
-* [skopeo](skopeo-image-nightly-build-cron/README.md)
-* [tkn](tkn-image-nightly-build-cron/README.md)
-* [testrunner](pipeline-test-runner-build-cron/README.md)
+[Images](dogfooding/images) are build on the dogfooding cluster.
 
 ### Nightly Releases
 
-The following projects are released nightly:
-* [pipeline](pipeline-nightly-release-cron/README.md)
-* [triggers](triggers-nightly-release-cron/README.md)
-* [dashboard](dashboard-nightly-release-cron/README.md)
+The following projects are released nightly on the dogfooding cluster:
+
+* [pipeline](dogfooding/releases/pipeline-nightly/README.md)
+* [triggers](dogfooding/releases/triggers-nightly/README.md)
+* [dashboard](dogfooding/releases/dashboard-nightly/README.md)
 
 ### Continuous Deployments
 
-The following configuration maps are deployed continuously:
-* [prow config](prow-config-cd-hourly-cron/README.md)
-* [labels sync](labels-sync-cron/README.md)
-
-The following folders are deployed continuously:
-* [robotcat cadmin](robocat-cadmin-cron/README.md)
-
-The following helm charts are deployed continuously:
-* [minio](minio-helm-cron/README.md)
-
-The following Tekton services are deployed continuously:
-* [pipeline on robocat](robocat-pipeline-deploy-latest-cron/README.md)
-
+[Tekton services](dogfooding/tekton) in the Robocat cluster are deployed
+nightly from the dogfooding cluster. Other deployments are performed from
+the same cluster they target.
 
 ## Adding a new cron job
 
 To add a new cronjob for an existing base, follow these steps.
 
 Example folders structure:
-```
+
+```bash
 cronjobs
-├── README.md
-├── configmap-cd-cron-base (existing)
-│   ├── kustomization.yaml
-│   └── trigger.yaml
-└── myresource-cd-daily-cron (added)
-    ├── cronjob.yaml
-    └── kustomization.yaml
+├─── dogfooding
+│   ├── cleanup
+│   │   ├── kustomization.yaml
+│   │   ├── default-nightly
+│   │   │   ├── README.md
+│   │   │   ├── cronjob.yaml
+│   │   │   └── kustomization.yaml
+│   │   └── *mynamespace-nightly*
+│   │       ├── README.md
+│   │       ├── cronjob.yaml
+│   │       └── kustomization.yaml
 ```
 
 Example Kustomization configuration file:
-```
+
+```yaml
 # kustomization.yaml
 bases:
-- ../../resource-cd-cron-base
+- ../../../bases/cleanup
 patchesStrategicMerge:
 - cronjob.yaml
-nameSuffix: "-myresource"
+nameSuffix: "-dogfooding-mynamespace"
 ```
 
 Example Cronjob definition file. This file must give enough context for
 `kustomize` to match the correct resource to be patched - in this case to match
-`resource-cd-trigger` defined in `resource-cd-cron-base/trigger.yaml`.
+[`cleanup-trigger`](bases/cleanup/trigger-resource-cd.yaml).
 It allows cron jobs to override relevant parts of the template trigger, like
 schedule or the value of environment variables.
-```
-# cronjob.yaml
+
+```yaml
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: resource-cd-trigger # <-- This should not be changed!
+  name: cleanup-trigger
 spec:
-  schedule: "*/1 * * * *"  # <-- Change the schedule here
+  schedule: "0 11 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -96,38 +110,41 @@ spec:
           containers:
           - name: trigger
             env:
-              - name: SINK_URL
-                value: "http://el-myconfig-deployer.default.svc.cluster.local:8080"
-              - name: GIT_REPOSITORY
-                value: "github.com/tektoncd/plumbing"
-              - name: GIT_REVISION
-                value: "master"
-              - name: CONFIG_PATH
-                value: "my-great-resource"
               - name: NAMESPACE
-                value: "default"
+                value: "mynamespace"
               - name: CLUSTER_RESOURCE
-                value: "prow-cluster-config-bot"
+                value: "dogfooding-tektoncd-cleaner"
+              - name: CLEANUP_KEEP
+                value: "200"
 ```
 
 To generate the YAML for the newly defined cron configuration, run the following:
-```
-kustomize build tekton/cronjobs/myresource-cd-daily-cron/
+
+```bash
+kustomize build tekton/cronjobs/dogfooding/cleanup/mynamespace-nightly
 ```
 
 To apply the cron configuration directly, run the following:
-```
-kustomize build tekton/cronjobs/myresource-cd-daily-cron/ | kubectl apply -f -
+
+```bash
+kustomize build tekton/cronjobs/dogfooding/cleanup/mynamespace-nightly | kubectl apply -f -
 # or
-kubectl -k tekton/cronjobs/myresource-cd-daily-cron/
+kubectl replace -k tekton/cronjobs/dogfooding/cleanup/mynamespace-nightly/
+```
+
+To reapply all cronjobs on dogfooding:
+
+```bash
+kubectl replace -k tekton/cronjobs/dogfooding
 ```
 
 ## Adding a daily build for a new image
 
-To build daily a docker image, follow these steps:
+To build daily a container image, follow these steps:
 
 1. Create a new context folder with the Dockerfile in it:
-```
+
+```bash
 tekton
 ├── images
 │   └── myimage
@@ -136,16 +153,20 @@ tekton
 
 1. Create a new kustomize folder with `kustomization.yaml` and `cronjob.yaml`.
    Copy the content from an existing one, e.g. `tkn-image-nightly-build-cron`.
-```
-tekton
-├── cronjobs
-│   └── myimage-image-nightly-build-cron
-│       ├── cronjob.yaml
-│       └── kustomization.yaml
+
+```bash
+cronjobs
+├─── dogfooding
+│   ├── images
+│   │   └── myimage-nightly
+│   │       ├── README.md
+│   │       ├── cronjob.yaml
+│   │       └── kustomization.yaml
 ```
 
 1. Edit `cronjob.yaml`. Configure at least CONTEXT_PATH and TARGET_IMAGE.
-```
+
+```yaml
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -173,25 +194,29 @@ spec:
 ```
 
 1. Edit `kustomization.yaml`. Set the nameSuffix to identify the new cron job.
-```
+
+```yaml
 bases:
-- ../nightly-image-build-cron-base
+- ../../../bases/image-build
 patchesStrategicMerge:
 - cronjob.yaml
 nameSuffix: "-myimage"
 ```
 
 1. Apply your new job:
-```
-kubectl -k tekton/config/myimage-image-nightly-build-cron/
+
+```yaml
+kubectl -k tekton/cronjobs/dogfooding/images/myimage-nightly/
 ```
 
 1. Check the result:
-```
+
+```yaml
 kubectl get cronjobs
 ```
 
 1. Run the build:
-```
+
+```yaml
 kubectl create job --from=cronjob/image-build-cron-trigger-myimage build-myimage-$(date +"%Y%m%d-%H%M")
 ```

@@ -1,5 +1,0 @@
-bases:
-- ../nightly-image-build-cron-base
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-alpine-git-nonroot"

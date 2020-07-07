@@ -23,9 +23,9 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: eu-geo # Used for Minio
+  name: eu-geo  # Used for Minio
 ---
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cert-manager # Used for Minio
+  name: cert-manager  # Used for Minio

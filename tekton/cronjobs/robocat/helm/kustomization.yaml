@@ -1,0 +1,3 @@
+resources:
+- cert-manager-nightly
+- minio-nightly

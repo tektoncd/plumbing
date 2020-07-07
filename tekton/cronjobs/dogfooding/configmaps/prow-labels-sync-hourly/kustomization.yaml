@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/configmap
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-label-sync"

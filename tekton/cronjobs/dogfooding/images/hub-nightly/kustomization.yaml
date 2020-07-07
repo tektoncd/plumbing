@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/image-build
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-hub"
