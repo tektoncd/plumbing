@@ -506,8 +506,8 @@ presubmits:
     agent: kubernetes
     always_run: true
     decorate: true
-    rerun_command: "/test pull-tekton-dashboard-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-dashboard-integration-0-11-3-tests"
+    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-0-11-3-tests),?(\\s+|$)"
     spec:
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
@@ -545,8 +545,8 @@ presubmits:
     agent: kubernetes
     always_run: true
     decorate: true
-    rerun_command: "/test pull-tekton-dashboard-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-dashboard-integration-0-12-1-tests"
+    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-0-12-1-tests),?(\\s+|$)"
     spec:
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
@@ -584,8 +584,8 @@ presubmits:
     agent: kubernetes
     always_run: true
     decorate: true
-    rerun_command: "/test pull-tekton-dashboard-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-dashboard-integration-0-13-2-tests"
+    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-0-13-2-tests),?(\\s+|$)"
     spec:
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
