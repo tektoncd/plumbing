@@ -1,5 +1,0 @@
-bases:
-- ../nightly-release-cron-base
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-triggers-nightly-release"

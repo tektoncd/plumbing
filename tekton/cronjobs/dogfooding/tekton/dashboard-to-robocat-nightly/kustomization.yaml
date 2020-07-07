@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/tekton-service
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-robotcat-dashboard"

@@ -1,4 +1,0 @@
-commonLabels:
-  app: tekton.plumbing
-resources:
-- trigger-with-uuid.yaml

@@ -1,5 +1,0 @@
-bases:
-- ../cleanup-cd-cron-base
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-dogfooding-default"

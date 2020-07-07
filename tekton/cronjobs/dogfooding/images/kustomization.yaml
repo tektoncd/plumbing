@@ -1,0 +1,11 @@
+resources:
+- alpine-git-nonroot-nightly
+- coverage-image-nightly
+- hub-nightly
+- ko-gcloud-nightly
+- ko-nightly
+- kubectl-nightly
+- pipeline-test-runner-nightly
+- skopeo-nightly
+- tkn-nightly
+- yamllint-nightly

@@ -1,0 +1,4 @@
+resources:
+- dashboard-nightly
+- pipeline-nightly
+- triggers-nightly

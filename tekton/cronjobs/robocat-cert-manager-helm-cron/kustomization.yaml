@@ -1,5 +1,0 @@
-bases:
-- ../helm-cd-cron-base
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-cert-manager-helm"
