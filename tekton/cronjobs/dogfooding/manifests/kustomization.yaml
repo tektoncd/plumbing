@@ -1,2 +1,3 @@
-# yamllint disable-line rule:empty-values
 resources:
+- plumbing-tekton-nightly
+- plumbing-tekton-cronjobs-nightly

@@ -21,11 +21,8 @@ spec:
   params:
   - name: labels
     description: List of labels currently on the Pull Request
-    type: string
   - name: gitRepository
-    type: string
   - name: pullRequestUrl
-    type: string
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
