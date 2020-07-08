@@ -1,3 +1,6 @@
+commonAnnotations:
+  managed-by: Tekton
+
 resources:
 - images/image-build-trigger.yaml
 - release/install_and_test_tekton_release.yaml

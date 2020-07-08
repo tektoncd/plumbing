@@ -1,0 +1,2 @@
+resources:
+- check-pr-has-kind-label.yaml

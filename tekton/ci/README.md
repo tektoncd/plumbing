@@ -5,18 +5,17 @@ Tekton using Tekton. A general [concept](docs/ci-concept.md) is available
 with diagrams to explain the general setup.
 
 The CI system provides the following facilities:
+
 - Run Tekton tasks or pipelines as GitHub checks, in response to pull request
   and specific comments
 - Update the status of the check on GitHub when a job is started and when it
   completes
 - Filter the jobs to be executed based on the content of the PR
 
-
 ## Where are the CI services running
 
 All the resources used for CI are deployed in the `tektonci` namespace in the
 `dogfooding` cluster.
-
 
 ## Setting up the response to pull requests and comments
 
@@ -24,7 +23,7 @@ The resources in `eventlistener.yaml` and `ingress.yaml` set up the service and
 ingress that are configured in repository specific webhook settings on GitHub.
 The Event Listener uses a secret called `ci-webhook`:
 
-```
+```yaml
 apiVersion: v1
 data:
   secret: [Base64 encoded secret specified when creating the WebHook in GitHub]
@@ -42,6 +41,7 @@ certificate from Let's Encrypt and configures HTTPs termination on the load
 balancer.
 
 The configuration on GitHub side is manual. Two events are required:
+
 - pull_request
 - issue_comment
 if more events are added to the webhook, they will be filtered out by the
@@ -66,7 +66,6 @@ The comment trigger requires a custom interceptor
 [add-pr-body](./interceptors/add-pr-body/README.md) to enrich the event with the
 details of the pull request where the comment was made.
 
-
 ## Setting up the update of the status check
 
 The resources in `github-eventlistener.yaml` define two Event Listeners:
@@ -87,7 +86,7 @@ a CloudEvent PipelineResource.
 
 Example pipeline:
 
-```
+```yaml
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
@@ -152,7 +151,6 @@ spec:
 ## Filter the jobs to be executed based on the content of the PR
 
 [TBD]
-
 
 ## Define new CI Jobs
 
