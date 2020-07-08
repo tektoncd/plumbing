@@ -1,0 +1,14 @@
+namespace: default
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bindings.yaml
+- clusters.yaml
+- configmap-template.yaml
+- eventlistener.yaml
+- folder-template.yaml
+- helm-template.yaml
+- tekton-template.yaml
+- cleanup-template.yaml
+- notification-template.yaml

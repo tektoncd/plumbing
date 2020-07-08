@@ -69,7 +69,7 @@ spec:
               - name: CLUSTER_RESOURCE
                 value: "not-a-real-cluster"
               - name: FOLDER_METHOD
-                value: "apply"
+                value: "replace"
               - name: FOLDER_OVERLAY
                 value: "false"
               - name: FOLDER_PATH

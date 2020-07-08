@@ -79,16 +79,38 @@ spec:
             NAMESPACE_PARAM="-n $(params.namespace)"
             [[ "$(params.namespace)" == "" ]] && NAMESPACE_PARAM=""
 
-            # Run the deployment
+            # Handle overlays
+            TARGET=$(resources.inputs.source.path)/$(params.folderPath)
             if [[ "$(params.isOverlay)" == "true" ]]; then
-              kubectl "$(params.deployMethod)" \
-                $NAMESPACE_PARAM -f \
-                $(resources.inputs.source.path)/$(params.folderPath)
-            else
+              TARGET=target.yaml
               kustomize build \
-                $(resources.inputs.source.path)/$(params.folderPath) | \
-                kubectl "$(params.deployMethod)" $NAMESPACE_PARAM -f -
+                $(resources.inputs.source.path)/$(params.folderPath) > $TARGET
             fi
+
+            # Check if there is any diff
+            DIFF=diff.txt
+            kubectl diff $NAMESPACE_PARAM -f $TARGET | tee $DIFF
+
+            # If there is no diff, we don't need to update
+            if [ ! -s ${DIFF?} ]; then
+              echo "No change detected, nothing to be done."
+              exit 0
+            fi
+
+            # When deploying with replace, we need to do a create first,
+            # to ensure new resources are created
+            CREATE_OUTPUT=create.txt
+            if [[ "$(params.deployMethod)" == "replace" ]]; then
+              kubectl create $NAMESPACE_PARAM -f $TARGET  2> $CREATE_OUTPUT || true
+              # If there was some unexpected message in the error log, fail
+              if grep -v "already exists" $CREATE_OUTPUT; then
+                  echo "Something went wrong when creating resources"
+                  exit 1
+              fi
+            fi
+
+            # Run the actual deployment. If it fails, it will fail the step.
+            kubectl "$(params.deployMethod)" $NAMESPACE_PARAM -f $TARGET
       params:
       - name: folderPath
         value: $(params.folderPath)

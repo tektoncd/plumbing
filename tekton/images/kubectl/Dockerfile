@@ -30,4 +30,4 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Get Kubectl and Kustomize from the build image
 COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl
-COPY --from=build /usr/local/go/bin/kustomize /usr/local/go/bin
+COPY --from=build /usr/local/go/bin/kustomize /usr/local/bin/kustomize
