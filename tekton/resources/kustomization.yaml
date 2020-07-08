@@ -4,23 +4,8 @@ commonAnnotations:
 
 resources:
 - images/image-build-trigger.yaml
-- release/install_and_test_tekton_release.yaml
-- release/install_tekton_release.yaml
-- release/nightly-release-logs-trigger.yaml
-- release/prerelease_checks.yaml
-- release/save-release-logs.yaml
-- release/test_tekton_release.yaml
-- release/github_release.yaml
-- cd/bindings.yaml
-- cd/clusters.yaml
-- cd/configmap-template.yaml
-- cd/eventlistener.yaml
-- cd/folder-template.yaml
-- cd/helm-template.yaml
-- cd/tekton-template.yaml
-- cd/serviceaccount.yaml
-- cd/cleanup-template.yaml
-- cd/notification-template.yaml
 - org-permissions/peribolos.yaml
 - org-permissions/peribolos-trigger.yaml
+- release
+- cd
 - nightly-release
