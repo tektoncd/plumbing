@@ -1,7 +1,6 @@
+namespace: tektonci
 commonAnnotations:
   managed-by: Tekton
-
-namespace: tektonci
 
 resources:
 - 0001_rbac.yaml

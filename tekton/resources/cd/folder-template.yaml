@@ -75,18 +75,20 @@ spec:
             #!/bin/sh
             set -ex
 
-            # Determine whether to deploy a normal folder or a kustomize overlay
-            METHOD_PARAM="-f"
-            [[ "$(params.isOverlay)" == "true" ]] && METHOD_PARAM="-k"
-
             # Determine whether to enforce namespace across resources
             NAMESPACE_PARAM="-n $(params.namespace)"
             [[ "$(params.namespace)" == "" ]] && NAMESPACE_PARAM=""
 
             # Run the deployment
-            kubectl "$(params.deployMethod)" \
-              $NAMESPACE_PARAM $METHOD_PARAM \
-              $(resources.inputs.source.path)/$(params.folderPath)
+            if [[ "$(params.isOverlay)" == "true" ]]; then
+              kubectl "$(params.deployMethod)" \
+                $NAMESPACE_PARAM -f \
+                $(resources.inputs.source.path)/$(params.folderPath)
+            else
+              kustomize build \
+                $(resources.inputs.source.path)/$(params.folderPath) | \
+                kubectl "$(params.deployMethod)" $NAMESPACE_PARAM -f -
+            fi
       params:
       - name: folderPath
         value: $(params.folderPath)

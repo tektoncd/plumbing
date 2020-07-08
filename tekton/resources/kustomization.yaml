@@ -1,3 +1,4 @@
+namespace: default
 commonAnnotations:
   managed-by: Tekton
 
