@@ -1,0 +1,4 @@
+resources:
+- overlays/dashboard
+- overlays/pipeline
+- overlays/triggers
