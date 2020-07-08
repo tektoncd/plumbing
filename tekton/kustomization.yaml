@@ -1,0 +1,7 @@
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- resources
+- ci
+- mario-bot

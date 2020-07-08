@@ -1,3 +1,6 @@
+commonAnnotations:
+  managed-by: Tekton
+
 resources:
 - cleanup
 - configmaps

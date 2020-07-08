@@ -1,0 +1,8 @@
+namespace: mario
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- mario-github-comment.yaml
+- mario-image-build-trigger.yaml
+- ingress.yaml
