@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: tekton-ci-webhook-pull-request
+  name: tekton-ci-github-base
   namespace: tektonci
 spec:
   params:
@@ -11,12 +11,38 @@ spec:
     value: $(body.repository.full_name)
   - name: gitRepository
     value: $(body.repository.html_url)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-clone-depth
+  namespace: tektonci
+spec:
+  params:
+  - name: gitCloneDepth
+    value: $(body.extensions.git_clone_depth)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-pr-number-extension
+  namespace: tektonci
+spec:
+  params:
+  - name: pullRequestNumber
+    value: $(body.extensions.pr_number)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-pull-request
+  namespace: tektonci
+spec:
+  params:
   - name: gitRevision
     value: $(body.pull_request.head.sha)
   - name: pullRequestNumber
     value: $(body.pull_request.number)
-  - name: gitCloneDepth
-    value: $(body.extensions.git_clone_depth)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -25,61 +51,9 @@ metadata:
   namespace: tektonci
 spec:
   params:
-  - name: buildUUID
-    value: $(header.X-GitHub-Delivery)
-  - name: package
-    value: $(body.repository.full_name)
-  - name: gitRepository
-    value: $(body.repository.html_url)
   - name: gitRevision
     value: $(body.add_pr_body.pull_request_body.head.sha)
   - name: pullRequestNumber
     value: $(body.add_pr_body.pull_request_body.number)
-  - name: gitCloneDepth
-    value: $(body.extensions.git_clone_depth)
   - name: gitHubCommand
     value: $(body.comment.body)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-taskrun-cloudevent
-  namespace: tektonci
-spec:
-  params:
-  - name: pullRequestNumber
-    value: $(body.taskRun.metadata.labels.tekton\.dev/pr-number)
-  - name: gitURL
-    value: $(body.taskRun.metadata.annotations.tekton\.dev/gitURL)
-  - name: buildUUID
-    value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
-  - name: checkName
-    value: $(body.taskRun.metadata.labels.tekton\.dev/check-name)
-  - name: checkResult
-    value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
-  - name: pipelineRunName
-    value: $(body.taskRun.metadata.ownerReferences[?(@.kind == 'PipelineRun')].name)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-check-pending
-  namespace: tektonci
-spec:
-  params:
-  - name: checkStatus
-    value: pending
-  - name: checkDescription
-    value: "Job Triggered."
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-check-complete
-  namespace: tektonci
-spec:
-  params:
-  - name: checkStatus
-    value: complete
-  - name: checkDescription
-    value: "Job Finished."

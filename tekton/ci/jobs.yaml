@@ -18,9 +18,6 @@ spec:
     inputs:
       - name: source
         type: git
-    outputs:
-      - name: endtrigger
-        type: cloudEvent
   steps:
   - name: noop
     image: busybox
@@ -50,9 +47,6 @@ spec:
     inputs:
       - name: source
         type: git
-    outputs:
-      - name: endtrigger
-        type: cloudEvent
   steps:
   - name: noop
     image: busybox
@@ -94,9 +88,6 @@ spec:
     inputs:
       - name: source
         type: git
-    outputs:
-      - name: endtrigger
-        type: cloudEvent
   steps:
   - name: lint
     image: golangci/golangci-lint:$(params.version)
@@ -130,9 +121,6 @@ spec:
     inputs:
       - name: source
         type: git
-    outputs:
-      - name: endtrigger
-        type: cloudEvent
   steps:
   - name: lint
     image: gcr.io/tekton-releases/dogfooding/yamllint:latest
@@ -168,9 +156,6 @@ spec:
     inputs:
     - name: source
       type: git
-    outputs:
-    - name: endtrigger
-      type: cloudEvent
   results:
   - name: IMAGE_DIGEST
     description: Digest of the image just built.

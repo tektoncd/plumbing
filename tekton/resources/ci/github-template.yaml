@@ -3,7 +3,6 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: tekton-ci-github-check-update
-  namespace: tektonci
 spec:
   params:
   - name: pullRequestNumber
@@ -20,13 +19,14 @@ spec:
     description: A description to be displayed for the status of the check
   - name: checkResult
     description: Whether the triggering event was successful or not
-  - name: pipelineRunName
-    description: The name of the pipeline run that triggered this
+  - name: taskRunName
+    description: The name of the task run that triggered this
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
       name: pr-$(params.checkStatus)-$(uid)
+      namespace: tektonci
     spec:
       type: pullRequest
       params:
@@ -40,6 +40,7 @@ spec:
     kind: TaskRun
     metadata:
       name: $(params.checkName)-pr-$(params.checkStatus)-$(uid)
+      namespace: tektonci
     spec:
       serviceAccountName: tekton-ci-jobs
       taskSpec:
@@ -75,7 +76,7 @@ spec:
               else:
                 check_status = "error"
             else:
-              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/pipelineruns/$(params.pipelineRunName)'
+              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/taskruns/$(params.taskRunName)'
 
             # Build Status
             status_body = dict(
