@@ -1,0 +1,40 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-taskrun-cloudevent
+spec:
+  params:
+  - name: pullRequestNumber
+    value: $(body.taskRun.metadata.labels.tekton\.dev/pr-number)
+  - name: gitURL
+    value: $(body.taskRun.metadata.annotations.tekton\.dev/gitURL)
+  - name: buildUUID
+    value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
+  - name: checkName
+    value: $(body.taskRun.metadata.labels.tekton\.dev/check-name)
+  - name: checkResult
+    value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
+  - name: taskRunName
+    value: $(body.taskRun.metadata.name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-check-pending
+spec:
+  params:
+  - name: checkStatus
+    value: pending
+  - name: checkDescription
+    value: "Job Triggered."
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-check-complete
+spec:
+  params:
+  - name: checkStatus
+    value: complete
+  - name: checkDescription
+    value: "Job Finished."

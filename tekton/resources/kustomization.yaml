@@ -8,4 +8,5 @@ resources:
 - org-permissions/peribolos-trigger.yaml
 - release
 - cd
+- ci
 - nightly-release

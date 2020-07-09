@@ -63,12 +63,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -108,12 +102,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -153,12 +141,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -198,12 +180,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -243,12 +219,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -288,12 +258,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -333,12 +297,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -378,12 +336,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -423,12 +375,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -468,12 +414,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -511,12 +451,6 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -556,9 +490,3 @@ spec:
             value: $(params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
-      - name: starttrigger
-        resourceRef:
-          name: github-check-start
-      - name: endtrigger
-        resourceRef:
-          name: github-check-done

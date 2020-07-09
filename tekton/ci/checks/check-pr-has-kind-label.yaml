@@ -7,8 +7,6 @@ spec:
   params:
   - name: labels
     value: $(body.pull_request.labels)
-  - name: gitRepository
-    value: $(body.repository.html_url)
   - name: pullRequestUrl
     value: $(body.pull_request.html_url)
 ---
@@ -19,6 +17,10 @@ metadata:
   namespace: tektonci
 spec:
   params:
+  - name: buildUUID
+    description: UUID used to track a CI Pipeline Run in logs
+  - name: pullRequestNumber
+    description: The pullRequestNumber
   - name: labels
     description: List of labels currently on the Pull Request
   - name: gitRepository
@@ -28,6 +30,13 @@ spec:
     kind: TaskRun
     metadata:
       name: check-pr-labels-$(uid)
+      annotations:
+        tekton.dev/gitURL: "$(params.gitRepository)"
+      labels:
+        prow.k8s.io/build-id: $(params.buildUUID)
+        tekton.dev/check-name: check-pr-has-kind-label
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(params.pullRequestNumber)
     spec:
       taskSpec:
         resources:
@@ -71,6 +80,7 @@ spec:
 
             import json
             import yaml
+            import sys
 
             prLabels = json.loads('$(params.labels)')
             labelNames = list(map(lambda e: e["name"], prLabels))
@@ -106,24 +116,8 @@ spec:
               with open(new_comment_path, "w") as comment:
                 json.dump(comment_body, comment)
 
-              fail_check = {
-                "State": "failure",
-                "Label": "check-pr-has-kind-label",
-                "Desc": "The PR requires exactly one kind/ label to merge"
-              }
-
-              new_check_path = "$(outputs.resources.pr.path)/status/check-pr-has-kind-label.json"
-              with open(new_check_path, "w") as check:
-                json.dump(fail_check, check)
-            else:
-              success_check = {
-                "State": "success",
-                "Label": "check-pr-has-kind-label",
-                "Desc": "This PR has exactly one kind/ label"
-              }
-              new_check_path = "$(outputs.resources.pr.path)/status/check-pr-has-kind-label.json"
-              with open(new_check_path, "w") as check:
-                json.dump(success_check, check)
+              # Check failed. Return exit code 1.
+              sys.exit(1)
       resources:
         inputs:
         - name: source

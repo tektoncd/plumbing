@@ -18,21 +18,8 @@ spec:
   resources:
     - name: source
       type: git
-    - name: starttrigger
-      type: cloudEvent
-    - name: endtrigger
-      type: cloudEvent
   tasks:
-  - name: check-reset
-    taskRef:
-      name: tekton-ci-reset-check-status
-    params:
-    - name: checkName
-      value: $(params.checkName)
-    resources:
-      outputs:
-      - name: trigger
-        resource: starttrigger
+  - name: lint
     conditions:
     - conditionRef: "check-git-files-changed"
       params:
@@ -49,8 +36,6 @@ spec:
         value: $(params.gitHubCommand)
       - name: checkName
         value: $(params.checkName)
-  - name: lint
-    runAfter: [check-reset]
     taskRef:
       name: yamllint
     params:
@@ -60,6 +45,3 @@ spec:
       inputs:
       - name: source
         resource: source
-      outputs:
-      - name: endtrigger
-        resource: endtrigger
