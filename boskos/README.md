@@ -5,7 +5,7 @@ We use Boskos to manage GCP projects which end to end tests are run against.
 - It runs [in the `prow` cluster of the `tekton-releases` project](../README.md#gcp-projects), in
   the namespace `test-pods`
 
-_[Boskos docs](https://github.com/kubernetes/test-infra/tree/master/boskos)._
+_[Boskos docs](https://github.com/kubernetes-sigs/boskos)._
 
 ## Adding a project
 
