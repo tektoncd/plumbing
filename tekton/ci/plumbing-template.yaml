@@ -497,7 +497,7 @@ spec:
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
-          value: plumbing-images-build
+          value: tekton-golang-lint
         - name: gitHubCommand
           value: $(params.gitHubCommand)
       resources:
