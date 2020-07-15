@@ -1182,7 +1182,7 @@ presubmits:
             # then env triggers changes in tektoncd/pipeline's e2e-common.sh to enable the validation admission webhook
             # for ClusterTask access
             - name: TEST_CLUSTER_TASK_ACCESS_VALIDATION
-              value: true
+              value: "true"
       volumes:
         - name: test-account
           secret:
