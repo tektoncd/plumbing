@@ -16,6 +16,10 @@ Current buildcops are:
 - Sharon Jerop Kipruto @jerop (jerop)
 - Vincent Demeester @vdemeester (vdemeest)
 
+Other folks who are not build cops but have build cop access:
+- Sunil Thaha @sthaha
+
+Build cop access is given with [addpermissions.py](../addpermissions.py).
 
 ## Rotation
 
