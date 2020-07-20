@@ -162,7 +162,7 @@ RUN apt update && apt install -y rubygems  # for mdl
 # Extra tools through go get
 RUN GO111MODULE="on" go get github.com/google/ko/cmd/ko@v0.5.1 && \
     GO111MODULE="off" go get github.com/google/licenseclassifier && \
-    GO111MODULE="on" go get github.com/google/go-licenses && \
+    GO111MODULE="off" go get github.com/google/go-licenses && \
     GO111MODULE="on" go get github.com/jstemmer/go-junit-report && \
     GO111MODULE="on" go get github.com/raviqqe/liche && \
     GO111MODULE="off" go get github.com/golang/dep/cmd/dep
