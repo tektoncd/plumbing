@@ -13,4 +13,5 @@ resources:
 - tekton-golang-lint.yaml
 - tekton-image-build.yaml
 - tekton-yamllint.yaml
+- tekton-test-ci.yaml
 - checks

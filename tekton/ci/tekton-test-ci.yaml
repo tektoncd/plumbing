@@ -1,0 +1,171 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-namespace
+  namespace: tektonci
+spec:
+  params:
+  - name: namespace
+    description: name of the namespace to create
+  resources:
+    inputs:
+      - name: targetCluster
+        type: cluster
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+  steps:
+  - name: create-namespace
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+
+      # Create the namespace
+      kubectl create namespace $(params.namespace)
+
+      # Copy over requires secrets and image pull secrets
+      kubectl get secret ci-webhook --namespace=tektonci --export -o yaml | \
+        kubectl apply --namespace=$(params.namespace) -f -
+      kubectl get secret default-de-icr-io --namespace=tektonci --export -o yaml | \
+        kubectl apply --namespace=$(params.namespace) -f -
+      kubectl patch sa/default -n $(params.namespace) -p '{"imagePullSecrets": [{"name": "default-de-icr-io"}]}'
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-overlay
+  namespace: tektonci
+spec:
+  params:
+  - name: folderPath
+    description: path in git repo to kustomize overlay
+  - name: namespace
+    description: target namespace
+  resources:
+    inputs:
+      - name: source
+        type: git
+      - name: targetCluster
+        type: cluster
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+  steps:
+  - name: deploy-from-folder
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+
+      TARGET=$(resources.inputs.source.path)/$(params.folderPath)
+
+      # Replace the namespace if set in kustomize. If not set, it will be set by kubectl
+      sed -i -e 's/^namespace: .*$/namespace: $(params.namespace)/g' $TARGET/kustomization.yaml
+
+      # Deploy to the target namespace
+      kustomize build $TARGET | kubectl create -n $(params.namespace) -f -
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cloud-event-trigger
+  namespace: tektonci
+spec:
+  resources:
+    outputs:
+      - name: cloudEventTarget
+        type: cloudEvent
+  steps:
+  - name: no-op
+    image: busybox
+    script: |
+      #!/bin/sh
+      set -ex
+
+      echo "Sending Cloud Event to $(resources.outputs.cloudEventTarget.target-uri) @};-'-"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: test-resource-folder
+  namespace: tektonci
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: namespace
+      description: The name of the namespace to use for testing
+    - name: folderPath
+      description: path in git repo to kustomize overlay
+    - name: userAgent
+      description: The user agent in the pipeline trigger
+  resources:
+    - name: source
+      type: git
+    - name: target
+      type: cluster
+    - name: cloudEventTarget
+      type: cloudEvent
+  tasks:
+    - name: create-namespace
+      conditions:
+        - conditionRef: "check-git-files-changed"
+          params:
+          - name: gitCloneDepth
+            value: $(params.gitCloneDepth)
+          - name: regex
+            value: $(params.fileFilterRegex)
+          resources:
+          - name: source
+            resource: source
+        - conditionRef: "check-name-matches"
+          params:
+          - name: gitHubCommand
+            value: $(params.gitHubCommand)
+          - name: checkName
+            value: $(params.checkName)
+        - conditionRef: "check-triggered-by-github"
+          params:
+          - name: userAgent
+            value: $(params.userAgent)
+      taskRef:
+        name: create-namespace
+      params:
+        - name: namespace
+          value: $(params.namespace)
+      resources:
+        inputs:
+          - name: targetCluster
+            resource: target
+    - name: deploy-tekton-ci
+      runAfter: ["create-namespace"]
+      taskRef:
+        name: deploy-overlay
+      params:
+      - name: folderPath
+        value: "tekton/ci"
+      - name: namespace
+        value: $(params.namespace)
+      resources:
+        inputs:
+        - name: source
+          resource: source
+        - name: targetCluster
+          resource: target
+  finally:
+    - name: trigger
+      taskRef:
+        name: cloud-event-trigger
+      resources:
+        outputs:
+        - name: cloudEventTarget
+          resource: cloudEventTarget
