@@ -21,6 +21,8 @@ spec:
     description: Whether the triggering event was successful or not
   - name: taskRunName
     description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
@@ -57,7 +59,10 @@ spec:
           script: |
             #!/bin/sh
             mkdir -p $(resources.outputs.pr.path)
+            chmod 775 $(resources.outputs.pr.path)
             cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
+            find $(resources.outputs.pr.path) -type d -exec chmod 775 {} \;
+            find $(resources.outputs.pr.path) -type f -exec chmod 644 {} \;
         - name: setup-comment
           image: python:3-alpine
           script: |
@@ -68,7 +73,7 @@ spec:
             check_status = "$(params.checkStatus)"
 
             if (check_status == "complete"):
-              logs_url = 'http://logs.dogfooding.tekton.dev/?buildid=$(params.buildUUID)&namespace=tektonci'
+              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)'
               if ("$(params.checkResult)" == "True"):
                 check_status = "success"
               elif ("$(params.checkResult)" == "False"):
@@ -76,7 +81,7 @@ spec:
               else:
                 check_status = "error"
             else:
-              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/taskruns/$(params.taskRunName)'
+              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)'
 
             # Build Status
             status_body = dict(

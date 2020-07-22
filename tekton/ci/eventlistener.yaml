@@ -18,7 +18,7 @@ spec:
               - pull_request
         - cel:
             filter: >-
-              body.repository.full_name == 'tektoncd/plumbing' &&
+              body.repository.full_name == 'afrittoli/plumbing' &&
               (body.action == 'opened' || body.action == 'synchronize')
             overlays:
             - key: extensions.git_clone_depth
@@ -39,7 +39,7 @@ spec:
               - issue_comment
         - cel:
             filter: >-
-              body.repository.full_name == 'tektoncd/plumbing' &&
+              body.repository.full_name == 'afrittoli/plumbing' &&
               body.action == 'created' &&
               'pull_request' in body.issue &&
               body.issue.state == 'open' &&
@@ -88,3 +88,16 @@ spec:
         - ref: tekton-ci-pr-number-extension
       template:
         name: check-pull-request-labels
+    - name: test-ci-trigger
+      interceptors:
+        - cel:
+            filter: >-
+              body.taskRun.metadata.annotations['ci.tekton.dev/github-repo'] == 'afrittoli/plumbing' &&
+              body.taskRun.metadata.annotations['ci.tekton.dev/github-event'] == 'pull_request' &&
+              body.taskRun.metadata.annotations['ci.tekton.dev/github-action'] in ['opened', 'synchronize']
+      bindings:
+        - ref: tekton-ci-github-base-forwarded
+        - ref: tekton-ci-webhook-pull-request-forwarded
+        - ref: tekton-ci-clone-depth-forwarded
+      template:
+        name: tekton-plumbing-ci-pipeline
