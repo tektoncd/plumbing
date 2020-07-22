@@ -130,6 +130,12 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
+    - color: c7def8
+      description: Categorizes issue or PR as related to a TEP (or needs a TEP).
+      name: kind/tep
+      target: both
+      prowPlugin: label
+      addedBy: anyone
     - color: bfd4f2
       description: Categorizes issue or PR as related to documentation.
       name: kind/documentation
