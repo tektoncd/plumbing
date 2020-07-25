@@ -15,7 +15,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: prow-cluster-config-bot
-  namespace: default
 spec:
   params:
   - name: url
@@ -35,7 +34,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: prow-github-admin-default
-  namespace: default
 spec:
   params:
   - name: url
@@ -55,7 +53,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: robocat-tekton-deployer
-  namespace: default
 spec:
   params:
   - name: url
@@ -75,7 +72,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: robocat-cadmin
-  namespace: default
 spec:
   params:
   - name: url
@@ -95,7 +91,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: dogfooding-tekton-deployer
-  namespace: default
 spec:
   params:
   - name: url
@@ -115,7 +110,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: dogfooding-tektonci-default
-  namespace: default
 spec:
   params:
   - name: url
@@ -135,7 +129,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: dogfooding-tektoncd-cleaner
-  namespace: default
 spec:
   params:
   - name: url
@@ -155,7 +148,6 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: dogfooding-tekton-cd
-  namespace: default
 spec:
   params:
   - name: url
@@ -169,4 +161,23 @@ spec:
   - fieldName: cadata
     secretKey: ca.crt
     secretName: dogfooding-tekton-cd-token
+  type: cluster
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: af-tekton-cadmin
+spec:
+  params:
+  - name: url
+    value: https://c106.eu-de.containers.cloud.ibm.com:31182
+  - name: username
+    value: cadmin
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: af-tekton-cadmin-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: af-tekton-cadmin-token
   type: cluster

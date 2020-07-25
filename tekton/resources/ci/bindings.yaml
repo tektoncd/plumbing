@@ -16,6 +16,8 @@ spec:
     value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
   - name: taskRunName
     value: $(body.taskRun.metadata.name)
+  - name: taskRunNamespace
+    value: $(body.taskRun.metadata.namespace)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding

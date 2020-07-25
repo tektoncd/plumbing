@@ -15,6 +15,8 @@ spec:
       description: The command that was used to trigger testing
     - name: folders
       description: The folders to lint with yamllint
+    - name: userAgent
+      description: The user agent in the pipeline trigger
   resources:
     - name: source
       type: git
@@ -36,6 +38,17 @@ spec:
         value: $(params.gitHubCommand)
       - name: checkName
         value: $(params.checkName)
+    - conditionRef: "check-files-and-trigger"
+      params:
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: $(params.fileFilterRegex)
+      - name: userAgent
+        value: $(params.userAgent)
+      resources:
+      - name: source
+        resource: source
     taskRef:
       name: yamllint
     params:
