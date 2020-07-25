@@ -124,7 +124,7 @@ spec:
       NO_FILE_MATCH=0
       cd $(resources.source.path)
       git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-          grep -E '$(params.regex)' || FILES_NOT_CHANGED=1
+          grep -E '$(params.regex)' || NO_FILE_MATCH=1
 
       NOT_TRIGGERED_BY_GITHUB=0
       REGEX="^GitHub-"
