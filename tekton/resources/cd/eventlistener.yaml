@@ -102,7 +102,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') &&
+              (header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') ||
+              header.match('ce-type', 'dev.tekton.event.taskrun.running.v1')) &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
@@ -131,7 +132,8 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') &&
+              (header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') ||
+              header.match('ce-type', 'dev.tekton.event.taskrun.running.v1')) &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
