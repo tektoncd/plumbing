@@ -169,8 +169,6 @@ spec:
     env:
     - name: DOCKER_CONFIG
       value: /tekton/home/.docker
-    - name: GOOGLE_APPLICATION_CREDENTIALS
-      value: /secret/release.json
     command:
     - /kaniko/executor
     - $(params.EXTRA_ARGS)
@@ -181,9 +179,6 @@ spec:
     - --no-push
     securityContext:
       runAsUser: 0
-    volumeMounts:
-    - name: gcp-secret
-      mountPath: /secret
   - name: write-digest
     workingDir: $(resources.inputs.source.path)
     image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/imagedigestexporter:v0.11.1
@@ -197,7 +192,3 @@ spec:
     image: stedolan/jq
     script: |
       cat image-digested | jq '.[0].digest' | tee /tekton/results/IMAGE_DIGEST
-  volumes:
-  - name: gcp-secret
-    secret:
-      secretName: release-secret
