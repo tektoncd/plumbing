@@ -28,7 +28,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: cleanup-runs-$(params.clusterResource)-$(params.namespace)-$(uid)
+      name: cleanup-runs-$(tt.params.clusterResource)-$(tt.params.namespace)-$(uid)
     spec:
       taskSpec:
         params:
@@ -62,11 +62,11 @@ spec:
             tkn tr delete -n $(params.namespace) --keep $(( $(params.keep) * 2 ))
       params:
       - name: keep
-        value: $(params.keep)
+        value: $(tt.params.keep)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       resources:
         inputs:
           - name: targetCluster
             resourceRef:
-              name: $(params.clusterResource)
+              name: $(tt.params.clusterResource)

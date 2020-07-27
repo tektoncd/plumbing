@@ -21,24 +21,24 @@ spec:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
-      name: git-source-$(params.projectName)-$(uid)
+      name: git-source-$(tt.params.projectName)-$(uid)
     spec:
       type: git
       params:
       - name: revision
-        value: $(params.gitrevision)
+        value: $(tt.params.gitrevision)
       - name: url
-        value: http://$(params.gitrepository)
+        value: http://$(tt.params.gitrepository)
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
-      name: tekton-bucket-nightly-$(params.projectName)-$(uid)
+      name: tekton-bucket-nightly-$(tt.params.projectName)-$(uid)
     spec:
       params:
       - name: type
         value: gcs
       - name: location
-        value: gs://tekton-releases-nightly/$(params.projectName)
+        value: gs://tekton-releases-nightly/$(tt.params.projectName)
       - name: dir
         value: "y"
       type: storage

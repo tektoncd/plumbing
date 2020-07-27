@@ -60,10 +60,10 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: build-and-push-$(params.imageName)-$(uid)
+      name: build-and-push-$(tt.params.imageName)-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
-        plumbing.tekton.dev/image: $(params.imageName)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        plumbing.tekton.dev/image: $(tt.params.imageName)
     spec:
       taskSpec:
         resources:
@@ -83,7 +83,7 @@ spec:
           command:
           - /kaniko/executor
           - --dockerfile=Dockerfile
-          - --context=$(params.contextPath)
+          - --context=$(tt.params.contextPath)
           - --destination=$(resources.outputs.image.url)
           volumeMounts:
             - name: gcp-secret
@@ -99,13 +99,13 @@ spec:
               type: git
               params:
               - name: revision
-                value: $(params.gitRevision)
+                value: $(tt.params.gitRevision)
               - name: url
-                value: https://$(params.gitRepository)
+                value: https://$(tt.params.gitRepository)
         outputs:
           - name: image
             resourceSpec:
               type: image
               params:
               - name: url
-                value: $(params.registry)/$(params.namespace)/$(params.imageName):$(params.imageTag)
+                value: $(tt.params.registry)/$(tt.params.namespace)/$(tt.params.imageName):$(tt.params.imageTag)

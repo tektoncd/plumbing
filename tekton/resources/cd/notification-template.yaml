@@ -38,5 +38,5 @@ spec:
           value: robocat-slack-app-webhook
         - name: message
           value: >-
-            :boom: The TaskRun <$(params.dashboardBaseURL)/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)|$(params.taskRunNamespace)/$(params.taskRunName)>
-            failed to deploy <$(params.dashboardBaseURL)/#/namespaces/$(params.taskRunNamespace)/pipelineresources/$(params.gitResource)|$(params.taskRunNamespace)/$(params.gitResource)>
+            :boom: The TaskRun <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/taskruns/$(tt.params.taskRunName)|$(tt.params.taskRunNamespace)/$(tt.params.taskRunName)>
+            failed to deploy <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/pipelineresources/$(tt.params.gitResource)|$(tt.params.taskRunNamespace)/$(tt.params.gitResource)>

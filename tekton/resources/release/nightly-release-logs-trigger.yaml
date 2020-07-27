@@ -51,17 +51,17 @@ spec:
         name: save-release-logs
       params:
       - name: pipelinerun
-        value: $(params.pipelineRun)
+        value: $(tt.params.pipelineRun)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       - name: versionTag
-        value: $(params.versionTag)
+        value: $(tt.params.versionTag)
         resources:
         - name: release-bucket
           resourceRef:
-            name: $(params.bucket)
+            name: $(tt.params.bucket)
       resources:
         outputs:
           - name: release-bucket
             resourceRef:
-              name: $(params.bucket)
+              name: $(tt.params.bucket)

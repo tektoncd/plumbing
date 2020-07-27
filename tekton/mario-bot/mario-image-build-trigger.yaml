@@ -136,14 +136,14 @@ spec:
       type: image
       params:
       - name: url
-        value: $(params.targetImage)
+        value: $(tt.params.targetImage)
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
       generateName: build-and-push-$(uid)-
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
-        mario.bot/pull-request-id: $(params.pullRequestID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        mario.bot/pull-request-id: $(tt.params.pullRequestID)
     spec:
       serviceAccountName: mario-releaser
       taskSpec:
@@ -170,7 +170,7 @@ spec:
           - /kaniko/executor
           - --dockerfile=Dockerfile
           - --context=$(params.contextPath)
-          - --destination=$(params.targetImage)
+          - --destination=$(tt.params.targetImage)
           volumeMounts:
             - name: gcp-secret
               mountPath: /secret
@@ -180,7 +180,7 @@ spec:
               secretName: release-secret
       params:
       - name: contextPath
-        value: $(params.contextPath)
+        value: $(tt.params.contextPath)
       resources:
         inputs:
           - name: source
@@ -188,9 +188,9 @@ spec:
               type: git
               params:
               - name: revision
-                value: $(params.gitRevision)
+                value: $(tt.params.gitRevision)
               - name: url
-                value: https://$(params.gitRepository)
+                value: https://$(tt.params.gitRepository)
         outputs:
           - name: image
             resourceRef:

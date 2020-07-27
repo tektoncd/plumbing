@@ -43,7 +43,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-helm-$(params.chartDescription)-$(uid)
+      name: deploy-helm-$(tt.params.chartDescription)-$(uid)
     spec:
       taskSpec:
         params:
@@ -99,19 +99,19 @@ spec:
               --wait --timeout 5m
       params:
       - name: chartName
-        value: $(params.chartName)
+        value: $(tt.params.chartName)
       - name: chartVersion
-        value: $(params.chartVersion)
+        value: $(tt.params.chartVersion)
       - name: chartRepo
-        value: $(params.chartRepo)
+        value: $(tt.params.chartRepo)
       - name: chartParams
-        value: $(params.chartParams)
+        value: $(tt.params.chartParams)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       - name: preDeployResources
-        value: $(params.preDeployResources)
+        value: $(tt.params.preDeployResources)
       resources:
         inputs:
           - name: targetCluster
             resourceRef:
-              name: $(params.clusterResource)
+              name: $(tt.params.clusterResource)
