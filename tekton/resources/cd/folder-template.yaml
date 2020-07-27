@@ -44,13 +44,13 @@ spec:
       type: git
       params:
       - name: revision
-        value: $(params.gitRevision)
+        value: $(tt.params.gitRevision)
       - name: url
-        value: https://$(params.gitRepository)
+        value: https://$(tt.params.gitRepository)
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-resources-$(params.folderDescription)-$(uid)
+      name: deploy-resources-$(tt.params.folderDescription)-$(uid)
     spec:
       taskSpec:
         params:
@@ -113,13 +113,13 @@ spec:
             kubectl "$(params.deployMethod)" $NAMESPACE_PARAM -f $TARGET
       params:
       - name: folderPath
-        value: $(params.folderPath)
+        value: $(tt.params.folderPath)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       - name: deployMethod
-        value: $(params.deployMethod)
+        value: $(tt.params.deployMethod)
       - name: isOverlay
-        value: $(params.isOverlay)
+        value: $(tt.params.isOverlay)
       resources:
         inputs:
           - name: source
@@ -127,4 +127,4 @@ spec:
               name: git-source-$(uid)
           - name: targetCluster
             resourceRef:
-              name: $(params.clusterResource)
+              name: $(tt.params.clusterResource)

@@ -57,7 +57,7 @@ spec:
       type: pullRequest
       params:
         - name: url
-          value: $(params.gitURL)/pull/$(params.pullRequestID)
+          value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
       secrets:
         - fieldName: authToken
           secretName: mario-github-token
@@ -98,8 +98,8 @@ spec:
             ok_pics = ['mario', 'luigi', 'tekton']
             failed_pics = ['goomba']
             logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
-            successful = ("$(params.passedOrFailed)" == "True")
-            print("PassedOrFailed: {}".format("$(params.passedOrFailed)"))
+            successful = ("$(tt.params.passedOrFailed)" == "True")
+            print("PassedOrFailed: {}".format("$(tt.params.passedOrFailed)"))
 
             # Service Image
             comment_template = (
@@ -129,7 +129,7 @@ spec:
               '<a href="http://35.222.249.224/?buildid={buildid}&'
               'namespace=mario">build logs</a>'
             )
-            comment_params['buildid'] = '$(params.buildUUID)'
+            comment_params['buildid'] = '$(tt.params.buildUUID)'
 
             new_comment_path = "$(resources.outputs.pr.path)/comments/new.json"
             comment_body = dict(body=comment_template.format(**comment_params))
@@ -142,16 +142,16 @@ spec:
               type: git
               params:
               - name: revision
-                value: $(params.gitRevision)
+                value: $(tt.params.gitRevision)
               - name: url
-                value: $(params.gitURL)
+                value: $(tt.params.gitURL)
           - name: pr
             resourceRef:
               name: pr-$(uid)
         outputs:
           - name: image
             resourceRef:
-              name: $(params.targetImageResourceName)
+              name: $(tt.params.targetImageResourceName)
           - name: pr
             resourceRef:
               name: pr-$(uid)

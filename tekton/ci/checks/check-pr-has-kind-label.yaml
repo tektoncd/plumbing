@@ -31,12 +31,12 @@ spec:
     metadata:
       name: check-pr-labels-$(uid)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: check-pr-has-kind-label
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
     spec:
       taskSpec:
         resources:
@@ -151,8 +151,8 @@ spec:
               secretKey: bot-token
       params:
       - name: labels
-        value: $(params.labels)
+        value: $(tt.params.labels)
       - name: gitRepository
-        value: $(params.gitRepository)
+        value: $(tt.params.gitRepository)
       - name: pullRequestUrl
-        value: $(params.pullRequestUrl)
+        value: $(tt.params.pullRequestUrl)

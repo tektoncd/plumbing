@@ -43,13 +43,13 @@ spec:
       type: git
       params:
       - name: revision
-        value: $(params.gitRevision)
+        value: $(tt.params.gitRevision)
       - name: url
-        value: https://$(params.gitRepository)
+        value: https://$(tt.params.gitRepository)
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-configmap-$(params.configMapDescription)-$(uid)
+      name: deploy-configmap-$(tt.params.configMapDescription)-$(uid)
     spec:
       taskSpec:
         params:
@@ -105,13 +105,13 @@ spec:
               kubectl replace configmap $(params.configMapName) -n $(params.namespace) -f -
       params:
       - name: configPath
-        value: $(params.configPath)
+        value: $(tt.params.configPath)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       - name: configMapName
-        value: $(params.configMapName)
+        value: $(tt.params.configMapName)
       - name: configMapKey
-        value: $(params.configMapKey)
+        value: $(tt.params.configMapKey)
       resources:
         inputs:
           - name: source
@@ -119,4 +119,4 @@ spec:
               name: git-source-$(uid)
           - name: targetCluster
             resourceRef:
-              name: $(params.clusterResource)
+              name: $(tt.params.clusterResource)

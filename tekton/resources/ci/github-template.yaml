@@ -25,13 +25,13 @@ spec:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
     metadata:
-      name: pr-$(params.checkStatus)-$(uid)
+      name: pr-$(tt.params.checkStatus)-$(uid)
       namespace: tektonci
     spec:
       type: pullRequest
       params:
         - name: url
-          value: $(params.gitURL)/pull/$(params.pullRequestNumber)
+          value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
       secrets:
         - fieldName: authToken
           secretName: bot-token-github
@@ -39,7 +39,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: $(params.checkName)-pr-$(params.checkStatus)-$(uid)
+      name: $(tt.params.checkName)-pr-$(tt.params.checkStatus)-$(uid)
       namespace: tektonci
     spec:
       serviceAccountName: tekton-ci-jobs
@@ -65,36 +65,36 @@ spec:
             import json
             import random
 
-            check_status = "$(params.checkStatus)"
+            check_status = "$(tt.params.checkStatus)"
 
             if (check_status == "complete"):
-              logs_url = 'http://logs.dogfooding.tekton.dev/?buildid=$(params.buildUUID)&namespace=tektonci'
-              if ("$(params.checkResult)" == "True"):
+              logs_url = 'http://logs.dogfooding.tekton.dev/?buildid=$(tt.params.buildUUID)&namespace=tektonci'
+              if ("$(tt.params.checkResult)" == "True"):
                 check_status = "success"
-              elif ("$(params.checkResult)" == "False"):
+              elif ("$(tt.params.checkResult)" == "False"):
                 check_status = "failure"
               else:
                 check_status = "error"
             else:
-              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/taskruns/$(params.taskRunName)'
+              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/taskruns/$(tt.params.taskRunName)'
 
             # Build Status
             status_body = dict(
               State=check_status,
-              Label="$(params.checkName)",
-              Desc="$(params.checkDescription)",
+              Label="$(tt.params.checkName)",
+              Desc="$(tt.params.checkDescription)",
               Target=logs_url)
 
             # we may need to URLEncode the check name
-            status_path = "$(resources.outputs.pr.path)/status/$(params.checkName).json"
+            status_path = "$(resources.outputs.pr.path)/status/$(tt.params.checkName).json"
             with open(status_path, "w") as status:
               json.dump(status_body, status)
       resources:
         inputs:
           - name: pr
             resourceRef:
-              name: pr-$(params.checkStatus)-$(uid)
+              name: pr-$(tt.params.checkStatus)-$(uid)
         outputs:
           - name: pr
             resourceRef:
-              name: pr-$(params.checkStatus)-$(uid)
+              name: pr-$(tt.params.checkStatus)-$(uid)

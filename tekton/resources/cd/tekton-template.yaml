@@ -44,21 +44,21 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-$(params.tektonProject)-release-$(params.targetCluster)-$(uid)
+      name: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-$(uid)
     spec:
       taskRef:
         name: install-tekton-release
       params:
       - name: projectName
-        value: $(params.tektonProject)
+        value: $(tt.params.tektonProject)
       - name: namespace
-        value: $(params.namespace)
+        value: $(tt.params.namespace)
       - name: version
-        value: $(params.tektonVersion)
+        value: $(tt.params.tektonVersion)
       - name: environment
-        value: $(params.targetCluster)
+        value: $(tt.params.targetCluster)
       - name: release-file
-        value: $(params.releaseFile)
+        value: $(tt.params.releaseFile)
       resources:
         inputs:
           - name: release-bucket
@@ -68,17 +68,17 @@ spec:
               - name: type
                 value: gcs
               - name: location
-                value: $(params.releaseBucket)/$(params.tektonProject)$(params.releaseExtraPath)
+                value: $(tt.params.releaseBucket)/$(tt.params.tektonProject)$(tt.params.releaseExtraPath)
               - name: dir
                 value: "y"
           - name: k8s-cluster
             resourceRef:
-              name: $(params.clusterResource)
+              name: $(tt.params.clusterResource)
           - name: plumbing-library
             resourceSpec:
               type: git
               params:
               - name: revision
-                value: $(params.plumbingRevision)
+                value: $(tt.params.plumbingRevision)
               - name: url
-                value: https://$(params.plumbingRepository)
+                value: https://$(tt.params.plumbingRepository)

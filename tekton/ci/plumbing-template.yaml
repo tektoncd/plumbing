@@ -29,12 +29,12 @@ spec:
     metadata:
       name: tekton-noop-check-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: tekton-noop-check
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -43,24 +43,24 @@ spec:
         - name: passorfail
           value: pass
         - name: message
-          value: "BuildUUID#: $(params.buildUUID), Package: $(params.package), Repo: $(params.gitRepository), Revision: $(params.gitRevision)"
+          value: "BuildUUID#: $(tt.params.buildUUID), Package: $(tt.params.package), Repo: $(tt.params.gitRepository), Revision: $(tt.params.gitRevision)"
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "(tekton-demo)"
         - name: checkName
           value: tekton-noop-check
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -68,12 +68,12 @@ spec:
     metadata:
       name: plumbing-ko-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-ko-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -82,24 +82,24 @@ spec:
         - name: imageName
           value: ko
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/ko/**"
         - name: checkName
           value: plumbing-ko-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -107,12 +107,12 @@ spec:
     metadata:
       name: plumbing-ko-gcloud-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-ko-gcloud-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -121,24 +121,24 @@ spec:
         - name: imageName
           value: ko-gcloud
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/ko-gcloud/**"
         - name: checkName
           value: plumbing-ko-gcloud-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -146,12 +146,12 @@ spec:
     metadata:
       name: plumbing-hub-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-hub-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -160,24 +160,24 @@ spec:
         - name: imageName
           value: hub
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/hub/**"
         - name: checkName
           value: plumbing-hub-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -185,12 +185,12 @@ spec:
     metadata:
       name: plumbing-kubectl-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-kubectl-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -199,24 +199,24 @@ spec:
         - name: imageName
           value: kubectl
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/kubectl/**"
         - name: checkName
           value: plumbing-kubectl-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -224,12 +224,12 @@ spec:
     metadata:
       name: plumbing-skopeo-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-skopeo-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -238,24 +238,24 @@ spec:
         - name: imageName
           value: skopeo
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/skopeo/**"
         - name: checkName
           value: plumbing-skopeo-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -263,12 +263,12 @@ spec:
     metadata:
       name: plumbing-test-runner-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-test-runner-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -277,24 +277,24 @@ spec:
         - name: imageName
           value: test-runner
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/test-runner/**"
         - name: checkName
           value: plumbing-test-runner-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -302,12 +302,12 @@ spec:
     metadata:
       name: plumbing-tkn-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-tkn-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -316,24 +316,24 @@ spec:
         - name: imageName
           value: tkn
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/tkn/**"
         - name: checkName
           value: plumbing-tkn-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -341,12 +341,12 @@ spec:
     metadata:
       name: plumbing-coverage-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-coverage-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -355,24 +355,24 @@ spec:
         - name: imageName
           value: coverage
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/coverage/**"
         - name: checkName
           value: plumbing-coverage-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -380,27 +380,27 @@ spec:
     metadata:
       name: tekton-yamllint-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-yamllint
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
         name: tekton-yamllint
       params:
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
           value: plumbing-yamllint
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
         - name: folders
           value: buildbot/config mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
       resources:
@@ -409,46 +409,46 @@ spec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
       name: tekton-golang-lint-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-golang-lint
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
         name: tekton-golang-lint
       params:
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
           value: tekton-golang-lint
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
@@ -456,12 +456,12 @@ spec:
     metadata:
       name: plumbing-alpine-git-nonroot-build-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-alpine-git-nonroot-build
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
@@ -470,23 +470,23 @@ spec:
         - name: imageName
           value: alpine-git-nonroot
         - name: pullRequestNumber
-          value: $(params.pullRequestNumber)
+          value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/images/alpine-git-nonroot/**"
         - name: checkName
           value: plumbing-alpine-git-nonroot-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
       resources:
       - name: source
         resourceSpec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
             value: $(params.gitCloneDepth)
