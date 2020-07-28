@@ -152,7 +152,7 @@ spec:
         name: deploy-overlay
       params:
       - name: folderPath
-        value: "tekton/ci"
+        value: "tekton/ci/**"
       - name: namespace
         value: $(params.namespace)
       resources:

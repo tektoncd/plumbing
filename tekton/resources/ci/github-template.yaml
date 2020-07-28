@@ -23,6 +23,9 @@ spec:
     description: The name of the task run that triggered this
   - name: taskRunNamespace
     description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
     kind: PipelineResource
@@ -71,9 +74,13 @@ spec:
             import random
 
             check_status = "$(params.checkStatus)"
+            if "$(params.parentPipelineRunName)" == "":
+              resource_path = "taskruns/$(params.taskRunName)"
+            else:
+              resource_path = "pipelineruns/$(params.parentPipelineRunName)"
 
             if (check_status == "complete"):
-              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)'
+              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/' + resource_path
               if ("$(params.checkResult)" == "True"):
                 check_status = "success"
               elif ("$(params.checkResult)" == "False"):
@@ -81,7 +88,7 @@ spec:
               else:
                 check_status = "error"
             else:
-              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/taskruns/$(params.taskRunName)'
+              logs_url = 'http://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(params.taskRunNamespace)/' + resource_path
 
             # Build Status
             status_body = dict(

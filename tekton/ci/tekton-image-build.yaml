@@ -48,7 +48,7 @@ spec:
       - name: gitCloneDepth
         value: $(params.gitCloneDepth)
       - name: regex
-        value: "tekton/ci"
+        value: "tekton/ci/**"
       - name: userAgent
         value: $(params.userAgent)
       resources:
