@@ -1637,3 +1637,107 @@ periodics:
     - name: test-account
       secret:
         secretName: test-account
+- name: periodic-tekton-stale
+  interval: 1h
+  decorate: true
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20200727-9592e624ac
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:tektoncd
+        -label:lifecycle/frozen
+        -label:lifecycle/stale
+        -label:lifecycle/rotten
+      - --updated=2160h
+      - --token=/etc/github-token/oauth
+      - |-
+        --comment=Issues go stale after 90d of inactivity.
+        Mark the issue as fresh with `/remove-lifecycle stale`.
+        Stale issues rot after an additional 30d of inactivity and eventually close.
+        If this issue is safe to close now please do so with `/close`.
+
+        /lifecycle stale
+
+        Send feedback to [tektoncd/plumbing](https://github.com/tektoncd/plumbing).
+      - --template
+      - --ceiling=10
+      - --confirm
+      volumeMounts:
+        - name: github-token
+          mountPath: /etc/github-token
+    volumes:
+      - name: github-token
+        secret:
+          secretName: oauth-token
+- name: periodic-tekton-rotten
+  interval: 1h
+  decorate: true
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20200727-9592e624ac
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:tektoncd
+        -label:lifecycle/frozen
+        -label:lifecycle/stale
+        -label:lifecycle/rotten
+      - --updated=720h
+      - --token=/etc/github-token/oauth
+      - |-
+        --comment=Stale issues rot after 30d of inactivity.
+        Mark the issue as fresh with `/remove-lifecycle rotten`.
+        Rotten issues close after an additional 30d of inactivity.
+        If this issue is safe to close now please do so with `/close`.
+
+        /lifecycle rotten
+
+        Send feedback to [tektoncd/plumbing](https://github.com/tektoncd/plumbing).
+      - --template
+      - --ceiling=10
+      - --confirm
+      volumeMounts:
+        - name: github-token
+          mountPath: /etc/github-token
+    volumes:
+      - name: github-token
+        secret:
+          secretName: oauth-token
+- name: periodic-tekton-close
+  interval: 1h
+  decorate: true
+  spec:
+    containers:
+    - image: gcr.io/k8s-prow/commenter:v20200727-9592e624ac
+      command:
+      - /app/robots/commenter/app.binary
+      args:
+      - |-
+        --query=org:tektoncd
+        -label:lifecycle/frozen
+        -label:lifecycle/stale
+        -label:lifecycle/rotten
+      - --updated=720h
+      - --token=/etc/github-token/oauth
+      - |-
+        --comment=Rotten issues close after 30d of inactivity.
+        Reopen the issue with `/reopen`.
+        Mark the issue as fresh with `/remove-lifecycle rotten`.
+
+        /close
+
+        Send feedback to [tektoncd/plumbing](https://github.com/tektoncd/plumbing).
+      - --template
+      - --ceiling=10
+      - --confirm
+      volumeMounts:
+        - name: github-token
+          mountPath: /etc/github-token
+    volumes:
+      - name: github-token
+        secret:
+          secretName: oauth-token
