@@ -14,10 +14,10 @@
 FROM alpine:3.11
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ARG HUB_VERSION=2.14.2-r1
+ARG HUB_VERSION=2.14.2
 ARG HUB_RELEASE=r1
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 RUN apk add --no-cache \
     git=2.24.3-r0 \
     bash=5.0.11-r1 \
-    hub=${HUB_VERSION}
+    hub=${HUB_VERSION}-${HUB_RELEASE}
