@@ -158,47 +158,6 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-yamllint-$(uid)
-      labels:
-        prow.k8s.io/build-id: $(tt.params.buildUUID)
-        tekton.dev/check-name: plumbing-yamllint
-        tekton.dev/kind: ci
-        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
-      annotations:
-        tekton.dev/gitURL: "$(tt.params.gitRepository)"
-    spec:
-      serviceAccountName: tekton-ci-jobs
-      pipelineRef:
-        name: tekton-yamllint
-      params:
-        - name: pullRequestNumber
-          value: $(tt.params.pullRequestNumber)
-        - name: gitCloneDepth
-          value: $(tt.params.gitCloneDepth)
-        - name: fileFilterRegex
-          value: ".*"
-        - name: checkName
-          value: plumbing-yamllint
-        - name: gitHubCommand
-          value: $(tt.params.gitHubCommand)
-        - name: folders
-          value: buildbot/config mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
-        - name: userAgent
-          value: $(params.userAgent)
-      resources:
-      - name: source
-        resourceSpec:
-          type: git
-          params:
-          - name: revision
-            value: $(tt.params.gitRevision)
-          - name: url
-            value: $(tt.params.gitRepository)
-          - name: depth
-            value: $(tt.params.gitCloneDepth)
-  - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
-    metadata:
       name: tekton-golang-lint-$(uid)
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
