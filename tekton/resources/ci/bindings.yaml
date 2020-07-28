@@ -22,6 +22,15 @@ spec:
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
+  name: tekton-ci-taskrun-from-pipelinerun-cloudevent
+spec:
+  params:
+  - name: parentPipelineRunName
+    value: $(body.taskRun.metadata.ownerReferences[?(@.kind == 'PipelineRun')].name)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
   name: tekton-ci-check-pending
 spec:
   params:

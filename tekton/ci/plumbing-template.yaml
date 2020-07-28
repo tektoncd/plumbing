@@ -261,7 +261,7 @@ spec:
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "tekton/ci/"
+          value: "tekton/ci/**"
         - name: checkName
           value: plumbing-alpine-git-nonroot-build
         - name: gitHubCommand
