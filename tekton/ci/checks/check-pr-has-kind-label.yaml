@@ -82,7 +82,8 @@ spec:
             import yaml
             import sys
 
-            prLabels = json.loads('$(params.labels)')
+            prLabelsText = """$(params.labels)"""
+            prLabels = json.loads(prLabelsText)
             labelNames = list(map(lambda e: e["name"], prLabels))
             kindLabels = list(filter(lambda e: "kind" in e, labelNames))
 
