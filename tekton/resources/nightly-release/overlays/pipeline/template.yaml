@@ -28,6 +28,9 @@
       - name: builtEntrypointImage
         resourceRef:
           name: entrypoint-image
+      - name: builtNopImage
+        resourceRef:
+          name: nop-image
       - name: builtKubeconfigWriterImage
         resourceRef:
           name: kubeconfigwriter-image
