@@ -19,7 +19,7 @@ spec:
     - -c
     - |
       set -ex
-      /peribolos -config-path /workspace/repo/$(params.configPath) -fix-org -fix-org-members -github-token-path /etc/github/bot-token -confirm=true
+      /peribolos -config-path /workspace/repo/$(params.configPath) -fix-org -fix-org-members -fix-teams -fix-team-repos -fix-team-members -github-token-path /etc/github/bot-token -confirm=true
     volumeMounts:
     - name: github-oauth
       mountPath: /etc/github
