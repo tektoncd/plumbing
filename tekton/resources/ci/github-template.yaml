@@ -43,6 +43,10 @@ spec:
       namespace: tektonci
     spec:
       serviceAccountName: tekton-ci-jobs
+      podTemplate:
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
       taskSpec:
         resources:
           inputs:
