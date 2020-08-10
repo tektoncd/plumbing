@@ -116,8 +116,6 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.Handler
 			}
 		}
 
-		log.Printf(string(responseBytes))
-
 		// Write the response
 		n, err := w.Write(responseBytes)
 		if err != nil {
@@ -183,7 +181,7 @@ func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
