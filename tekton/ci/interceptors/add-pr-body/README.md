@@ -80,3 +80,23 @@ ko apply -P -f tekton/ci/interceptors/add-pr-body/config/
 ```
 
 Eventually it should be included in nightly releases and installed from there.
+
+## GitHub Enterprise
+
+The interceptor needs authentication if you are using GitHub Enterprise. 
+In order to authenticate to GitHub Enterprise API, you need to set `GITHUB_OAUTH_SECRET` environment variable.
+
+Add GitHub OAuth secret to the deployment like below.
+```yaml
+    spec:
+      serviceAccountName: add-pr-body-bot
+      containers:
+        - name: add-pr-body-interceptor
+          image: github.com/tektoncd/plumbing/tekton/ci/interceptors/add-pr-body/cmd/add-pr-body
+          env:
+            - name: GITHUB_OAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-secret
+                  key: oauth
+```

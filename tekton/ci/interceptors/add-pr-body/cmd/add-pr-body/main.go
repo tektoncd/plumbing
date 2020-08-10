@@ -23,13 +23,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type triggerErrorPayload struct {
 	Error string `json:"errorMessage,omitempty"`
 }
 
-type urlToMap func(string) (map[string]interface{}, error)
+type urlToMap func(string, string) (map[string]interface{}, error)
 
 const (
 	rootPrBodyKey    = "add_pr_body"
@@ -38,11 +39,18 @@ const (
 )
 
 func main() {
-	http.HandleFunc("/", makeAddPRBodyHandler(getPrBody))
+	http.HandleFunc("/", makeAddPRBodyHandler(getPrBody, getGitHubAuth("GITHUB_OAUTH_SECRET", "")))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
 }
 
-func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
+func getGitHubAuth(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var payload []byte
@@ -85,7 +93,7 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 			return
 		}
 		// Get the PR Body from the URL
-		prBody, err := urlFetcherDecoder(prUrl)
+		prBody, err := urlFetcherDecoder(prUrl, token)
 		if err != nil {
 			log.Printf("failed to get the PR body: %q", err)
 			marshalError(err, w)
@@ -107,6 +115,9 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap) http.HandlerFunc {
 				w.Header().Add(k, v)
 			}
 		}
+
+		log.Printf(string(responseBytes))
+
 		// Write the response
 		n, err := w.Write(responseBytes)
 		if err != nil {
@@ -155,12 +166,24 @@ func getPrUrl(body map[string]interface{}) (string, error) {
 	return prUrlString, nil
 }
 
-func getPrBody(prUrl string) (map[string]interface{}, error) {
-	resp, err := http.Get(prUrl)
+func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
+	var oauth = "token " + token
+	req, err := http.NewRequest("GET", prUrl, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+
+	// If token isn't an empty string add GitHub Enterprise OAuth header
+	if token != "" {
+		req.Header.Add("Authorization: ", oauth)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
