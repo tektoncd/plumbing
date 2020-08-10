@@ -165,7 +165,6 @@ func getPrUrl(body map[string]interface{}) (string, error) {
 }
 
 func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
-	var oauth = "token " + token
 	req, err := http.NewRequest("GET", prUrl, nil)
 	if err != nil {
 		return nil, err
@@ -173,7 +172,7 @@ func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
 
 	// If token isn't an empty string add GitHub Enterprise OAuth header
 	if token != "" {
-		req.Header.Add("Authorization: ", oauth)
+		req.Header.Add("Authorization", "token " + token)
 	}
 
 	client := &http.Client{}
