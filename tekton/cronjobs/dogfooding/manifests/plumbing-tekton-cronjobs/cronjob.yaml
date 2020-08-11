@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: folder-cd-trigger
 spec:
-  schedule: "30 10 * * *"
+  schedule: "50 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -17,12 +17,12 @@ spec:
               - name: GIT_REVISION
                 value: "master"
               - name: NAMESPACE
-                value: ""
+                value: "default"
               - name: CLUSTER_RESOURCE
                 value: "dogfooding-tekton-cd"
               - name: FOLDER_PATH
-                value: "tekton"
+                value: "tekton/cronjobs/dogfooding"
               - name: FOLDER_DESCRIPTION
-                value: "tekton"
+                value: "tekton-cronjobs-dogfooding"
               - name: FOLDER_OVERLAY
                 value: "true"
