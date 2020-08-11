@@ -22,7 +22,7 @@ spec:
   - name: release-name
     description: The name of the release (e.g. Cat + Robot for pipeline)
   - name: release-tag
-    description: Release number and git tag to be applied (e.g. 0.888.1, with 'v')
+    description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
   - name: previous-release-tag
     description: Previous release number - for author and PR list calculation
   resources:
@@ -114,6 +114,26 @@ spec:
 
         echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
         cat $HOME/pr.csv
+    - name: release-notes
+      image: stedolan/jq
+      script: |
+        #!/bin/bash
+        set -e
+
+        # First process pull requests that have release notes
+        # Extract the release notes but drop lines that match an unmodified PR template
+        grep -v "release-note-none" $HOME/pr.csv | while read pr; do
+          PR_NUM=$(echo $pr | cut -d';' -f2)
+          PR_RELEASE_NOTES_B64=$(wget -O- https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
+            jq .body -r | grep -oPz '(?s)(?<=```release-note..)(.+?)(?=```)' | \
+            grep -avP '\W*(Your release note here|action required: your release note here|NONE)\W*' | base64 -w0)
+          echo "$pr;$PR_RELEASE_NOTES_B64" >> $HOME/pr-notes.csv
+          # Avoid rate limiting
+          sleep 0.2
+        done
+
+        # Copy pull requests without release notes to a dedicated file
+        grep "release-note-none" $HOME/pr.csv > $HOME/pr-no-notes.csv
     - name: body
       image: busybox
       script: |
@@ -123,12 +143,8 @@ spec:
 
         # Features
 
-        * :sparkles: [Feature Title]
-        $(awk -F";" '/kind\/feature/{ print "* :sparkles: "$3" ("$2")" }' $HOME/pr.csv)
-
-        [Detailed feature description] (#Number).
-
-        [Fill list here]
+        $(awk -F";" '/kind\/feature/{ print "echo -e \"* :sparkles: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/feature/{ print "* :sparkles: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
         # Deprecation Notices
 
@@ -150,26 +166,23 @@ spec:
 
         # Fixes
 
-        * :bug: [Description (#Number)]
-        $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr.csv)
-        $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr.csv)
-
-        [Fill list here]
+        $(awk -F";" '/kind\/bug/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/flake/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+        $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
         # Misc
 
-        * :hammer: [Description (#Number)]
-        $(awk -F";" '/kind\/cleanup/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr.csv)
-        $(awk -F";" '/kind\/misc/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr.csv)
-
-        [Fill list here]
+        $(awk -F";" '/kind\/cleanup/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/misc/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/cleanup/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+        $(awk -F";" '/kind\/misc/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
         # Docs
 
-        * :book: [Description (#Number)]
-        $(awk -F";" '/kind\/documentation/{ print "* :book: "$3" ("$2")" }' $HOME/pr.csv)
+        $(awk -F";" '/kind\/documentation/{ print "echo -e \"* :book: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/documentation/{ print "* :book: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
-        [Fill list here]
         EOF
 
     - name: authors
@@ -182,14 +195,10 @@ spec:
         ## Thanks
 
         Thanks to these contributors who contributed to ${VERSION}!
-
-        EOF
-        awk -F";" '{ print "- :heart: @"$1 }' $HOME/pr.csv | sort -u | tee -a $HOME/release.md
-
-        cat <<EOF | tee -a $HOME/release.md
+        $(awk -F";" '{ print "* :heart: @"$1 }' $HOME/pr.csv | sort -u)
 
         Extra shout-out for awesome release notes:
-        * :heart_eyes: [@GitHub Nickname] [Fill list here]
+        $(awk -F";" '{ print "* :heart_eyes: @"$1 }' $HOME/pr-notes.csv | sort -u)
         EOF
     - name: pr-data
       image: gcr.io/tekton-releases/dogfooding/hub
@@ -199,15 +208,13 @@ spec:
         set -ex
 
         cat <<EOF | tee -a $HOME/release.md
+
         ## Unsorted PR List
+        $(egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }')
 
-        # List of PRs merged between $OLD_VERSION and $VERSION
-
-        To Be Done: Categorize these PRs into Features, Deprecation Notices,
-        Backward Incompatible Changes, Fixes, Docs, Misc.
+        To Be Done: Deprecation Notices, Backward Incompatible Changes
 
         EOF
-        egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }' | tee -a $HOME/release.md
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
       workingdir: $(resources.inputs.source.path)
