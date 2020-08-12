@@ -10,20 +10,20 @@
         name: dashboard-release
       params:
       - name: package
-        value: $(params.gitrepository)
+        value: $(tt.params.gitrepository)
       - name: imageRegistry
         value: gcr.io/tekton-nightly
       - name: versionTag
-        value: $(params.versionTag)
+        value: $(tt.params.versionTag)
       - name: bucketName
         value: latest
       resources:
       - name: dashboard-source-repo
         resourceRef:
-          name: git-source-$(params.projectName)-$(uid)
+          name: git-source-$(tt.params.projectName)-$(uid)
       - name: bucket-for-dashboard
         resourceRef:
-          name: tekton-bucket-nightly-$(params.projectName)-$(uid)
+          name: tekton-bucket-nightly-$(tt.params.projectName)-$(uid)
       - name: builtDashboardImage
         resourceRef:
           name: dashboard-image
