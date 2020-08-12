@@ -437,7 +437,7 @@ spec:
         - name: fileFilterRegex
           value: ".*"
         - name: checkName
-          value: tekton-golang-lint
+          value: plumbing-golang-lint
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
       resources:
