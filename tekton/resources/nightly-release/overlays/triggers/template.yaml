@@ -10,18 +10,18 @@
         name: triggers-release
       params:
       - name: package
-        value: $(params.gitrepository)
+        value: $(tt.params.gitrepository)
       - name: imageRegistry
         value: gcr.io/tekton-nightly
       - name: versionTag
-        value: $(params.versionTag)
+        value: $(tt.params.versionTag)
       resources:
       - name: source-repo
         resourceRef:
-          name: git-source-$(params.projectName)-$(uid)
+          name: git-source-$(tt.params.projectName)-$(uid)
       - name: bucket
         resourceRef:
-          name: tekton-bucket-nightly-$(params.projectName)-$(uid)
+          name: tekton-bucket-nightly-$(tt.params.projectName)-$(uid)
       - name: builtControllerImage
         resourceRef:
           name: triggers-controller-image
