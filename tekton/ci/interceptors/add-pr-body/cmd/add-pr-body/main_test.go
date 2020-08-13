@@ -30,7 +30,7 @@ import (
 )
 
 func TestEmptyBody(t *testing.T) {
-	r := createRequest("POST", "/", "issue_comment", nil)
+	r := createRequest("POST", "/", "issue_comment", "", nil)
 	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
@@ -41,7 +41,7 @@ func TestEmptyBody(t *testing.T) {
 
 func TestNoAddPrBody(t *testing.T) {
 	body := marshalEvent(t, makePrBody(false, ""))
-	r := createRequest("POST", "/", "issue_comment", body)
+	r := createRequest("POST", "/", "issue_comment", "", body)
 	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
@@ -52,7 +52,7 @@ func TestNoAddPrBody(t *testing.T) {
 
 func TestNoPullRequestUrlFound(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, ""))
-	r := createRequest("POST", "/", "issue_comment", body)
+	r := createRequest("POST", "/", "issue_comment", "", body)
 	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
@@ -63,7 +63,7 @@ func TestNoPullRequestUrlFound(t *testing.T) {
 
 func TestCannotFetchURL(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, "foo://some_url"))
-	r := createRequest("POST", "/", "issue_comment", body)
+	r := createRequest("POST", "/", "issue_comment", "", body)
 	h := makeAddPRBodyHandler(getTestPrBodyError, "")
 	w := httptest.NewRecorder()
 
@@ -74,7 +74,7 @@ func TestCannotFetchURL(t *testing.T) {
 
 func TestFetchURL(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, "foo://some_url"))
-	r := createRequest("POST", "/", "issue_comment", body)
+	r := createRequest("POST", "/", "issue_comment", "", body)
 	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
@@ -89,12 +89,29 @@ func TestFetchURL(t *testing.T) {
 	assertResponsePayload(t, resp, &want)
 }
 
+func TestHeader(t *testing.T) {
+	token := "my-secret-token"
+	body := marshalEvent(t, makePrBody(true, "foo://some_url"))
+	r := createRequest("POST", "/", "issue_comment", token, body)
+	h := makeAddPRBodyHandler(getTestPrBody, token)
+	w := httptest.NewRecorder()
+
+	h(w, r)
+
+	resp := w.Result()
+
+	assertResponseHeader(t, resp, r.Header)
+}
+
 // creates a GitHub hook type request - no secret is provided in testing.
-func createRequest(method, url, event string, body []byte, opts ...requestOption) *http.Request {
+func createRequest(method, url, event, token string, body []byte, opts ...requestOption) *http.Request {
 	req := httptest.NewRequest(method, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Github-Event", event)
 	req.Header.Set("X-Github-Delivery", "testing-123")
+	if token != "" {
+		req.Header.Add("Authorization", "token " + token)
+	}
 	for _, o := range opts {
 		o(req)
 	}
@@ -160,6 +177,15 @@ func assertResponsePayload(t *testing.T, resp *http.Response, v interface{}, opt
 		t.Fatal(err)
 	}
 	if diff := cmp.Diff(obj, v, opts...); diff != "" {
+		t.Fatalf("compare failed: %s\n", diff)
+	}
+}
+
+func assertResponseHeader(t *testing.T, resp *http.Response, v interface{}, opts ...cmp.Option) {
+	t.Helper()
+	headers := resp.Header
+
+	if diff := cmp.Diff(headers, v, opts...); diff != "" {
 		t.Fatalf("compare failed: %s\n", diff)
 	}
 }
