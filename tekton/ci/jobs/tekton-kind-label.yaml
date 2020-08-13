@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tekton-kind-label
+  namespace: tektonci
+spec:
+  params:
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: labels
+      description: The labels attached to the Pull Request
+  resources:
+    - name: source
+      type: git
+    - name: pr
+      type: pullRequest
+  tasks:
+  - name: check-kind-label
+    conditions:
+    - conditionRef: "check-name-matches"
+      params:
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
+      - name: checkName
+        value: $(params.checkName)
+    taskRef:
+      name: check-kind-label
+    params:
+    - name: labels
+      value: $(params.labels)
+    resources:
+      inputs:
+      - name: source
+        resource: source
+      - name: pr
+        resource: pr
+      outputs:
+      - name: pr
+        resource: pr
