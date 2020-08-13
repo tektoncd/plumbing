@@ -62,7 +62,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -101,7 +101,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -140,7 +140,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -179,7 +179,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -218,7 +218,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -257,7 +257,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -296,7 +296,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -335,7 +335,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -374,7 +374,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -450,7 +450,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -489,4 +489,4 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
