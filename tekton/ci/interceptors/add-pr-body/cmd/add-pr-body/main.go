@@ -115,7 +115,6 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.Handler
 				w.Header().Add(k, v)
 			}
 		}
-
 		// Write the response
 		n, err := w.Write(responseBytes)
 		if err != nil {
