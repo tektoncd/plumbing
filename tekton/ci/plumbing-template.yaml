@@ -27,45 +27,6 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-noop-check-$(uid)
-      labels:
-        prow.k8s.io/build-id: $(tt.params.buildUUID)
-        tekton.dev/check-name: tekton-noop-check
-        tekton.dev/kind: ci
-        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
-      annotations:
-        tekton.dev/gitURL: "$(tt.params.gitRepository)"
-    spec:
-      serviceAccountName: tekton-ci-jobs
-      pipelineRef:
-        name: tekton-noop-check
-      params:
-        - name: passorfail
-          value: pass
-        - name: message
-          value: "BuildUUID#: $(tt.params.buildUUID), Package: $(tt.params.package), Repo: $(tt.params.gitRepository), Revision: $(tt.params.gitRevision)"
-        - name: gitCloneDepth
-          value: $(tt.params.gitCloneDepth)
-        - name: fileFilterRegex
-          value: "(tekton-demo)"
-        - name: checkName
-          value: tekton-noop-check
-        - name: gitHubCommand
-          value: $(tt.params.gitHubCommand)
-      resources:
-      - name: source
-        resourceSpec:
-          type: git
-          params:
-          - name: revision
-            value: $(tt.params.gitRevision)
-          - name: url
-            value: $(tt.params.gitRepository)
-          - name: depth
-            value: $(tt.params.gitCloneDepth)
-  - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
-    metadata:
       name: plumbing-ko-build-$(uid)
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
