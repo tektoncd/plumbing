@@ -11,6 +11,8 @@ spec:
     description: org/repo
   - name: pullRequestNumber
     description: The pullRequestNumber
+  - name: pullRequestUrl
+    description: The HTML URL for the pull request
   - name: gitRepository
     description: The git repository that hosts context and Dockerfile
   - name: gitRevision
@@ -23,6 +25,8 @@ spec:
       this template is triggered by a comment. The default value is for the
       case of a pull_request event.
     default: ""
+  - name: labels
+    description: List of labels currently on the Pull Request
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun

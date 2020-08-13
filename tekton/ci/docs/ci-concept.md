@@ -1,49 +1,87 @@
 # CI with Tekton
 
-This document introduces a concept about how to do CI on Tekton using Tekton
+This document presents an overview of how to do CI on Tekton using Tekton
 itself. The same concept can be ported to other applications.
 
-We use a dedicated Event Listener (one for each repository? to be clarified) to
-server webhooks from repo for which we want to setup CI.
-The Event Listener, which filters out invalid and irrelevant events using a
-GitHub and a CEL filter interceptors.
+## Pipeline and Triggers resources
 
-The data needed by the CI pipeline is extracted from the event using an event
-binding. If the different types of events are not compatible, we might use
-a custom interceptor to normalise the event body to a common structure.
-Environment specific inputs are passed via a dedicated binding.
+We use a dedicated Event Listener to serve webhooks from repo for which we
+want to run CI. The Event Listener filters out invalid requests and unwanted
+events using the stock GitHub interceptor.
+CEL filters can then be used to select which events we want to react to by
+triggering the CI pipelines.
 
-The trigger template has a base structure defined in the plumbing repo.
-This can be used to define common resources and to enforce CI jobs to all repos
-e.g. a CLA/DCO check job. The base trigger template defines the pipeline run,
-and it forces the pipeline spec to be embedded.
+Since not all different types of events include the same information in the
+same place, trigger bindings and custom interceptors with overlays are used
+to present a standard interface towards the trigger bindings.
 
-Since one event may trigger the execution of several CI jobs, each CI job is
-associated to a Task or Pipeline. The list of Tasks (i.e. CI jobs) is defined
-in the repo under test. The complete trigger template is aggregated via
-"kustomize". For this to work CI tasks must have a common structure in terms
-of inputs and outputs.
+We use multiple bindings to make them re-usable:
+
+- A GitHub base binding extracts parameters common to all GitHub events
+- GitHub event specific bindings extract other parameters
+
+Custom interceptors are used to add more information into the payload about
+the Pull Request and the user who submitted it.
+
+Trigger templates receive parameters from the bindings and run the CI
+pipelines. They are organized per repo:
+
+- One trigger template includes all CI jobs common to all repos
+- Each repo then has an own trigger template, which can be hosted in the
+  repo itself.
+
+Trigger templates may include tasks and pipelines that are not CI jobs that
+may perform tasks required for the actual CI jobs to work correctly.
+
+CI Jobs are implemented as pipelines with one or more tasks and one or more
+conditions. Conditions are used to ensure only relevant CI jobs are executed:
+
+- Only run a CI job when relevant files were modified
+- Only run a CI job when the job name matches the regex requested via the
+  `/test [regex]` command in GitHub
+
+The `Pipeline` is used to adapt the input parameters available in the trigger
+template to those needed by the CI `Task(s)`. It adds labels and annotations
+useful for identifying CI Jobs and for GitHub update logic downstream.
 
 ![CI Diagram](./ci-setup.svg)
 
+## GitHub check updates
+
+Tekton for CI is configured to send cloud events notifications for all `TaskRun`
+and `PipelineRun` life-cycle events. The events are sent to a dedicated
+`tekton-events` event listener, which gathers and filters them, and uses them
+to update checks on GitHub side.
+
+When a CI `Task` starts, the `start` event is intercepted and the GitHub check
+is set to pending, with a link to the Tekton Dashboard for developers to stream
+execution logs live if they wish to.
+
+When a CI `Task` completes, the `end` event is intercepted to the GitHub check
+is set to passed or failed, depending on the outcome of the `Task`.
+
+If a CI job is made of multiple `Tasks`, extra filtering logic is required to
+select the correct events for GitHub status updates:
+
+- Pipeline Start -> We never use this one as condition may tell us later
+  that the CI job should not be executed
+- Task Start -> This can be used to set the status to pending, even in case of
+  multiple tasks
+- Task End -> This can be used in case of single task CI jobs, or also in case
+  of multiple tasks if we have annotations to tell us that it's the last one
+- Pipeline End -> This can used in all cases, however the Task End is preferred
+  in case of single Task CI jobs since it will trigger faster
+
+In edge cases events may be delivered out of order (for instance in case of retries)
+which could lead to the start event being processed after the end one.
+Logic in the GitHub update tasks helps minimize the impact of this case.
+
 ## Reuse of Tasks in CI
 
-It is highly desirable to be able to use existing tasks in CI, for instance
-tasks from the catalog to run unit tests or linting.
-The design above requires tasks to have certain features:
-- never fail, report the result to a task result
-- accept a fixed set of inputs
+It is highly desirable to be able to use existing `Tasks` in CI, for instance
+`Tasks` from the catalog to run unit tests or linting.
+When a suitable `Task` does not exists, it should be added to the catalog if
+applicable.
 
-These requirements reduce reusability of tasks. Several missing features in
-Tekton might help simplify the design and/or increase reuse of tasks:
-- do not stop a pipeline when a task fails
-- run custom steps on task start/stop
-- send cloud event notifications on task completions
-
-Until we have such features the solution are:
-- write dedicated tasks
-- write pipeline, to reduce the interface of existing tasks to the required one
-
-Each task shall have the following interface:
-- one input git resource
-- one output cloudevent resource
+The CI pipelines can be used to adapt the parameters available from the CI
+system to the catalog tasks.
