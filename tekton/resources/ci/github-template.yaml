@@ -22,20 +22,6 @@ spec:
   - name: taskRunName
     description: The name of the task run that triggered this
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: pr-$(tt.params.checkStatus)-$(uid)
-      namespace: tektonci
-    spec:
-      type: pullRequest
-      params:
-        - name: url
-          value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
-      secrets:
-        - fieldName: authToken
-          secretName: bot-token-github
-          secretKey: bot-token
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
@@ -96,9 +82,23 @@ spec:
       resources:
         inputs:
           - name: pr
-            resourceRef:
-              name: pr-$(tt.params.checkStatus)-$(uid)
+            resourceSpec:
+              type: pullRequest
+              params:
+                - name: url
+                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
+              secrets:
+                - fieldName: authToken
+                  secretName: bot-token-github
+                  secretKey: bot-token
         outputs:
           - name: pr
-            resourceRef:
-              name: pr-$(tt.params.checkStatus)-$(uid)
+            resourceSpec:
+              type: pullRequest
+              params:
+                - name: url
+                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
+              secrets:
+                - fieldName: authToken
+                  secretName: bot-token-github
+                  secretKey: bot-token

@@ -49,19 +49,6 @@ spec:
   - name: passedOrFailed
     description: Whether the triggering event was successful or not
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: pr-$(uid)
-    spec:
-      type: pullRequest
-      params:
-        - name: url
-          value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
-      secrets:
-        - fieldName: authToken
-          secretName: mario-github-token
-          secretKey: GITHUB_TOKEN
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
@@ -146,12 +133,26 @@ spec:
               - name: url
                 value: $(tt.params.gitURL)
           - name: pr
-            resourceRef:
-              name: pr-$(uid)
+            resourceSpec:
+              type: pullRequest
+              params:
+                - name: url
+                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
+              secrets:
+                - fieldName: authToken
+                  secretName: mario-github-token
+                  secretKey: GITHUB_TOKEN
         outputs:
           - name: image
             resourceRef:
               name: $(tt.params.targetImageResourceName)
           - name: pr
-            resourceRef:
-              name: pr-$(uid)
+            resourceSpec:
+              type: pullRequest
+              params:
+                - name: url
+                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
+              secrets:
+                - fieldName: authToken
+                  secretName: mario-github-token
+                  secretKey: GITHUB_TOKEN

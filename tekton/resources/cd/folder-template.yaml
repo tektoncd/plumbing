@@ -36,17 +36,6 @@ spec:
     description: Whether the folder is a kustomize overlay "true" or "false"
     default: "false"
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: git-source-$(uid)
-    spec:
-      type: git
-      params:
-      - name: revision
-        value: $(tt.params.gitRevision)
-      - name: url
-        value: https://$(tt.params.gitRepository)
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
@@ -123,8 +112,13 @@ spec:
       resources:
         inputs:
           - name: source
-            resourceRef:
-              name: git-source-$(uid)
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(tt.params.gitRevision)
+              - name: url
+                value: https://$(tt.params.gitRepository)
           - name: targetCluster
             resourceRef:
               name: $(tt.params.clusterResource)

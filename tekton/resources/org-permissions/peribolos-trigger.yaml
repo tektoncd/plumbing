@@ -22,17 +22,6 @@ spec:
     description: The git repository url
   resourcetemplates:
   - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: community-git-$(uid)
-    spec:
-      type: git
-      params:
-      - name: revision
-        value: $(tt.params.gitrevision)
-      - name: url
-        value: $(tt.params.gitrepositoryurl)
-  - apiVersion: tekton.dev/v1alpha1
     kind: TaskRun
     metadata:
       generateName: peribolos-run-
@@ -42,8 +31,13 @@ spec:
       resources:
         inputs:
           - name: repo
-            resourceRef:
-              name: community-git-$(uid)
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(tt.params.gitrevision)
+              - name: url
+                value: $(tt.params.gitrepositoryurl)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
