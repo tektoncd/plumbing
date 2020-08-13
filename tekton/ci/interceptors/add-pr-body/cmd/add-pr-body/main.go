@@ -39,15 +39,15 @@ const (
 )
 
 func main() {
-	http.HandleFunc("/", makeAddPRBodyHandler(getPrBody, getGitHubAuth("GITHUB_OAUTH_SECRET", "")))
+	http.HandleFunc("/", makeAddPRBodyHandler(getPrBody, getGitHubAuth("GITHUB_OAUTH_SECRET")))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", 8080), nil))
 }
 
-func getGitHubAuth(key, fallback string) string {
+func getGitHubAuth(key string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
-	return fallback
+	return ""
 }
 
 func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.HandlerFunc {
