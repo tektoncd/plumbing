@@ -12,6 +12,5 @@ resources:
 - plumbing-template.yaml
 - tekton-golang-lint.yaml
 - tekton-image-build.yaml
-- tekton-noop-check.yaml
 - tekton-yamllint.yaml
 - checks

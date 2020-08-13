@@ -17,11 +17,14 @@
         value: $(tt.params.versionTag)
       resources:
       - name: source-repo
-        resourceRef:
-          name: git-source-$(tt.params.projectName)-$(uid)
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(tt.params.gitrevision)
       - name: bucket
         resourceRef:
-          name: tekton-bucket-nightly-$(tt.params.projectName)-$(uid)
+          name: tekton-bucket-nightly-$(tt.params.projectName)
       - name: builtControllerImage
         resourceRef:
           name: triggers-controller-image

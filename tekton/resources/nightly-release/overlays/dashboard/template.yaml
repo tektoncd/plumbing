@@ -19,11 +19,14 @@
         value: latest
       resources:
       - name: dashboard-source-repo
-        resourceRef:
-          name: git-source-$(tt.params.projectName)-$(uid)
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(tt.params.gitrevision)
       - name: bucket-for-dashboard
         resourceRef:
-          name: tekton-bucket-nightly-$(tt.params.projectName)-$(uid)
+          name: tekton-bucket-nightly-$(tt.params.projectName)
       - name: builtDashboardImage
         resourceRef:
           name: dashboard-image

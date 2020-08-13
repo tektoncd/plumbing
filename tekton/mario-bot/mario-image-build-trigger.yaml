@@ -128,15 +128,6 @@ spec:
   - name: targetImage
     description: The fully qualifie image target e.g. repo/name:tag.
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: target-image-$(uid)
-    spec:
-      type: image
-      params:
-      - name: url
-        value: $(tt.params.targetImage)
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
@@ -193,8 +184,11 @@ spec:
                 value: https://$(tt.params.gitRepository)
         outputs:
           - name: image
-            resourceRef:
-              name: target-image-$(uid)
+            resourceSpec:
+              type: image
+              params:
+              - name: url
+                value: $(tt.params.targetImage)
           - name: endtrigger
             resourceRef:
               name: github-feedback-trigger
