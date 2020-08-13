@@ -1,0 +1,8 @@
+resources:
+- conditions.yaml
+- tasks.yaml
+- tekton-golang-lint.yaml
+- tekton-image-build.yaml
+- tekton-kind-label.yaml
+- tekton-yamllint.yaml
+- tekton-test-ci.yaml

@@ -11,6 +11,8 @@ spec:
     description: org/repo
   - name: pullRequestNumber
     description: The pullRequestNumber
+  - name: pullRequestUrl
+    description: The HTML URL for the pull request
   - name: gitRepository
     description: The git repository that hosts context and Dockerfile
   - name: gitRevision
@@ -29,6 +31,8 @@ spec:
     description: GitHub action, for instance "opened" or "synchronize"
   - name: userAgent
     description: User-agent from the pipeline trigger
+  - name: labels
+    description: List of labels currently on the Pull Request
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun

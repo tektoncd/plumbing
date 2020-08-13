@@ -8,7 +8,7 @@ spec:
   serviceAccountName: tekton-ci-listener
   serviceType: LoadBalancer
   triggers:
-    - name: pull-request-trigger
+    - name: plumbing-pull-request-ci
       interceptors:
         - github:
             secretRef:
@@ -27,9 +27,10 @@ spec:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-pull-request
         - ref: tekton-ci-clone-depth
+        - ref: tekton-ci-webhook-pr-labels
       template:
         name: tekton-plumbing-ci-pipeline
-    - name: comment-trigger
+    - name: all-comment-ci
       interceptors:
         - github:
             secretRef:
@@ -62,9 +63,10 @@ spec:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
+        - ref: tekton-ci-webhook-pr-labels
       template:
         name: tekton-plumbing-ci-pipeline
-    - name: trigger-check-pr-labels
+    - name: all-pull-request-check-pr-labels
       interceptors:
         - github:
             secretRef:
@@ -85,8 +87,8 @@ spec:
               expression: body.pull_request.html_url.split('/')[size(body.pull_request.html_url.split('/'))-1]
       bindings:
         - ref: tekton-ci-github-base
-        - ref: trigger-to-check-pr-labels
         - ref: tekton-ci-pr-number-extension
+        - ref: tekton-ci-webhook-pr-labels
       template:
         name: check-pull-request-labels
     - name: test-ci-trigger

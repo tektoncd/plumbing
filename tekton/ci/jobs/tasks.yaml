@@ -1,68 +1,6 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: tekton-noop
-  namespace: tektonci
-  description: |
-    Example CI Job that does nothing interesting.
-spec:
-  params:
-    - name: message
-      description: A message to log
-      type: string
-    - name: passorfail
-      description: whether it should 'pass' or 'fail'
-      type: string
-      default: 'pass'
-  resources:
-    inputs:
-      - name: source
-        type: git
-  steps:
-  - name: noop
-    image: busybox
-    script: |
-      #!/bin/sh
-      set -ex
-      echo "$(params.message)"
-      echo
-      sleep 120
-      echo "Content of the repo:"
-      ls $(resources.inputs.source.path)
-      [[ "$(params.passorfail)" == "pass" ]]
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: tekton-fails-sometimes
-  namespace: tektonci
-  description: |
-    Example CI Job that fails ~50% of the times
-spec:
-  params:
-    - name: message
-      description: A message to log
-      type: string
-  resources:
-    inputs:
-      - name: source
-        type: git
-  steps:
-  - name: noop
-    image: busybox
-    script: |
-      #!/bin/sh
-      set -ex
-      echo "$(params.message)"
-      echo
-      sleep 30
-      echo "Content of the repo:"
-      ls $(resources.inputs.source.path)
-      exit $(( $(date +"%s") % 2 ))
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
   name: golang-lint
   namespace: tektonci
   description: |
@@ -192,3 +130,88 @@ spec:
     image: stedolan/jq
     script: |
       cat image-digested | jq '.[0].digest' | tee /tekton/results/IMAGE_DIGEST
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: check-kind-label
+  namespace: tektonci
+  description: |
+    Verifies that a PR has one valid kind label
+spec:
+  resources:
+    inputs:
+      - name: source
+        type: git
+      - name: pr
+        type: pullRequest
+    outputs:
+      - name: pr
+        type: pullRequest
+  params:
+  - name: labels
+    description: The labels attached to the Pull Request
+  volumes:
+  - name: label-config-v2
+    configMap:
+      name: label-config-v2
+  steps:
+  - name: copy-pr-to-output
+    image: busybox
+    script: |
+      #!/bin/sh
+      mkdir -p $(outputs.resources.pr.path)
+      cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
+  - name: install-pyyaml
+    image: python:3-alpine
+    script: |
+      pip install pyyaml --user
+  - name: check-labels
+    image: python:3-alpine
+    volumeMounts:
+      - name: label-config-v2
+        mountPath: /etc/config
+    script: |
+      #!/usr/bin/env python
+
+      import json
+      import yaml
+      import sys
+
+      prLabelsText = """$(params.labels)"""
+      prLabels = json.loads(prLabelsText)
+      labelNames = list(map(lambda e: e["name"], prLabels))
+      kindLabels = list(filter(lambda e: "kind" in e, labelNames))
+
+      availableLabels = None
+      with open("/etc/config/labels.yaml", "r") as stream:
+        availableLabels = yaml.safe_load(stream)["default"]["labels"]
+
+      availableKindLabels = list(filter(lambda e: "kind/" in e["name"], availableLabels))
+      availableKindNamesAndDescriptions = map(lambda e: "`" +str(e["name"])+ "`" + ":  " + str(e["description"]), availableKindLabels)
+
+      comment_template=""
+      if (len(kindLabels) > 1 or len(kindLabels) == 0):
+        comment_template += """
+      **This PR cannot be merged:** expecting exactly one kind/ label
+
+      <details>
+
+      Available `kind/` labels are:
+
+      """
+
+        for i in availableKindNamesAndDescriptions:
+          comment_template += i + "\n"
+
+        comment_template += """
+
+      </details>
+      """
+        new_comment_path = "$(outputs.resources.pr.path)/comments/new.json"
+        comment_body = dict(body=comment_template)
+        with open(new_comment_path, "w") as comment:
+          json.dump(comment_body, comment)
+
+        # Check failed. Return exit code 1.
+        sys.exit(1)

@@ -4,15 +4,7 @@ commonAnnotations:
 
 resources:
 - 0001_rbac.yaml
-- bindings.yaml
-- conditions.yaml
 - eventlistener.yaml
-- jobs.yaml
-- plumbing-template.yaml
-- tekton-cd-template.yaml
-- tekton-golang-lint.yaml
-- tekton-image-build.yaml
-- tekton-yamllint.yaml
-- tekton-test-ci.yaml
 - clusters.yaml
-- checks
+- jobs
+- templates
