@@ -31,7 +31,7 @@ import (
 
 func TestEmptyBody(t *testing.T) {
 	r := createRequest("POST", "/", "issue_comment", nil)
-	h := makeAddPRBodyHandler(getTestPrBody)
+	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
 	h(w, r)
@@ -42,7 +42,7 @@ func TestEmptyBody(t *testing.T) {
 func TestNoAddPrBody(t *testing.T) {
 	body := marshalEvent(t, makePrBody(false, ""))
 	r := createRequest("POST", "/", "issue_comment", body)
-	h := makeAddPRBodyHandler(getTestPrBody)
+	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
 	h(w, r)
@@ -53,7 +53,7 @@ func TestNoAddPrBody(t *testing.T) {
 func TestNoPullRequestUrlFound(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, ""))
 	r := createRequest("POST", "/", "issue_comment", body)
-	h := makeAddPRBodyHandler(getTestPrBody)
+	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
 	h(w, r)
@@ -64,7 +64,7 @@ func TestNoPullRequestUrlFound(t *testing.T) {
 func TestCannotFetchURL(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, "foo://some_url"))
 	r := createRequest("POST", "/", "issue_comment", body)
-	h := makeAddPRBodyHandler(getTestPrBodyError)
+	h := makeAddPRBodyHandler(getTestPrBodyError, "")
 	w := httptest.NewRecorder()
 
 	h(w, r)
@@ -75,13 +75,13 @@ func TestCannotFetchURL(t *testing.T) {
 func TestFetchURL(t *testing.T) {
 	body := marshalEvent(t, makePrBody(true, "foo://some_url"))
 	r := createRequest("POST", "/", "issue_comment", body)
-	h := makeAddPRBodyHandler(getTestPrBody)
+	h := makeAddPRBodyHandler(getTestPrBody, "")
 	w := httptest.NewRecorder()
 
 	h(w, r)
 
 	want := makePrBody(true, "foo://some_url")
-	wantPrBody, _ := getTestPrBody("foo://some_url")
+	wantPrBody, _ := getTestPrBody("foo://some_url", "")
 	(*want)[rootPrBodyKey].(map[string]interface{})[prBodyContentKey] = wantPrBody
 
 	resp := w.Result()
@@ -127,13 +127,13 @@ func makePrBody(base bool, url string) *map[string]interface{} {
 	return &prAddBody
 }
 
-func getTestPrBody(prURL string) (map[string]interface{}, error) {
+func getTestPrBody(prURL string, token string) (map[string]interface{}, error) {
 	retrievedPrBody := make(map[string]interface{})
 	retrievedPrBody["foo"] = map[string]interface{}{}
 	return retrievedPrBody, nil
 }
 
-func getTestPrBodyError(prURL string) (map[string]interface{}, error) {
+func getTestPrBodyError(prURL string, token string) (map[string]interface{}, error) {
 	return nil, errors.New("something went wrong")
 }
 
