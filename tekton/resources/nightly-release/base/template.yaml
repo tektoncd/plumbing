@@ -17,21 +17,3 @@ spec:
     default: gcr.io/tekton-nightly
   - name: projectName
     description: Name of the Tekton project to release (e.g. pipeline, triggers, etc).
-  resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: PipelineResource
-    metadata:
-      name: tekton-bucket-nightly-$(tt.params.projectName)
-    spec:
-      params:
-      - name: type
-        value: gcs
-      - name: location
-        value: gs://tekton-releases-nightly/$(tt.params.projectName)
-      - name: dir
-        value: "y"
-      type: storage
-      secrets:
-      - fieldName: GOOGLE_APPLICATION_CREDENTIALS
-        secretKey: service-account.json
-        secretName: nightly-account
