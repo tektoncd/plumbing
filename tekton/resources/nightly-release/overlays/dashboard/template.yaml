@@ -25,6 +25,8 @@
             params:
             - name: revision
               value: $(tt.params.gitrevision)
+            - name: url
+              value: https://$(tt.params.gitrepository)
         - name: bucket-for-dashboard
           resourceSpec:
             type: storage
