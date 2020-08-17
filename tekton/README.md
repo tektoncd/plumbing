@@ -7,7 +7,7 @@ includes `tektoncd/plumbing` specific tasks and pipelines.
 These resources are applied to [the dogfooding cluster](../docs/dogfooding.md).
 
 Resources are organised in folders:
-- The [config](config/README.md) folder holds `CronJobs` definition for regular
+- The [cronjobs](cronjobs/README.md) folder holds `CronJobs` definition for regular
   tasks, like building images, deploying configuration, nightly releases
 - The [images](images/README.md) folder contains the `Dockerfile` and context for
   all container images used by the Tekton project infrastructure.
