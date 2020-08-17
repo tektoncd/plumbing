@@ -1,5 +1,5 @@
 - op: add
-  path: "/spec/"
+  path: "/spec"
   value:
     resourcetemplates:
     - apiVersion: tekton.dev/v1beta
