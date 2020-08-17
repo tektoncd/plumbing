@@ -83,6 +83,7 @@ metadata:
   name: tekton-events
 spec:
   serviceAccountName: tektoncd
+  replicas: 3
   triggers:
     - name: configmap-deploy-failed
       interceptors:
