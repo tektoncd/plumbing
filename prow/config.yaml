@@ -81,9 +81,53 @@ tide:
     tektoncd/website: rebase
   target_url: https://prow.tekton.dev/tide
 
+presets:
+- labels:
+    preset-presubmit-sh: "true"
+  volumeMounts:
+  - name: test-account
+    mountPath: /etc/test-account
+    readOnly: true
+  env:
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /etc/test-account/service-account.json
+  - name: E2E_CLUSTER_REGION
+    value: us-central1
+  volumes:
+  - name: test-account
+    secret:
+      secretName: test-account
+- labels:
+    preset-postsubmit-sh: "true"
+  volumeMounts:
+  - name: nightly-account
+    mountPath: /etc/nightly-account
+    readOnly: true
+  env:
+  - name: GOOGLE_APPLICATION_CREDENTIALS
+    value: /etc/nightly-account/service-account.json
+  volumes:
+  # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
+  # images to gcr.io/tekton-nightly 👼
+  - name: nightly-account
+    secret:
+      secretName: nightly-account
+- labels:
+    preset-github-token: "true"
+  volumeMounts:
+  - name: github-token
+    mountPath: /etc/github-token
+    readOnly: true
+  volumes:
+  - name: github-token
+    secret:
+      secretName: oauth-token
+
 presubmits:
   tektoncd/plumbing:
   - name: pull-dogfooding-mario-test
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     decorate: true
     rerun_command: "/test pull-dogfooding-mario-test"
@@ -105,19 +149,6 @@ presubmits:
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./tekton/images/test-runner/test.sh"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: try-out-prow-plus-tekton
     agent: tekton-pipeline
     always_run: false
@@ -135,6 +166,8 @@ presubmits:
 
   tektoncd/chains:
     - name: pull-tekton-chains-build-tests
+      labels:
+        preset-presubmit-sh: "true"
       agent: kubernetes
       always_run: true
       decorate: true
@@ -158,20 +191,9 @@ presubmits:
           - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
           - "./test/presubmit-tests.sh"
           - "--build-tests"
-          volumeMounts:
-          - name: test-account
-            mountPath: /etc/test-account
-            readOnly: true
-          env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/test-account/service-account.json
-          - name: E2E_CLUSTER_REGION
-            value: us-central1
-        volumes:
-        - name: test-account
-          secret:
-            secretName: test-account
     - name: pull-tekton-chains-unit-tests
+      labels:
+        preset-presubmit-sh: "true"
       agent: kubernetes
       always_run: true
       decorate: true
@@ -195,21 +217,9 @@ presubmits:
           - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
           - "./test/presubmit-tests.sh"
           - "--unit-tests"
-          volumeMounts:
-          - name: test-account
-            mountPath: /etc/test-account
-            readOnly: true
-          env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/test-account/service-account.json
-          - name: E2E_CLUSTER_REGION
-            value: us-central1
-        volumes:
-        - name: test-account
-          secret:
-            secretName: test-account
-
     - name: pull-tekton-chains-integration-tests
+      labels:
+        preset-presubmit-sh: "true"
       agent: kubernetes
       always_run: true
       decorate: true
@@ -233,22 +243,10 @@ presubmits:
           - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
           - "./test/presubmit-tests.sh"
           - "--integration-tests"
-          volumeMounts:
-          - name: test-account
-            mountPath: /etc/test-account
-            readOnly: true
-          env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /etc/test-account/service-account.json
-          - name: E2E_CLUSTER_REGION
-            value: us-central1
-        volumes:
-        - name: test-account
-          secret:
-            secretName: test-account
-
   tektoncd/cli:
   - name: pull-tekton-cli-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -272,20 +270,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-cli-build-cross-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -309,20 +296,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-cross-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-cli-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -346,20 +322,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-cli-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -383,20 +348,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-cli-integration-tests-0_10
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -420,22 +374,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: RELEASE_YAML
-          value: https://github.com/tektoncd/pipeline/releases/download/v0.10.2/release.yaml
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-cli-go-coverage
+    labels:
+      preset-github-tekon: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -457,16 +398,10 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
-        volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-          readOnly: true
-      volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
   tektoncd/dashboard:
   - name: pull-tekton-dashboard-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -490,20 +425,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-dashboard-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -527,20 +451,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-dashboard-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -564,21 +477,10 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   tektoncd/experimental:
   - name: pull-tekton-experimental-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -602,20 +504,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-experimental-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -639,20 +530,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-experimental-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -676,22 +556,10 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
-  ####
   tektoncd/hub:
   - name: pull-tekton-hub-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -715,20 +583,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-hub-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -752,20 +609,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-hub-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -789,21 +635,10 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   tektoncd/operator:
   - name: pull-tekton-operator-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -827,24 +662,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-        securityContext:
-          privileged: true
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-operator-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -868,20 +688,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-operator-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -905,20 +714,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-operator-go-coverage
+    labels:
+      preset-github-token: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -940,16 +738,10 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
-        volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-          readOnly: true
-      volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
   tektoncd/pipeline:
   - name: pull-tekton-pipeline-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -973,22 +765,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-        - name: DISABLE_MD_LINK_CHECK
-          value: "true"
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-pipeline-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1012,20 +791,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-pipeline-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1049,20 +817,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-pipeline-go-coverage
+    labels:
+      preset-github-token: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1084,16 +841,10 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
-        volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-          readOnly: true
-      volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1117,20 +868,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-catalog-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1154,20 +894,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-catalog-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1191,21 +920,10 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   tektoncd/triggers:
   - name: pull-tekton-triggers-build-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1229,20 +947,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-triggers-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1266,20 +973,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-triggers-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -1303,20 +999,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        volumeMounts:
-        - name: test-account
-          mountPath: /etc/test-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/test-account/service-account.json
-        - name: E2E_CLUSTER_REGION
-          value: us-central1
-      volumes:
-      - name: test-account
-        secret:
-          secretName: test-account
   - name: pull-tekton-triggers-go-coverage
+    labels:
+      preset-github-token: "true"
     agent: kubernetes
     always_run: true
     rerun_command: "/test pull-tekton-triggers-go-coverage"
@@ -1338,14 +1023,6 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
-        volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-          readOnly: true
-      volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
 
 postsubmits:
   tektoncd/cli:
@@ -1365,6 +1042,8 @@ postsubmits:
         - "--cov-threshold-percentage=0"
   tektoncd/dashboard:
   - name: tekton-dashboard-publish-images
+    labels:
+      preset-postsubmit-sh: "true"
     branches:
     - master
     always_run: true
@@ -1386,21 +1065,10 @@ postsubmits:
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/publish-images.sh"
-        volumeMounts:
-        - name: nightly-account
-          mountPath: /etc/nightly-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/nightly-account/service-account.json
-      volumes:
-      # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
-      # images to gcr.io/tekton-nightly 👼
-      - name: nightly-account
-        secret:
-          secretName: nightly-account
   tektoncd/experimental:
   - name: tekton-dashboard-publish-images
+    labels:
+      preset-postsubmit-sh: "true"
     always_run: true
     decorate: true
     spec:
@@ -1420,19 +1088,6 @@ postsubmits:
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/publish-images.sh"
-        volumeMounts:
-        - name: nightly-account
-          mountPath: /etc/nightly-account
-          readOnly: true
-        env:
-        - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /etc/nightly-account/service-account.json
-      volumes:
-      # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
-      # images to gcr.io/tekton-nightly 👼
-      - name: nightly-account
-        secret:
-          secretName: nightly-account
   tektoncd/operator:
   - name: post-tekton-operator-go-coverage
     branches:
@@ -1478,9 +1133,12 @@ postsubmits:
         args:
         - "--artifacts=$(ARTIFACTS)"
         - "--cov-threshold-percentage=0"
+
 periodics:
 - cron: "5 2 * * *"
   name: ci-tekton-pipeline-upgrade-tests
+  labels:
+    preset-presubmit-sh: "true"
   agent: kubernetes
   extra_refs:
   - org: tektoncd
@@ -1504,19 +1162,6 @@ periodics:
       - "--" # end bootstrap args, scenario args below
       - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
       - "./test/e2e-tests-upgrade.sh"
-      volumeMounts:
-      - name: test-account
-        mountPath: /etc/test-account
-        readOnly: true
-      env:
-      - name: GOOGLE_APPLICATION_CREDENTIALS
-        value: /etc/test-account/service-account.json
-      - name: E2E_CLUSTER_REGION
-        value: us-central1
-    volumes:
-    - name: test-account
-      secret:
-        secretName: test-account
 - name: periodic-tekton-stale
   interval: 1h
   decorate: true
