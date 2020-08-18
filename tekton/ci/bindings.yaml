@@ -103,3 +103,13 @@ spec:
     value: $(body.add_pr_body.pull_request_body.number)
   - name: gitHubCommand
     value: $(body.comment.body)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-tektoncd-comment
+  namespace: tektonci
+spec:
+  params:
+  - name: gitHubCommand
+    value: $(body.comment.body)

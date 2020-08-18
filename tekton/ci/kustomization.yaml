@@ -10,6 +10,7 @@ resources:
 - ingress.yaml
 - jobs.yaml
 - plumbing-template.yaml
+- tekton-cd-template.yaml
 - tekton-golang-lint.yaml
 - tekton-image-build.yaml
 - tekton-yamllint.yaml
