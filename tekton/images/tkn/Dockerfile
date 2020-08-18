@@ -16,4 +16,4 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ARG TKN_VERSION=0.13.1
 
-RUN wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar zxf - -C /usr/local/bin
+RUN ARCH=$(uname -m) && wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_${ARCH}.tar.gz | tar zxf - -C /usr/local/bin
