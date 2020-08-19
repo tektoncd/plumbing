@@ -64,10 +64,10 @@ spec:
             import random
 
             check_status = "$(tt.params.checkStatus)"
-            if "$(params.parentPipelineRunName)" == "":
-              resource_path = "taskruns/$(params.taskRunName)"
+            if "$(tt.params.parentPipelineRunName)" == "":
+              resource_path = "taskruns/$(tt.params.taskRunName)"
             else:
-              resource_path = "pipelineruns/$(params.parentPipelineRunName)?pipelineTask=$(params.parentPipelineRunTaskName)"
+              resource_path = "pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)"
 
             if ("$(tt.params.checkResult)" == "True"):
               check_status = "success"
@@ -75,7 +75,7 @@ spec:
               check_status = "failure"
             else:
               check_status = "error"
-            logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(params.taskRunNamespace)/' + resource_path
+            logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
             # Build Status
             status_body = dict(
