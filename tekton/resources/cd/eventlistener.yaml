@@ -105,7 +105,8 @@ spec:
               header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
-              !('tekton.dev/conditionName' in body.taskRun.metadata.labels)
+              !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
+              !('ownerReferences' in body.taskRun.metadata)
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
         - ref: tekton-ci-check-pending
@@ -119,9 +120,41 @@ spec:
               header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')) &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
-              !('tekton.dev/conditionName' in body.taskRun.metadata.labels)
+              !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
+              !('ownerReferences' in body.taskRun.metadata)
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
         - ref: tekton-ci-check-complete
+      template:
+        name: tekton-ci-github-check-update
+    - name: github-check-start-with-owner
+      interceptors:
+        - cel:
+            filter: >-
+              header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
+              body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
+              !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
+              'ownerReferences' in body.taskRun.metadata
+      bindings:
+        - ref: tekton-ci-taskrun-cloudevent
+        - ref: tekton-ci-check-pending
+        - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
+      template:
+        name: tekton-ci-github-check-update
+    - name: github-check-done-with-owner
+      interceptors:
+        - cel:
+            filter: >-
+              (header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1') ||
+              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')) &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
+              body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
+              !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
+              'ownerReferences' in body.taskRun.metadata
+      bindings:
+        - ref: tekton-ci-taskrun-cloudevent
+        - ref: tekton-ci-check-complete
+        - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
       template:
         name: tekton-ci-github-check-update

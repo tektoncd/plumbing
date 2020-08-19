@@ -21,6 +21,14 @@ spec:
     description: Whether the triggering event was successful or not
   - name: taskRunName
     description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
@@ -48,7 +56,7 @@ spec:
             #!/bin/sh
             mkdir -p $(resources.outputs.pr.path)
             cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
-        - name: setup-comment
+        - name: update-check-status
           image: python:3-alpine
           script: |
             #!/usr/bin/env python
@@ -56,17 +64,18 @@ spec:
             import random
 
             check_status = "$(tt.params.checkStatus)"
-
-            if (check_status == "complete"):
-              logs_url = 'http://logs.dogfooding.tekton.dev/?buildid=$(tt.params.buildUUID)&namespace=tektonci'
-              if ("$(tt.params.checkResult)" == "True"):
-                check_status = "success"
-              elif ("$(tt.params.checkResult)" == "False"):
-                check_status = "failure"
-              else:
-                check_status = "error"
+            if "$(params.parentPipelineRunName)" == "":
+              resource_path = "taskruns/$(params.taskRunName)"
             else:
-              logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/tektonci/taskruns/$(tt.params.taskRunName)'
+              resource_path = "pipelineruns/$(params.parentPipelineRunName)?pipelineTask=$(params.parentPipelineRunTaskName)"
+
+            if ("$(tt.params.checkResult)" == "True"):
+              check_status = "success"
+            elif ("$(tt.params.checkResult)" == "False"):
+              check_status = "failure"
+            else:
+              check_status = "error"
+            logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(params.taskRunNamespace)/' + resource_path
 
             # Build Status
             status_body = dict(
