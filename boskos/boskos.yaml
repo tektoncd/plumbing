@@ -153,7 +153,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos
-        image: gcr.io/k8s-prow/boskos/boskos:v20200213-a79910c4a
+        image: gcr.io/k8s-staging-boskos/boskos:v20200819-984516e
         args:
         - --storage=/store/boskos.json
         - --config=/etc/config/config
@@ -229,7 +229,7 @@ spec:
       terminationGracePeriodSeconds: 300
       containers:
       - name: boskos-janitor
-        image: gcr.io/k8s-prow/boskos/janitor:v20200213-1586d3041
+        image: gcr.io/k8s-staging-boskos/janitor:v20200819-984516e
         args:
         - --resource-type=gke-project
         - --pool-size=10
@@ -264,6 +264,6 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos-reaper
-        image: gcr.io/k8s-prow/boskos/reaper:v20200213-1586d3041
+        image: gcr.io/k8s-staging-boskos/reaper:v20200819-984516e
         args:
         - --resource-type=gke-project
