@@ -62,6 +62,7 @@ spec:
             #!/usr/bin/env python
             import json
             import random
+            import sys
 
             check_status = "$(tt.params.checkStatus)"
             if "$(tt.params.parentPipelineRunName)" == "":
@@ -86,6 +87,23 @@ spec:
 
             # we may need to URLEncode the check name
             status_path = "$(resources.outputs.pr.path)/status/$(tt.params.checkName).json"
+            try:
+              with open(status_path, "r") as status:
+                old_status = json.load(status)
+            except FileNotFoundError:
+              # There is no previous status. Just continue.
+              old_status = dict(Label="", Desc="", Target="")
+
+            # Detect race condition. It may be that the "start" event is processed after
+            # the "complete" one. This does not eliminate the possibility of race as the two
+            # update jobs may still run in parallel, but it reduces the chances considerably.
+            if (status_body['State'] in ['success', 'failure', 'error'] and
+                  status_body['Label'] == old_status['Label'] and
+                  status_body['Desc'] == old_status['Desc'] and
+                  status_body['Target'] == old_status['Target']):
+                # A matching complete was already done, stop here.
+                sys.exit(0)
+
             with open(status_path, "w") as status:
               json.dump(status_body, status)
       resources:
