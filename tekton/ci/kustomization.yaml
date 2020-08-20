@@ -7,7 +7,6 @@ resources:
 - bindings.yaml
 - conditions.yaml
 - eventlistener.yaml
-- ingress.yaml
 - jobs.yaml
 - plumbing-template.yaml
 - tekton-cd-template.yaml

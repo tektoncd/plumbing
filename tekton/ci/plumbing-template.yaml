@@ -199,19 +199,19 @@ spec:
     metadata:
       name: plumbing-test-tekton-ci-$(uid)
       labels:
-        prow.k8s.io/build-id: $(params.buildUUID)
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-test-tekton-ci
         tekton.dev/kind: ci
-        tekton.dev/pr-number: $(params.pullRequestNumber)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
-        tekton.dev/gitURL: "$(params.gitRepository)"
-        ci.tekton.dev/github-delivery: $(params.buildUUID)
-        ci.tekton.dev/github-repo: $(params.package)
-        ci.tekton.dev/github-event: $(params.githubEvent)
-        ci.tekton.dev/github-action: $(params.githubAction)
-        ci.tekton.dev/github-pr-number: $(params.pullRequestNumber)
-        ci.tekton.dev/github-git-revision: $(params.gitRevision)
-        ci.tekton.dev/git-clone-depth: $(params.gitCloneDepth)
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+        ci.tekton.dev/github-delivery: $(tt.params.buildUUID)
+        ci.tekton.dev/github-repo: $(tt.params.package)
+        ci.tekton.dev/github-event: $(tt.params.githubEvent)
+        ci.tekton.dev/github-action: $(tt.params.githubAction)
+        ci.tekton.dev/github-pr-number: $(tt.params.pullRequestNumber)
+        ci.tekton.dev/github-git-revision: $(tt.params.gitRevision)
+        ci.tekton.dev/git-clone-depth: $(tt.params.gitCloneDepth)
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
