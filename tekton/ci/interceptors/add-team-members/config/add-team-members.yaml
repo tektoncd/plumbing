@@ -30,7 +30,7 @@ spec:
       serviceAccountName: add-team-member-bot
       containers:
         - name: add-team-member-interceptor
-          image: ko://github.com/tektoncd/plumbing/tekton/ci/interceptors/add-team-members/cmd/add-team-members
+          image: ko://github.com/andreafrittoli/plumbing/tekton/ci/interceptors/add-team-members/cmd/add-team-members
           env:
           - name: GITHUB_TOKEN
             valueFrom:

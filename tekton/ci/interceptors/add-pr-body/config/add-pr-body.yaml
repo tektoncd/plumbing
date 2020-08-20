@@ -30,7 +30,7 @@ spec:
       serviceAccountName: add-pr-body-bot
       containers:
         - name: add-pr-body-interceptor
-          image: github.com/tektoncd/plumbing/tekton/ci/interceptors/add-pr-body/cmd/add-pr-body
+          image: github.com/tektoncd/andreafrittoli/tekton/ci/interceptors/add-pr-body/cmd/add-pr-body
 ---
 apiVersion: v1
 kind: Service
