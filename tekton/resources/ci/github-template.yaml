@@ -55,7 +55,10 @@ spec:
           script: |
             #!/bin/sh
             mkdir -p $(resources.outputs.pr.path)
+            chmod 775 $(resources.outputs.pr.path)
             cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
+            find $(resources.outputs.pr.path) -type d -exec chmod 775 {} \;
+            find $(resources.outputs.pr.path) -type f -exec chmod 644 {} \;
         - name: update-check-status
           image: python:3-alpine
           script: |
@@ -76,7 +79,7 @@ spec:
               check_status = "failure"
             else:
               check_status = "error"
-            logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
+            logs_url = 'https://af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
             # Build Status
             status_body = dict(

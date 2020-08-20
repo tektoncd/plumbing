@@ -20,6 +20,8 @@ spec:
       description: The command that was used to trigger testing
     - name: pullRequestNumber
       description: The number of the pull request
+    - name: userAgent
+      description: The user agent in the pipeline trigger
   resources:
     - name: source
       type: git
@@ -41,6 +43,17 @@ spec:
         value: $(params.gitHubCommand)
       - name: checkName
         value: $(params.checkName)
+    - conditionRef: "check-files-and-trigger"
+      params:
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: "tekton/ci/**"
+      - name: userAgent
+        value: $(params.userAgent)
+      resources:
+      - name: source
+        resource: source
     taskRef:
       name: build-push-kaniko
     params:

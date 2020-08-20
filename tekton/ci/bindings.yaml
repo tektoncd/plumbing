@@ -11,6 +11,30 @@ spec:
     value: $(body.repository.full_name)
   - name: gitRepository
     value: $(body.repository.html_url)
+  - name: githubEvent
+    value: $(header.X-GitHub-Event)
+  - name: githubAction
+    value: $(body.action)
+  - name: userAgent
+    value: $(header.User-Agent)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-github-base-forwarded
+  namespace: tektonci
+spec:
+  params:
+  - name: buildUUID
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-delivery'])
+  - name: package
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-repo'])
+  - name: gitRepository
+    value: $(body.taskRun.metadata.annotations['tekton\.dev/gitURL'])
+  - name: githubEvent
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-event'])
+  - name: githubAction
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-action'])
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -21,6 +45,16 @@ spec:
   params:
   - name: gitCloneDepth
     value: $(body.extensions.git_clone_depth)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-clone-depth-forwarded
+  namespace: tektonci
+spec:
+  params:
+  - name: gitCloneDepth
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/git-clone-depth'])
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -47,6 +81,18 @@ spec:
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
+  name: tekton-ci-webhook-pull-request-forwarded
+  namespace: tektonci
+spec:
+  params:
+  - name: gitRevision
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-git-revision'])
+  - name: pullRequestNumber
+    value: $(body.taskRun.metadata.annotations['ci\.tekton\.dev/github-pr-number'])
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
   name: tekton-ci-webhook-comment
   namespace: tektonci
 spec:
@@ -55,5 +101,15 @@ spec:
     value: $(body.add_pr_body.pull_request_body.head.sha)
   - name: pullRequestNumber
     value: $(body.add_pr_body.pull_request_body.number)
+  - name: gitHubCommand
+    value: $(body.comment.body)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-tektoncd-comment
+  namespace: tektonci
+spec:
+  params:
   - name: gitHubCommand
     value: $(body.comment.body)

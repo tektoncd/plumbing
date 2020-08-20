@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ing
+  namespace: tekton-pipelines
+spec:
+  tls:
+  - hosts:
+    - af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud
+    secretName: af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000
+  rules:
+  - host: af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud
+    http:
+      paths:
+      - backend:
+          serviceName: tekton-dashboard
+          servicePort: 9097
+        path: /
