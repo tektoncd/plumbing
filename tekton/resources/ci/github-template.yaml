@@ -79,7 +79,7 @@ spec:
               check_status = "failure"
             else:
               check_status = "error"
-            logs_url = 'https://aftekton-dff43bc8701fcd5837d6de963718ad39-0000.eu-de.containers.appdomain.cloud/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
+            logs_url = 'https://af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
             # Build Status
             status_body = dict(

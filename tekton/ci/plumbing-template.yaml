@@ -57,13 +57,9 @@ spec:
         - name: checkName
           value: plumbing-ko-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -102,13 +98,9 @@ spec:
         - name: checkName
           value: plumbing-ko-gcloud-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -147,13 +139,9 @@ spec:
         - name: checkName
           value: plumbing-hub-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -164,13 +152,9 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-<<<<<<< HEAD
             value: $(tt.params.gitCloneDepth)
-=======
-            value: $(params.gitCloneDepth)
           - name: userAgent
-            value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+            value: $(tt.params.userAgent)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -198,13 +182,9 @@ spec:
         - name: checkName
           value: plumbing-kubectl-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -243,13 +223,9 @@ spec:
         - name: checkName
           value: plumbing-skopeo-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -288,13 +264,9 @@ spec:
         - name: checkName
           value: plumbing-test-runner-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -305,13 +277,9 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-<<<<<<< HEAD
             value: $(tt.params.gitCloneDepth)
-=======
-            value: $(params.gitCloneDepth)
           - name: userAgent
-            value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+            value: $(tt.params.userAgent)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -339,13 +307,9 @@ spec:
         - name: checkName
           value: plumbing-tkn-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -384,13 +348,9 @@ spec:
         - name: checkName
           value: plumbing-coverage-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -468,13 +428,9 @@ spec:
         - name: checkName
           value: plumbing-golang-lint
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -513,13 +469,9 @@ spec:
         - name: checkName
           value: plumbing-alpine-git-nonroot-build
         - name: gitHubCommand
-<<<<<<< HEAD
           value: $(tt.params.gitHubCommand)
-=======
-          value: $(params.gitHubCommand)
         - name: userAgent
-          value: $(params.userAgent)
->>>>>>> 011b917... Add a CI job to test CI changes
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
@@ -530,10 +482,7 @@ spec:
           - name: url
             value: $(tt.params.gitRepository)
           - name: depth
-<<<<<<< HEAD
             value: $(tt.params.gitCloneDepth)
-=======
-            value: $(params.gitCloneDepth)
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -558,19 +507,19 @@ spec:
         name: test-resource-folder
       params:
         - name: gitCloneDepth
-          value: $(params.gitCloneDepth)
+          value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
           value: "tekton/ci/**"
         - name: checkName
           value: plumbing-alpine-git-nonroot-build
         - name: gitHubCommand
-          value: $(params.gitHubCommand)
+          value: $(tt.params.gitHubCommand)
         - name: namespace
-          value: pr$(params.pullRequestNumber)-$(uid)
+          value: pr$(tt.params.pullRequestNumber)-$(uid)
         - name: folderPath
           value: "tekton/ci"
         - name: userAgent
-          value: $(params.userAgent)
+          value: $(tt.params.userAgent)
       resources:
       - name: target
         resourceRef:
@@ -580,15 +529,14 @@ spec:
           type: git
           params:
           - name: revision
-            value: $(params.gitRevision)
+            value: $(tt.params.gitRevision)
           - name: url
-            value: $(params.gitRepository)
+            value: $(tt.params.gitRepository)
           - name: depth
-            value: $(params.gitCloneDepth)
+            value: $(tt.params.gitCloneDepth)
       - name: cloudEventTarget
         resourceSpec:
           type: cloudEvent
           params:
             - name: targetURI
-              value: http://el-tekton-ci-webhook.pr$(params.pullRequestNumber)-$(uid):8080
->>>>>>> 011b917... Add a CI job to test CI changes
+              value: http://el-tekton-ci-webhook.pr$(tt.params.pullRequestNumber)-$(uid):8080
