@@ -74,7 +74,7 @@ spec:
               check_status = "success"
             elif ("$(tt.params.checkResult)" == "False"):
               check_status = "failure"
-            else:
+            elif ("$(tt.params.checkResult)" != "Unknown")):
               check_status = "error"
             logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
@@ -90,6 +90,7 @@ spec:
             try:
               with open(status_path, "r") as status:
                 old_status = json.load(status)
+                print("Previous status: {}".format(old_status))
             except FileNotFoundError:
               # There is no previous status. Just continue.
               old_status = dict(Label="", Desc="", Target="")
@@ -106,6 +107,8 @@ spec:
 
             with open(status_path, "w") as status:
               json.dump(status_body, status)
+
+            print("New status: {}".format(status_body))
       resources:
         inputs:
           - name: pr
