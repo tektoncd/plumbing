@@ -6,7 +6,7 @@ metadata:
   namespace: tektonci
 spec:
   serviceAccountName: tekton-ci-listener
-  serviceType: NodePort
+  serviceType: LoadBalancer
   triggers:
     - name: pull-request-trigger
       interceptors:
