@@ -109,7 +109,7 @@ spec:
               namespace: tektonci
         - cel:
             filter: >-
-              body.comment.user.login in body.add_team_members.maintainers_team_members
+              body.pull_request.user.login in body.add_team_members.maintainers_team_members
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-pull-request
