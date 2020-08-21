@@ -74,7 +74,7 @@ spec:
               check_status = "success"
             elif ("$(tt.params.checkResult)" == "False"):
               check_status = "failure"
-            elif ("$(tt.params.checkResult)" != "Unknown")):
+            elif ("$(tt.params.checkResult)" != "Unknown"):
               check_status = "error"
             logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
