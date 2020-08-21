@@ -97,7 +97,7 @@ spec:
     spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
-        name: tekton-cd-configmap-trigger
+        name: cd-configmap-labels-trigger
       params:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
