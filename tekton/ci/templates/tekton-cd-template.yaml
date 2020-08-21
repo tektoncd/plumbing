@@ -98,6 +98,17 @@ spec:
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
         name: cd-configmap-labels-trigger
+      resources:
+        - name: source
+          resourceSpec:
+            type: git
+            params:
+            - name: revision
+              value: $(tt.params.gitRevision)
+            - name: url
+              value: $(tt.params.gitRepository)
+            - name: depth
+              value: $(tt.params.gitCloneDepth)
       params:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)

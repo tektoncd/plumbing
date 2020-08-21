@@ -23,7 +23,7 @@ spec:
     - name: source
       type: git
   tasks:
-  - name: lint
+  - name: deploy-configmaps
     conditions:
     - conditionRef: "check-git-files-changed"
       params:
