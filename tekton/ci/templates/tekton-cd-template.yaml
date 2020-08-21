@@ -58,7 +58,7 @@ spec:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "tekton/resource/cd/**"
+          value: "tekton/resources/cd/**"
         - name: checkName
           value: plumbing-test-tekton-cd
         - name: gitHubCommand
