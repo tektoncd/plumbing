@@ -94,8 +94,10 @@ spec:
         - cel:
             filter: >-
               body.taskRun.metadata.annotations['ci.tekton.dev/github-repo'] == 'andreafrittoli/plumbing' &&
-              body.taskRun.metadata.annotations['ci.tekton.dev/github-event'] == 'pull_request' &&
-              body.taskRun.metadata.annotations['ci.tekton.dev/github-action'] in ['opened', 'synchronize']
+              ((body.taskRun.metadata.annotations['ci.tekton.dev/github-event'] == 'pull_request' &&
+              body.taskRun.metadata.annotations['ci.tekton.dev/github-action'] in ['opened', 'synchronize']) ||
+              (body.taskRun.metadata.annotations['ci.tekton.dev/github-event'] == 'issue_comment' &&
+              body.taskRun.metadata.annotations['ci.tekton.dev/github-action'] in ['created', 'updated']))
       bindings:
         - ref: tekton-ci-github-base-forwarded
         - ref: tekton-ci-webhook-pull-request-forwarded
