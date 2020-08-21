@@ -222,7 +222,7 @@ spec:
         - name: fileFilterRegex
           value: "tekton/ci/**"
         - name: checkName
-          value: plumbing-alpine-git-nonroot-build
+          value: plumbing-test-tekton-ci
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         - name: namespace
