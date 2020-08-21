@@ -15,6 +15,8 @@ spec:
     description: The git repository that hosts context and Dockerfile
   - name: gitRevision
     description: The Git revision to be used.
+  - name: gitCloneDepth
+    description: Number of commits in the change + 1
   - name: gitHubCommand
     description: |
       The GitHub command that was used a trigger. This is only available when
@@ -23,16 +25,82 @@ spec:
     default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
-      name: cd-echo-test-$(uid)
+      name: plumbing-test-tekton-cd-$(uid)
       labels:
-        tekton.dev/kind: cd
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/check-name: plumbing-test-tekton-cd
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+        ci.tekton.dev/github-delivery: $(tt.params.buildUUID)
+        ci.tekton.dev/github-repo: $(tt.params.package)
+        ci.tekton.dev/github-event: $(tt.params.githubEvent)
+        ci.tekton.dev/github-action: $(tt.params.githubAction)
+        ci.tekton.dev/github-pr-number: $(tt.params.pullRequestNumber)
+        ci.tekton.dev/github-git-revision: $(tt.params.gitRevision)
+        ci.tekton.dev/git-clone-depth: $(tt.params.gitCloneDepth)
     spec:
       serviceAccountName: tekton-ci-jobs
-      taskSpec:
-        steps:
-        - name: echo
-          image: busybox
-          script: |
-            echo "Executing $(tt.params.gitHubCommand)"
+      pipelineRef:
+        name: test-resource-cd-folder
+      params:
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/resource/cd/**"
+        - name: checkName
+          value: plumbing-test-tekton-cd
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+        - name: namespace
+          value: pr$(tt.params.pullRequestNumber)-cd-$(uid)
+        - name: folderPath
+          value: "tekton/resource/cd"
+        - name: userAgent
+          value: $(tt.params.userAgent)
+      resources:
+      - name: target
+        resourceRef:
+          name: af-tekton-cadmin
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(tt.params.gitRevision)
+          - name: url
+            value: $(tt.params.gitRepository)
+          - name: depth
+            value: $(tt.params.gitCloneDepth)
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: cd-configmap-labels-trigger-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/check-name: plumbing-configmap-cd-test
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      taskRef: tekton-cd-configmap-trigger
+      params:
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/resources/cd/configmap-template.yaml"
+        - name: checkName
+          value: plumbing-configmap-cd-test
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+        - name: userAgent
+          value: $(tt.params.userAgent)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: namespace
+          value: pr$(tt.params.pullRequestNumber)-cd-$(uid)

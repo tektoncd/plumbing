@@ -1,0 +1,143 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cd-configmap-labels-trigger
+  namespace: tektonci
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: userAgent
+      description: The user agent in the pipeline trigger
+    - name: gitRevision
+      description: The git revision to be deployed
+    - name: namespace
+      description: The namespace where the config map should be deployed
+  resources:
+    - name: source
+      type: git
+  tasks:
+  - name: lint
+    conditions:
+    - conditionRef: "check-git-files-changed"
+      params:
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: $(params.fileFilterRegex)
+      resources:
+      - name: source
+        resource: source
+    - conditionRef: "check-name-matches"
+      params:
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
+      - name: checkName
+        value: $(params.checkName)
+    - conditionRef: "check-files-and-trigger"
+      params:
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: "tekton/resources/cd/**"
+      - name: userAgent
+        value: $(params.userAgent)
+      resources:
+      - name: source
+        resource: source
+    taskRef:
+      name: tekton-cd-configmap-trigger
+    params:
+      - name: sinkUrl
+        value: http://el-tekton-cd.$(params.namespace).svc.cluster.local:8080
+      - name: gitRevision
+        value: master
+      - name: configPath
+        value: $(params.configPath)
+      - name: namespace
+        value: $(params.namespace)
+      - name: configmapName
+        value: "label-config-v2"
+      - name: configmapKey
+        value: "labels.yaml"
+      - name: configmapDescription
+        value: "github-labels"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: test-resource-cd-folder
+  namespace: tektonci
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: namespace
+      description: The name of the namespace to use for testing
+    - name: folderPath
+      description: path in git repo to kustomize overlay
+    - name: userAgent
+      description: The user agent in the pipeline trigger
+  resources:
+    - name: source
+      type: git
+    - name: target
+      type: cluster
+  tasks:
+    - name: create-namespace
+      conditions:
+        - conditionRef: "check-git-files-changed"
+          params:
+          - name: gitCloneDepth
+            value: $(params.gitCloneDepth)
+          - name: regex
+            value: $(params.fileFilterRegex)
+          resources:
+          - name: source
+            resource: source
+        - conditionRef: "check-name-matches"
+          params:
+          - name: gitHubCommand
+            value: $(params.gitHubCommand)
+          - name: checkName
+            value: $(params.checkName)
+        - conditionRef: "check-triggered-by-github"
+          params:
+          - name: userAgent
+            value: $(params.userAgent)
+      taskRef:
+        name: create-namespace
+      params:
+        - name: namespace
+          value: $(params.namespace)
+      resources:
+        inputs:
+          - name: targetCluster
+            resource: target
+    - name: deploy-tekton-cd
+      runAfter: ["create-namespace"]
+      taskRef:
+        name: deploy-overlay
+      params:
+      - name: folderPath
+        value: "tekton/resources/cd"
+      - name: namespace
+        value: $(params.namespace)
+      resources:
+        inputs:
+        - name: source
+          resource: source
+        - name: targetCluster
+          resource: target

@@ -215,3 +215,83 @@ spec:
 
         # Check failed. Return exit code 1.
         sys.exit(1)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: tekton-cd-configmap-trigger
+  namespace: tektonci
+  description: |
+    Triggers a config map deployment by sending a JSON body to a tekton CD
+    event listener. Behaves the same as the "configmap-cd-trigger" cronjob base.
+spec:
+  params:
+  - name: sinkUrl
+    description: Event listener sink URL
+    default: http://el-tekton-cd.default.svc.cluster.local:8080
+  - name: gitRepository
+    description: The git repo that hosts the configmap
+    default: github.com/andreafrittoli/plumbing
+  - name: gitRevision
+    description: The git revision tha to be deployed
+    default: master
+  - name: configPath
+    description: The PATH to be deployed within the git repo
+  - name: namespace
+    description: The namespace where the config map should be deployed
+  - name: clusterResource
+    description: Name of the cluster resources to be used for deployment
+    default: af-tekton-cadmin
+  - name: configmapName
+    description: The name of the config map to be created / updated
+  - name: configmapKey
+    description: The name of the config map key that will host the data
+  - name: configmapDescription
+    description: A description of the config map
+  steps:
+  - name: http-trigger
+    image: curlimages/curl
+    script: |
+      cat <<EOF > /workspace/post-body.json
+      {
+        "trigger-template": "configmap",
+        "params": {
+          "git": {
+            "repository": "$GIT_REPOSITORY",
+            "revision": "$GIT_REVISION"
+          },
+          "target": {
+            "namespace": "$NAMESPACE",
+            "cluster-resource": "$CLUSTER_RESOURCE"
+          },
+          "configmap": {
+              "description": "$CONFIGMAP_DESCRIPTION",
+              "path": "$CONFIG_PATH",
+              "name": "$CONFIGMAP_NAME",
+              "key": "$CONFIGMAP_KEY"
+          }
+        }
+      }
+      EOF
+      curl --retry-connrefused --retry 200 \
+        --retry-delay 0 --retry-max-time 600 \
+        -d @/workspace/post-body.json $SINK_URL
+    env:
+      - name: SINK_URL
+        value: $(params.sinkUrl)
+      - name: GIT_REPOSITORY
+        value: $(params.gitRepository)
+      - name: GIT_REVISION
+        value: $(params.gitRevision)
+      - name: CONFIG_PATH
+        value: $(params.configPath)
+      - name: NAMESPACE
+        value: $(params.namespace)
+      - name: CLUSTER_RESOURCE
+        value: $(params.clusterResource)
+      - name: CONFIGMAP_NAME
+        value: $(params.configmapName)
+      - name: CONFIGMAP_KEY
+        value: $(params.configmapKey)
+      - name: CONFIGMAP_DESCRIPTION
+        value: $(params.configmapDescription)
