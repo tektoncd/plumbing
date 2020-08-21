@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: buildcop
-        image: ko://github.com/tektoncd/plumbing/buildbot/cmd/buildbot
+        image: ko://github.com/tektoncd/plumbing/bots/buildbot/cmd/buildbot
         envFrom:
         - configMapRef:
             name: buildcop-cfg

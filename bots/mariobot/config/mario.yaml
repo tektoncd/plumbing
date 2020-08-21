@@ -30,7 +30,7 @@ spec:
       serviceAccountName: mario-bot
       containers:
         - name: mario-interceptor
-          image: github.com/tektoncd/plumbing/mariobot/cmd/mario
+          image: ko://github.com/tektoncd/plumbing/bots/mariobot/cmd/mario
           env:
             - name: GITHUB_SECRET_TOKEN
               valueFrom:
