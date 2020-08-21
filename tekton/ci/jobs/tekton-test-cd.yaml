@@ -40,12 +40,8 @@ spec:
         value: $(params.gitHubCommand)
       - name: checkName
         value: $(params.checkName)
-    - conditionRef: "check-files-and-trigger"
+    - conditionRef: "check-triggered-by-github"
       params:
-      - name: gitCloneDepth
-        value: $(params.gitCloneDepth)
-      - name: regex
-        value: "tekton/resources/cd/**"
       - name: userAgent
         value: $(params.userAgent)
       resources:
