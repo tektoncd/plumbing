@@ -11,19 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.13-alpine3.12 as build
+FROM golang:1.14-alpine3.12 as build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
 RUN update-ca-certificates
 
-ARG KUBECTL_VERSION=1.16.2
+ARG KUBECTL_VERSION=1.18.1
 RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
 
 # Install Kustomize
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
+RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.8.1
 
 FROM alpine:3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
