@@ -66,31 +66,6 @@ spec:
         - ref: tekton-ci-webhook-pr-labels
       template:
         name: tekton-plumbing-ci-pipeline
-    - name: all-pull-request-check-pr-labels
-      interceptors:
-        - github:
-            secretRef:
-              secretName: ci-webhook
-              secretKey: secret
-            eventTypes:
-              - pull_request
-        - cel:
-            filter: >-
-              body.repository.full_name.startsWith('andreafrittoli/') &&
-              body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'catalog', 'hub'] &&
-              (body.action == 'opened' ||
-               body.action == 'synchronize' ||
-               body.action == 'labeled' ||
-               body.action == 'unlabeled')
-            overlays:
-            - key: extensions.pr_number
-              expression: body.pull_request.html_url.split('/')[size(body.pull_request.html_url.split('/'))-1]
-      bindings:
-        - ref: tekton-ci-github-base
-        - ref: tekton-ci-pr-number-extension
-        - ref: tekton-ci-webhook-pr-labels
-      template:
-        name: check-pull-request-labels
     - name: test-ci-trigger
       interceptors:
         - cel:
