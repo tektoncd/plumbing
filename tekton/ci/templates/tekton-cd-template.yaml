@@ -96,7 +96,8 @@ spec:
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs
-      taskRef: tekton-cd-configmap-trigger
+      pipelineRef:
+        name: tekton-cd-configmap-trigger
       params:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
