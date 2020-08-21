@@ -363,7 +363,7 @@ spec:
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         - name: folders
-          value: pipelinerun-logs/config boskos gubernator prow robocat tekton
+          value: bots/buildbot/config bots/mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
       resources:
       - name: source
         resourceSpec:
