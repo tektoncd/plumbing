@@ -59,7 +59,7 @@ spec:
       - name: gitRevision
         value: master
       - name: configPath
-        value: $(params.configPath)
+        value: "label_sync/labels.yaml"
       - name: namespace
         value: $(params.namespace)
       - name: configmapName

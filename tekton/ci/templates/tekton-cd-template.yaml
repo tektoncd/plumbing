@@ -23,6 +23,14 @@ spec:
       this template is triggered by a comment. The default value is for the
       case of a pull_request event.
     default: ""
+  - name: githubEvent
+    description: GitHub event as provided in the X-GitHub-Event header
+  - name: githubAction
+    description: GitHub action, for instance "opened" or "synchronize"
+  - name: userAgent
+    description: User-agent from the pipeline trigger
+  - name: labels
+    description: List of labels currently on the Pull Request
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
