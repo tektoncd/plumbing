@@ -4,4 +4,3 @@ commonAnnotations:
 resources:
 - bindings.yaml
 - github-template.yaml
-- clusters.yaml
