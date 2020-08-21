@@ -61,7 +61,7 @@ spec:
       # If a command was specified, the regex should match the checkName
       REGEX="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
       [[ "$REGEX" == "" ]] && REGEX='.*'
-      echo "$(params.checkName)" | grep -E $REGEX
+      echo "$(params.checkName)" | grep -E "$REGEX"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
