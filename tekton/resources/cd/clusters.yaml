@@ -167,10 +167,11 @@ apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: af-tekton-cadmin
+  namespace: default
 spec:
   params:
   - name: url
-    value: https://c106.eu-de.containers.cloud.ibm.com:31182
+    value: https://c1.eu-gb.containers.cloud.ibm.com:25232
   - name: username
     value: cadmin
   secrets:
