@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: af-tekton-cadmin
+spec:
+  params:
+  - name: url
+    value: https://c1.eu-gb.containers.cloud.ibm.com:25232
+  - name: username
+    value: cadmin
+  secrets:
+  - fieldName: token
+    secretKey: token
+    secretName: af-tekton-cadmin-token
+  - fieldName: cadata
+    secretKey: ca.crt
+    secretName: af-tekton-cadmin-token
+  type: cluster
