@@ -77,7 +77,7 @@ spec:
               check_status = "success"
             elif ("$(tt.params.checkResult)" == "False"):
               check_status = "failure"
-            elif ("$(tt.params.checkResult)" != "Unknown")):
+            elif ("$(tt.params.checkResult)" != "Unknown"):
               check_status = "error"
             logs_url = 'https://af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
 
