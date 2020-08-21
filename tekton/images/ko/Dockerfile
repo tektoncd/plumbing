@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.14.2-alpine3.11
+FROM golang:1.14-alpine3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GO111MODULE on
 RUN go get github.com/google/ko/cmd/ko@v0.5.1
 
 RUN apk add --no-cache musl-dev gcc git
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
+RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.8.1
