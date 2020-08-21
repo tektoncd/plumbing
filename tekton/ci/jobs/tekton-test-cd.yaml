@@ -44,9 +44,6 @@ spec:
       params:
       - name: userAgent
         value: $(params.userAgent)
-      resources:
-      - name: source
-        resource: source
     taskRef:
       name: tekton-cd-configmap-trigger
     params:

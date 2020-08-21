@@ -88,7 +88,7 @@ spec:
       [[ "$(params.userAgent)" == "" ]] && exit 1
 
       REGEX="^GitHub-"
-      echo "$(params.userAgent)" | grep -E $REGEX
+      echo "$(params.userAgent)" | grep -E "$REGEX"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
