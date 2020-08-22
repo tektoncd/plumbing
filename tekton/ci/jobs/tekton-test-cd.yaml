@@ -22,6 +22,8 @@ spec:
   resources:
     - name: source
       type: git
+    - name: targetCluster
+      type: cluster
   tasks:
   - name: deploy-configmaps
     conditions:
@@ -69,6 +71,10 @@ spec:
         value: $(tasks.deploy-configmaps.results.event-listener-event-id)
       - name: namespace
         value: $(params.namespace)
+    resources:
+      inputs:
+        - name: targetCluster
+          resource: targetCluster
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
