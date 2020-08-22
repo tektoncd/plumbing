@@ -30,9 +30,9 @@ spec:
         kubectl apply --namespace=$(params.namespace) -f -
       kubectl get secret default-de-icr-io --namespace=tektonci --export -o yaml | \
         kubectl apply --namespace=$(params.namespace) -f -
-      kubectl get secret default-de-icr-io --namespace=tektonci --export -o yaml | \
-        kubectl apply --namespace=$(params.namespace) -f -
       kubectl patch sa/default -n $(params.namespace) -p '{"imagePullSecrets": [{"name": "default-de-icr-io"}]}'
+      kubectl get secret af-tekton-cadmin-token --namespace=tektonci --export -o yaml | \
+        kubectl apply --namespace=$(params.namespace) -f -
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task

@@ -278,7 +278,7 @@ spec:
       EOF
       curl --retry-connrefused --retry 200 \
         --retry-delay 0 --retry-max-time 600 \
-        -O /workspace/response-body.json
+        --output /workspace/response-body.json \
         -d @/workspace/post-body.json $SINK_URL
     env:
       - name: SINK_URL
@@ -302,7 +302,12 @@ spec:
   - name: extract-id
     image: stedolan/jq
     script: |
+      echo "Extracting Event ID from:"
+      cat /workspace/response-body.json
+
       cat /workspace/response-body.json | jq -r '.eventID' > $(results.event-listener-event-id.path)
+      echo "Got Event ID:"
+      cat $(results.event-listener-event-id.path)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -328,16 +333,20 @@ spec:
     - name: DASHBOARD_BASE_URL
       value: https://af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud/
     - name: TASKRUN_BASE_NAME
-      value: taskrun/deploy-configmap-github-labels
+      value: deploy-configmap-github-labels
   steps:
   - name: http-trigger
     image: gcr.io/tekton-releases/dogfooding/kubectl
     script: |
+      # Discover the taskrun name
+      TASKRUN=$(kubectl -o jsonpath='{.items[0].metadata.name}' \
+        get tr -n $(params.namespace) -l 'triggers.tekton.dev/triggers-eventid=$(params.eventID)')
+
       echo "Waiting for the CD pipelinerun to complete."
-      echo "Follow on: ${DASHBOARD_BASE_URL}#/namespaces/$(params.namespace)/taskruns/${TASKRUN_BASE_NAME}-$(params.eventID)"
+      echo "Follow on: ${DASHBOARD_BASE_URL}#/namespaces/$(params.namespace)/taskruns/${TASKRUN}"
 
       # If the condition was met, the task is successful.
       # If the wait times out or the condition goes to false, the task fails.
       kubectl wait --for=condition=Succeeded \
-        ${TASKRUN_BASE_NAME}-$(params.eventID) \
+        taskrun/${TASKRUN} \
         -n $(params.namespace) --timeout=600s
