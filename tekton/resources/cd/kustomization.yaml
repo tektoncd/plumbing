@@ -3,6 +3,7 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
+- serviceaccount.yaml
 - bindings.yaml
 - clusters.yaml
 - configmap-template.yaml
