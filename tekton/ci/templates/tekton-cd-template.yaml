@@ -39,8 +39,8 @@ spec:
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-test-tekton-cd
-        tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+        tekton.dev/kind: ci-infra
       annotations:
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
         ci.tekton.dev/github-delivery: $(tt.params.buildUUID)
