@@ -153,7 +153,9 @@ spec:
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci-webhook' &&
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
-              'ownerReferences' in body.taskRun.metadata
+              'ownerReferences' in body.taskRun.metadata &&
+              (header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1' &&
+              !(body.taskRun.metadata.labels['tekton.dev/pipelineTask'] == 'deploy-configmaps'))
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
         - ref: tekton-ci-check-complete

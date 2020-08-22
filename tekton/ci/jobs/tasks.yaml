@@ -225,6 +225,9 @@ metadata:
     Triggers a config map deployment by sending a JSON body to a tekton CD
     event listener. Behaves the same as the "configmap-cd-trigger" cronjob base.
 spec:
+  results:
+  - name: event-listener-event-id
+    description: The trigger event ID from the event listener response
   params:
   - name: sinkUrl
     description: Event listener sink URL
@@ -275,6 +278,7 @@ spec:
       EOF
       curl --retry-connrefused --retry 200 \
         --retry-delay 0 --retry-max-time 600 \
+        -O /workspace/response-body.json
         -d @/workspace/post-body.json $SINK_URL
     env:
       - name: SINK_URL
@@ -295,3 +299,45 @@ spec:
         value: $(params.configmapKey)
       - name: CONFIGMAP_DESCRIPTION
         value: $(params.configmapDescription)
+  - name: extract-id
+    image: stedolan/jq
+    script: |
+      cat /workspace/response-body.json | jq -r '.eventID' > $(results.event-listener-event-id.path)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: tekton-cd-monitor-configmap-cd
+  namespace: tektonci
+  description: |
+    Waits for a configmap CD pipeline to complete and reports the result
+spec:
+  params:
+  - name: eventID
+    description: The event ID of the triggered pipeline
+  - name: namespace
+    description: The namespace where the config map should be deployed
+  resources:
+    inputs:
+      - name: targetCluster
+        type: cluster
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+    - name: DASHBOARD_BASE_URL
+      value: https://af-tekton2-dff43bc8701fcd5837d6de963718ad39-0000.eu-gb.containers.appdomain.cloud/
+    - name: TASKRUN_BASE_NAME
+      value: taskrun/deploy-configmap-github-labels
+  steps:
+  - name: http-trigger
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      echo "Waiting for the CD pipelinerun to complete."
+      echo "Follow on: ${DASHBOARD_BASE_URL}#/namespaces/$(params.namespace)/taskruns/${TASKRUN_BASE_NAME}-$(params.eventID)"
+
+      # If the condition was met, the task is successful.
+      # If the wait times out or the condition goes to false, the task fails.
+      kubectl wait --for=condition=Succeeded \
+        ${TASKRUN_BASE_NAME}-$(params.eventID) \
+        -n $(params.namespace) --timeout=600s

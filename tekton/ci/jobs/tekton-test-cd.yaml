@@ -61,6 +61,14 @@ spec:
         value: "labels.yaml"
       - name: configmapDescription
         value: "github-labels"
+  - name: wait-for-status
+    taskRef:
+      name: tekton-cd-monitor-configmap-cd
+    params:
+      - name: eventID
+        value: $(tasks.deploy-configmaps.results.event-listener-event-id)
+      - name: namespace
+        value: $(params.namespace)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
