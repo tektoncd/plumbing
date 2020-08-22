@@ -187,6 +187,8 @@ spec:
           value: $(tt.params.gitHubCommand)
         - name: folders
           value: buildbot/config mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
+        - name: userAgent
+          value: $(tt.params.userAgent)
       resources:
       - name: source
         resourceSpec:
