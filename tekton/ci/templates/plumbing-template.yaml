@@ -126,7 +126,7 @@ spec:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-tkn-build
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
-        tekton.dev/kind: ci-infra
+        tekton.dev/kind: ci
       annotations:
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
@@ -207,7 +207,7 @@ spec:
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-test-tekton-ci
-        tekton.dev/kind: ci
+        tekton.dev/kind: ci-infra
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
