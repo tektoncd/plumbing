@@ -376,7 +376,7 @@ presubmits:
         - "--integration-tests"
   - name: pull-tekton-cli-go-coverage
     labels:
-      preset-github-tekon: "true"
+      preset-github-token: "true"
     agent: kubernetes
     always_run: true
     decorate: true
