@@ -97,6 +97,11 @@ default:
       name: area/performance
       target: both
       addedBy: label
+    - color: 8822ee
+      description: Issues or PRs that are related to demos.
+      name: area/demo
+      target: both
+      addedBy: label
 
     # Kinds
     - color: d876e3
