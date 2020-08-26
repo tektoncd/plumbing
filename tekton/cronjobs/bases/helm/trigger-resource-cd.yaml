@@ -16,6 +16,7 @@ kind: CronJob
 metadata:
   name: helm-cd-trigger
 spec:
+  suspend: true
   schedule: "12 * * * *"  # Houly at *:12
   jobTemplate:
     spec:

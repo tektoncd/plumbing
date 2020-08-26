@@ -16,6 +16,7 @@ kind: CronJob
 metadata:
   name: image-build-cron-trigger
 spec:
+  suspend: true
   schedule: "0 2 * * *"  # Daily at 2am
   jobTemplate:
     spec:

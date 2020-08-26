@@ -18,6 +18,7 @@ metadata:
 spec:
   schedule: "0 2 * * *"  # Daily at 2am
   jobTemplate:
+    suspend: true
     spec:
       template:
         spec:
