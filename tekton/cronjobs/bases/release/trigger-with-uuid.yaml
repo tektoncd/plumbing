@@ -16,9 +16,9 @@ kind: CronJob
 metadata:
   name: nightly-cron-trigger
 spec:
+  suspend: true
   schedule: "0 2 * * *"  # Daily at 2am
   jobTemplate:
-    suspend: true
     spec:
       template:
         spec:
