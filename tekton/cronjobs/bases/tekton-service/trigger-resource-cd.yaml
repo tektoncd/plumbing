@@ -16,10 +16,10 @@ kind: CronJob
 metadata:
   name: tekton-release-cd-trigger
 spec:
+  suspend: true
   schedule: "12 * * * *"  # Houly at *:12
   jobTemplate:
     spec:
-      suspend: true
       template:
         spec:
           volumes:
