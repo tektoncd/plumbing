@@ -21,7 +21,7 @@ spec:
               - name: NAMESPACE
                 value: "tektonci"
               - name: CLUSTER_RESOURCE
-                value: "dogfooding-tektonci-default"
+                value: "af-tekton-cadmin"
               - name: CONFIGMAP_NAME
                 value: "label-config-v2"
               - name: CONFIGMAP_KEY
