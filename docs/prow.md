@@ -178,11 +178,10 @@ These values have been removed from the original
 cluster so that Prow can trigger the execution of
 [`PipelineRuns`](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md).
 
-[Since Prow only works with select versions of Tekton Pipelines](https://github.com/kubernetes/test-infra/issues/13948)
-the version currently installed in the cluster is v0.3.1:
+Prow supports pipelines v1alpha1 up to v0.13.1:
 
 ```bash
-kubectl apply --filename  https://storage.googleapis.com/tekton-releases/previous/v0.3.1/release.yaml
+kubectl apply --filename  https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.13.1/release.yaml
 ```
 
 _See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)._
