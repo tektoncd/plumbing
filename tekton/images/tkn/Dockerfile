@@ -14,6 +14,6 @@
 FROM alpine:3.11
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ARG TKN_VERSION=0.11.0
+ARG TKN_VERSION=0.12.0
 
 RUN wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar zxf - -C /usr/local/bin
