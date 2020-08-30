@@ -57,12 +57,15 @@ spec:
           - name: KUBECONFIG
             value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
         steps:
+        - name: hello-digital-developer-conference
+          image: busybox
+          script:
+            echo 'Hello everyone!'
         - name: fetch-current-config
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
-            set -e
-            set +x
+            set -ex
             kubectl get configmap -n $(params.namespace) \
               $(params.configMapName) -o template \
               --template='{{ index .data "$(params.configMapKey)" }}' > \
@@ -84,15 +87,16 @@ spec:
             echo "diff [current-config] [new config]"
             has_diff=0
             diff /workspace/$(params.configMapKey) \
-              $(resources.inputs.source.path)/$(params.configPath) 2> /dev/null || has_diff=1
+              $(resources.inputs.source.path)/$(params.configPath) || has_diff=1
             if [ $has_diff -eq 0 ]; then
+              echo "No change in config detected. Nothing to be done."
               exit 0
             fi
             # Apply configuration changes
             kubectl create configmap $(params.configMapName) \
               --from-file=$(params.configMapKey)=$(resources.inputs.source.path)/$(params.configPath) \
               --dry-run -o yaml | \
-              kubectl replace configmap $(params.configMapName) -n $(params.namespace) -f - 2> /dev/null
+              kubectl replace configmap $(params.configMapName) -n $(params.namespace) -f -
       params:
       - name: configPath
         value: $(tt.params.configPath)
