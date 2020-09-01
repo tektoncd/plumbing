@@ -15,8 +15,6 @@
           value: gcr.io/tekton-nightly
         - name: versionTag
           value: $(tt.params.versionTag)
-        - name: bucketName
-          value: latest
         resources:
         - name: dashboard-source-repo
           resourceSpec:
