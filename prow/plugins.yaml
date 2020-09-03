@@ -48,6 +48,8 @@ plugins:
   - release-note
   tektoncd/operator:
   - release-note
+  tektoncd/triggers:
+  - release-note
 
 external_plugins:
   tektoncd:
