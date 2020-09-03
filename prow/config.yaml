@@ -1092,6 +1092,7 @@ postsubmits:
   - name: post-tekton-operator-go-coverage
     branches:
     - master
+    - main
     agent: kubernetes
     decorate: true
     spec:
