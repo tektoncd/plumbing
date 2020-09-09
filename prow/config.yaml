@@ -662,6 +662,11 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
+        env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
+        securityContext:
+          privileged: true
   - name: pull-tekton-operator-unit-tests
     labels:
       preset-presubmit-sh: "true"
