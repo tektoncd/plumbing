@@ -155,7 +155,6 @@ spec:
       - name: boskos
         image: gcr.io/k8s-staging-boskos/boskos:v20200819-984516e
         args:
-        - --storage=/store/boskos.json
         - --config=/etc/config/config
         - --namespace=test-pods
         ports:
