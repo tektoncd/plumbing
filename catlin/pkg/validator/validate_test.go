@@ -18,13 +18,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tektoncd/plumbing/catlin/pkg/app"
-	"github.com/tektoncd/plumbing/catlin/pkg/parser"
-	"go.uber.org/zap"
 	"gotest.tools/v3/assert"
+
+	"github.com/tektoncd/plumbing/catlin/pkg/parser"
+	"github.com/tektoncd/plumbing/catlin/pkg/test"
 )
 
-var validTask = `
+const (
+	validTask = `
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -43,12 +44,14 @@ spec:
     A para about this valid task
 
   steps:
-  - name: hello
-    image: ubuntu:latest
-    command: [sleep, infinity]
+    - name: hello
+      image: abc.io/ubuntu:1.0
+      command: [sleep, infinity]
+    - name: foo-bar
+      image: abc.io/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
 `
 
-var validPipeline = `
+	validPipeline = `
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -71,25 +74,10 @@ spec:
     taskRef:
       name: hello
 `
-
-type TestConfig struct {
-	log *zap.Logger
-}
-
-var _ app.CLI = (*TestConfig)(nil)
-
-func (t *TestConfig) Logger() *zap.Logger {
-	return t.log
-}
-
-func (t *TestConfig) Stream() *app.Stream {
-	return nil
-}
+)
 
 func TestContentValidator_Task(t *testing.T) {
-	log, _ := zap.NewDevelopment()
-
-	tc := &TestConfig{log: log}
+	tc := test.New()
 
 	r := strings.NewReader(validTask)
 	parser := parser.ForReader(r)
@@ -100,15 +88,12 @@ func TestContentValidator_Task(t *testing.T) {
 	v := NewContentValidator(tc, res)
 	result := v.Validate()
 
-	//t.Logf("%v", result.Lints)
 	assert.Equal(t, 0, result.Errors)
 	assert.Equal(t, 0, len(result.Lints))
 }
 
 func TestContentValidator_Pipeline(t *testing.T) {
-	log, _ := zap.NewDevelopment()
-
-	tc := &TestConfig{log: log}
+	tc := test.New()
 
 	r := strings.NewReader(validPipeline)
 	parser := parser.ForReader(r)
@@ -117,6 +102,21 @@ func TestContentValidator_Pipeline(t *testing.T) {
 	assert.NilError(t, err)
 
 	v := NewContentValidator(tc, res)
+	result := v.Validate()
+
+	assert.Equal(t, 0, result.Errors)
+	assert.Equal(t, 0, len(result.Lints))
+}
+
+func TestValidatorForKind_Task(t *testing.T) {
+
+	r := strings.NewReader(validTask)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	v := ForKind(res)
 	result := v.Validate()
 
 	assert.Equal(t, 0, result.Errors)

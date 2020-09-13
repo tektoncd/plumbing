@@ -3,6 +3,7 @@ module github.com/tektoncd/plumbing/catlin
 go 1.14
 
 require (
+	github.com/google/go-containerregistry v0.1.1
 	github.com/spf13/cobra v1.0.0
 	github.com/tektoncd/pipeline v0.15.2
 	go.uber.org/zap v1.15.0

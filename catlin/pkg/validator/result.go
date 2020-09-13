@@ -36,10 +36,11 @@ const (
 	Error Kind = iota
 	Warning
 	Recommendation
+	Info
 )
 
 func (t Kind) String() string {
-	return [...]string{"error", "warning", "recommendation"}[t]
+	return [...]string{"error", "warning", "recommendation", "info"}[t]
 }
 
 type Lint struct {
@@ -72,6 +73,10 @@ func (r *Result) Warn(format string, args ...interface{}) {
 
 func (r *Result) Recommend(format string, args ...interface{}) {
 	r.add(Recommendation, format, args...)
+}
+
+func (r *Result) Info(format string, args ...interface{}) {
+	r.add(Info, format, args...)
 }
 
 func (r *Result) Append(other Result) {

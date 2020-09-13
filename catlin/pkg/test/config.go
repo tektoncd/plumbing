@@ -12,33 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package validator
+package test
 
 import (
-	"github.com/tektoncd/plumbing/catlin/pkg/parser"
+	"go.uber.org/zap"
+
+	"github.com/tektoncd/plumbing/catlin/pkg/app"
 )
 
-type Validator interface {
-	Validate() Result
+type testConfig struct {
+	log *zap.Logger
 }
 
-func ForKind(res *parser.Resource) Validator {
-	switch res.Kind {
-	case "Task":
-		return NewTaskValidator(res)
-	default:
-		return &noopValidator{kind: res.Kind}
+var _ app.CLI = (*testConfig)(nil)
+
+func New() *testConfig {
+	log, _ := zap.NewDevelopment()
+	return &testConfig{
+		log: log,
 	}
 }
 
-type noopValidator struct {
-	kind string
+func (t *testConfig) Logger() *zap.Logger {
+	return t.log
 }
 
-var _ Validator = (*noopValidator)(nil)
-
-func (v *noopValidator) Validate() Result {
-	r := Result{}
-	r.Info("no validator specific to kind %s", v.kind)
-	return r
+func (t *testConfig) Stream() *app.Stream {
+	return nil
 }

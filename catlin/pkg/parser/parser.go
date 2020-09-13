@@ -58,6 +58,10 @@ func (r *Resource) Version() string {
 	return v
 }
 
+func (r *Resource) ToType() (interface{}, error) {
+	return convertToTyped(r.Unstructured)
+}
+
 type Parser interface {
 	Parse() (*Resource, error)
 }
@@ -106,7 +110,7 @@ func (t *TektonParser) Parse() (*Resource, error) {
 		}
 	}
 
-	if err := convertToTyped(res); err != nil {
+	if _, err := convertToTyped(res); err != nil {
 		return nil, err
 	}
 
@@ -118,21 +122,22 @@ func (t *TektonParser) Parse() (*Resource, error) {
 	}, nil
 }
 
-func convertToTyped(u *unstructured.Unstructured) error {
+func convertToTyped(u *unstructured.Unstructured) (interface{}, error) {
 	t, err := typeForKind(u.GetKind())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, t); err != nil {
-		return err
+		return nil, err
 	}
 
 	t.SetDefaults(context.Background())
 	if fe := t.Validate(context.Background()); !isEmptyFieldError(fe) {
-		return fe
+		return nil, fe
 	}
-	return nil
+
+	return t, nil
 }
 
 func isEmptyFieldError(fe *apis.FieldError) bool {
