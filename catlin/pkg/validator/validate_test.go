@@ -21,7 +21,6 @@ import (
 	"gotest.tools/v3/assert"
 
 	"github.com/tektoncd/plumbing/catlin/pkg/parser"
-	"github.com/tektoncd/plumbing/catlin/pkg/test"
 )
 
 const (
@@ -77,7 +76,6 @@ spec:
 )
 
 func TestContentValidator_Task(t *testing.T) {
-	tc := test.New()
 
 	r := strings.NewReader(validTask)
 	parser := parser.ForReader(r)
@@ -85,7 +83,7 @@ func TestContentValidator_Task(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(tc, res)
+	v := NewContentValidator(res)
 	result := v.Validate()
 
 	assert.Equal(t, 0, result.Errors)
@@ -93,7 +91,6 @@ func TestContentValidator_Task(t *testing.T) {
 }
 
 func TestContentValidator_Pipeline(t *testing.T) {
-	tc := test.New()
 
 	r := strings.NewReader(validPipeline)
 	parser := parser.ForReader(r)
@@ -101,7 +98,7 @@ func TestContentValidator_Pipeline(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(tc, res)
+	v := NewContentValidator(res)
 	result := v.Validate()
 
 	assert.Equal(t, 0, result.Errors)
