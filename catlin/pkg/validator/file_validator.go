@@ -18,21 +18,18 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tektoncd/plumbing/catlin/pkg/app"
 	"github.com/tektoncd/plumbing/catlin/pkg/parser"
-	"go.uber.org/zap"
 )
 
 type PathValidator struct {
 	path string
-	log  *zap.SugaredLogger
 	res  *parser.Resource
 }
 
 var _ Validator = (*PathValidator)(nil)
 
-func NewPathValidator(cli app.CLI, r *parser.Resource, path string) *PathValidator {
-	return &PathValidator{path: path, res: r, log: cli.Logger().Sugar()}
+func NewPathValidator(r *parser.Resource, path string) *PathValidator {
+	return &PathValidator{path: path, res: r}
 }
 
 func (v *PathValidator) Validate() Result {
@@ -50,10 +47,6 @@ func (v *PathValidator) Validate() Result {
 	}
 
 	expectedPath := filepath.Join(kind, name, version, name+".yaml")
-
-	//v.log.Infof("name: %s | kind: %s | version: %s", name, kind, version)
-	//v.log.Infof("abspath: %s", absPath)
-	//v.log.Infof("expectedPath: %s", expectedPath)
 
 	if !strings.HasSuffix(absPath, expectedPath) {
 		result.Error("Resource path is invalid; expected path: %s", expectedPath)

@@ -18,22 +18,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tektoncd/plumbing/catlin/pkg/app"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"github.com/tektoncd/plumbing/catlin/pkg/consts"
 	"github.com/tektoncd/plumbing/catlin/pkg/parser"
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type ContentValidator struct {
 	res *parser.Resource
-	log *zap.SugaredLogger
 }
 
 var _ Validator = (*ContentValidator)(nil)
 
-func NewContentValidator(cli app.CLI, r *parser.Resource) *ContentValidator {
-	return &ContentValidator{res: r, log: cli.Logger().Sugar()}
+func NewContentValidator(r *parser.Resource) *ContentValidator {
+	return &ContentValidator{res: r}
 }
 
 func (v *ContentValidator) Validate() Result {

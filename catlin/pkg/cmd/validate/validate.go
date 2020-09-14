@@ -74,8 +74,8 @@ func validate(cli app.CLI, path string) error {
 
 	// run validators
 	validators := []validator.Validator{
-		validator.NewPathValidator(cli, res, path),
-		validator.NewContentValidator(cli, res),
+		validator.NewPathValidator(res, path),
+		validator.NewContentValidator(res),
 		validator.ForKind(res),
 	}
 
