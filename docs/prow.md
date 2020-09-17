@@ -105,7 +105,7 @@ kubectl apply -f prow/ingress.yaml
 To see the IP of the ingress in the new cluster:
 
 ```bash
-kubectl get ingres ing
+kubectl get ingress ing
 ```
 
 You should be able to navigate to this endpoint in your browser and see the Prow landing page.
