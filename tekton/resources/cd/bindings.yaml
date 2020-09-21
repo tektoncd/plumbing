@@ -124,11 +124,20 @@ spec:
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: configmap-deploy-details
+  name: cd-pipeline-type
 spec:
   params:
-  - name: gitResource
-    value: $(body.taskRun.spec.resources.inputs[?(@.name == 'source')].resourceRef.name)
+  - name: cdPipelineType
+    value: $(body.taskRun.metadata.labels.triggers\.tekton\.dev/trigger)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: cd-pipeline-type-nightly
+spec:
+  params:
+  - name: cdPipelineType
+    value: "nightly release"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -136,10 +145,25 @@ metadata:
   name: taskrun-meta
 spec:
   params:
-  - name: taskRunName
+  - name: runName
     value: $(body.taskRun.metadata.name)
-  - name: taskRunNamespace
+  - name: runNamespace
     value: $(body.taskRun.metadata.namespace)
+  - name: runKind
+    value: taskrun
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: pipelinerun-meta
+spec:
+  params:
+  - name: runName
+    value: $(body.pipelineRun.metadata.name)
+  - name: runNamespace
+    value: $(body.pipelineRun.metadata.namespace)
+  - name: runKind
+    value: pipelinerun
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding

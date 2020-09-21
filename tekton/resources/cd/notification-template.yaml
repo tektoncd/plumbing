@@ -14,17 +14,19 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: configmap-deploy-failed-slack
+  name: cd-pipeline-failed-slack
 spec:
   params:
-  - name: taskRunName
+  - name: runName
     description: The name of the TaskRun
-  - name: taskRunNamespace
+  - name: runNamespace
     description: The namespace of the TaskRun
+  - name: runKind
+    description: The kind of Run (taskrun or pipelinerun)
   - name: dashboardBaseURL
     description: The base URL of the Tekton dashboard
-  - name: gitResource
-    description: The git sha of the deployed resource
+  - name: cdPipelineType
+    description: The type of CD pipeline
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
@@ -38,5 +40,5 @@ spec:
           value: robocat-slack-app-webhook
         - name: message
           value: >-
-            :boom: The TaskRun <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/taskruns/$(tt.params.taskRunName)|$(tt.params.taskRunNamespace)/$(tt.params.taskRunName)>
-            failed to deploy <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/pipelineresources/$(tt.params.gitResource)|$(tt.params.taskRunNamespace)/$(tt.params.gitResource)>
+            :boom: $(tt.params.cdPipelineType) CD Pipeline failed. See the $(tt.params.runKind) <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/$(tt.params.runKind)s/$(tt.params.runName)|$(tt.params.runNamespace)/$(tt.params.runName)>
+            for logs and details.
