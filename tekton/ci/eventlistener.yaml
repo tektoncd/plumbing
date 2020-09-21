@@ -63,10 +63,10 @@ spec:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
-        - ref: tekton-ci-webhook-pr-labels
+        - ref: tekton-ci-webhook-issue-labels
       template:
-        name: tekton-plumbing-ci-pipeline
-    - name: all-pull-request-check-pr-labels
+        name: tekton-all-ci-pipeline
+    - name: all-pull-request-ci
       interceptors:
         - github:
             secretRef:
@@ -82,15 +82,12 @@ spec:
                body.action == 'synchronize' ||
                body.action == 'labeled' ||
                body.action == 'unlabeled')
-            overlays:
-            - key: extensions.pr_number
-              expression: body.pull_request.html_url.split('/')[size(body.pull_request.html_url.split('/'))-1]
       bindings:
         - ref: tekton-ci-github-base
-        - ref: tekton-ci-pr-number-extension
+        - ref: tekton-ci-webhook-pull-request
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: check-pull-request-labels
+        name: tekton-all-ci-pipeline
     - name: cd-trigger
       interceptors:
         - github:
