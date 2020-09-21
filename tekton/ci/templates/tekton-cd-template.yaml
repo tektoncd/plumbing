@@ -1,0 +1,38 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-cd-triggers
+  namespace: tektonci
+spec:
+  params:
+  - name: buildUUID
+    description: UUID used to track a CI Pipeline Run in logs
+  - name: package
+    description: org/repo
+  - name: pullRequestNumber
+    description: The pullRequestNumber
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: gitHubCommand
+    description: |
+      The GitHub command that was used a trigger. This is only available when
+      this template is triggered by a comment. The default value is for the
+      case of a pull_request event.
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: cd-echo-test-$(uid)
+      labels:
+        tekton.dev/kind: cd
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      taskSpec:
+        steps:
+        - name: echo
+          image: busybox
+          script: |
+            echo "Executing $(tt.params.gitHubCommand)"
