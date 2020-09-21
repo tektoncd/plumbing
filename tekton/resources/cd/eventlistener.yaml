@@ -85,19 +85,32 @@ spec:
   serviceAccountName: tektoncd
   replicas: 3
   triggers:
-    - name: configmap-deploy-failed
+    - name: cd-pipeline-failed
       interceptors:
         - cel:
             filter: >-
               header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] == 'configmaps'
+              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] in ['configmaps', 'folders', 'helm']
       bindings:
-      - ref: configmap-deploy-details
+      - ref: cd-pipeline-type
       - ref: taskrun-meta
       - ref: dashboard-url-dogfooding
       template:
-        name: configmap-deploy-failed-slack
+        name: cd-pipeline-failed-slack
+    - name: cd-pipeline-nightly-release-failed
+      interceptors:
+        - cel:
+            filter: >-
+              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'].endsWith('nightly-release-cron') &&
+              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'].endsWith('nightly-release-cron-trigger')
+      bindings:
+      - ref: cd-pipeline-type-nightly
+      - ref: pipelinerun-meta
+      - ref: dashboard-url-dogfooding
+      template:
+        name: cd-pipeline-failed-slack
     - name: github-check-start
       interceptors:
         - cel:
