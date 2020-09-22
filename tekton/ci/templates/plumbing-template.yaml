@@ -343,6 +343,45 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
+      name: plumbing-openssh-server-build-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/check-name: plumbing-openssh-server-build
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-image-build
+      params:
+        - name: imageName
+          value: openssh-server
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/openssh-server/**"
+        - name: checkName
+          value: plumbing-openssh-server-build
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(tt.params.gitRevision)
+          - name: url
+            value: $(tt.params.gitRepository)
+          - name: depth
+            value: $(tt.params.gitCloneDepth)
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
       name: tekton-yamllint-$(uid)
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
