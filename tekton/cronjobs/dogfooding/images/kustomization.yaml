@@ -5,6 +5,7 @@ resources:
 - ko-gcloud-nightly
 - ko-nightly
 - kubectl-nightly
+- openssh-server-nightly
 - pipeline-test-runner-nightly
 - skopeo-nightly
 - tkn-nightly
