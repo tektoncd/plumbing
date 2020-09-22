@@ -1051,3 +1051,16 @@ spec:
       - name: plugins
         configMap:
           name: plugins
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: needs-rebase
+spec:
+  selector:
+    app: needs-rebase
+  ports:
+  - port: 80
+    targetPort: 8888
+  type: NodePort
