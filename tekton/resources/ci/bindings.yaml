@@ -6,14 +6,12 @@ spec:
   params:
   - name: pullRequestNumber
     value: $(body.taskRun.metadata.labels.tekton\.dev/pr-number)
-  - name: gitURL
-    value: $(body.taskRun.metadata.annotations.tekton\.dev/gitURL)
+  - name: gitRevision
+    value: $(body.taskRun.metadata.annotations.tekton\.dev/gitRevision)
   - name: buildUUID
     value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
   - name: checkName
     value: $(body.taskRun.metadata.labels.tekton\.dev/check-name)
-  - name: checkResult
-    value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
   - name: taskRunName
     value: $(body.taskRun.metadata.name)
   - name: taskRunNamespace
@@ -25,21 +23,32 @@ metadata:
   name: tekton-ci-check-pending
 spec:
   params:
-  - name: checkStatus
+  - name: gitHubCheckStatus
     value: pending
-  - name: checkDescription
+  - name: gitHubCheckDescription
     value: "Job Triggered."
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: tekton-ci-check-complete
+  name: tekton-ci-check-success
 spec:
   params:
-  - name: checkStatus
-    value: complete
-  - name: checkDescription
-    value: "Job Finished."
+  - name: gitHubCheckStatus
+    value: success
+  - name: gitHubCheckDescription
+    value: "Job Successful."
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-check-failure
+spec:
+  params:
+  - name: gitHubCheckStatus
+    value: failure
+  - name: gitHubCheckDescription
+    value: "Job Failed."
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -51,3 +60,12 @@ spec:
     value: $(body.taskRun.metadata.ownerReferences[?(@.kind == 'PipelineRun')].name)
   - name: parentPipelineRunTaskName
     value: $(body.taskRun.metadata.labels.tekton\.dev/pipelineTask)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-overlays
+spec:
+  params:
+  - name: gitHubRepo
+    value: $(body.extensions.repo)

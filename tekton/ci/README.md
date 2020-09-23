@@ -234,6 +234,7 @@ downstream CEL filters to work correctly.
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
         prow.k8s.io/build-id: $(tt.params.buildUUID)
       annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       serviceAccountName: tekton-ci-jobs

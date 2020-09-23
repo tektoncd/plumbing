@@ -38,6 +38,7 @@ spec:
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       pipelineRef:

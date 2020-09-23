@@ -9,16 +9,16 @@ spec:
     description: The pullRequestID to comment to
   - name: buildUUID
     description: The buildUUID for the logs link
-  - name: gitURL
-    description: The gitURL (https://org/repo)
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
   - name: checkName
     description: Name of the CI Job (GitHub Check)
-  - name: checkStatus
-    description: Can be 'pending' or 'complete'
-  - name: checkDescription
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
     description: A description to be displayed for the status of the check
-  - name: checkResult
-    description: Whether the triggering event was successful or not
   - name: taskRunName
     description: The name of the task run that triggered this
   - name: taskRunNamespace
@@ -33,7 +33,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: $(tt.params.checkName)-pr-$(tt.params.checkStatus)-$(uid)
+      name: $(tt.params.checkName)-pr-$(tt.params.gitHubCheckStatus)-$(uid)
       namespace: tektonci
     spec:
       serviceAccountName: tekton-ci-jobs
@@ -41,94 +41,22 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 1001
-      taskSpec:
-        resources:
-          inputs:
-            - name: pr
-              type: pullRequest
-          outputs:
-            - name: pr
-              type: pullRequest
-        steps:
-        - name: copy-pr-to-output
-          image: busybox
-          script: |
-            #!/bin/sh
-            mkdir -p $(resources.outputs.pr.path)
-            cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
-        - name: update-check-status
-          image: python:3-alpine
-          script: |
-            #!/usr/bin/env python
-            import json
-            import random
-            import sys
-
-            check_status = "$(tt.params.checkStatus)"
-            if "$(tt.params.parentPipelineRunName)" == "":
-              resource_path = "taskruns/$(tt.params.taskRunName)"
-            else:
-              resource_path = "pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)"
-
-            if ("$(tt.params.checkResult)" == "True"):
-              check_status = "success"
-            elif ("$(tt.params.checkResult)" == "False"):
-              check_status = "failure"
-            elif ("$(tt.params.checkResult)" != "Unknown"):
-              check_status = "error"
-            logs_url = 'https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/' + resource_path
-
-            # Build Status
-            status_body = dict(
-              State=check_status,
-              Label="$(tt.params.checkName)",
-              Desc="$(tt.params.checkDescription)",
-              Target=logs_url)
-
-            # we may need to URLEncode the check name
-            status_path = "$(resources.outputs.pr.path)/status/$(tt.params.checkName).json"
-            try:
-              with open(status_path, "r") as status:
-                old_status = json.load(status)
-                print("Previous status: {}".format(old_status))
-            except FileNotFoundError:
-              # There is no previous status. Just continue.
-              old_status = dict(Label="", Desc="", Target="")
-
-            # Detect race condition. It may be that the "start" event is processed after
-            # the "complete" one. This does not eliminate the possibility of race as the two
-            # update jobs may still run in parallel, but it reduces the chances considerably.
-            if (status_body['State'] in ['success', 'failure', 'error'] and
-                  status_body['Label'] == old_status['Label'] and
-                  status_body['Desc'] == old_status['Desc'] and
-                  status_body['Target'] == old_status['Target']):
-                # A matching complete was already done, stop here.
-                sys.exit(0)
-
-            with open(status_path, "w") as status:
-              json.dump(status_body, status)
-
-            print("New status: {}".format(status_body))
-      resources:
-        inputs:
-          - name: pr
-            resourceSpec:
-              type: pullRequest
-              params:
-                - name: url
-                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
-              secrets:
-                - fieldName: authToken
-                  secretName: bot-token-github
-                  secretKey: bot-token
-        outputs:
-          - name: pr
-            resourceSpec:
-              type: pullRequest
-              params:
-                - name: url
-                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestNumber)
-              secrets:
-                - fieldName: authToken
-                  secretName: bot-token-github
-                  secretKey: bot-token
+      taskRef:
+        name: github-set-status
+      params:
+        - name: REPO_FULL_NAME
+          value: $(tt.params.gitHubRepo)
+        - name: SHA
+          value: $(tt.params.gitRevision)
+        - name: TARGET_URL
+          value: https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
+        - name: DESCRIPTION
+          value: $(tt.params.gitHubCheckDescription)
+        - name: CONTEXT
+          value: $(tt.params.checkName)
+        - name: STATE
+          value: $(tt.params.gitHubCheckStatus)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: bot-token-github
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: bot-token
