@@ -374,6 +374,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+        env:
+        - name: RELEASE_YAML
+          value: https://github.com/tektoncd/pipeline/releases/download/v0.10.2/release.yaml
   - name: pull-tekton-cli-go-coverage
     labels:
       preset-github-token: "true"
