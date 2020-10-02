@@ -62,10 +62,11 @@ kind create cluster --name tekton
 
 # Install Tekton
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
-kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml 
+kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
 kubectl apply -f https://github.com/tektoncd/dashboard/releases/download/${TEKTON_DASHBOARD_VERSION}/tekton-dashboard-release.yaml
 
-# Wait just a bit, to wait for the service to be running
+# Wait until all pods are ready
 sleep 10
+kubectl wait -n tekton-pipelines --for=condition=ready pods --all
 kubectl port-forward service/tekton-dashboard -n tekton-pipelines 9097:9097 &> kind-tekton-dashboard.log &
 echo “Tekton Dashboard available at http://localhost:9097”
