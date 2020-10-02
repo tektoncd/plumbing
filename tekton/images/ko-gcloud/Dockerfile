@@ -36,7 +36,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 # Install ko
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go get github.com/google/ko/cmd/ko@v0.5.1
+RUN go get github.com/google/ko/cmd/ko@v0.6.0
 
 # Get Kubectl and Kustomize from the build image
 COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl
