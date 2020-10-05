@@ -1,0 +1,63 @@
+name: build pipeline base image
+
+on:
+  workflow_dispatch:
+    inputs:
+      pathToProject:
+        description: 'path to project'
+        required: true
+        default: 'github.com/tektoncd/pipeline'
+      imageRegistry:
+        description: 'image registry'
+        required: true
+        default: 'gcr.io/tekton-nightly'
+      url:
+        description: 'url'
+        required: true
+        default: 'build-base:latest'
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: github_actions_base_pipeline
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+          install: true
+
+      - name: Set up gcloud
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '290.0.1'
+          service_account_key: ${{ secrets.GKE_SA_KEY }}
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      - name: Configure docker to use gcloud
+        run: |-
+          gcloud --quiet auth configure-docker
+
+      - name: Checkout pipeline repo
+        uses: actions/checkout@v2
+        with:
+          repository: tektoncd/pipeline
+          path: pipeline
+
+      - name: Run Buildx
+        run: |
+          docker  build \
+            --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x \
+            --tag ${{ github.event.inputs.imageRegistry }}/${{ github.event.inputs.pathToProject }}/${{ github.event.inputs.url }} \
+            --push \
+            ./pipeline/images
