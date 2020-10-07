@@ -160,7 +160,12 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
-
+    - color: 8F0891
+      name: hacktoberfest-accepted
+      description: Categorizes issue or PR as one for Hacktoberfest 2020
+      target: both
+      prowPlugin: label
+      addedBy: humans
     # For further discussion in the next Productivity WG meeting
 
     # Would like to understand when this label should be used vs. using GitHub syntax or ZenHub
