@@ -40,5 +40,6 @@ spec:
           value: robocat-slack-app-webhook
         - name: message
           value: >-
-            :boom: $(tt.params.cdPipelineType) CD Pipeline failed. See the $(tt.params.runKind) <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.taskRunNamespace)/$(tt.params.runKind)s/$(tt.params.runName)|$(tt.params.runNamespace)/$(tt.params.runName)>
+            :boom: $(tt.params.cdPipelineType) CD Pipeline failed.
+            See the <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.runNamespace)/$(tt.params.runKind)s/$(tt.params.runName)|$(tt.params.runNamespace)/$(tt.params.runName)>
             for logs and details.
