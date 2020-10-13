@@ -55,9 +55,9 @@ spec:
   - name: s5
     image: gcr.io/foo/bar/baz:bar
   - name: s6
-    image: abc.io/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+    image: abc.io/fedora:1.0@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
   - name: s7
-    image: abc.io/xyz/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+    image: abc.io/xyz/fedora:v123@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
   - name: s8
     image: 172.16.3.4:3000/foo/bar:baz
 `
@@ -99,7 +99,7 @@ spec:
   - name: s6
     image: gcr.io/foo/bar/baz:latest
   - name: s7
-    image: abc.io/fedora:1.0@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+    image: abc.io/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
   - name: s8
     image: abc.io/fedora:latest@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
   - name: s9
@@ -176,11 +176,11 @@ func TestTaskValidator_InvalidImageRef(t *testing.T) {
 
 	// image with digest and a tag
 	assert.Equal(t, Warning, lints[8].Kind)
-	assert.Equal(t, `Step "s7" uses image "abc.io/fedora:1.0@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f"; consider using digest over tags as tags are mutable`, result.Lints[8].Message)
+	assert.Equal(t, `Step "s7" uses image "abc.io/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f"; consider using a image tagged with specific version along with digest eg. abc.io/img:v1@sha256:abcde`, result.Lints[8].Message)
 
 	// image with digest and latest tag
 	assert.Equal(t, Warning, lints[9].Kind)
-	assert.Equal(t, `Step "s8" uses image "abc.io/fedora:latest@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f"; consider using digest over tags as tags are mutable`, result.Lints[9].Message)
+	assert.Equal(t, `Step "s8" uses image "abc.io/fedora:latest@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f"; consider using a image tagged with specific version along with digest eg. abc.io/img:v1@sha256:abcde`, result.Lints[9].Message)
 
 	// image with invalid digest
 	assert.Equal(t, Error, lints[10].Kind)

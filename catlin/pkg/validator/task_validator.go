@@ -80,8 +80,8 @@ func (t *taskValidator) validateStep(s v1beta1.Step) Result {
 			return result
 		}
 
-		if tagHasDigest(rep.String()) {
-			result.Warn("Step %q uses image %q; consider using digest over tags as tags are mutable", step, img)
+		if !tagWithDigest(rep.String()) {
+			result.Warn("Step %q uses image %q; consider using a image tagged with specific version along with digest eg. abc.io/img:v1@sha256:abcde", step, img)
 		}
 
 		return result
@@ -116,7 +116,11 @@ func isValidRegistry(img string) bool {
 	return strings.Contains(repo, ".")
 }
 
-func tagHasDigest(img string) bool {
+// tagWithDigest validates if image has a specific tag along with digest
+func tagWithDigest(img string) bool {
 	withOutDigest := strings.Split(img, "@sha256")[0]
-	return strings.Contains(withOutDigest, ":")
+	if strings.Contains(withOutDigest, ":") && !strings.Contains(withOutDigest, ":latest") {
+		return true
+	}
+	return false
 }
