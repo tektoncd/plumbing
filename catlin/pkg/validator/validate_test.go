@@ -47,7 +47,7 @@ spec:
       image: abc.io/ubuntu:1.0
       command: [sleep, infinity]
     - name: foo-bar
-      image: abc.io/fedora@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+      image: abc.io/fedora:1.0@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
 `
 
 	validPipeline = `
