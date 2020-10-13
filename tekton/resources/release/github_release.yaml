@@ -122,7 +122,8 @@ spec:
 
         # First process pull requests that have release notes
         # Extract the release notes but drop lines that match an unmodified PR template
-        grep -v "release-note-none" $HOME/pr.csv | while read pr; do
+        # || true in case all PRs are "release-note-none"
+        grep -v "release-note-none" $HOME/pr.csv || true | while read pr; do
           PR_NUM=$(echo $pr | cut -d';' -f2)
           PR_RELEASE_NOTES_B64=$(wget -O- https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
             jq .body -r | grep -oPz '(?s)(?<=```release-note..)(.+?)(?=```)' | \
@@ -133,7 +134,8 @@ spec:
         done
 
         # Copy pull requests without release notes to a dedicated file
-        grep "release-note-none" $HOME/pr.csv > $HOME/pr-no-notes.csv
+        # || true in case no PRs have "release-note-none"
+        grep "release-note-none" $HOME/pr.csv || true > $HOME/pr-no-notes.csv
     - name: body
       image: busybox
       script: |
