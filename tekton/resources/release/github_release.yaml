@@ -84,7 +84,7 @@ spec:
 
         # UPPER_THRESHOLD is the newest sha we are interested in
         UPPER_THRESHOLD=$(inputs.resources.source.revision)
-        # COMMON_ANCESTOR is the common ancestore between the OLD_VERSION and UPPER_THRESHOLD
+        # COMMON_ANCESTOR is the common ancestor between the OLD_VERSION and UPPER_THRESHOLD
         COMMON_ANCESTOR=$(git merge-base ${OLD_VERSION} ${UPPER_THRESHOLD})
         # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from master
         OLD_RELEASE_SUBJECTS=$HOME/old_subjects.txt
@@ -105,6 +105,10 @@ spec:
         hub pr list --state merged -L 300 -f "%sm;%au;%i;%t;%L%n" | \
           while read pr; do
             SHA=$(echo $pr | cut -d';' -f1)
+            # Skip the common ancestor has it has already been released
+            if [ "$SHA" == "$COMMON_ANCESTOR" ]; then
+              continue
+            fi
             SUBJECT=$(git log -1 --format="%s" $SHA || echo "__NOT_FOUND__")
             git merge-base --is-ancestor $SHA $UPPER_THRESHOLD && \
             git merge-base --is-ancestor $COMMON_ANCESTOR $SHA && \
