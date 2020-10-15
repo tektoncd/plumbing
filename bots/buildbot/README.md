@@ -8,7 +8,6 @@ This folder holds the Slack buildcop bot code and configuration.
 Current buildcops are:
 - Andrea Frittoli @afrittoli (andrea.frittoli)
 - Billy Lynch @wlynch (wlynch)
-- Christie Wilson @bobcatfish (christiewilson)
 - Dibyo Mukherjee @dibyom (dibyo)
 - Nikhil Thomas @nikhil-thomas (nikthoma)
 - Savita Ashture @savitaashture (sashture)
@@ -24,7 +23,7 @@ Build cop access is given with [addpermissions.py](../addpermissions.py).
 ## Rotation
 
 * The rotation is stored in [rotation.csv](rotation.csv).
-* Update the rotation with [generate-rotation-csv](generate-rotation-csv).
+* Update the rotation with [generate-rotation-csv](cmd/generate-rotation-csv).
 
 ## Configuration
 
