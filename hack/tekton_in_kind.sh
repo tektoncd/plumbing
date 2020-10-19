@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu -o pipefail
+set -e -o pipefail
 
 declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION
 
@@ -67,6 +67,6 @@ kubectl apply -f https://github.com/tektoncd/dashboard/releases/download/${TEKTO
 
 # Wait until all pods are ready
 sleep 10
-kubectl wait -n tekton-pipelines --for=condition=ready pods --all
+kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=120s
 kubectl port-forward service/tekton-dashboard -n tekton-pipelines 9097:9097 &> kind-tekton-dashboard.log &
 echo “Tekton Dashboard available at http://localhost:9097”
