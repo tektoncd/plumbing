@@ -281,10 +281,43 @@ function default_integration_test_runner() {
   return ${failed}
 }
 
+# Run conformance tests. If there's no `conformance_tests` function, run the default
+# conformance test runner.
+function run_conformance_tests() {
+  (( ! RUN_CONFORMANCE_TESTS )) && return 0
+  header "Running conformance tests"
+  local failed=0
+  # Run pre-conformance tests, if any
+  if function_exists pre_conformance_tests; then
+    pre_conformance_tests || failed=1
+  fi
+  # Don't run conformance tests if pre-conformance tests failed
+  if (( ! failed )); then
+    if function_exists conformance_tests; then
+      conformance_tests || failed=1
+    else
+      default_conformance_test_runner || failed=1
+    fi
+  fi
+  # Don't run post-conformance tests if pre/conformance tests failed
+  if (( ! failed )) && function_exists post_conformance_tests; then
+    post_conformance_tests || failed=1
+  fi
+  results_banner "Conformance" ${failed}
+  return ${failed}
+}
+
+# Default conformance test runner that runs conformance tests in the `test` folder.
+# This runner also runs tests without a build tag in the `test` folder.
+function default_conformance_test_runner() {
+  report_go_test ./test -tags=conformance
+}
+
 # Options set by command-line flags.
 RUN_BUILD_TESTS=0
 RUN_UNIT_TESTS=0
 RUN_INTEGRATION_TESTS=0
+RUN_CONFORMANCE_TESTS=0
 EMIT_METRICS=0
 
 # Process flags and run tests accordingly.
@@ -330,11 +363,13 @@ function main() {
       --build-tests) RUN_BUILD_TESTS=1 ;;
       --unit-tests) RUN_UNIT_TESTS=1 ;;
       --integration-tests) RUN_INTEGRATION_TESTS=1 ;;
+      --conformance-tests) RUN_CONFORMANCE_TESTS=1 ;;
       --emit-metrics) EMIT_METRICS=1 ;;
       --all-tests)
         RUN_BUILD_TESTS=1
         RUN_UNIT_TESTS=1
         RUN_INTEGRATION_TESTS=1
+        RUN_CONFORMANCE_TESTS=1
         ;;
       --run-test)
         shift
@@ -349,6 +384,7 @@ function main() {
   readonly RUN_BUILD_TESTS
   readonly RUN_UNIT_TESTS
   readonly RUN_INTEGRATION_TESTS
+  readonly RUN_CONFORMANCE_TESTS
   readonly EMIT_METRICS
   readonly TEST_TO_RUN
 
@@ -359,7 +395,7 @@ function main() {
   local failed=0
 
   if [[ -n "${TEST_TO_RUN}" ]]; then
-    if (( RUN_BUILD_TESTS || RUN_UNIT_TESTS || RUN_INTEGRATION_TESTS )); then
+    if (( RUN_BUILD_TESTS || RUN_UNIT_TESTS || RUN_INTEGRATION_TESTS || RUN_CONFORMANCE_TESTS )); then
       abort "--run-test must be used alone"
     fi
     # If this is a presubmit run, but a documentation-only PR, don't run the test
@@ -375,6 +411,10 @@ function main() {
   # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run integration tests if build/unit tests failed
   if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
     run_integration_tests || failed=1
+  fi
+  # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run conformance tests if build/unit/integration tests failed
+  if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
+    run_conformance_tests || failed=1
   fi
 
   exit ${failed}
