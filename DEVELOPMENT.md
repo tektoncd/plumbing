@@ -70,6 +70,8 @@ kubectl create secret generic ci-webhook -n tektonci --from-literal=secret=$GITH
 # Expose the event listener via Smee
 kubectl port-forward service/el-tekton-ci-webhook -n tektonci 9999:8080 &> el-tekton-ci-webhook-pf.log &
 smee --target http://127.0.0.1:9999/ &> smee.log &
+# Wait for smee target ready
+sleep 2
 SMEE_TARGET=$(tail -1 smee.log | cut -d'/' -f3-)
 
 # Install a Task to create the webhook, create a secret used by it
