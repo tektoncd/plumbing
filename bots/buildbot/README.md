@@ -19,7 +19,7 @@ Other folks who are not build cops but have build cop access:
 - Sunil Thaha @sthaha
 - Priti Desai @pritidesai
 
-Build cop access is given with [addpermissions.py](../addpermissions.py).
+Build cop access is given with [addpermissions.py](../../addpermissions.py).
 
 ## Rotation
 
