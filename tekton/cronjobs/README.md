@@ -151,7 +151,7 @@ tekton
 │       └── Dockerfile
 ```
 
-1. Create a new kustomize folder with `kustomization.yaml` and `cronjob.yaml`.
+2. Create a new kustomize folder with `kustomization.yaml` and `cronjob.yaml`.
    Copy the content from an existing one, e.g. `tkn-image-nightly-build-cron`.
 
 ```bash
@@ -164,7 +164,7 @@ cronjobs
 │   │       └── kustomization.yaml
 ```
 
-1. Edit `cronjob.yaml`. Configure at least CONTEXT_PATH and TARGET_IMAGE.
+3. Edit `cronjob.yaml`. Configure at least CONTEXT_PATH and TARGET_IMAGE.
 
 ```yaml
 apiVersion: batch/v1beta1
@@ -193,7 +193,7 @@ spec:
               value: tekton/images/myimage
 ```
 
-1. Edit `kustomization.yaml`. Set the nameSuffix to identify the new cron job.
+4. Edit `kustomization.yaml`. Set the nameSuffix to identify the new cron job.
 
 ```yaml
 bases:
@@ -203,19 +203,25 @@ patchesStrategicMerge:
 nameSuffix: "-myimage"
 ```
 
-1. Apply your new job:
+5. Edit `tekton/cronjobs/dogfooding/images/kustomization.yaml`. Add name of your newly created directory
+
+```
+- myimage-nightly
+```
+
+6. Apply your new job:
 
 ```yaml
 kubectl -k tekton/cronjobs/dogfooding/images/myimage-nightly/
 ```
 
-1. Check the result:
+7. Check the result:
 
 ```yaml
 kubectl get cronjobs
 ```
 
-1. Run the build:
+8. Run the build:
 
 ```yaml
 kubectl create job --from=cronjob/image-build-cron-trigger-myimage build-myimage-$(date +"%Y%m%d-%H%M")
