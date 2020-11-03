@@ -10,3 +10,4 @@ resources:
 - skopeo-nightly
 - tkn-nightly
 - yamllint-nightly
+- buildx-gcloud-nightly
