@@ -3,3 +3,4 @@ resources:
 - all-template.yaml
 - tekton-cd-template.yaml
 - bindings.yaml
+- website-template.yaml
