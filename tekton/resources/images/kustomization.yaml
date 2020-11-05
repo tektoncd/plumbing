@@ -1,0 +1,9 @@
+namespace: default
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bindings.yaml
+- single-arch-template.yaml
+- eventlistener.yaml
+- multi-arch-template.yaml

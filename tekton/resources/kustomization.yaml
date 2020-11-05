@@ -3,7 +3,7 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
-- images/image-build-trigger.yaml
+- images
 - org-permissions/peribolos.yaml
 - org-permissions/peribolos-trigger.yaml
 - release

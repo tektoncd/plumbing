@@ -1,40 +1,4 @@
 apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: trigger-to-build-and-push-image
-spec:
-  params:
-  - name: buildUUID
-    value: $(body.buildUUID)
-  - name: gitRepository
-    value: $(body.gitRepository)
-  - name: gitRevision
-    value: $(body.gitRevision)
-  - name: contextPath
-    value: $(body.contextPath)
-  - name: registry
-    value: $(body.registry)
-  - name: namespace
-    value: $(body.namespace)
-  - name: imageName
-    value: $(body.imageName)
-  - name: imageTag
-    value: $(body.imageTag)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: EventListener
-metadata:
-  name: image-builder
-spec:
-  serviceAccountName: release-right-meow
-  triggers:
-    - name: trigger
-      bindings:
-        - ref: trigger-to-build-and-push-image
-      template:
-        name: build-and-push-image
----
-apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: build-and-push-image

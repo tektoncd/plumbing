@@ -1,0 +1,122 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: build-and-push-image-multi-arch
+spec:
+  params:
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: registry
+    description: The container registry *registry*/namespace/name tag
+  - name: namespace
+    description: The namespace (aka user, org, project) registry/*namespace*/name tag
+  - name: imageName
+    description: The image name (aka repository) registry/namespace/*name* tag
+  - name: imageTag
+    description: The image tag registry/namespace/name *tag*
+  - name: buildUUID
+    description: The build UUID is used for log collection
+  - name: platforms
+    description: Platforms for multi-arch build in form of `linux/amd64,linux/s390x`
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: build-and-push-$(tt.params.imageName)-$(uid)
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        plumbing.tekton.dev/image: $(tt.params.imageName)
+    spec:
+      taskSpec:
+        resources:
+          inputs:
+            - name: source
+              type: git
+          outputs:
+            - name: image
+              type: image
+        steps:
+        - env:
+          - name: DOCKER_HOST
+            value: tcp://localhost:2376
+          - name: DOCKER_TLS_VERIFY
+            value: "1"
+          - name: DOCKER_CERT_PATH
+            value: /certs/client
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /secret/release.json
+          image: gcr.io/tekton-releases/dogfooding/buildx-gcloud:latest
+          name: build-image-multi-arch
+          script: |
+            #!/usr/bin/env sh
+
+            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+            gcloud auth configure-docker
+
+            docker run --rm --privileged tonistiigi/binfmt:latest --install all
+            ln -s /root/.docker/cli-plugins ~/.docker/cli-plugins
+
+            docker context create context1
+
+            docker buildx create context1 --name builder-buildx1 --driver docker-container --platform $(tt.params.platforms) --use
+            docker buildx inspect --bootstrap --builder builder-buildx1
+
+            cd $(resources.inputs.source.path)
+            docker buildx build \
+            --platform $(tt.params.platforms) \
+            --tag $(resources.outputs.image.url) \
+            --push \
+            $(tt.params.contextPath)
+          volumeMounts:
+          - mountPath: /certs/client
+            name: dind-certs
+          - mountPath: /secret
+            name: gcp-secret
+        volumes:
+        - name: gcp-secret
+          secret:
+            secretName: release-secret
+        - emptyDir: {}
+          name: dind-certs
+        sidecars:
+        - args:
+          - --storage-driver=vfs
+          - --userland-proxy=false
+          - --debug
+          env:
+          - name: DOCKER_TLS_CERTDIR
+            value: /certs
+          image: docker:dind
+          name: server-docker
+          readinessProbe:
+            exec:
+              command:
+              - ls
+              - /certs/client/ca.pem
+            periodSeconds: 1
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /certs/client
+            name: dind-certs
+      resources:
+        inputs:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(tt.params.gitRevision)
+              - name: url
+                value: https://$(tt.params.gitRepository)
+        outputs:
+          - name: image
+            resourceSpec:
+              type: image
+              params:
+              - name: url
+                value: $(tt.params.registry)/$(tt.params.namespace)/$(tt.params.imageName):$(tt.params.imageTag)
