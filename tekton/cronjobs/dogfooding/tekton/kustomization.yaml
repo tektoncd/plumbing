@@ -2,3 +2,4 @@ resources:
 - dashboard-to-robocat-nightly
 - pipeline-to-robocat-nightly
 - triggers-to-robotcat-nightly
+- website-to-netlify-nightly

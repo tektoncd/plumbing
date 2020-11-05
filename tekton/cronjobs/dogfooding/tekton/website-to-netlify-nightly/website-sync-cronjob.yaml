@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: website-netlify-build-trigger
+spec:
+  schedule: '15 3 * * *'
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            image: curlimages/curl
+            command:
+              - /bin/sh
+            args:
+              - -ce
+              - |
+                curl -X POST -d {} $NETLIFY_BUILD_HOOK
+          env:
+          - name: NETLIFY_BUILD_HOOK
+            valueFrom:
+              secretKeyRef:
+                name: netlify_build_hook
+                key: url
+          restartPolicy: Never
