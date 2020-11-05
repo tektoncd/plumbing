@@ -1,0 +1,28 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: image-builder
+spec:
+  serviceAccountName: release-right-meow
+  triggers:
+    - name: single-arch-build-trigger
+      interceptors:
+        - cel:
+            filter: >-
+              !('platforms' in body) ||
+              size(body['platforms']) == 0
+      bindings:
+        - ref: trigger-to-build-and-push-image
+      template:
+        name: build-and-push-image
+    - name: multi-arch-build-trigger
+      interceptors:
+        - cel:
+            filter: >-
+              'platforms' in body &&
+              size(body['platforms']) != 0
+      bindings:
+        - ref: trigger-to-build-and-push-image
+        - ref: trigger-to-build-and-push-image-platform
+      template:
+        name: build-and-push-image-multi-arch
