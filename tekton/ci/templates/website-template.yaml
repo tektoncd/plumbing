@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-website-ci-triggers
+  name: tekton-website-ci-pipeline
   namespace: tektonci
 spec:
   params:
@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-python-test-pipelinerun
+      name: tekton-python-test-pipelinerun-$(uid)
     spec:
       pipelineRef:
         name: tekton-python-test-pipeline
