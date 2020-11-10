@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build kubetest independently of the rest
-FROM golang:1.14 as kubetest
+FROM docker.io/library/golang:1.15 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
@@ -22,12 +22,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-# Build knative-tools independently of the rest
-FROM golang:1.14 as knative-tools
-RUN git clone https://github.com/knative/test-infra.git /go/src/knative.dev/test-infra
-RUN go install knative.dev/test-infra/tools/dep-collector
-
-FROM debian:buster
+FROM docker.io/library/debian:buster
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV DEBIAN_FRONTEND noninteractive \
@@ -149,8 +144,8 @@ RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 
 # END: test-infra import
 
-# Install Go 1.14.1
-ARG GO_VERSION=1.14.1
+# Install Go 1.15.2
+ARG GO_VERSION=1.15.2
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
@@ -186,7 +181,6 @@ RUN gem install mdl -v 0.5.0
 # Extra tools through pip
 RUN python -m pip install yamllint
 
-COPY --from=knative-tools /go/bin/dep-collector /usr/local/bin
 COPY --from=kubetest /go/bin/kubetest /usr/local/bin
 
 # note the runner is also responsible for making docker in docker function if
