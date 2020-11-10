@@ -389,7 +389,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/cli.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -734,7 +734,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/operator.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -837,7 +837,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/pipeline.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1019,7 +1019,7 @@ presubmits:
     clone_uri: "https://github.com/tektoncd/triggers.git"
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1041,7 +1041,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1105,7 +1105,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1120,7 +1120,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
@@ -1135,7 +1135,7 @@ postsubmits:
     decorate: true
     spec:
       containers:
-      - image: gcr.io/knative-tests/test-infra/coverage:latest # we may want ours here
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
         imagePullPolicy: Always
         command:
         - "/coverage"
