@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.14-alpine3.12
+FROM golang:1.15-alpine3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GO111MODULE on

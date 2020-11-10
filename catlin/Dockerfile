@@ -1,4 +1,4 @@
-FROM golang:1.14 as BUILD
+FROM golang:1.15 as BUILD
 
 COPY . /build
 WORKDIR /build
@@ -11,4 +11,3 @@ WORKDIR /app
 COPY --from=BUILD /build/catlin /app/catlin
 
 ENTRYPOINT ["/app/catlin"]
-
