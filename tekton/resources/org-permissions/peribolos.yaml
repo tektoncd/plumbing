@@ -12,7 +12,7 @@ spec:
         type: git
   steps:
   - name: peribolos
-    image: gcr.io/k8s-prow/peribolos@sha256:64856665d286da72fe9481e9be99f828092ac501a4668a8cd966206d162ecea3
+    image: gcr.io/k8s-prow/peribolos:v20201110-efa5cb6a5e
     command:
     - /bin/sh
     args:
