@@ -6,7 +6,14 @@ declare GITHUB_USER GITHUB_TOKEN GITHUB_ORG GITHUB_REPO
 # This script deploys Tekton CI on a local kind cluster
 # It create GitHub webhook and deploys Tekton CI pipeline and tasks
 
-USAGE="Usage:  tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo>"
+USAGE="Usage:  tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo> 
+
+Options:
+ -u <github-user>         Your GitHub username
+ -t <github-token>        Your GitHub token
+ -o <github-org>          The org or user where your fork is hosted
+ -r <github-repo>         The name of the fork, typically \"plumbing\"
+"
 
 # Read command line options
 while getopts ":u:t:o:r:" opt; do
@@ -26,7 +33,7 @@ while getopts ":u:t:o:r:" opt; do
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo $USAGE
+      echo "$USAGE"
       exit 1
       ;;
     : )
@@ -40,7 +47,7 @@ shift $((OPTIND -1))
 # Check input params
 if [ -z "$GITHUB_USER" ] || [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_ORG" ] || [ -z "$GITHUB_REPO" ] ; then
   echo "Missing parameters"
-  echo $USAGE
+  echo "$USAGE"
   exit 1
 fi
 

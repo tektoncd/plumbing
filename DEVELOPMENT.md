@@ -50,7 +50,7 @@ your laptop.
 Create a GitHub personal token with `admin:repo_hook` persmissions
 at least. This will be used to create the webhook.
 
-Run blow script to deploy Tekton CI on the local kind cluster:
+Run the script below to deploy Tekton CI on the local kind cluster:
 
 ```bash
 ./hack/tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo>
