@@ -1171,9 +1171,6 @@ periodics:
       - "--" # end bootstrap args, scenario args below
       - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
       - "./test/e2e-tests-upgrade.sh"
-      env:
-      - name: TEST_RUN_ALL_TESTS
-        value: 1
 - cron: "6 3 * * *"
   name: periodic-tekton-catalog-integration-tests
   labels:
@@ -1203,6 +1200,9 @@ periodics:
       - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
       - "./test/presubmit-tests.sh"
       - "--integration-tests"
+      env:
+      - name: TEST_RUN_ALL_TESTS
+        value: 1
 - name: periodic-tekton-stale
   interval: 1h
   decorate: true
