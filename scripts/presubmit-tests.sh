@@ -61,7 +61,7 @@ function pr_only_contains() {
 function list_changed_files() {
   local file="${WORK_DIR}/changed_files"
   if [[ ! -f ${file} ]]; then
-    git --no-pager diff --name-only ${PULL_BASE_SHA}..${PULL_SHA} > ${file}
+    git --no-pager diff --name-only ${PULL_BASE_SHA}..${PULL_PULL_SHA} > ${file}
   fi
   echo ${file}
 }
