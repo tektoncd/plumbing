@@ -11,3 +11,4 @@ resources:
 - tkn-nightly
 - yamllint-nightly
 - buildx-gcloud-nightly
+- teps-community-nightly
