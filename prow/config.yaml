@@ -1202,7 +1202,7 @@ periodics:
       - "--integration-tests"
       env:
       - name: TEST_RUN_ALL_TESTS
-        value: 1
+        value: "true"
 - name: periodic-tekton-stale
   interval: 1h
   decorate: true
