@@ -193,7 +193,16 @@ spec:
               value: tekton/images/myimage
 ```
 
-4. Edit `kustomization.yaml`. Set the nameSuffix to identify the new cron job.
+4. Add PLATFORMS to `cronjob.yaml` if you want to build multi-arch image. List target architectures for the image.
+```
+...
+            - name: PLATFORMS
+              value: "linux/amd64,linux/s390x,linux/ppc64le"
+```
+**Note**
+Please, make sure that the image is buildable for listed architectures. For instance, base image in corresponding Dockerfile should support the same(or larger) list of architectures.
+
+5. Edit `kustomization.yaml`. Set the nameSuffix to identify the new cron job.
 
 ```yaml
 bases:
@@ -203,25 +212,25 @@ patchesStrategicMerge:
 nameSuffix: "-myimage"
 ```
 
-5. Edit `tekton/cronjobs/dogfooding/images/kustomization.yaml`. Add name of your newly created directory
+6. Edit `tekton/cronjobs/dogfooding/images/kustomization.yaml`. Add name of your newly created directory
 
 ```
 - myimage-nightly
 ```
 
-6. Apply your new job:
+7. Apply your new job:
 
 ```yaml
 kubectl -k tekton/cronjobs/dogfooding/images/myimage-nightly/
 ```
 
-7. Check the result:
+8. Check the result:
 
 ```yaml
 kubectl get cronjobs
 ```
 
-8. Run the build:
+9. Run the build:
 
 ```yaml
 kubectl create job --from=cronjob/image-build-cron-trigger-myimage build-myimage-$(date +"%Y%m%d-%H%M")
