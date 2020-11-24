@@ -160,7 +160,8 @@ RUN GO111MODULE="on" go get github.com/google/ko/cmd/ko@v0.6.0 && \
     GO111MODULE="off" go get github.com/google/go-licenses && \
     GO111MODULE="on" go get github.com/jstemmer/go-junit-report && \
     GO111MODULE="on" go get github.com/raviqqe/liche && \
-    GO111MODULE="off" go get github.com/golang/dep/cmd/dep
+    GO111MODULE="off" go get github.com/golang/dep/cmd/dep && \
+    GO111MODULE="on" go get sigs.k8s.io/kind@v0.9.0
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
 ARG GOLANGCI_VERSION=1.30.0
