@@ -53,7 +53,7 @@ GOFLAGS=${GOFLAGS:-}
 # Returns true if PR only contains the given file regexes.
 # Parameters: $1 - file regexes, space separated.
 function pr_only_contains() {
-  [[ -z "$(cat "${CHANGED_FILES}" | grep -v "\(${1// /\\|}\)$")" ]]
+  [[ -z "$(cat \"${CHANGED_FILES}\" | grep -v \"\(${1// /\\|}\)$\")" ]]
 }
 
 # List changed files in the current PR.
@@ -77,8 +77,8 @@ function initialize_environment() {
 
   WORK_DIR=$(mktemp -d)
   CHANGED_FILES="$(list_changed_files)"
-  if [[ -n "$(cat ${CHANGED_FILES})" ]]; then
-    echo -e "Changed files in commit ${PULL_PULL_SHA}:\n$(cat ${CHANGED_FILES})"
+  if [[ -n "$(cat \"${CHANGED_FILES}\")" ]]; then
+    echo -e "Changed files in commit ${PULL_PULL_SHA}:\n$(cat \"${CHANGED_FILES}\")"
     local no_presubmit_files="${NO_PRESUBMIT_FILES[*]}"
     pr_only_contains "${no_presubmit_files}" && IS_PRESUBMIT_EXEMPT_PR=1
     pr_only_contains "\.md ${no_presubmit_files}" && IS_DOCUMENTATION_PR=1
@@ -158,7 +158,7 @@ function yaml_build_tests() {
   subheader "Linting the yaml files"
   local yamlfiles=""
 
-  for file in $(cat ${CHANGED_FILES}); do
+  for file in $(cat "${CHANGED_FILES}"); do
     [[ -z $(echo "${file}" | grep '\.yaml$\|\.yml$' | grep -v '^vendor/' | grep -v '^third_party/') ]] && continue
 
     echo "found ${file}"
