@@ -1196,9 +1196,10 @@ periodics:
       - --token=/etc/github-token/oauth
       - |-
         --comment=Issues go stale after 90d of inactivity.
-        Mark the issue as fresh with `/remove-lifecycle stale`.
+        Mark the issue as fresh with `/remove-lifecycle stale` with a justification.
         Stale issues rot after an additional 30d of inactivity and eventually close.
-        If this issue is safe to close now please do so with `/close`.
+        If this issue is safe to close now please do so with `/close` with a justification.
+        If this issue should be exempted, mark the issue as frozen with `/lifecycle frozen` with a justification.
 
         /lifecycle stale
 
@@ -1231,9 +1232,10 @@ periodics:
       - --token=/etc/github-token/oauth
       - |-
         --comment=Stale issues rot after 30d of inactivity.
-        Mark the issue as fresh with `/remove-lifecycle rotten`.
+        Mark the issue as fresh with `/remove-lifecycle rotten` with a justification.
         Rotten issues close after an additional 30d of inactivity.
-        If this issue is safe to close now please do so with `/close`.
+        If this issue is safe to close now please do so with `/close` with a justification.
+        If this issue should be exempted, mark the issue as frozen with `/lifecycle frozen` with a justification.
 
         /lifecycle rotten
 
@@ -1266,8 +1268,9 @@ periodics:
       - --token=/etc/github-token/oauth
       - |-
         --comment=Rotten issues close after 30d of inactivity.
-        Reopen the issue with `/reopen`.
-        Mark the issue as fresh with `/remove-lifecycle rotten`.
+        Reopen the issue with `/reopen` with a justification.
+        Mark the issue as fresh with `/remove-lifecycle rotten` with a justification.
+        If this issue should be exempted, mark the issue as frozen with `/lifecycle frozen` with a justification.
 
         /close
 
