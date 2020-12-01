@@ -559,6 +559,9 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+        env:
+        - name: DOCKER_IN_DOCKER_ENABLED
+          value: "true"
   tektoncd/hub:
   - name: pull-tekton-hub-build-tests
     labels:
