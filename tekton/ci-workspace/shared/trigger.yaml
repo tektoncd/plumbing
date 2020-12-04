@@ -1,0 +1,26 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: all-repos
+spec:
+  interceptors:
+    - github:
+        secretRef:
+          secretName: ci-webhook
+          secretKey: secret
+        eventTypes:
+          - pull_request
+    - cel:
+        filter: >-
+          body.action in ['opened', 'synchronize', 'labeled', 'unlabeled', 'reopened']
+        overlays:
+          - key: git_clone_depth
+            expression: "string(body.pull_request.commits + 1.0)"
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-pull-request
+    - ref: tekton-ci-webhook-pr-labels
+    - ref: tekton-ci-clone-depth
+  template:
+    name: tekton-all-ci-pipeline

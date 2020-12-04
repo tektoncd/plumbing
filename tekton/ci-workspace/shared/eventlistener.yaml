@@ -1,0 +1,10 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: tekton-ci
+spec:
+  serviceAccountName: tekton-ci-listener
+  serviceType: NodePort
+  namespaceSelector:
+    matchNames: ['tekton-ci']
