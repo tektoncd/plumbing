@@ -4,20 +4,19 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    dns.gardener.cloud/dnsnames: 'webhook-draft.ci.dogfooding.tekton.dev'
+    dns.gardener.cloud/dnsnames: 'webhook.ci.dogfooding.tekton.dev'
     dns.gardener.cloud/ttl: "3600"
   name: ing
-  namespace: tektonci
 spec:
   tls:
-  - secretName: webhook-draft-ci-dogfooding-tekton-dev-tls
+  - secretName: webhook-ci-dogfooding-tekton-dev-tls
     hosts:
-    - webhook-draft.ci.dogfooding.tekton.dev
+    - webhook.ci.dogfooding.tekton.dev
   rules:
-  - host: webhook-draft.ci.dogfooding.tekton.dev
+  - host: webhook.ci.dogfooding.tekton.dev
     http:
       paths:
       - backend:
-          serviceName: el-tekton-ci-webhook
+          serviceName: el-tekton-ci
           servicePort: 8080
         path: /*

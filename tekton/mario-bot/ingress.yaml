@@ -4,7 +4,8 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    dns.gardener.cloud/dnsnames: mario.dogfooding.tekton.dev
+    dns.gardener.cloud/dnsnames: 'mario.dogfooding.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
   name: ing
   namespace: mario
 spec:
@@ -13,7 +14,8 @@ spec:
     hosts:
     - mario.dogfooding.tekton.dev
   rules:
-  - http:
+  - host: mario.dogfooding.tekton.dev
+    http:
       paths:
       - backend:
           serviceName: el-mario-image-builder

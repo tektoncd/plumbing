@@ -4,7 +4,8 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    dns.gardener.cloud/dnsnames: dashboard.robocat.tekton.dev
+    dns.gardener.cloud/dnsnames: 'dashboard.robocat.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
   name: ing
   namespace: tekton-pipelines
 spec:
@@ -13,7 +14,8 @@ spec:
     hosts:
     - dashboard.robocat.tekton.dev
   rules:
-  - http:
+  - host: dashboard.robocat.tekton.dev
+    http:
       paths:
       - backend:
           serviceName: tekton-dashboard

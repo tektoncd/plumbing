@@ -1,0 +1,81 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: check-git-files-changed
+  annotations:
+    description: |
+      Returns "passed" in the "check" result if any of the files changed
+      in the source on the workspace matches the regular expression
+    ci.tekton.dev/condition: |
+      The result of this task is used to evaluate a condition.
+      Events from this task are ignored downstream, when it comes to update the CI job status.
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits + 1
+    - name: regex
+      description: Regular expression to match files changed
+  workspaces:
+    - name: input
+  results:
+    - name: check
+  steps:
+    - name: check-files-changed
+      image: alpine/git
+      script: |
+        #!/bin/sh
+        set -ex
+        set -o pipefail
+
+        BACK="HEAD~$(( $(params.gitCloneDepth) - 1 ))"
+
+        cd $(workspaces.input.path)
+        git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
+            grep -E '$(params.regex)' \
+            || printf "failed" > $(results.check.path) \
+            && printf "passed" > $(results.check.path)
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: check-name-matches
+  annotations:
+    description: |
+      Returns "passed" in the "check" result if the name of the CI Job
+      (GitHub Check) matches the regular expression specified. This is used
+      for the "/test" command in GitHub. The regular expression cannot contain spaces.
+    ci.tekton.dev/condition: |
+      The result of this task is used to evaluate a condition.
+      Events from this task are ignored downstream, when it comes to update the CI job status.
+spec:
+  params:
+    - name: gitHubCommand
+      description: The whole comment left on GitHub
+    - name: checkName
+      description: The name of the check
+  results:
+    - name: check
+      description: The result of the check, "passed" or "failed"
+  steps:
+    - name: check-name
+      image: alpine
+      script: |
+        #!/bin/sh
+        set -ex
+        set -o pipefail
+
+        # Default to passed
+        printf "passed" > $(results.check.path)
+
+        # TODO(afrittoli) We might want to move this to an external script so
+        # we can attach unit tests to it.
+
+        # If no command was specified, the check is successful
+        [[ "$(params.gitHubCommand)" == "" ]] && exit 0
+
+        # If a command was specified, the regex should match the checkName
+        REGEX="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
+        [[ "$REGEX" == "" ]] && REGEX='.*'
+        echo "$(params.checkName)" | grep -E "$REGEX" \
+            || printf "failed" > $(results.check.path) \
+            && printf "passed" > $(results.check.path)

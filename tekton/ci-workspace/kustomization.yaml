@@ -1,0 +1,9 @@
+namespace: tekton-ci
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- infra
+- shared
+- jobs
+- community

@@ -1,0 +1,105 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: teps-lint
+  description: |
+    Lint teps and tep table
+spec:
+  params:
+    - name: teps-folder
+      description: The folders to lint with teps.py
+  workspaces:
+    - name: input
+  steps:
+  - name: teps-validate
+    image: gcr.io/tekton-releases/dogfooding/teps:latest
+    args: ['validate', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
+  - name: teps-table-refresh
+    image: gcr.io/tekton-releases/dogfooding/teps:latest
+    workingDir: $(workspaces.input.path)
+    args: ['table', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
+  - name: teps-table
+    image: alpine/git:latest
+    workingDir: $(workspaces.input.path)
+    args: ['diff', '--exit-code']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: teps-linter
+spec:
+  params:
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: teps-folder
+      description: The folder that hold the teps
+  workspaces:
+    - name: sources
+      description: Workspace where the git repo is prepared for testing
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-batch-merge # from the catalog
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+      workspaces:
+        - name: output
+          workspace: sources
+    - name: check-name-matches
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: pull-community-teps-lint
+    - name: check-git-files-changed
+      runAfter: ['clone-repo']
+      taskRef:
+        name: check-git-files-changed
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: regex
+          value: $(params.fileFilterRegex)
+      workspaces:
+        - name: input
+          workspace: sources
+    - name: teps-lint
+      when: # implicit dependency on the check tasks
+        - input: $(tasks.check-name-matches.results.check)
+          operator: in
+          values: ["passed"]
+        - input: $(tasks.check-git-files-changed.results.check)
+          operator: in
+          values: ["passed"]
+      workspaces:
+        - name: input
+          workspace: sources
+      taskRef:
+        name: teps-lint
+      params:
+        - name: teps-folder
+          value: $(params.teps-folder)
