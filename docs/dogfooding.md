@@ -87,8 +87,8 @@ which shows Stackdriver log entries for PipelineRuns.
 Manifests for various resources are deployed to the dogfooding clusters from different repositories.
 For the plumbing repo, manifest are applied nightly through two cronjobs:
 
-- [tekton](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton-nightly)
-- [tekton-cronjobs](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton-cronjobs-nightly)
+- [tekton](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton)
+- [tekton-cronjobs](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton-cronjobs)
 
 Manifests from other repos (pipeline, dashboard and triggers) are applied manually for now.
 
