@@ -12,3 +12,4 @@ resources:
 - tekton-template.yaml
 - cleanup-template.yaml
 - notification-template.yaml
+- serviceaccount.yaml
