@@ -1,0 +1,6 @@
+namespace: bastion-z
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- deploy_test_cleanup.yaml

@@ -1,0 +1,8 @@
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bastion-z
+- eventlistener.yaml
+- pipeline-deploy-test-template.yaml
+- serviceaccount.yaml
