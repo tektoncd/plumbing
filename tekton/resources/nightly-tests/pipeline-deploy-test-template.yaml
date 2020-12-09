@@ -1,0 +1,123 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-pipeline-nightly-test
+spec:
+  params:
+  - name: containerRegistry
+  - name: kubeconfigSecret
+  - name: targetArch
+  - name: namespace
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: tekton-pipeline-nightly-run-
+      namespace: $(tt.params.namespace)
+    spec:
+      pipelineSpec:
+        resources:
+        - name: plumbing-source
+          type: git
+        - name: tekton-pipeline-source
+          type: git
+        params:
+        - name: package
+        - name: container-registry
+        - name: kubeconfig-secret
+        - name: target-arch
+        - name: resources
+        tasks:
+        - name: deploy-pipeline
+          taskRef:
+            name: deploy-tekton-project-nightly
+          params:
+          - name: package
+            value: $(params.package)
+          - name: container-registry
+            value: $(params.container-registry)
+          - name: kubeconfig-secret
+            value: $(params.kubeconfig-secret)
+          - name: target-arch
+            value: $(params.target-arch)
+          resources:
+            inputs:
+            - name: tekton-project-source
+              resource: tekton-pipeline-source
+        - name: e2e-test-pipeline
+          runAfter: [deploy-pipeline]
+          taskRef:
+            name: e2e-tests
+          params:
+          - name: package
+            value: $(params.package)
+          - name: container-registry
+            value: $(params.container-registry)
+          - name: kubeconfig-secret
+            value: $(params.kubeconfig-secret)
+          - name: target-arch
+            value: $(params.target-arch)
+          resources:
+            inputs:
+            - name: plumbing-source
+              resource: plumbing-source
+            - name: tekton-project-source
+              resource: tekton-pipeline-source
+        finally:
+        - name: cleanup
+          taskRef:
+            name: cleanup-tekton-nightly
+          params:
+          - name: package
+            value: $(params.package)
+          - name: resources
+            value: $(params.resources)
+          - name: kubeconfig-secret
+            value: $(params.kubeconfig-secret)
+          resources:
+            inputs:
+            - name: plumbing-source
+              resource: plumbing-source
+            - name: tekton-project-source
+              resource: tekton-pipeline-source
+      params:
+      - name: package
+        value: github.com/tektoncd/pipeline
+      - name: resources
+        value: "conditions pipelineresources tasks pipelines taskruns pipelineruns"
+      - name: container-registry
+        value: $(tt.params.containerRegistry)
+      - name: kubeconfig-secret
+        value: $(tt.params.kubeconfigSecret)
+      - name: target-arch
+        value: $(tt.params.targetArch)
+      resources:
+      - name: tekton-pipeline-source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: master
+          - name: url
+            value: https://github.com/tektoncd/pipeline
+      - name: plumbing-source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: master
+          - name: url
+            value: https://github.com/tektoncd/plumbing

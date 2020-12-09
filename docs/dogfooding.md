@@ -22,6 +22,8 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
     - `mario-github-secret` contains the secret used to verify comment webhook requests to
       the mario service are coming from github
     - `mario-github-token` used for updating PRs
+  - In the bastion-z namespace:
+    - `s390x-kubeconfig` used to access s390x remote k8s cluster to run s390x tests there
 - `GCP` secrets:
   - `nightly-account` is used by nightly releases to push releases
   to the nightly bucket. It's a token for service account

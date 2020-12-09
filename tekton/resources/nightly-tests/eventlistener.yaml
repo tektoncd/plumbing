@@ -1,0 +1,32 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: test-nightly
+spec:
+  serviceAccountName: tekton-test-nightly
+  triggers:
+  - name: pipeline-nightly-test-trigger
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'pipeline'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      name: tekton-pipeline-nightly-test
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-deploy-test-tekton-project
+spec:
+  params:
+  - name: namespace
+    value: $(body.params.run.namespace)
+  - name: containerRegistry
+    value: $(body.params.target.registry)
+  - name: targetArch
+    value: $(body.params.target.targetArch)
+  - name: kubeconfigSecret
+    value: $(body.params.target.kubeconfigSecret)

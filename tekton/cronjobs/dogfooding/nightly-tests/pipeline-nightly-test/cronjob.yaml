@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: nightly-test-trigger
+spec:
+  schedule: "0 1 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+            - name: SINK_URL
+              value: "http://el-test-nightly.default.svc.cluster.local:8080"
+            - name: TARGET_PROJECT
+              value: "pipeline"
+            - name: NAMESPACE
+              value: "bastion-z"
+            - name: REGISTRY
+              value: "sshd.bastion-z.svc.cluster.local:4000"
+            - name: TARGET_ARCH
+              value: "s390x"
+            - name: KUBECONFIG_SECRET
+              value: "s390x-kubeconfig"

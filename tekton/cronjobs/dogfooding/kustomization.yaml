@@ -9,3 +9,4 @@ resources:
 - manifests
 - releases
 - tekton
+- nightly-tests
