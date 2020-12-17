@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// The Rotation object which knows how to dynamically find the correct build cop from
+// The Rotation object which knows how to dynamically find the correct build captain from
 // the file getter f it is initialized with.
 type Rotation struct {
 	f GetFile
@@ -35,19 +35,19 @@ func NewRotation(f GetFile) Rotation {
 	return Rotation{f: f}
 }
 
-// GetBuildCop returns the name of the build cop for the requested time
-func (r Rotation) GetBuildCop(t time.Time) string {
+// GetBuildCaptain returns the name of the build captain for the requested time
+func (r Rotation) GetBuildCaptain(t time.Time) string {
 	tf := t.Format("2006-01-02") // Mon Jan 2 15:04:05 MST 2006
 	f, err := r.f()
 	if err != nil {
-		log.Printf("Could not read from build cop rotation: %v", err)
+		log.Printf("Could not read from build captain rotation: %v", err)
 		return "nobody"
 	}
 	defer f.Close()
 	rotation, err := parseRotation(f)
 
 	if err != nil {
-		log.Printf("Could not read rotation from build cop rotation: %v", err)
+		log.Printf("Could not read rotation from build captain rotation: %v", err)
 		return "nobody"
 	}
 	b, ok := rotation[tf]
