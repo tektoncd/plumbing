@@ -15,5 +15,5 @@ FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN  mkdir -p ~/.docker/cli-plugins \
-     && curl -fsSL https://github.com/docker/buildx/releases/download/v0.4.2/buildx-v0.4.2.linux-amd64 > ~/.docker/cli-plugins/docker-buildx \
+     && curl -fsSL https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64 > ~/.docker/cli-plugins/docker-buildx \
      && chmod u+x ~/.docker/cli-plugins/docker-buildx
