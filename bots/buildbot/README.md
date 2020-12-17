@@ -1,11 +1,11 @@
-# Tekton buildcop
+# Tekton buildcaptain
 
-This folder holds the Slack buildcop bot code and configuration.
+This folder holds the Slack buildcaptain bot code and configuration.
 
-* [Build Cop Runbook](https://docs.google.com/document/d/1QJV0z2bMXdz_BZOkBwfxIP1BiktUb8c1lcifwqxF5wg/edit)
-* [Build Cop Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
+* [Build Captain Runbook](https://docs.google.com/document/d/1QJV0z2bMXdz_BZOkBwfxIP1BiktUb8c1lcifwqxF5wg/edit)
+* [Build Captain Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
 
-Current buildcops are:
+Current buildcaptains are:
 - Andrea Frittoli @afrittoli (andrea.frittoli)
 - Billy Lynch @wlynch (wlynch)
 - Dibyo Mukherjee @dibyom (dibyo)
@@ -15,11 +15,11 @@ Current buildcops are:
 - Sharon Jerop Kipruto @jerop (jerop)
 - Vincent Demeester @vdemeester (vdemeest)
 
-Other folks who are not build cops but have build cop access:
+Other folks who are not build captains but have build captain access:
 - Sunil Thaha @sthaha
 - Priti Desai @pritidesai
 
-Build cop access is given with [addpermissions.py](../../addpermissions.py).
+Build captain access is given with [addpermissions.py](../../addpermissions.py).
 
 ## Rotation
 

@@ -13,10 +13,10 @@ import (
 const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/master/bots/buildbot/rotation.csv"
 
 var (
-	currentCop string
-	botID      string
-	token      string
-	channelID  string
+	currentCaptain string
+	botID          string
+	token          string
+	channelID      string
 
 	vdemeest string
 )
@@ -43,20 +43,20 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	copsID := map[string]string{}
+	captainsID := map[string]string{}
 	for _, user := range users {
 		if user.Name == "vdemeest" {
 			vdemeest = user.ID
 		}
-		copsID[user.Name] = user.ID
+		captainsID[user.Name] = user.ID
 	}
 
 	r := NewRotation(FromURL(rotationURL))
-	currentCop = copsID[r.GetBuildCop(time.Now())]
+	currentCaptain = captainsID[r.GetBuildCaptain(time.Now())]
 
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
-	go dailyPing(rtm, copsID, r)
+	go dailyPing(rtm, captainsID, r)
 
 	for msg := range rtm.IncomingEvents {
 		switch ev := msg.Data.(type) {
@@ -88,11 +88,11 @@ func main() {
 func handleMessage(rtm *slack.RTM, message, channel string, direct bool) {
 	switch {
 	case statusMessage(message, botID, direct):
-		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is the buildcop :cop:\nBuildcop log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCop), channel))
+		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is the buildcaptain :cop:\nBuildcaptain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCaptain), channel))
 	case easterEggMessage(message, botID, direct):
 		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is my master :meow-wow:, and he is old :older_man:, grumpy :face_with_raised_eyebrow: but awesome :hooray: :meow-party:", vdemeest), channel))
 	case directMessage(message, botID, direct):
-		rtm.SendMessage(rtm.NewOutgoingMessage(":thinking_face: I ain't smart :zany_face:, I don't understand what you are telling me :robot_face: …\n Try to tell me `status` or `who is the buildcop ?` :sunglasses:", channel))
+		rtm.SendMessage(rtm.NewOutgoingMessage(":thinking_face: I ain't smart :zany_face:, I don't understand what you are telling me :robot_face: …\n Try to tell me `status` or `who is the buildcaptain ?` :sunglasses:", channel))
 	}
 }
 
@@ -127,7 +127,7 @@ func getEasterEggMessages(botID string, direct bool) []string {
 }
 
 func getStatusMessages(botID string, direct bool) []string {
-	return getMessages([]string{"who is the buildcop ?", "buildcop ?", "status"}, botID, direct)
+	return getMessages([]string{"who is the buildcaptain ?", "buildcaptain ?", "status"}, botID, direct)
 }
 
 func getMessages(messages []string, botID string, direct bool) []string {
@@ -141,14 +141,14 @@ func getMessages(messages []string, botID string, direct bool) []string {
 	return ms
 }
 
-func dailyPing(rtm *slack.RTM, copsID map[string]string, r Rotation) {
+func dailyPing(rtm *slack.RTM, captainsID map[string]string, r Rotation) {
 	jt := NewJobTicker()
 	for {
 		<-jt.t.C
-		currentCop = copsID[r.GetBuildCop(time.Now())]
-		if currentCop != "" {
-			// Only send the daily ping if there is actually a buildcop.
-			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the buildcop :cop:\nBuildcop log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCop), channelID))
+		currentCaptain = captainsID[r.GetBuildCaptain(time.Now())]
+		if currentCaptain != "" {
+			// Only send the daily ping if there is actually a buildcaptain.
+			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the buildcaptain :cop:\nBuildcaptain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCaptain), channelID))
 		}
 		jt.updateJobTicker()
 	}
