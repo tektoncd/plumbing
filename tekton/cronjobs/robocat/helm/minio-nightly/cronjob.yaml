@@ -19,7 +19,7 @@ spec:
               - name: CHART_NAME
                 value: "minio"
               - name: CHART_VERSION
-                value: "5.0.16"
+                value: "8.0.8"
               - name: CHART_PARAMS
                 value: >-
                   fullnameOverride=s3,
@@ -31,4 +31,4 @@ spec:
               - name: CHART_DESCRIPTION
                 value: "minio-s3"
               - name: CHART_REPO
-                value: https://kubernetes-charts.storage.googleapis.com/
+                value: https://helm.min.io/
