@@ -45,6 +45,6 @@ data:
 When connected to [the dogfood cluster](https://github.com/tektoncd/plumbing/blob/master/README.md#gcp-projects):
 
 ```bash
-# must be run from the `buildbot` dir or it will use the go.mod file one level up
-buildbot$ KO_DOCKER_REPO=gcr.io/tekton-releases/buildbot ko --context dogfood apply -f config/deployment.yaml
+# must be run from the `buildcaptain` dir or it will use the go.mod file one level up
+buildcaptain$ KO_DOCKER_REPO=gcr.io/tekton-releases/buildcaptain ko --context dogfood apply -f config/deployment.yaml
 ```

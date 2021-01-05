@@ -2,5 +2,5 @@
 
 We currently have the following bots:
 
-- [buildbot](./buildbot) that is a slack bot for buildcops
+- [buildcaptain](./buildcaptain) that is a slack bot for Build Captains
 - [mariobot](./mariobot) that is a github bot to build images from repositories

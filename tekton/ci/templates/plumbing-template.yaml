@@ -416,7 +416,7 @@ spec:
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         - name: folders
-          value: bots/buildbot/config bots/mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
+          value: bots/buildcaptain/config bots/mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
       resources:
       - name: source
         resourceSpec:
