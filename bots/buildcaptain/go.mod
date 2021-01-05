@@ -1,4 +1,4 @@
-module github.com/tektoncd/plumbing/bots/buildbot
+module github.com/tektoncd/plumbing/bots/buildcaptain
 
 go 1.12
 
