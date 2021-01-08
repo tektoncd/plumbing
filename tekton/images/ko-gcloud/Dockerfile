@@ -34,9 +34,9 @@ RUN tar -C /usr/local -xzf go1.15.tar.gz
 ENV PATH="${PATH}:/usr/local/go/bin"
 
 # Install ko
-ENV GOBIN=/usr/local/go/bin
-ENV GO111MODULE on
-RUN go get github.com/google/ko/cmd/ko@v0.6.2
+ARG KO_VERSION=0.7.0
+RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
+RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Get Kubectl and Kustomize from the build image
 COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl

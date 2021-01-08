@@ -154,9 +154,13 @@ RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VE
 RUN apt update && apt install -y uuid-runtime  # for uuidgen
 RUN apt update && apt install -y rubygems  # for mdl
 
+# Install ko
+ARG KO_VERSION=0.7.0
+RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
+RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
+
 # Extra tools through go get
-RUN GO111MODULE="on" go get github.com/google/ko/cmd/ko@v0.6.2 && \
-    GO111MODULE="off" go get github.com/google/licenseclassifier && \
+RUN GO111MODULE="off" go get github.com/google/licenseclassifier && \
     GO111MODULE="off" go get github.com/google/go-licenses && \
     GO111MODULE="on" go get github.com/jstemmer/go-junit-report && \
     GO111MODULE="on" go get github.com/raviqqe/liche && \
