@@ -50,9 +50,6 @@
         - name: builtKubeconfigWriterImage
           resourceRef:
             name: kubeconfigwriter-image
-        - name: builtCredsInitImage
-          resourceRef:
-            name: creds-init-image
         - name: builtGitInitImage
           resourceRef:
             name: git-init-image
