@@ -149,6 +149,7 @@ ARG GO_VERSION=1.15.2
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
+ENV GOROOT /usr/local/go
 
 # Extra tools through apt
 RUN apt update && apt install -y uuid-runtime  # for uuidgen

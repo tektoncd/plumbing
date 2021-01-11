@@ -32,6 +32,7 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 RUN curl https://dl.google.com/go/go1.15.linux-amd64.tar.gz > go1.15.tar.gz
 RUN tar -C /usr/local -xzf go1.15.tar.gz
 ENV PATH="${PATH}:/usr/local/go/bin"
+ENV GOROOT /usr/local/go
 
 # Install ko
 ARG KO_VERSION=0.7.0
