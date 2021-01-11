@@ -14,6 +14,7 @@
 FROM golang:1.15-alpine3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
+ENV GOROOT /usr/local/go
 RUN apk add --no-cache curl ca-certificates
 RUN update-ca-certificates
 
