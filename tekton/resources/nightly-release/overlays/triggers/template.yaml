@@ -47,6 +47,9 @@
         - name: builtEventListenerSinkImage
           resourceRef:
             name: event-listener-sink-image
+        - name: builtCoreInterceptorsImage
+          resourceRef:
+            name: core-interceptors-image
         - name: notification
           resourceRef:
             name: post-nightly-release-trigger
