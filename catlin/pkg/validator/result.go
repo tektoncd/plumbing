@@ -50,8 +50,9 @@ type Lint struct {
 
 type Result struct {
 	//Status Status
-	Lints  []Lint
-	Errors int
+	Lints    []Lint
+	Errors   int
+	Warnings int
 }
 
 func (r *Result) add(k Kind, format string, args ...interface{}) {
@@ -68,6 +69,7 @@ func (r *Result) Error(format string, args ...interface{}) {
 }
 
 func (r *Result) Warn(format string, args ...interface{}) {
+	r.Warnings++
 	r.add(Warning, format, args...)
 }
 
