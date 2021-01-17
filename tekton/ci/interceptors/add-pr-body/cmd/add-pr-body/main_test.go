@@ -47,7 +47,7 @@ func TestNoAddPrBody(t *testing.T) {
 
 	h(w, r)
 
-	assertBadRequestResponse(t, w, "no 'add-pr-body' found in the body")
+	assertBadRequestResponse(t, w, "no 'extensions' found in the body")
 }
 
 func TestNoPullRequestUrlFound(t *testing.T) {
@@ -82,7 +82,7 @@ func TestFetchURL(t *testing.T) {
 
 	want := makePrBody(true, "foo://some_url")
 	wantPrBody, _ := getTestPrBody("foo://some_url", "")
-	(*want)[rootPrBodyKey].(map[string]interface{})[prBodyContentKey] = wantPrBody
+	(*want)[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[prExtensionsContentKey] = wantPrBody
 
 	resp := w.Result()
 
@@ -110,7 +110,7 @@ func createRequest(method, url, event, token string, body []byte, opts ...reques
 	req.Header.Set("X-Github-Event", event)
 	req.Header.Set("X-Github-Delivery", "testing-123")
 	if token != "" {
-		req.Header.Add("Authorization", "token " + token)
+		req.Header.Add("Authorization", "token "+token)
 	}
 	for _, o := range opts {
 		o(req)
@@ -130,18 +130,21 @@ func marshalEvent(t *testing.T, evt interface{}) []byte {
 }
 
 func makePrBody(base bool, url string) *map[string]interface{} {
-	prAddBody := make(map[string]interface{})
+	body := make(map[string]interface{})
+	prBody := make(map[string]interface{})
+
 	if !base {
-		return &prAddBody
+		return &body
 	}
 	var prAddBodyContent map[string]interface{}
 	if url == "" {
 		prAddBodyContent = map[string]interface{}{"foo": "bar"}
 	} else {
-		prAddBodyContent = map[string]interface{}{prBodyUrlKey: url}
+		prAddBodyContent = map[string]interface{}{prExtensionsUrlKey: url}
 	}
-	prAddBody[rootPrBodyKey] = prAddBodyContent
-	return &prAddBody
+	prBody[prExtensionsKey] = prAddBodyContent
+	body[RootExtensionsKey] = prBody
+	return &body
 }
 
 func getTestPrBody(prURL string, token string) (map[string]interface{}, error) {
