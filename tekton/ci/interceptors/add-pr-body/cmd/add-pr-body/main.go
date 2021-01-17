@@ -33,9 +33,10 @@ type triggerErrorPayload struct {
 type urlToMap func(string, string) (map[string]interface{}, error)
 
 const (
-	rootPrBodyKey    = "add_pr_body"
-	prBodyUrlKey     = "pull_request_url"
-	prBodyContentKey = "pull_request_body"
+	RootExtensionsKey      = "extensions"
+	prExtensionsKey        = "add_pr_body"
+	prExtensionsUrlKey     = "pull_request_url"
+	prExtensionsContentKey = "pull_request_body"
 )
 
 func main() {
@@ -100,7 +101,7 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.Handler
 			return
 		}
 		// Add the PR body to the original body
-		jsonBody[rootPrBodyKey].(map[string]interface{})[prBodyContentKey] = prBody
+		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[prExtensionsContentKey] = prBody
 
 		// Marshal the body
 		responseBytes, err := json.Marshal(jsonBody)
@@ -148,11 +149,15 @@ func decodeBody(body []byte) (map[string]interface{}, error) {
 }
 
 func getPrUrl(body map[string]interface{}) (string, error) {
-	addPrBody, ok := body[rootPrBodyKey]
+	extensionsBody, ok := body[RootExtensionsKey]
 	if !ok {
-		return "", errors.New("no 'add-pr-body' found in the body")
+		return "", errors.New("no 'extensions' found in the body")
 	}
-	prUrl, ok := addPrBody.(map[string]interface{})[prBodyUrlKey]
+	addPrBody, ok := extensionsBody.(map[string]interface{})[prExtensionsKey]
+	if !ok {
+		return "", errors.New("no 'add-pr-body' found in the extensions")
+	}
+	prUrl, ok := addPrBody.(map[string]interface{})[prExtensionsUrlKey]
 	if !ok {
 		return "", errors.New("no 'pull-request-url' found")
 	}
@@ -171,7 +176,7 @@ func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
 
 	// If token isn't an empty string add GitHub Enterprise OAuth header
 	if token != "" {
-		req.Header.Add("Authorization", "token " + token)
+		req.Header.Add("Authorization", "token "+token)
 	}
 
 	client := &http.Client{}
