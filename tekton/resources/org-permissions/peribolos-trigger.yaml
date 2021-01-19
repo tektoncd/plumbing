@@ -51,4 +51,4 @@ spec:
       bindings:
         - ref: peribolos-binding
       template:
-        name: peribolos-template
+        ref: peribolos-template

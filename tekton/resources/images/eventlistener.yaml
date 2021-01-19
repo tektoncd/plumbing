@@ -14,7 +14,7 @@ spec:
       bindings:
         - ref: trigger-to-build-and-push-image
       template:
-        name: build-and-push-image
+        ref: build-and-push-image
     - name: multi-arch-build-trigger
       interceptors:
         - cel:
@@ -25,4 +25,4 @@ spec:
         - ref: trigger-to-build-and-push-image
         - ref: trigger-to-build-and-push-image-platform
       template:
-        name: build-and-push-image-multi-arch
+        ref: build-and-push-image-multi-arch

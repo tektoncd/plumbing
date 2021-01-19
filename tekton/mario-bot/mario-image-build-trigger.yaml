@@ -122,7 +122,7 @@ spec:
       bindings:
         - ref: mario-trigger-to-build-and-push-image
       template:
-        name: mario-build-and-push-image
+        ref: mario-build-and-push-image
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource

@@ -29,7 +29,7 @@ spec:
         - ref: deploy-source-git
         - ref: configmap-details
       template:
-        name: deploy-configmap
+        ref: deploy-configmap
     - name: folders
       interceptors:
         - cel:
@@ -41,7 +41,7 @@ spec:
         - ref: deploy-source-git
         - ref: folder-details
       template:
-        name: deploy-from-folder
+        ref: deploy-from-folder
     - name: helm
       interceptors:
         - cel:
@@ -52,7 +52,7 @@ spec:
         - ref: deploy-target-details
         - ref: helm-details
       template:
-        name: deploy-helm-chart
+        ref: deploy-helm-chart
     - name: tekton
       interceptors:
         - cel:
@@ -64,7 +64,7 @@ spec:
         - ref: tekton-details
         - ref: plumbing-git
       template:
-        name: deploy-tekton-release
+        ref: deploy-tekton-release
     - name: cleanup
       interceptors:
         - cel:
@@ -75,7 +75,7 @@ spec:
         - ref: deploy-target-details
         - ref: cleanup-details
       template:
-        name: cleanup-runs
+        ref: cleanup-runs
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
@@ -97,7 +97,7 @@ spec:
       - ref: taskrun-meta
       - ref: dashboard-url-dogfooding
       template:
-        name: cd-pipeline-failed-slack
+        ref: cd-pipeline-failed-slack
     - name: cd-pipeline-nightly-release-failed
       interceptors:
         - cel:
@@ -110,7 +110,7 @@ spec:
       - ref: pipelinerun-meta
       - ref: dashboard-url-dogfooding
       template:
-        name: cd-pipeline-failed-slack
+        ref: cd-pipeline-failed-slack
     - name: github-check-start
       interceptors:
         - cel:
@@ -121,7 +121,7 @@ spec:
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
-              - key: extensions.repo
+              - key: repo
                 expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
@@ -129,7 +129,7 @@ spec:
         - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
         - ref: tekton-ci-overlays
       template:
-        name: tekton-ci-github-check-update
+        ref: tekton-ci-github-check-update
     - name: github-check-success
       interceptors:
         - cel:
@@ -140,7 +140,7 @@ spec:
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
-              - key: extensions.repo
+              - key: repo
                 expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
@@ -148,7 +148,7 @@ spec:
         - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
         - ref: tekton-ci-overlays
       template:
-        name: tekton-ci-github-check-update
+        ref: tekton-ci-github-check-update
     - name: github-check-failure
       interceptors:
         - cel:
@@ -159,7 +159,7 @@ spec:
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
-              - key: extensions.repo
+              - key: repo
                 expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
       bindings:
         - ref: tekton-ci-taskrun-cloudevent
@@ -167,4 +167,4 @@ spec:
         - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
         - ref: tekton-ci-overlays
       template:
-        name: tekton-ci-github-check-update
+        ref: tekton-ci-github-check-update

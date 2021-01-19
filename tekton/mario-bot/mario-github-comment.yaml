@@ -28,7 +28,7 @@ spec:
       bindings:
         - ref: trigger-to-comment-github
       template:
-        name: mario-comment-github
+        ref: mario-comment-github
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate

@@ -9,4 +9,4 @@ spec:
       bindings:
         - ref: binding
       template:
-        name: template
+        ref: template

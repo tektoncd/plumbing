@@ -44,9 +44,9 @@ metadata:
 spec:
   params:
   - name: gitRevision
-    value: $(body.add_pr_body.pull_request_body.head.sha)
+    value: $(body.extensions.add_pr_body.pull_request_body.head.sha)
   - name: pullRequestNumber
-    value: $(body.add_pr_body.pull_request_body.number)
+    value: $(body.extensions.add_pr_body.pull_request_body.number)
   - name: pullRequestUrl
     value: $(body.issue.pull_request.html_url)
   - name: gitHubCommand
