@@ -16,10 +16,10 @@ Current buildcaptains are:
 - Vincent Demeester @vdemeester (vdemeest)
 
 Other folks who are not build captains but have build captain access:
-- Sunil Thaha @sthaha
+- Piyush Garg @piyush-garg
 - Priti Desai @pritidesai
 
-Build captain access is given with [addpermissions.py](../../addpermissions.py).
+Build captain access is given with [adjustpermissions.py](../../adjustpermissions.py).
 
 ## Rotation
 
