@@ -33,13 +33,14 @@ type triggerErrorPayload struct {
 type urlToList func(string, string) ([]string, error)
 
 const (
-	rootAddTeamMembersKey = "add_team_members"
-	orgUrlKey             = "org_base_url"
-	teamKey               = "team"
-	orgMembersKey         = "public_org_members"
-	teamMembersKey        = "maintainers_team_members"
-	publicMembersPath     = "%s/public_members"
-	teamPath              = "%s/teams/%s-maintainers/members"
+	RootExtensionsKey = "extensions"
+	prExtensionsKey   = "add_team_members"
+	orgUrlKey         = "org_base_url"
+	teamKey           = "team"
+	orgMembersKey     = "public_org_members"
+	teamMembersKey    = "maintainers_team_members"
+	publicMembersPath = "%s/public_members"
+	teamPath          = "%s/teams/%s-maintainers/members"
 )
 
 func main() {
@@ -102,7 +103,7 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 			return
 		}
 		// Add the PR body to the original body
-		jsonBody[rootAddTeamMembersKey].(map[string]interface{})[orgMembersKey] = orgMembers
+		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = orgMembers
 		// Get the team URL from the body
 		teamUrl, err := getTeamUrl(jsonBody)
 		if err != nil {
@@ -118,7 +119,7 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 			return
 		}
 		// Add the PR body to the original body
-		jsonBody[rootAddTeamMembersKey].(map[string]interface{})[teamMembersKey] = teamMembers
+		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[teamMembersKey] = teamMembers
 
 		// Marshal the body
 		responseBytes, err := json.Marshal(jsonBody)
@@ -175,7 +176,11 @@ func decodeListBody(body []byte) ([]interface{}, error) {
 }
 
 func getTeamMemberValue(key string, body map[string]interface{}) (string, error) {
-	addTeamMember, ok := body[rootAddTeamMembersKey]
+	extensionsBody, ok := body[RootExtensionsKey]
+	if !ok {
+		return "", errors.New("no 'extensions' found in the body")
+	}
+	addTeamMember, ok := extensionsBody.(map[string]interface{})[prExtensionsKey]
 	if !ok {
 		return "", errors.New("no 'add-team-member' found in the body")
 	}
