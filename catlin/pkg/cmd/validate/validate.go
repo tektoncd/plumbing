@@ -97,7 +97,7 @@ func validate(cli app.CLI, path string) error {
 		case validator.Info:
 			fmt.Fprintf(out, "INFO : %s\n", v.Message)
 		default:
-			level := strings.ToUpper(string(v.Kind))
+			level := strings.ToUpper(fmt.Sprint(v.Kind))
 			fmt.Fprintf(out, "%s : %s\n", level, v.Message)
 		}
 	}
