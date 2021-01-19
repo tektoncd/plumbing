@@ -80,7 +80,7 @@ spec:
       bindings:
         - ref: mario-trigger-binding
       template:
-        name: mario-trigger-template
+        ref: mario-trigger-template
 ```
 
 ## Configuring the GitHub secret

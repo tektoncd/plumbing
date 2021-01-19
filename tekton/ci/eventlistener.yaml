@@ -21,7 +21,7 @@ spec:
               body.repository.full_name == 'tektoncd/plumbing' &&
               (body.action == 'opened' || body.action == 'synchronize')
             overlays:
-            - key: extensions.git_clone_depth
+            - key: git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
@@ -29,7 +29,7 @@ spec:
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-plumbing-ci-pipeline
+        ref: tekton-plumbing-ci-pipeline
     - name: plumbing-comment-ci
       interceptors:
         - github:
@@ -56,15 +56,15 @@ spec:
               namespace: tektonci
         - cel:
             overlays:
-            - key: extensions.git_clone_depth
-              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
+            - key: git_clone_depth
+              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-issue-labels
       template:
-        name: tekton-plumbing-ci-pipeline
+        ref: tekton-plumbing-ci-pipeline
     - name: all-comment-ci
       interceptors:
         - github:
@@ -92,15 +92,15 @@ spec:
               namespace: tektonci
         - cel:
             overlays:
-            - key: extensions.git_clone_depth
-              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
+            - key: git_clone_depth
+              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-issue-labels
       template:
-        name: tekton-all-ci-pipeline
+        ref: tekton-all-ci-pipeline
     - name: all-pull-request-ci
       interceptors:
         - github:
@@ -122,7 +122,7 @@ spec:
         - ref: tekton-ci-webhook-pull-request
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-all-ci-pipeline
+        ref: tekton-all-ci-pipeline
     - name: cd-trigger
       interceptors:
         - github:
@@ -156,7 +156,7 @@ spec:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-tektoncd-comment
       template:
-        name: tekton-cd-triggers
+        ref: tekton-cd-triggers
     - name: website-pull-request-ci
       interceptors:
         - github:
@@ -170,7 +170,7 @@ spec:
               body.repository.full_name == 'tektoncd/website' &&
               (body.action == 'opened' || body.action == 'synchronize')
             overlays:
-            - key: extensions.git_clone_depth
+            - key: git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
@@ -178,7 +178,7 @@ spec:
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-website-ci-pipeline
+        ref: tekton-website-ci-pipeline
     - name: website-comment-ci
       interceptors:
         - github:
@@ -205,15 +205,15 @@ spec:
               namespace: tektonci
         - cel:
             overlays:
-            - key: extensions.git_clone_depth
-              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
+            - key: git_clone_depth
+              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-issue-labels
       template:
-        name: tekton-website-ci-pipeline
+        ref: tekton-website-ci-pipeline
     - name: community-pull-request-ci
       interceptors:
         - github:
@@ -227,7 +227,7 @@ spec:
               body.repository.full_name == 'tektoncd/community' &&
               (body.action == 'opened' || body.action == 'synchronize')
             overlays:
-            - key: extensions.git_clone_depth
+            - key: git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
@@ -235,7 +235,7 @@ spec:
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-community-ci-pipeline
+        ref: tekton-community-ci-pipeline
     - name: community-comment-ci
       interceptors:
         - github:
@@ -262,12 +262,12 @@ spec:
               namespace: tektonci
         - cel:
             overlays:
-            - key: extensions.git_clone_depth
-              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
+            - key: git_clone_depth
+              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-issue-labels
       template:
-        name: tekton-community-ci-pipeline
+        ref: tekton-community-ci-pipeline

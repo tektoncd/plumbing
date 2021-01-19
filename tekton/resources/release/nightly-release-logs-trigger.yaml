@@ -24,7 +24,7 @@ spec:
       bindings:
         - ref: publish-images-taskrun-to-release-logs
       template:
-        name: release-logs
+        ref: release-logs
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate

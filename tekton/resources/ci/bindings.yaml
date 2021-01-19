@@ -68,4 +68,4 @@ metadata:
 spec:
   params:
   - name: gitHubRepo
-    value: $(body.extensions.repo)
+    value: $(extensions.repo)

@@ -67,7 +67,7 @@ A trigger in an event listener:
           namespace: tektonci
     - cel:
         filter: >-
-          body.comment.user.login in body.add_team_members.maintainers_team_members
+          body.comment.user.login in body.extensions.add_team_members.maintainers_team_members
 ```
 
 ## Installation

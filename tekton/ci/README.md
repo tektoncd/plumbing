@@ -297,7 +297,7 @@ To react to pull requests:
               body.repository.full_name == 'tektoncd/plumbing' &&
               (body.action == 'opened' || body.action == 'synchronize')
             overlays:
-            - key: extensions.git_clone_depth
+            - key: git_clone_depth
               expression: "string(body.pull_request.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
@@ -305,7 +305,7 @@ To react to pull requests:
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-plumbing-ci-pipeline
+        ref: tekton-plumbing-ci-pipeline
 ```
 
 To react to issue comments:
@@ -338,13 +338,13 @@ To react to issue comments:
               namespace: tektonci
         - cel:
             overlays:
-            - key: extensions.git_clone_depth
-              expression: "string(body.add_pr_body.pull_request_body.commits + 1.0)"
+            - key: git_clone_depth
+              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       bindings:
         - ref: tekton-ci-github-base
         - ref: tekton-ci-webhook-comment
         - ref: tekton-ci-clone-depth
         - ref: tekton-ci-webhook-pr-labels
       template:
-        name: tekton-plumbing-ci-pipeline
+        ref: tekton-plumbing-ci-pipeline
 ```
