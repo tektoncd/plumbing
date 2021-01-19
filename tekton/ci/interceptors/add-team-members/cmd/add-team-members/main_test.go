@@ -47,7 +47,7 @@ func TestNoAddTeamMemberBody(t *testing.T) {
 
 	h(w, r)
 
-	assertBadRequestResponse(t, w, "no 'add-team-member' found in the body")
+	assertBadRequestResponse(t, w, "no 'extensions' found in the body")
 }
 
 func TestNoOrgUrlFound(t *testing.T) {
@@ -104,8 +104,8 @@ func TestFetchURL(t *testing.T) {
 
 	want := makeTeamBody(true, "foo://some_url", "team1")
 	wantTeamBody := []interface{}{string("foo"), string("bar")}
-	(*want)[rootAddTeamMembersKey].(map[string]interface{})[orgMembersKey] = wantTeamBody
-	(*want)[rootAddTeamMembersKey].(map[string]interface{})[teamMembersKey] = wantTeamBody
+	(*want)[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = wantTeamBody
+	(*want)[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[teamMembersKey] = wantTeamBody
 
 	resp := w.Result()
 
@@ -148,9 +148,10 @@ func marshalEvent(t *testing.T, evt interface{}) []byte {
 }
 
 func makeTeamBody(base bool, url, team string) *map[string]interface{} {
+	body := make(map[string]interface{})
 	teamAddBody := make(map[string]interface{})
 	if !base {
-		return &teamAddBody
+		return &body
 	}
 	var teamAddBodyContent map[string]interface{}
 	if url == "" {
@@ -163,8 +164,9 @@ func makeTeamBody(base bool, url, team string) *map[string]interface{} {
 	} else {
 		teamAddBodyContent[teamKey] = team
 	}
-	teamAddBody[rootAddTeamMembersKey] = teamAddBodyContent
-	return &teamAddBody
+	teamAddBody[prExtensionsKey] = teamAddBodyContent
+	body[RootExtensionsKey] = teamAddBody
+	return &body
 }
 
 func getTestAddTeamMemberBody(url, token string) ([]string, error) {
