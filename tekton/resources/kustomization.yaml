@@ -1,11 +1,9 @@
-namespace: default
 commonAnnotations:
   managed-by: Tekton
 
 resources:
 - images
-- org-permissions/peribolos.yaml
-- org-permissions/peribolos-trigger.yaml
+- org-permissions
 - release
 - cd
 - ci
