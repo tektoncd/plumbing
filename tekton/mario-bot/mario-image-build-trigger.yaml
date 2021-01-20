@@ -110,7 +110,6 @@ spec:
             secretRef:
               secretName: mario-github-secret
               secretKey: secret-token
-              namespace: mario
             eventTypes:
               - issue_comment
         - webhook:
@@ -118,7 +117,6 @@ spec:
               kind: Service
               name: mario
               apiVersion: v1
-              namespace: mario
       bindings:
         - ref: mario-trigger-to-build-and-push-image
       template:

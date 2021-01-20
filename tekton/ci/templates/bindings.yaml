@@ -20,7 +20,7 @@ metadata:
 spec:
   params:
   - name: gitCloneDepth
-    value: $(body.extensions.git_clone_depth)
+    value: $(extensions.git_clone_depth)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
