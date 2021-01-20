@@ -1,3 +1,4 @@
+namespace: default
 resources:
 - overlays/dashboard
 - overlays/pipeline

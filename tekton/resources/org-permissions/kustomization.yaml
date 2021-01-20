@@ -3,5 +3,5 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
-- bindings.yaml
-- github-template.yaml
+- peribolos.yaml
+- peribolos-trigger.yaml
