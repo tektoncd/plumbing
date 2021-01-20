@@ -60,7 +60,7 @@ spec:
         - name: e2e-test-pipeline
           runAfter: [deploy-pipeline]
           taskRef:
-            name: e2e-tests
+            name: e2e-remote-tests
           params:
           - name: package
             value: $(params.package)

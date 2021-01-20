@@ -10,3 +10,4 @@ resources:
 - cd
 - ci
 - nightly-release
+- nightly-tests
