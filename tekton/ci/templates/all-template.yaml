@@ -3,6 +3,8 @@ kind: TriggerTemplate
 metadata:
   name: tekton-all-ci-pipeline
   namespace: tektonci
+  annotations:
+    triggers.tekton.dev/old-escape-quotes: "true"
 spec:
   params:
   - name: buildUUID
