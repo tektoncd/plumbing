@@ -117,6 +117,7 @@ spec:
               kind: Service
               name: mario
               apiVersion: v1
+              namespace: mario
       bindings:
         - ref: mario-trigger-to-build-and-push-image
       template:
