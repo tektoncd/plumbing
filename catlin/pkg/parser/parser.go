@@ -35,7 +35,7 @@ import (
 
 func registerSchema() {
 	beta1 := runtime.NewSchemeBuilder(v1beta1.AddToScheme)
-	beta1.AddToScheme(scheme.Scheme)
+	_ = beta1.AddToScheme(scheme.Scheme)
 }
 
 type Resource struct {
