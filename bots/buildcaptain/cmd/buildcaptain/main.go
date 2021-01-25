@@ -13,7 +13,6 @@ import (
 const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/main/bots/buildcaptain/rotation.csv"
 
 var (
-	currentCaptain string
 	botID          string
 	token          string
 	channelID      string
@@ -51,12 +50,9 @@ func main() {
 		captainsID[user.Name] = user.ID
 	}
 
-	r := NewRotation(FromURL(rotationURL))
-	currentCaptain = captainsID[r.GetBuildCaptain(time.Now())]
-
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
-	go dailyPing(rtm, captainsID, r)
+	go dailyPing(rtm, captainsID)
 
 	for msg := range rtm.IncomingEvents {
 		switch ev := msg.Data.(type) {
@@ -67,7 +63,7 @@ func main() {
 			fmt.Println("Connection counter:", ev.ConnectionCount)
 		case *slack.MessageEvent:
 			if isDirectMessage(ev.Channel) || ev.Channel == channelID {
-				handleMessage(rtm, ev.Text, ev.Channel, isDirectMessage(ev.Channel))
+				handleMessage(rtm, ev.Text, ev.Channel, isDirectMessage(ev.Channel), captainsID)
 			}
 		case *slack.PresenceChangeEvent:
 			fmt.Printf("Presence Change: %v\n", ev)
@@ -85,10 +81,10 @@ func main() {
 	}
 }
 
-func handleMessage(rtm *slack.RTM, message, channel string, direct bool) {
+func handleMessage(rtm *slack.RTM, message, channel string, direct bool, captainsID map[string]string) {
 	switch {
 	case statusMessage(message, botID, direct):
-		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is the Build Captain :female-pilot:\nBuild Captain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCaptain), channel))
+		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is the Build Captain :female-pilot:\nBuild Captain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", getCurrentCaptain(captainsID)), channel))
 	case easterEggMessage(message, botID, direct):
 		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is my maker :meow-wow:, and he is old :older_man:, grumpy :face_with_raised_eyebrow: but awesome :hooray: :meow-party:", vdemeest), channel))
 	case directMessage(message, botID, direct):
@@ -141,11 +137,16 @@ func getMessages(messages []string, botID string, direct bool) []string {
 	return ms
 }
 
-func dailyPing(rtm *slack.RTM, captainsID map[string]string, r Rotation) {
+func getCurrentCaptain(captainsID map[string]string) string {
+	r := NewRotation(FromURL(rotationURL))
+	return captainsID[r.GetBuildCaptain(time.Now())]
+}
+
+func dailyPing(rtm *slack.RTM, captainsID map[string]string) {
 	jt := NewJobTicker()
 	for {
 		<-jt.t.C
-		currentCaptain = captainsID[r.GetBuildCaptain(time.Now())]
+		currentCaptain := getCurrentCaptain(captainsID)
 		if currentCaptain != "" {
 			// Only send the daily ping if there is actually a build captain.
 			rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("Hello :wave: today's <@%s> is the Build Captain :female-pilot:\nBuild Captain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCaptain), channelID))
