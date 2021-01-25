@@ -32,7 +32,7 @@ Build captain access is given with [adjustpermissions.py](../../adjustpermission
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: buildcop-cfg
+  name: buildcaptain-cfg
   namespace: default
 data:
   SLACKTOKEN: …token…
