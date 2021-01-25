@@ -90,7 +90,7 @@ func handleMessage(rtm *slack.RTM, message, channel string, direct bool) {
 	case statusMessage(message, botID, direct):
 		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is the Build Captain :female-pilot:\nBuild Captain log is here: https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk", currentCaptain), channel))
 	case easterEggMessage(message, botID, direct):
-		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is my master :meow-wow:, and he is old :older_man:, grumpy :face_with_raised_eyebrow: but awesome :hooray: :meow-party:", vdemeest), channel))
+		rtm.SendMessage(rtm.NewOutgoingMessage(fmt.Sprintf("<@%s> is my maker :meow-wow:, and he is old :older_man:, grumpy :face_with_raised_eyebrow: but awesome :hooray: :meow-party:", vdemeest), channel))
 	case directMessage(message, botID, direct):
 		rtm.SendMessage(rtm.NewOutgoingMessage(":thinking_face: I ain't smart :zany_face:, I don't understand what you are telling me :robot_face: …\n Try to tell me `status` or `who is the build captain ?` :sunglasses:", channel))
 	}
@@ -123,7 +123,7 @@ func statusMessage(message, botID string, direct bool) bool {
 }
 
 func getEasterEggMessages(botID string, direct bool) []string {
-	return getMessages([]string{"who is your master ?", "master ?", "master", "where do you come from ?"}, botID, direct)
+	return getMessages([]string{"who is your maker ?", "maker ?", "maker", "where do you come from ?"}, botID, direct)
 }
 
 func getStatusMessages(botID string, direct bool) []string {
