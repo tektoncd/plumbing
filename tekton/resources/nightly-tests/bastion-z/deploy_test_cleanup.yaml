@@ -87,6 +87,8 @@ spec:
       value: $(params.target-arch)
     - name: SYSTEM_NAMESPACE
       value: tekton-pipelines
+    - name: KUBECONFIG
+      value: /root/.kube/config
     command:
     - /bin/bash
     args:

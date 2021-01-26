@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: tekton-pipeline-nightly-run-
+      generateName: tekton-pipeline-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
       pipelineSpec:
@@ -61,6 +61,7 @@ spec:
           runAfter: [deploy-pipeline]
           taskRef:
             name: e2e-remote-tests
+          retries: 2
           params:
           - name: package
             value: $(params.package)
@@ -70,6 +71,28 @@ spec:
             value: $(params.kubeconfig-secret)
           - name: target-arch
             value: $(params.target-arch)
+          resources:
+            inputs:
+            - name: plumbing-source
+              resource: plumbing-source
+            - name: tekton-project-source
+              resource: tekton-pipeline-source
+        - name: examples-test-pipeline
+          runAfter: [e2e-test-pipeline]
+          taskRef:
+            name: e2e-remote-tests
+          retries: 2
+          params:
+          - name: package
+            value: $(params.package)
+          - name: container-registry
+            value: $(params.container-registry)
+          - name: kubeconfig-secret
+            value: $(params.kubeconfig-secret)
+          - name: target-arch
+            value: $(params.target-arch)
+          - name: tags
+            value: "examples"
           resources:
             inputs:
             - name: plumbing-source
