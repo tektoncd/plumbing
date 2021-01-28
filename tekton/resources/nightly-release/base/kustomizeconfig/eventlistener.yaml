@@ -6,7 +6,7 @@ nameReference:
     kind: EventListener
 - kind: TriggerTemplate
   fieldSpecs:
-  - path: spec/triggers/template/name
+  - path: spec/triggers/template/ref
     kind: EventListener
 - kind: ServiceAccount
   fieldSpecs:
