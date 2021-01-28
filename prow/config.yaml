@@ -989,6 +989,7 @@ presubmits:
   - name: pull-tekton-results-integration-tests
     labels:
       preset-presubmit-sh: "true"
+      preset-kind-volume-mounts: "true"
     agent: kubernetes
     always_run: true
     decorate: true
