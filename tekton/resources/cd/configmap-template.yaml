@@ -38,7 +38,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-configmap-$(tt.params.configMapDescription)-$(uid)
+      generateName: deploy-configmap-$(tt.params.configMapDescription)-
     spec:
       taskSpec:
         params:

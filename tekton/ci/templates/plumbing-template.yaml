@@ -31,7 +31,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-ko-build-$(uid)
+      generateName: plumbing-ko-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-ko-build
@@ -71,7 +71,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-ko-gcloud-build-$(uid)
+      generateName: plumbing-ko-gcloud-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-ko-gcloud-build
@@ -111,7 +111,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-hub-build-$(uid)
+      generateName: plumbing-hub-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-hub-build
@@ -151,7 +151,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-kubectl-build-$(uid)
+      generateName: plumbing-kubectl-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-kubectl-build
@@ -191,7 +191,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-skopeo-build-$(uid)
+      generateName: plumbing-skopeo-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-skopeo-build
@@ -231,7 +231,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-test-runner-build-$(uid)
+      generateName: plumbing-test-runner-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-test-runner-build
@@ -271,7 +271,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-tkn-build-$(uid)
+      generateName: plumbing-tkn-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-tkn-build
@@ -311,7 +311,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-coverage-build-$(uid)
+      generateName: plumbing-coverage-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-coverage-build
@@ -351,7 +351,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-openssh-server-build-$(uid)
+      generateName: plumbing-openssh-server-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-openssh-server-build
@@ -391,7 +391,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-yamllint-$(uid)
+      generateName: tekton-yamllint-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-yamllint
@@ -431,7 +431,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-golang-lint-$(uid)
+      generateName: tekton-golang-lint-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-golang-lint
@@ -469,7 +469,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: plumbing-alpine-git-nonroot-build-$(uid)
+      generateName: plumbing-alpine-git-nonroot-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: plumbing-alpine-git-nonroot-build

@@ -24,7 +24,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: build-and-push-$(tt.params.imageName)-$(uid)
+      generateName: build-and-push-$(tt.params.imageName)-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         plumbing.tekton.dev/image: $(tt.params.imageName)

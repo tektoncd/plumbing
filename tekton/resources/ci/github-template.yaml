@@ -33,7 +33,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: $(tt.params.checkName)-pr-$(tt.params.gitHubCheckStatus)-$(uid)
+      generateName: $(tt.params.checkName)-pr-$(tt.params.gitHubCheckStatus)-
       namespace: tektonci
     spec:
       serviceAccountName: tekton-ci-jobs

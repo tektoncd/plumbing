@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: cd-echo-test-$(uid)
+      generateName: cd-echo-test-
       labels:
         tekton.dev/kind: cd
     spec:

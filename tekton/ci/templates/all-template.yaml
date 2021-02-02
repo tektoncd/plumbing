@@ -33,7 +33,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: check-pr-labels-$(uid)
+      generateName: check-pr-labels-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/check-name: check-pr-has-kind-label
