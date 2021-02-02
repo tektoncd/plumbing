@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: tekton-python-test-pipelinerun-$(uid)
+      generateName: tekton-python-test-pipelinerun-
     spec:
       pipelineRef:
         name: tekton-python-test-pipeline

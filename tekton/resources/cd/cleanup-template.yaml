@@ -28,7 +28,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: cleanup-runs-$(tt.params.clusterResource)-$(tt.params.namespace)-$(uid)
+      generateName: cleanup-runs-$(tt.params.clusterResource)-$(tt.params.namespace)-
     spec:
       taskSpec:
         params:

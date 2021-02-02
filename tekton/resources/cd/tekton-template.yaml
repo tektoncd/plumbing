@@ -44,7 +44,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-$(uid)
+      generateName: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-
     spec:
       taskRef:
         name: install-tekton-release

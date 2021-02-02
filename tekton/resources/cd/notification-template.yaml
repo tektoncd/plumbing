@@ -31,7 +31,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: send-to-webhook-slack-$(uid)
+      generateName: send-to-webhook-slack-
     spec:
       taskRef:
         name: send-to-webhook-slack

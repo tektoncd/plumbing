@@ -227,7 +227,7 @@ downstream CEL filters to work correctly.
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: CHECK-NAME-$(uid) # uid *MUST* be used here. The name is for information only.
+      generateName: CHECK-NAME- # generateName *MUST* be used here. The name is for information only.
       labels:
         tekton.dev/kind: ci
         tekton.dev/check-name: CHECK-NAME # *MUST* be the GitHub check name

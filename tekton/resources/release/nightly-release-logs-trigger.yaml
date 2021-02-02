@@ -44,7 +44,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      generateName: save-release-logs-$(uid)-
+      generateName: save-release-logs-
     spec:
       serviceAccountName: tekton-logs
       taskRef:

@@ -39,7 +39,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: deploy-resources-$(tt.params.folderDescription)-$(uid)
+      generateName: deploy-resources-$(tt.params.folderDescription)-
     spec:
       taskSpec:
         params:
