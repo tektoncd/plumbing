@@ -100,7 +100,7 @@ spec:
               },
               "plumbing": {
                 "repository": "github.com/tektoncd/plumbing",
-                "revision": "master"
+                "revision": "main"
               }
             }
           }

@@ -66,7 +66,7 @@ If you need those for development, you'll need to ensure that:
 - Install resources under `tekton/resources` to deploy the
   `tekton-events` event listener
 - Configure Tekton send cloud events to the `tekton-events`
-  event listener like on the [dogfooding](https://github.com/tektoncd/plumbing/blob/master/tekton/cd/pipeline/overlays/dogfooding/config-defaults.yaml) cluster.
+  event listener like on the [dogfooding](https://github.com/tektoncd/plumbing/blob/main/tekton/cd/pipeline/overlays/dogfooding/config-defaults.yaml) cluster.
 - Create the [secret](https://github.com/tektoncd/plumbing/blob/534861ab15eb5787cac51512eaae6ca2101a7573/tekton/resources/ci/github-template.yaml#L121-L123)
   needed by the GitHub update jobs to update status checks.
 

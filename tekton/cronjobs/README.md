@@ -186,7 +186,7 @@ spec:
             - name: GIT_REPOSITORY
               value: github.com/tektoncd/plumbing
             - name: GIT_REVISION
-              value: master
+              value: main
             - name: TARGET_IMAGE
               value: gcr.io/tekton-releases/dogfooding/myimage:latest
             - name: CONTEXT_PATH

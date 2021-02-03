@@ -51,9 +51,9 @@ We currently run a cron job synchronize labels in
 We use a separate cluster in a restricted project because modifying the labels requires write permission on all repos.
 
 We have a CronJob to sync the labels, defined
-[here](https://github.com/tektoncd/plumbing/blob/master/label_sync/cluster/label_sync_job.yaml).
+[here](https://github.com/tektoncd/plumbing/blob/main/label_sync/cluster/label_sync_job.yaml).
 After making changes to `labels.yaml`, we need to update the configmap
-[label-config-v2](https://github.com/tektoncd/plumbing/blob/master/label_sync/cluster/label_sync_job.yaml#L37):
+[label-config-v2](https://github.com/tektoncd/plumbing/blob/main/label_sync/cluster/label_sync_job.yaml#L37):
 ```
 # Setup kubectl to point to prow cluster in tekton-release
 kubectl -n github-admin delete configmap label-config-v2
@@ -63,7 +63,7 @@ kubectl -n github-admin create configmap label-config-v2 --from-file=labels.yaml
 ### Create a GitHub OAuth token
 
 Use GitHub to create an OAuth token
- 
+
   * You need repo scope in order to modify labels on issues
 
 ```

@@ -15,7 +15,7 @@ spec:
               - name: GIT_REPOSITORY
                 value: "github.com/tektoncd/plumbing"
               - name: GIT_REVISION
-                value: "master"
+                value: "main"
               - name: CONFIG_PATH
                 value: "prow/plugins.yaml"
               - name: NAMESPACE

@@ -4,7 +4,7 @@
 adjustpermissions.py gives users access to the Tekton GCP projects
 
 In order to interact with GCP resources
-(https://github.com/tektoncd/plumbing/blob/master/README.md#gcp-projects)
+(https://github.com/tektoncd/plumbing/blob/main/README.md#gcp-projects)
 folks sometimes need to be able to do actions like push images and view
 a project in the web console.
 
@@ -41,7 +41,7 @@ KNOWN_PROJECTS = (
   "tekton-releases",
   "tekton-nightly",
 )
-BOSKOS_CONFIG_URL = "https://raw.githubusercontent.com/tektoncd/plumbing/master/boskos/boskos-config.yaml"
+BOSKOS_CONFIG_URL = "https://raw.githubusercontent.com/tektoncd/plumbing/main/boskos/boskos-config.yaml"
 
 
 def gcloud_required() -> None:
