@@ -278,12 +278,12 @@ The plumbing git resource:
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: plumbing-git-master
+  name: plumbing-git-main
 spec:
   type: git
   params:
     - name: revision
-      value: master
+      value: main
     - name: url
       value: https://github.com/tektoncd/plumbing
 ```
@@ -331,7 +331,7 @@ tkn pipeline start \
   --param=package=github.com/tektoncd/pipeline \
   --resource=bucket=<tekton-bucket-resource> \
   --resource=test-cluster=<test-cluster> \
-  --resource=plumbing=plumbing-git-master \
+  --resource=plumbing=plumbing-git-main \
   --resource=tests=pipeline-git-v0-7-0 \
   --resource=results-bucket=tekton-results-bucket \
   verify-deploy-test-tekton-release

@@ -10,7 +10,7 @@ import (
 	"github.com/nlopes/slack"
 )
 
-const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/master/bots/buildcaptain/rotation.csv"
+const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/main/bots/buildcaptain/rotation.csv"
 
 var (
 	currentCaptain string

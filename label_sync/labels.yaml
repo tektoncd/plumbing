@@ -9,7 +9,7 @@
 default:
   labels:
     ##########################################################################
-    # Triage labels: Build Captains (more at https://github.com/tektoncd/plumbing/tree/master/buildcaptain) should
+    # Triage labels: Build Captains (more at https://github.com/tektoncd/plumbing/tree/main/buildcaptain) should
     # apply these labels when triaging issues:
     ##########################################################################
 

@@ -54,7 +54,7 @@ SSL Certificate are generated automatically using a `ClusterIssuer` managed by
 - To deploy the `ClusterIssuer`:
 
 ```bash
-kubectl apply -f https://github.com/tektoncd/plumbing/blob/master/tekton/certificates/clusterissuer.yaml
+kubectl apply -f https://github.com/tektoncd/plumbing/blob/main/tekton/certificates/clusterissuer.yaml
 ```
 
 - Apply the ingress resources and update the `*.tekton.dev` DNS configuration.
@@ -62,7 +62,7 @@ kubectl apply -f https://github.com/tektoncd/plumbing/blob/master/tekton/certifi
 
 The following DNS names and corresponding ingresses are defined:
 
-- `dashboard.dogfooding.tekton.dev`: [ingress](https://github.com/tektoncd/plumbing/blob/master/tekton/cd/dashboard/overlays/dogfooding/ingress.yaml)
+- `dashboard.dogfooding.tekton.dev`: [ingress](https://github.com/tektoncd/plumbing/blob/main/tekton/cd/dashboard/overlays/dogfooding/ingress.yaml)
 
 To see the IP of the ingress in the new cluster:
 
@@ -89,20 +89,20 @@ which shows Stackdriver log entries for PipelineRuns.
 Manifests for various resources are deployed to the dogfooding clusters from different repositories.
 For the plumbing repo, manifest are applied nightly through two cronjobs:
 
-- [tekton](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton)
-- [tekton-cronjobs](https://github.com/tektoncd/plumbing/tree/master/tekton/cronjobs/dogfooding/manifests/plumbing-tekton-cronjobs)
+- [tekton](https://github.com/tektoncd/plumbing/tree/main/tekton/cronjobs/dogfooding/manifests/plumbing-tekton)
+- [tekton-cronjobs](https://github.com/tektoncd/plumbing/tree/main/tekton/cronjobs/dogfooding/manifests/plumbing-tekton-cronjobs)
 
 Manifests from other repos (pipeline, dashboard and triggers) are applied manually for now.
 
 ### Service Accounts
 
 Service accounts definitions are stored in git and are applied as part of CD, expect for the case of
-[Cluster Roles](https://github.com/tektoncd/plumbing/blob/master/tekton/resources/cd/serviceaccount.yaml)
+[Cluster Roles](https://github.com/tektoncd/plumbing/blob/main/tekton/resources/cd/serviceaccount.yaml)
 and related bindings, as they would require giving too broad access to the CD service account.
 
 ## Tekton Services
 
-Tekton services are deployed using the [`deploy-release.sh`](https://github.com/tektoncd/plumbing/blob/master/scripts/deploy-release.sh)
+Tekton services are deployed using the [`deploy-release.sh`](https://github.com/tektoncd/plumbing/blob/main/scripts/deploy-release.sh)
 script, which submits a kubernets `Job` to the `robocat` cluster, to trigger a deployment on the
 `dogfooding` cluster. The `Job` triggers and event listener on the `robocat` cluster, and triggers
 a Tekton task that downloads a release from the release bucket, optionally applies overlays and
