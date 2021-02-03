@@ -1,4 +1,4 @@
-# :cat: Catlin :cat: 
+# :cat: Catlin :cat:
 
 Catlin is a command-line tool that Lints Tekton Resources and Catalogs.
 
@@ -20,4 +20,4 @@ This command validates
 catlin validate <path-to-resource-file>
 ```
 
-[tep]:https://github.com/tektoncd/community/blob/master/teps/0003-tekton-catalog-organization.md
+[tep]:https://github.com/tektoncd/community/blob/main/teps/0003-tekton-catalog-organization.md

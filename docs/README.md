@@ -23,12 +23,12 @@ static and the rest are dynamic (provisioned on demand).
 - [*robocat*](robocat.md): This cluster is our test bed for continuous
   deployment of services and resources. Everything that runs in this cluster is
   deployed automatically, which means it must be possible at any time to delete
-  the cluster and recreate it from scratch. 
+  the cluster and recreate it from scratch.
 
 ## GCP projects
 
 Automation for the `tektoncd` org runs in a GKE cluster which
-[members of the governing board](https://github.com/tektoncd/community/blob/master/governance.md#permissions-and-access)
+[members of the governing board](https://github.com/tektoncd/community/blob/main/governance.md#permissions-and-access)
 have access to.
 
 There are several GCP projects used by Tekton:

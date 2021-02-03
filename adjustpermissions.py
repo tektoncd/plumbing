@@ -9,7 +9,7 @@ folks sometimes need to be able to do actions like push images and view
 a project in the web console.
 
 This script will add the permissions allowed to folks on the governing board
-(https://github.com/tektoncd/community/blob/master/governance.md#permissions-and-access)
+(https://github.com/tektoncd/community/blob/main/governance.md#permissions-and-access)
 to all GCP projects. It can also be used to remove permissions if needed.
 
 This script requires the `gcloud` command line tool and the python
@@ -80,4 +80,3 @@ if __name__ == '__main__':
   gcloud_required()
   boskos_projects = parse_boskos_projects()
   update_all_projects([u.strip() for u in args.users.split(",")], list(KNOWN_PROJECTS) + boskos_projects, args.remove)
-
