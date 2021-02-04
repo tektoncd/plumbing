@@ -53,14 +53,6 @@ spec:
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
       resources:
-        - name: source
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: master
-            - name: url
-              value: $(tt.params.gitRepository)
         - name: pr
           resourceSpec:
             type: pullRequest
