@@ -12,8 +12,6 @@ spec:
     - name: labels
       description: The labels attached to the Pull Request
   resources:
-    - name: source
-      type: git
     - name: pr
       type: pullRequest
   tasks:
@@ -32,8 +30,6 @@ spec:
       value: $(params.labels)
     resources:
       inputs:
-      - name: source
-        resource: source
       - name: pr
         resource: pr
       outputs:

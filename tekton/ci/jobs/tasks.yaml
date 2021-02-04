@@ -150,8 +150,6 @@ metadata:
 spec:
   resources:
     inputs:
-      - name: source
-        type: git
       - name: pr
         type: pullRequest
     outputs:
