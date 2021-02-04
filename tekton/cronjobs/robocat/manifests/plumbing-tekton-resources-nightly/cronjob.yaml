@@ -17,7 +17,7 @@ spec:
               - name: GIT_REVISION
                 value: "main"
               - name: NAMESPACE
-                value: "default"
+                value: ""
               - name: CLUSTER_RESOURCE
                 value: "robocat-cadmin"
               - name: FOLDER_PATH
