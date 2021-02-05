@@ -52,14 +52,3 @@ spec:
           value: check-pr-has-kind-label
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
-      resources:
-        - name: pr
-          resourceSpec:
-            type: pullRequest
-            params:
-            - name: url
-              value: $(tt.params.pullRequestUrl)
-            secrets:
-            - fieldName: authToken
-              secretName: bot-token-github
-              secretKey: bot-token

@@ -148,13 +148,6 @@ metadata:
   description: |
     Verifies that a PR has one valid kind label
 spec:
-  resources:
-    inputs:
-      - name: pr
-        type: pullRequest
-    outputs:
-      - name: pr
-        type: pullRequest
   params:
   - name: labels
     description: The labels attached to the Pull Request
@@ -163,12 +156,6 @@ spec:
     configMap:
       name: label-config-v2
   steps:
-  - name: copy-pr-to-output
-    image: busybox
-    script: |
-      #!/bin/sh
-      mkdir -p $(outputs.resources.pr.path)
-      cp -r $(inputs.resources.pr.path)/* $(outputs.resources.pr.path)/
   - name: install-pyyaml
     image: python:3-alpine
     script: |
@@ -187,38 +174,31 @@ spec:
 
       prLabelsText = """$(params.labels)"""
       prLabels = json.loads(prLabelsText)
-      labelNames = list(map(lambda e: e["name"], prLabels))
-      kindLabels = list(filter(lambda e: "kind" in e, labelNames))
 
       availableLabels = None
-      with open("/etc/config/labels.yaml", "r") as stream:
+      with open("labels.yaml", "r") as stream:
         availableLabels = yaml.safe_load(stream)["default"]["labels"]
 
-      availableKindLabels = list(filter(lambda e: "kind/" in e["name"], availableLabels))
-      availableKindNamesAndDescriptions = map(lambda e: "`" +str(e["name"])+ "`" + ":  " + str(e["description"]), availableKindLabels)
+      availableKindLabels = {x.get("name"):x.get("description") for x in availableLabels if x.get("name").startswith("kind/")}
+      foundKindLabels = set([x.get("name") for x in prLabels if x.get("name").startswith("kind/") and x.get("name")])
+      validKindLabels = set([x for x in foundKindLabels if x in availableKindLabels])
 
-      comment_template=""
-      if (len(kindLabels) > 1 or len(kindLabels) == 0):
-        comment_template += """
-      **This PR cannot be merged:** expecting exactly one kind/ label
-
-      <details>
-
-      Available `kind/` labels are:
-
-      """
-
-        for i in availableKindNamesAndDescriptions:
-          comment_template += i + "\n"
-
-        comment_template += """
-
-      </details>
-      """
-        new_comment_path = "$(outputs.resources.pr.path)/comments/new.json"
-        comment_body = dict(body=comment_template)
-        with open(new_comment_path, "w") as comment:
-          json.dump(comment_body, comment)
+      # Check that we have one and only one kind label
+      foundLabels = len(validKindLabels)
+      if (foundLabels > 1 or foundLabels == 0):
+        msg = "Error: {} valid \"kind/*\" labels found".format(foundLabels)
+        if foundLabels > 1:
+            msg += "({})".format(validKindLabels)
+        msg += ", expecting exactly one."
+        invalidKindLabels = foundKindLabels - validKindLabels
+        if len(invalidKindLabels) > 0:
+            msg += " Invalid labels found: {}".format(invalidKindLabels)
+        print(msg)
+        print("\nAvailable \"kind/*\" labels are:")
+        for label, description in availableKindLabels.items():
+          print("\t{}: {}".format(label, description))
 
         # Check failed. Return exit code 1.
         sys.exit(1)
+      else:
+        print("Exactly one \"kind/*\" label found: {}".format(validKindLabels[0]))
