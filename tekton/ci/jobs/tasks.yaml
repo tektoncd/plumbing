@@ -176,7 +176,7 @@ spec:
       prLabels = json.loads(prLabelsText)
 
       availableLabels = None
-      with open("labels.yaml", "r") as stream:
+      with open("/etc/config/labels.yaml", "r") as stream:
         availableLabels = yaml.safe_load(stream)["default"]["labels"]
 
       availableKindLabels = {x.get("name"):x.get("description") for x in availableLabels if x.get("name").startswith("kind/")}
@@ -201,4 +201,4 @@ spec:
         # Check failed. Return exit code 1.
         sys.exit(1)
       else:
-        print("Exactly one \"kind/*\" label found: {}".format(validKindLabels[0]))
+        print("Exactly one \"kind/*\" label found: {}".format(validKindLabels))
