@@ -1,0 +1,16 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: release-details
+spec:
+  params:
+  - name: buildID
+    value: $(body.buildUUID)
+  - name: gitrevision
+    value: $(body.params.release.gitRevision)
+  - name: gitrepository
+    value: $(body.params.release.gitRepository)
+  - name: versionTag
+    value: $(body.params.release.versionTag)
+  - name: projectName
+    value: $(body.params.release.projectName)

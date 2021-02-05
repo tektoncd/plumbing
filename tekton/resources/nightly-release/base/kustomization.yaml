@@ -4,9 +4,8 @@ commonLabels:
 commonAnnotations:
   release: nightly
 resources:
-  - bindings.yaml
-  - serviceaccount.yaml
   - template.yaml
-  - eventlistener.yaml
+  - trigger.yaml
 configurations:
 - kustomizeconfig/eventlistener.yaml
+- kustomizeconfig/pipeline.yaml

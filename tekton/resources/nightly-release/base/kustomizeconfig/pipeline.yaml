@@ -1,0 +1,16 @@
+# Apply name prefix to resource refs.
+nameReference:
+- kind: Task
+  fieldSpecs:
+  - path: spec/tasks/taskRef/name
+    kind: Pipeline
+- kind: PipelineResource
+  fieldSpecs:
+  - path: spec/resourcetemplates/spec/resources/resourceRef/name
+    kind: TriggerTemplate
+- kind: Pipeline
+  fieldSpecs:
+  - path: spec/pipelineRef/name
+    kind: PipelineRun
+  - path: spec/resourcetemplates/spec/pipelineRef/name
+    kind: TriggerTemplate

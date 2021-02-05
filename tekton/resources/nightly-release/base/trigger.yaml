@@ -1,0 +1,11 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: nightly
+spec:
+  serviceAccountName: nightly-account
+  interceptors:  # yamllint disable-line rule:empty-values
+  bindings:
+    - ref: release-details
+  template:
+    ref: template

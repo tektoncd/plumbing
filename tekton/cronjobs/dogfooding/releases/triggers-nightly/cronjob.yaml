@@ -12,8 +12,8 @@ spec:
           containers:
           - name: trigger
             env:
-              - name: SINK_URL
-                value: el-triggers-nightly-release-cron.default.svc.cluster.local:8080
+              - name: PROJECT_NAME
+                value: triggers
           initContainers:
           - name: git
             env:
