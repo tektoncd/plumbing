@@ -11,9 +11,6 @@ spec:
       description: The command that was used to trigger testing
     - name: labels
       description: The labels attached to the Pull Request
-  resources:
-    - name: pr
-      type: pullRequest
   tasks:
   - name: check-kind-label
     conditions:
@@ -28,10 +25,3 @@ spec:
     params:
     - name: labels
       value: $(params.labels)
-    resources:
-      inputs:
-      - name: pr
-        resource: pr
-      outputs:
-      - name: pr
-        resource: pr
