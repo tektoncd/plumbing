@@ -73,15 +73,23 @@ spec:
                 cat <<EOF > /shared/post-body.json
                 {
                   "buildUUID": "$TRIGGER_UUID",
-                  "gitrevision": "$GIT_SHA",
-                  "gitrepository": "$GIT_REPO",
-                  "versionTag": "$VERSION_TAG"
+                  "trigger-template": "nightly-release",
+                  "params": {
+                    "release": {
+                      "gitRevision": "$GIT_SHA",
+                      "gitRepository": "$GIT_REPO",
+                      "versionTag": "$VERSION_TAG",
+                      "projectName": "$PROJECT_NAME"
+                    }
+                  }
                 }
                 EOF
                 curl -d @/shared/post-body.json $SINK_URL
             env:
               - name: SINK_URL
-                value: "sink-url"
+                value: "el-tekton-nightly.tekton-nightly.svc.cluster.local:8080"
+              - name: PROJECT_NAME
+                value: "project-name"
             volumeMounts:
             - mountPath: /shared
               name: shared-volume

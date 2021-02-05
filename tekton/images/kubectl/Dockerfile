@@ -23,7 +23,7 @@ RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-rele
 # Install Kustomize
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.8.1
+RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.9.3
 
 FROM alpine:3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
