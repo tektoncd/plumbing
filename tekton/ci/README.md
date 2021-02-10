@@ -82,6 +82,16 @@ When a start, failed or succeeded event is received for a CI job, the
 [`github-template.yaml`](../resources/ci/github-template.yaml) is triggered,
 which takes care of updating the check status on GitHub side accordingly.
 
+The `github-template` adds labels to the task runs it triggers to make it
+easier to associate them back with the source task run:
+
+```yaml
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+```
+
 ## CI Job Interface
 
 The existing overlays and bindings produce a set of parameters available to CI jobs
