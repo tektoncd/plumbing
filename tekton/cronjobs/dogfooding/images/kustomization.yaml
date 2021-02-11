@@ -12,3 +12,4 @@ resources:
 - yamllint-nightly
 - buildx-gcloud-nightly
 - teps-community-nightly
+- catlin-nightly
