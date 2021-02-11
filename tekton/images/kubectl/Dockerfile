@@ -28,6 +28,11 @@ RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.9.3
 FROM alpine:3.12
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
+# Kustomize requires git when pulling remote resources
+RUN apk --update add git less openssh && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm /var/cache/apk/*
+
 # Get Kubectl and Kustomize from the build image
 COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=build /usr/local/go/bin/kustomize /usr/local/bin/kustomize
