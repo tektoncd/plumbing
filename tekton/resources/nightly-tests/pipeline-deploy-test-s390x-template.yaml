@@ -14,13 +14,16 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-pipeline-nightly-test
+  name: tekton-pipeline-nightly-test-s390x
 spec:
   params:
   - name: containerRegistry
-  - name: kubeconfigSecret
   - name: targetArch
   - name: namespace
+  - name: remoteHost
+  - name: remotePort
+  - name: remoteUser
+  - name: remoteSecret
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
@@ -28,7 +31,31 @@ spec:
       generateName: tekton-pipeline-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
+      timeout: 2h
+      workspaces:
+      # this workspace will be used to store k8s config
+      - name: k8s-shared
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Mi
+      # this workspace will be used to store ssh key
+      - name: ssh-secret
+        secret:
+          secretName: $(tt.params.remoteSecret)
+          items:
+          - key: privatekey
+            path: id_rsa
+            # yamllint disable rule:octal-values
+            mode: 0600
+            # yamllint enable
       pipelineSpec:
+        workspaces:
+        - name: k8s-shared
+        - name: ssh-secret
         resources:
         - name: plumbing-source
           type: git
@@ -37,20 +64,38 @@ spec:
         params:
         - name: package
         - name: container-registry
-        - name: kubeconfig-secret
         - name: target-arch
-        - name: resources
+        - name: remote-host
+        - name: remote-port
+        - name: remote-user
         tasks:
+        - name: create-k8s-cluster
+          taskRef:
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
+          workspaces:
+          - name: k8s-shared
+            workspace: k8s-shared
+          - name: ssh-secret
+            workspace: ssh-secret
+          params:
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
         - name: deploy-pipeline
+          runAfter: [create-k8s-cluster]
           taskRef:
             name: deploy-tekton-project-nightly
+          workspaces:
+          - name: k8s-shared
+            workspace: k8s-shared
           params:
           - name: package
             value: $(params.package)
           - name: container-registry
             value: $(params.container-registry)
-          - name: kubeconfig-secret
-            value: $(params.kubeconfig-secret)
           - name: target-arch
             value: $(params.target-arch)
           resources:
@@ -60,15 +105,16 @@ spec:
         - name: e2e-test-pipeline
           runAfter: [deploy-pipeline]
           taskRef:
-            name: e2e-remote-tests
+            name: test-e2e-tekton-component
+          workspaces:
+          - name: k8s-shared
+            workspace: k8s-shared
           retries: 2
           params:
           - name: package
             value: $(params.package)
           - name: container-registry
             value: $(params.container-registry)
-          - name: kubeconfig-secret
-            value: $(params.kubeconfig-secret)
           - name: target-arch
             value: $(params.target-arch)
           resources:
@@ -80,15 +126,16 @@ spec:
         - name: examples-test-pipeline
           runAfter: [e2e-test-pipeline]
           taskRef:
-            name: e2e-remote-tests
+            name: test-e2e-tekton-component
+          workspaces:
+          - name: k8s-shared
+            workspace: k8s-shared
           retries: 2
           params:
           - name: package
             value: $(params.package)
           - name: container-registry
             value: $(params.container-registry)
-          - name: kubeconfig-secret
-            value: $(params.kubeconfig-secret)
           - name: target-arch
             value: $(params.target-arch)
           - name: tags
@@ -100,33 +147,36 @@ spec:
             - name: tekton-project-source
               resource: tekton-pipeline-source
         finally:
-        - name: cleanup
+        - name: delete-k8s-cluster-$(tt.params.targetArch)
           taskRef:
-            name: cleanup-tekton-nightly
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
+          workspaces:
+          - name: k8s-shared
+            workspace: k8s-shared
+          - name: ssh-secret
+            workspace: ssh-secret
           params:
-          - name: package
-            value: $(params.package)
-          - name: resources
-            value: $(params.resources)
-          - name: kubeconfig-secret
-            value: $(params.kubeconfig-secret)
-          resources:
-            inputs:
-            - name: plumbing-source
-              resource: plumbing-source
-            - name: tekton-project-source
-              resource: tekton-pipeline-source
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
+          - name: action
+            value: delete
       params:
       - name: package
         value: github.com/tektoncd/pipeline
-      - name: resources
-        value: "conditions pipelineresources tasks pipelines taskruns pipelineruns"
       - name: container-registry
         value: $(tt.params.containerRegistry)
-      - name: kubeconfig-secret
-        value: $(tt.params.kubeconfigSecret)
       - name: target-arch
         value: $(tt.params.targetArch)
+      - name: remote-host
+        value: $(tt.params.remoteHost)
+      - name: remote-port
+        value: $(tt.params.remotePort)
+      - name: remote-user
+        value: $(tt.params.remoteUser)
       resources:
       - name: tekton-pipeline-source
         resourceSpec:

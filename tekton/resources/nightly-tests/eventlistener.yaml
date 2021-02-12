@@ -5,16 +5,18 @@ metadata:
 spec:
   serviceAccountName: tekton-test-nightly
   triggers:
-  - name: pipeline-nightly-test-trigger
+  - name: pipeline-nightly-test-trigger-s390x
     interceptors:
     - cel:
         filter: >-
           'trigger-template' in body &&
-           body['trigger-template'] == 'pipeline'
+           body['trigger-template'] == 'pipeline' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
-      name: tekton-pipeline-nightly-test
+      name: tekton-pipeline-nightly-test-s390x
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -27,6 +29,12 @@ spec:
   - name: containerRegistry
     value: $(body.params.target.registry)
   - name: targetArch
-    value: $(body.params.target.targetArch)
-  - name: kubeconfigSecret
-    value: $(body.params.target.kubeconfigSecret)
+    value: $(body.params.target.arch)
+  - name: remoteSecret
+    value: $(body.params.remote.secret)
+  - name: remoteHost
+    value: $(body.params.remote.host)
+  - name: remotePort
+    value: $(body.params.remote.port)
+  - name: remoteUser
+    value: $(body.params.remote.user)

@@ -4,5 +4,5 @@ commonAnnotations:
 resources:
 - bastion-z
 - eventlistener.yaml
-- pipeline-deploy-test-template.yaml
+- pipeline-deploy-test-s390x-template.yaml
 - serviceaccount.yaml

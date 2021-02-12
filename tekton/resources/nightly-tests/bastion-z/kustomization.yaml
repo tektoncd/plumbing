@@ -3,4 +3,6 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
-- deploy_test_cleanup.yaml
+- k8s_cluster_setup.yaml
+- test_tekton_component.yaml
+- deploy_tekton_component.yaml
