@@ -38,8 +38,14 @@ spec:
                   "params": {
                     "target": {
                       "registry": "$REGISTRY",
-                      "targetArch": "$TARGET_ARCH",
-                      "kubeconfigSecret": "$KUBECONFIG_SECRET"
+                      "arch": "$TARGET_ARCH",
+                      "kubeconfigSecret": "$KUBECONFIG_SECRET_NAME"
+                    },
+                    "remote": {
+                       "host": "$REMOTE_HOST",
+                       "port": "$REMOTE_PORT",
+                       "user": "$REMOTE_USER",
+                       "secret": "$REMOTE_SECRET_NAME"
                     },
                     "run": {
                       "namespace": "$NAMESPACE"
@@ -62,6 +68,14 @@ spec:
                 value: "registry"
               - name: TARGET_ARCH
                 value: "s390x"
-              - name: KUBECONFIG_SECRET
+              - name: KUBECONFIG_SECRET_NAME
                 value: "secret"
+              - name: REMOTE_SECRET_NAME
+                value: "secret"
+              - name: REMOTE_HOST
+                value: "host"
+              - name: REMOTE_PORT
+                value: "22"
+              - name: REMOTE_USER
+                value: "user"
           restartPolicy: Never

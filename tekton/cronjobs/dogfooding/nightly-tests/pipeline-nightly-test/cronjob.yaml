@@ -22,5 +22,11 @@ spec:
               value: "sshd.bastion-z.svc.cluster.local:4000"
             - name: TARGET_ARCH
               value: "s390x"
-            - name: KUBECONFIG_SECRET
-              value: "s390x-kubeconfig"
+            - name: REMOTE_SECRET_NAME
+              value: "s390x-k8s-ssh"
+            - name: REMOTE_HOST
+              value: "sshd.bastion-z.svc.cluster.local"
+            - name: REMOTE_PORT
+              value: "1122"
+            - name: REMOTE_USER
+              value: "k8smanager"

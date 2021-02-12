@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test-e2e-tekton-component
+spec:
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: tests-path
+    description: path to the tests within "tests" git resource
+    default: ./test
+  - name: timeout
+    description: timeout for the go test runner
+    default: 30m
+  - name: container-registry
+    description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+  - name: tags
+    default: e2e
+  - name: target-arch
+    description: target architecture for tests (s390x, ppc64le, arm64)
+  resources:
+    inputs:
+    - name: plumbing-source
+      type: git
+    - name: tekton-project-source
+      type: git
+      targetPath: src/$(params.package)
+  workspaces:
+  - name: k8s-shared
+    description: workspace for k8s config, configuration file is expected to have `config` name
+    mountPath: /root/.kube
+  steps:
+  - name: run-e2e-tests
+    image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+    workingdir: /workspace/src/$(params.package)
+    env:
+    - name: REPO_ROOT_DIR
+      value: $(resources.inputs.tekton-project-source.path)
+    - name: GOPATH
+      value: /workspace
+    - name: KO_DOCKER_REPO
+      value: $(params.container-registry)
+    - name: TEST_RUNTIME_ARCH
+      value: $(params.target-arch)
+    - name: SYSTEM_NAMESPACE
+      value: tekton-pipelines
+    - name: KUBECONFIG
+      value: $(workspaces.k8s-shared.path)/config
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      source $(resources.inputs.plumbing-source.path)/scripts/library.sh
+      # extend test timeout (from 10 minutes to 20 minutes) to resolve https://github.com/tektoncd/pipeline/issues/3627
+      sed -i 's/timeout  = 10/timeout  = 20/g' test/wait.go
+      header "Running Go $(params.tags) tests"
+      report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path) -kubeconfig $(workspaces.k8s-shared.path)/config
