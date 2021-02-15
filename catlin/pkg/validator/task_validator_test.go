@@ -60,6 +60,10 @@ spec:
     image: abc.io/xyz/fedora:v123@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
   - name: s8
     image: 172.16.3.4:3000/foo/bar:baz
+  - name: s9
+    image: abc.io/xyz/fedora:latest-0.2@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+  - name: s10
+    image: abc.io/xyz/fedora:latest0.2@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
 `
 
 const taskWithInvalidImageRef = `

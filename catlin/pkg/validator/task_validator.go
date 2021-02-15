@@ -119,7 +119,7 @@ func isValidRegistry(img string) bool {
 // tagWithDigest validates if image has a specific tag along with digest
 func tagWithDigest(img string) bool {
 	withOutDigest := strings.Split(img, "@sha256")[0]
-	if strings.Contains(withOutDigest, ":") && !strings.Contains(withOutDigest, ":latest") {
+	if strings.Contains(withOutDigest, ":") && !strings.HasSuffix(withOutDigest, ":latest") {
 		return true
 	}
 	return false
