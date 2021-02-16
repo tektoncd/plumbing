@@ -1,13 +1,16 @@
-FROM golang:1.15 as BUILD
+FROM golang:1.15-alpine3.12 as BUILD
 
 COPY . /build
 WORKDIR /build
 RUN GOOS=linux GARCH=amd64 CGO_ENABLED=0 \
     go build -o catlin ./cmd/catlin
 
-FROM scratch
+FROM alpine:3.12
 
-WORKDIR /app
-COPY --from=BUILD /build/catlin /app/catlin
+RUN apk --no-cache add bash
 
-ENTRYPOINT ["/app/catlin"]
+WORKDIR /data
+
+COPY --from=BUILD /build/catlin /usr/bin/catlin
+
+CMD [ "catlin" ]
