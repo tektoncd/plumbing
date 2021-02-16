@@ -4,6 +4,7 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: webhook-draft.ci.dogfooding.tekton.dev
   name: ing
   namespace: tektonci
 spec:
