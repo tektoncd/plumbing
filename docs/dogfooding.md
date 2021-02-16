@@ -38,6 +38,7 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
   - dogfooding-tektonci-default-token
   - robocat-tekton-deployer-token
   - robocat-tektoncd-cadmin-token
+- Netlify API Token, in the `dns-manager` namespace, named `netlify-credentials`
 - Lots of other secrets, hopefully we can add more documentation on them
   here as we go.
 
@@ -107,3 +108,37 @@ script, which submits a kubernets `Job` to the `robocat` cluster, to trigger a d
 `dogfooding` cluster. The `Job` triggers and event listener on the `robocat` cluster, and triggers
 a Tekton task that downloads a release from the release bucket, optionally applies overlays and
 deploys the result to the `dogfooding` cluster using a dedicated service account.
+
+## DNS Names
+
+DNS records for the `tekton.dev` are hosted by Netlify. [Gardeners External DNS Manager](https://github.com/gardener/external-dns-management)
+is installed in the dogfooding cluster in the `dns-manager` namespace, and it watches for `DNSEntries` and annotated
+ingresses and services in all namespaces.
+
+DNS Manager is installed using helm as follows:
+
+```shell
+# From a cloned https://github.com/gardener/external-dns-management
+helm install dns-manager charts/external-dns-management \
+  --namespace=dns-manager \
+  --set configuration.disableNamespaceRestriction=true \
+  --set configuration.identifier=tekton-dogfooding-default \
+  --set vpa.enabled=false
+```
+
+The DNS Provider for Netlify is installed through the following resource:
+
+```yaml
+apiVersion: dns.gardener.cloud/v1alpha1
+kind: DNSProvider
+metadata:
+  name: netlify
+  namespace: dns-manager
+spec:
+  type: netlify-dns
+  secretRef:
+    name: netlify-credentials
+  domains:
+    include:
+    - tekton.dev
+```
