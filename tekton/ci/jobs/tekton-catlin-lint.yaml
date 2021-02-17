@@ -1,0 +1,78 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: catlin-lint
+  namespace: tektonci
+spec:
+  description: >-
+    This task detects changes in the pull request using git diff
+    and stores the changed tasks names in a workspace and passes
+    that to the catlin so that catlin can validate only changed
+    files.
+  workspaces:
+    - name: store-changed-files
+      description: Stores list of changed tasks
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+  resources:
+    inputs:
+      - name: source
+        type: git
+  steps:
+    - name: find-changed-tasks
+      image: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
+      workingDir: $(resources.inputs.source.path)
+      script: |
+        function detect_new_changed_tasks() {
+          # detect for changes in the task manifest
+          git --no-pager diff --name-only HEAD~$(( $(params.gitCloneDepth) - 1 ))|grep 'task/[^\/]*/[^\/]*/*[^/]*.yaml'|xargs -I {} dirname {}
+        }
+        all_tests=$(detect_new_changed_tasks |sort -u || true)
+        echo -n $all_tests > $(workspaces.store-changed-files.path)/changed-files.txt
+    - name: lint-catalog
+      image: gcr.io/tekton-releases/dogfooding/catlin:latest
+      workingDir: $(resources.inputs.source.path)
+      script: |
+        catlin validate $(cat $(workspaces.store-changed-files.path)/changed-files.txt)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: catlin-linter
+  namespace: tektonci
+spec:
+  workspaces:
+    - name: store-changed-files
+      description: Stores list of changed tasks
+  resources:
+    - name: source
+      type: git
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+  tasks:
+    - name: lint-catalog
+      conditions:
+        - conditionRef: "check-name-matches"
+          params:
+            - name: gitHubCommand
+              value: $(params.gitHubCommand)
+            - name: checkName
+              value: $(params.checkName)
+      taskRef:
+        name: catlin-lint
+      workspaces:
+        - name: store-changed-files
+          workspace: store-changed-files
+      resources:
+        inputs:
+          - name: source
+            resource: source
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)

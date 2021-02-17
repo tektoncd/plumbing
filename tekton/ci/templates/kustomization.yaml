@@ -5,3 +5,4 @@ resources:
 - bindings.yaml
 - website-template.yaml
 - community-template.yaml
+- catalog-template.yaml
