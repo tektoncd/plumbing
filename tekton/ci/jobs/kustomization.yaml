@@ -7,3 +7,4 @@ resources:
 - tekton-yamllint.yaml
 - tekton-python-test.yaml
 - tekton-teps-validation.yaml
+- tekton-catlin-lint.yaml
