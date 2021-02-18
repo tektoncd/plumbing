@@ -17,6 +17,19 @@ spec:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       name: tekton-pipeline-nightly-test-s390x
+  - name: triggers-nightly-test-trigger-s390x
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'triggers' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 's390x'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      name: tekton-triggers-nightly-test-s390x
+
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
