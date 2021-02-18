@@ -1,5 +1,0 @@
-bases:
-- ../../../bases/nightly-tests
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-pipeline"

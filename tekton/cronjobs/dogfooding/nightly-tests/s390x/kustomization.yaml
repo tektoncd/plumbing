@@ -1,0 +1,4 @@
+namespace: default
+resources:
+- pipeline-nightly-test
+- triggers-nightly-test

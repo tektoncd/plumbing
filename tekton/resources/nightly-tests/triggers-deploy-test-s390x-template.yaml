@@ -14,7 +14,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-pipeline-nightly-test-s390x
+  name: tekton-triggers-nightly-test-s390x
 spec:
   params:
   - name: containerRegistry
@@ -28,7 +28,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: tekton-pipeline-$(tt.params.targetArch)-nightly-run-
+      generateName: tekton-triggers-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
       timeout: 2h
@@ -60,6 +60,8 @@ spec:
         - name: plumbing-source
           type: git
         - name: tekton-pipeline-source
+          type: git
+        - name: tekton-triggers-source
           type: git
         params:
         - name: package
@@ -93,7 +95,7 @@ spec:
             workspace: k8s-shared
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/pipeline
           - name: container-registry
             value: $(params.container-registry)
           - name: target-arch
@@ -102,14 +104,13 @@ spec:
             inputs:
             - name: tekton-project-source
               resource: tekton-pipeline-source
-        - name: e2e-test-pipeline
+        - name: deploy-triggers
           runAfter: [deploy-pipeline]
           taskRef:
-            name: test-e2e-tekton-component
+            name: deploy-tekton-project-nightly
           workspaces:
           - name: k8s-shared
             workspace: k8s-shared
-          retries: 2
           params:
           - name: package
             value: $(params.package)
@@ -119,12 +120,10 @@ spec:
             value: $(params.target-arch)
           resources:
             inputs:
-            - name: plumbing-source
-              resource: plumbing-source
             - name: tekton-project-source
-              resource: tekton-pipeline-source
-        - name: examples-test-pipeline
-          runAfter: [e2e-test-pipeline]
+              resource: tekton-triggers-source
+        - name: e2e-test-triggers
+          runAfter: [deploy-triggers]
           taskRef:
             name: test-e2e-tekton-component
           workspaces:
@@ -138,14 +137,12 @@ spec:
             value: $(params.container-registry)
           - name: target-arch
             value: $(params.target-arch)
-          - name: tags
-            value: "examples"
           resources:
             inputs:
             - name: plumbing-source
               resource: plumbing-source
             - name: tekton-project-source
-              resource: tekton-pipeline-source
+              resource: tekton-triggers-source
         finally:
         - name: delete-k8s-cluster
           taskRef:
@@ -166,7 +163,7 @@ spec:
             value: delete
       params:
       - name: package
-        value: github.com/tektoncd/pipeline
+        value: github.com/tektoncd/triggers
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch
@@ -194,3 +191,11 @@ spec:
             value: main
           - name: url
             value: https://github.com/tektoncd/plumbing
+      - name: tekton-triggers-source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: master
+          - name: url
+            value: https://github.com/tektoncd/triggers
