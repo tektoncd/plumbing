@@ -65,9 +65,6 @@
         - name: builtPullRequestInitImage
           resourceRef:
             name: pull-request-init-image
-        - name: builtGcsFetcherImage
-          resourceRef:
-            name: gcs-fetcher-image
         - name: notification
           resourceRef:
             name: post-nightly-release-trigger
