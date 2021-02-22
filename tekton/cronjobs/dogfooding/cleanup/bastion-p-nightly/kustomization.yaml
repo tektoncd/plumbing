@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/cleanup
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-dogfooding-bastion-p"

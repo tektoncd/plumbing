@@ -3,9 +3,11 @@ commonAnnotations:
 
 resources:
 - bastion-z
+- bastion-p
 - eventlistener.yaml
 - pipeline-deploy-test-s390x-template.yaml
 - triggers-deploy-test-s390x-template.yaml
 - cli-deploy-test-s390x-template.yaml
 - operator-deploy-test-s390x-template.yaml
+- pipeline-deploy-test-ppc64le-template.yaml
 - serviceaccount.yaml

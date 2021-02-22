@@ -4,3 +4,4 @@ resources:
 - bastion-z-nightly
 - tekton-ci-nightly
 - tekton-nightly-nightly
+- bastion-p-nightly
