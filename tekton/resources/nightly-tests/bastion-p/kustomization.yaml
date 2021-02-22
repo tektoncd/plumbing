@@ -1,0 +1,8 @@
+namespace: bastion-p
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- deploy_tekton_component.yaml
+- test_tekton_component.yaml
+- cleanup_tekton.yaml

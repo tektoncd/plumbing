@@ -53,6 +53,18 @@ spec:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-operator-nightly-test-s390x
+  - name: pipeline-nightly-test-trigger-ppc64le
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'pipeline' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 'ppc64le'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      name: tekton-pipeline-nightly-test-ppc64le
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding

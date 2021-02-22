@@ -1,0 +1,57 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test-e2e-tekton-component
+spec:
+  workspaces:
+  - name: k8s-config
+    description: workspace to get k8s config file
+    mountPath: /root/.kube
+  - name: source-code
+    description: workspace with source code for tekton component
+    mountPath: /workspace
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: tests-path
+    description: path to the tests within "tests" git resource
+    default: ./test
+  - name: plumbing-path
+    description: path in the workspace for plumbing source code
+    default: src/github.com/tektoncd/plumbing
+  - name: timeout
+    description: timeout for the go test runner
+    default: 45m
+  - name: container-registry
+    description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+  - name: tags
+    default: e2e
+  - name: target-arch
+    description: target architecture for tests (s390x, ppc64le, arm64)
+  steps:
+  - name: run-e2e-tests
+    image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+    workingdir: $(workspaces.source-code.path)/src/$(params.package)
+    env:
+    - name: REPO_ROOT_DIR
+      value: $(workspaces.source-code.path)/src/$(params.package)
+    - name: GOPATH
+      value: /workspace
+    - name: KO_DOCKER_REPO
+      value: $(params.container-registry)
+    - name: TEST_RUNTIME_ARCH
+      value: $(params.target-arch)
+    - name: SYSTEM_NAMESPACE
+      value: tekton-pipelines
+    - name: KUBECONFIG
+      value: /root/.kube/config
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
+      # extend test timeout (from 10 minutes to 20 minutes) to resolve https://github.com/tektoncd/pipeline/issues/3627
+      sed -i 's/timeout  = 10/timeout  = 20/g' test/wait.go
+      header "Running Go $(params.tags) tests"
+      report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path) -kubeconfig /root/.kube/config
