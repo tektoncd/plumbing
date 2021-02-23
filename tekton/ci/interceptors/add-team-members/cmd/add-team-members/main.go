@@ -102,24 +102,29 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 			marshalError(err, w)
 			return
 		}
-		// Add the PR body to the original body
+		// Add the org members to the original body
 		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = orgMembers
-		// Get the team URL from the body
-		teamUrl, err := getTeamUrl(jsonBody)
-		if err != nil {
-			log.Printf("failed to extract the Team URL from the body: %q", err)
-			marshalError(err, w)
-			return
+
+		_, ok := jsonBody[teamKey]
+		if ok {
+			log.Printf("field %s found in body, fetching team members too", teamKey)
+			// Get the team URL from the body
+			teamUrl, err := getTeamUrl(jsonBody)
+			if err != nil {
+				log.Printf("failed to extract the Team URL from the body: %q", err)
+				marshalError(err, w)
+				return
+			}
+			// Get the list of team members from the URL
+			teamMembers, err := teamMembersFetcher(teamUrl, token)
+			if err != nil {
+				log.Printf("failed to get the list of team members: %q", err)
+				marshalError(err, w)
+				return
+			}
+			// Add the team members to the original body
+			jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[teamMembersKey] = teamMembers
 		}
-		// Get the list of org members from the URL
-		teamMembers, err := teamMembersFetcher(teamUrl, token)
-		if err != nil {
-			log.Printf("failed to get the list of team members: %q", err)
-			marshalError(err, w)
-			return
-		}
-		// Add the PR body to the original body
-		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[teamMembersKey] = teamMembers
 
 		// Marshal the body
 		responseBytes, err := json.Marshal(jsonBody)
