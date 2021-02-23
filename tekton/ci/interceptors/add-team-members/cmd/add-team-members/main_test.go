@@ -69,7 +69,13 @@ func TestNoTeamUrlFound(t *testing.T) {
 
 	h(w, r)
 
-	assertBadRequestResponse(t, w, "no 'team' found")
+	want := makeTeamBody(true, "foo://some_url", "")
+	wantTeamBody := []interface{}{string("foo"), string("bar")}
+	(*want)[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = wantTeamBody
+
+	resp := w.Result()
+
+	assertResponsePayload(t, resp, &want)
 }
 
 func TestCannotFetchOrgURL(t *testing.T) {
