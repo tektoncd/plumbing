@@ -106,7 +106,7 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 		// Add the org members to the original body
 		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = orgMembers
 
-		_, ok := jsonBody[teamKey]
+		_, ok := jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[teamKey]
 		if ok {
 			log.Printf("field %s found in body, fetching team members too", teamKey)
 			// Get the team URL from the body
