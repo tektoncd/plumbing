@@ -14,6 +14,9 @@ spec:
     description: The version tag to be applied to published images.
   - name: imageRegistry
     description: Registry where the images will be published to.
-    default: gcr.io/tekton-nightly
+    default: gcr.io
+  - name: imageRegistryPath
+    description: Registry project where the images will be published to.
+    default: tekton-nightly
   - name: projectName
     description: Name of the Tekton project to release (e.g. pipeline, triggers, etc).

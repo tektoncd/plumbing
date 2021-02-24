@@ -7,64 +7,27 @@
         generateName: pipeline-release-nightly-
       spec:
         pipelineRef:
-          name: pipeline-release-nightly
+          name: pipeline-release
         params:
         - name: package
           value: $(tt.params.gitrepository)
         - name: imageRegistry
-          value: gcr.io/tekton-nightly
+          value: $(tt.params.imageRegistry)
+        - name: imageRegistryPath
+          value: $(tt.params.imageRegistryPath)
         - name: versionTag
           value: $(tt.params.versionTag)
-        resources:
-        - name: source-repo
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(tt.params.gitrevision)
-            - name: url
-              value: https://$(tt.params.gitrepository)
-        - name: bucket
-          resourceSpec:
-            type: storage
-            params:
-            - name: type
-              value: gcs
-            - name: location
-              value: gs://tekton-releases-nightly/$(tt.params.projectName)
-            - name: dir
-              value: "y"
-            secrets:
-            - fieldName: GOOGLE_APPLICATION_CREDENTIALS
-              secretKey: service-account.json
-              secretName: nightly-account
-        - name: builtBaseImage
-          resourceRef:
-            name: base-image
-        - name: builtEntrypointImage
-          resourceRef:
-            name: entrypoint-image
-        - name: builtNopImage
-          resourceRef:
-            name: nop-image
-        - name: builtKubeconfigWriterImage
-          resourceRef:
-            name: kubeconfigwriter-image
-        - name: builtGitInitImage
-          resourceRef:
-            name: git-init-image
-        - name: builtControllerImage
-          resourceRef:
-            name: controller-image
-        - name: builtWebhookImage
-          resourceRef:
-            name: webhook-image
-        - name: builtDigestExporterImage
-          resourceRef:
-            name: digest-exporter-image
-        - name: builtPullRequestInitImage
-          resourceRef:
-            name: pull-request-init-image
-        - name: notification
-          resourceRef:
-            name: post-nightly-release-trigger
+        - name: serviceAccountPath
+          value: release.json
+      workspaces:
+        - name: workarea
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: release-secret
+          secret:
+            secretName: release-secret
