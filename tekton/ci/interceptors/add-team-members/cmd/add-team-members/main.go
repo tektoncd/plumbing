@@ -37,9 +37,9 @@ const (
 	prExtensionsKey   = "add_team_members"
 	orgUrlKey         = "org_base_url"
 	teamKey           = "team"
-	orgMembersKey     = "public_org_members"
+	orgMembersKey     = "org_members"
 	teamMembersKey    = "maintainers_team_members"
-	publicMembersPath = "%s/public_members"
+	membersPath       = "%s/members"
 	teamPath          = "%s/teams/%s-maintainers/members"
 )
 
@@ -96,12 +96,13 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 			return
 		}
 		// Get the list of org members from the URL
-		orgMembers, err := orgMembersFetcher(orgUrl, "")
+		orgMembers, err := orgMembersFetcher(orgUrl, token)
 		if err != nil {
 			log.Printf("failed to get the list of org members: %q", err)
 			marshalError(err, w)
 			return
 		}
+
 		// Add the org members to the original body
 		jsonBody[RootExtensionsKey].(map[string]interface{})[prExtensionsKey].(map[string]interface{})[orgMembersKey] = orgMembers
 
@@ -133,6 +134,7 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 			marshalError(err, w)
 			return
 		}
+
 		// Set all the original headers
 		for k, values := range r.Header {
 			for _, v := range values {
@@ -213,7 +215,7 @@ func getOrgUrl(body map[string]interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf(publicMembersPath, baseUrl), nil
+	return fmt.Sprintf(membersPath, baseUrl), nil
 }
 
 func getTeamUrl(body map[string]interface{}) (string, error) {
