@@ -13,14 +13,16 @@ incoming JSON as follows:
 {
   "add_team_members":
   {
-    "org_base_url": "https://api.github.com/repos/tektoncd/",
+    "org_base_url": "https://api.github.com/repos/tektoncd/"
   },
   "other-keys": "other=values"
 }
 ```
 
 It returns the original JSON payload untouched, with the addition of the org
-members:
+members. If the owner of the Github token passed in `GITHUB_TOKEN` is also
+a member of the organization then [both concealed and public members will be
+returned](https://docs.github.com/en/rest/reference/orgs#list-organization-members).
 
 ```json
 {
@@ -28,7 +30,7 @@ members:
   {
     "org_base_url": "https://api.github.com/repos/tektoncd/",
     "team": "plumbing",
-    "public_org_members": ["a", "b", "c"]
+    "org_members": ["a", "b", "c"]
   },
   "other-keys": "other=values"
 }
@@ -58,7 +60,7 @@ org members and the maintainers:
   {
     "org_base_url": "https://api.github.com/repos/tektoncd/",
     "team": "plumbing",
-    "public_org_members": ["a", "b", "c"],
+    "org_members": ["a", "b", "c"],
     "maintainers_team_members": ["a", "b"]
   },
   "other-keys": "other=values"
