@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: test-e2e-tekton-cli
+spec:
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: tests-path
+    description: path to the tests within "tests" git resource
+    default: ./test/e2e
+  - name: plumbing-path
+    description: path in the workspace for plumbing source code
+    default: src/github.com/tektoncd/plumbing
+  - name: timeout
+    description: timeout for the go test runner
+    default: 20m
+  - name: tags
+    default: e2e
+  workspaces:
+  - name: k8s-shared
+    description: workspace for k8s config, configuration file is expected to have `config` name
+    mountPath: /root/.kube
+  - name: source-code
+    description: workspace with source code for tekton component
+  steps:
+  - name: run-e2e-tests
+    image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+    workingdir: $(workspaces.source-code.path)/src/$(params.package)
+    env:
+    - name: REPO_ROOT_DIR
+      value: $(workspaces.source-code.path)/src/$(params.package)
+    - name: GOPATH
+      value: /workspace
+    - name: KUBECONFIG
+      value: $(workspaces.k8s-shared.path)/config
+    - name: TEST_CLIENT_BINARY
+      value: $(workspaces.source-code.path)/src/$(params.package)/tkn
+    - name: TEST_CLUSTERTASK_LIST_EMPTY
+      value: "yes"
+    command:
+    - /bin/bash
+    args:
+    - -ce
+    - |
+      source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
+      go build -o tkn $(params.package)/cmd/tkn
+      for testsuite in clustertask eventListener pipeline pipelinerun resource task; do
+        header "Running Go $(params.tags) ${testsuite} tests"
+        report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path)/${testsuite} --kubeconfig $(workspaces.k8s-shared.path)/config
+      done

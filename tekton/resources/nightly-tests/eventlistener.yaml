@@ -29,7 +29,18 @@ spec:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-triggers-nightly-test-s390x
-
+  - name: cli-nightly-test-trigger-s390x
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'cli' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 's390x'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      ref: tekton-cli-nightly-test-s390x
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
