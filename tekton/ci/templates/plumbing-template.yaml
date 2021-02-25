@@ -506,3 +506,51 @@ spec:
             value: $(tt.params.gitRepository)
           - name: depth
             value: $(tt.params.gitCloneDepth)
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: plumbing-unit-tests-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/check-name: plumbing-unit-tests
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+        tekton.dev/kind: ci
+      annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: tekton-golang-tests
+      params:
+        - name: package
+          value: $(tt.params.package)
+        - name: folders
+          value:
+            - bots/buildcaptain
+            - bots/mariobot
+            - catlin
+            - pipelinerun-logs
+            - tekton/ci/interceptors/add-team-members
+            - tekton/ci/interceptors/add-pr-body
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/alpine-git-nonroot/**"
+        - name: checkName
+          value: plumbing-unit-tests
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+      resources:
+      - name: source
+        resourceSpec:
+          type: git
+          params:
+          - name: revision
+            value: $(tt.params.gitRevision)
+          - name: url
+            value: $(tt.params.gitRepository)
+          - name: depth
+            value: $(tt.params.gitCloneDepth)
