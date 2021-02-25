@@ -94,9 +94,9 @@ spec:
       - name: package
         value: "$(params.package)"
       - name: context
-        value: $(params.folders)
+        value: [$(params.folders)]
       - name: version
         value: "1.15"
       workspaces:
-        - name: input
+        - name: source
           workspace: sources

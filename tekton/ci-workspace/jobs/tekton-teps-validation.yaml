@@ -3,8 +3,8 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: teps-lint
-  description: |
-    Lint teps and tep table
+  annotations:
+    description: Lint teps and tep table
 spec:
   params:
     - name: teps-folder
