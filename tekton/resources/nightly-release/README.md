@@ -60,3 +60,14 @@ spec:
       cpu: 100m
     type: Container
 ```
+
+## Catalog Tasks
+
+The nightly pipelines depend on a few catalog tasks, which are installed manually to the `tekton-nightly` namespace:
+
+```shell
+for task in git-clone golang-test golang-build gcs-upload; do
+  tkn task delete $task -n tekton-nightly || true
+  tkn hub install task $task -n tekton-nightly
+done
+```
