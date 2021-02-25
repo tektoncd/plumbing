@@ -8,4 +8,3 @@ resources:
 - tekton-python-test.yaml
 - tekton-teps-validation.yaml
 - tekton-catlin-lint.yaml
-- tekton-golang-tests.yaml
