@@ -1,0 +1,32 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: nightly-test-trigger
+spec:
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+            - name: SINK_URL
+              value: "http://el-test-nightly.default.svc.cluster.local:8080"
+            - name: TARGET_PROJECT
+              value: "cli"
+            - name: NAMESPACE
+              value: "bastion-z"
+            - name: REGISTRY
+              value: "sshd.bastion-z.svc.cluster.local:4000"
+            - name: TARGET_ARCH
+              value: "s390x"
+            - name: REMOTE_SECRET_NAME
+              value: "s390x-k8s-ssh"
+            - name: REMOTE_HOST
+              value: "sshd.bastion-z.svc.cluster.local"
+            - name: REMOTE_PORT
+              value: "1122"
+            - name: REMOTE_USER
+              value: "k8smanager"
