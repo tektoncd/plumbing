@@ -7,3 +7,4 @@ resources:
 - overlays/dashboard
 - overlays/pipeline
 - overlays/triggers
+- overlay/task-loops

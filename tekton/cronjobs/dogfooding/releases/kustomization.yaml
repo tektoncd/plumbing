@@ -2,3 +2,4 @@ resources:
 - dashboard-nightly
 - pipeline-nightly
 - triggers-nightly
+- task-loops-nightly
