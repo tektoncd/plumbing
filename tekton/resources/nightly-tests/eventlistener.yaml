@@ -16,7 +16,7 @@ spec:
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
-      name: tekton-pipeline-nightly-test-s390x
+      ref: tekton-pipeline-nightly-test-s390x
   - name: triggers-nightly-test-trigger-s390x
     interceptors:
     - cel:
@@ -28,7 +28,7 @@ spec:
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
-      name: tekton-triggers-nightly-test-s390x
+      ref: tekton-triggers-nightly-test-s390x
 
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
