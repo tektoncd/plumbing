@@ -23,4 +23,4 @@ spec:
     - ref: tekton-ci-webhook-pr-labels
     - ref: tekton-ci-clone-depth
   template:
-    name: tekton-all-ci-pipeline
+    ref: tekton-all-ci-pipeline

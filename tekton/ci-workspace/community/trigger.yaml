@@ -24,7 +24,7 @@ spec:
     - ref: tekton-ci-webhook-pr-labels
     - ref: tekton-ci-clone-depth
   template:
-    name: tekton-community-ci-pipeline
+    ref: tekton-community-ci-pipeline
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
@@ -64,4 +64,4 @@ spec:
     - ref: tekton-ci-clone-depth
     - ref: tekton-ci-webhook-issue-labels
   template:
-    name: tekton-community-ci-pipeline
+    ref: tekton-community-ci-pipeline
