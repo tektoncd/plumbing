@@ -3,3 +3,4 @@ resources:
 - pipeline-nightly-test
 - triggers-nightly-test
 - cli-nightly-test
+- operator-nightly-test

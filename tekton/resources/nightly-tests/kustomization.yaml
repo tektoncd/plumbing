@@ -7,4 +7,5 @@ resources:
 - pipeline-deploy-test-s390x-template.yaml
 - triggers-deploy-test-s390x-template.yaml
 - cli-deploy-test-s390x-template.yaml
+- operator-deploy-test-s390x-template.yaml
 - serviceaccount.yaml
