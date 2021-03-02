@@ -10,3 +10,5 @@ resources:
 - overlays/task-loops
 - overlays/cel
 - overlays/pipelines-in-pipelines
+- overlays/add-pr-body
+- overlays/add-team-members
