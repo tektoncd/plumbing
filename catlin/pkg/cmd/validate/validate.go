@@ -27,6 +27,8 @@ import (
 	"github.com/tektoncd/plumbing/catlin/pkg/validator"
 )
 
+var cat = []string{}
+
 func getFilesInDir(path string) ([]os.FileInfo, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -142,10 +144,18 @@ func validate(cli app.CLI, path string) error {
 		return err
 	}
 
+	if len(cat) == 0 {
+		// Get the predefined category list
+		cat, err = validator.GetCategories()
+		if err != nil {
+			return err
+		}
+	}
+
 	// run validators
 	validators := []validator.Validator{
 		validator.NewPathValidator(res, path),
-		validator.NewContentValidator(res),
+		validator.NewContentValidator(res, cat),
 		validator.ForKind(res),
 	}
 

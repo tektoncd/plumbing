@@ -57,3 +57,34 @@ func TestValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateError(t *testing.T) {
+
+	testParams := []struct {
+		name      string
+		args      []string
+		wantError bool
+		want      string
+	}{
+		{
+			name:      "single filepath",
+			args:      []string{"./testdata/task/black/0.1"},
+			wantError: true,
+			want:      "Error: ./testdata/task/black/0.1/black.yaml failed validation\n",
+		},
+	}
+
+	for _, tp := range testParams {
+		t.Run(tp.name, func(t *testing.T) {
+			cli := app.New()
+			validate := Command(cli)
+			got, err := test.ExecuteCommand(validate, tp.args...)
+			if tp.wantError {
+				if err == nil {
+					t.Errorf("Unexpected error")
+				}
+				assert.Equal(t, tp.want, got)
+			}
+		})
+	}
+}
