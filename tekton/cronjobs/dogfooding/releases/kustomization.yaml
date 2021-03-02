@@ -5,3 +5,5 @@ resources:
 - task-loops-nightly
 - cel-nightly
 - pipelines-in-pipelines-nightly
+- add-pr-body-nightly
+- add-team-members-nightly
