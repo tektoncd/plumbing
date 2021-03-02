@@ -10,18 +10,16 @@ spec:
     description: container registry used to publish build images
   - name: target-arch
     description: target architecture for tests (s390x, ppc64le, arm64)
-  resources:
-    inputs:
-    - name: tekton-project-source
-      type: git
-      targetPath: src/$(params.package)
   workspaces:
   - name: k8s-shared
     description: workspace for k8s config, configuration file is expected to have `config` name
     mountPath: /root/.kube
+  - name: source-code
+    description: workspace with source code for tekton component
+    mountPath: /workspace
   steps:
   - name: deploy
-    workingdir: /workspace/src/$(params.package)
+    workingdir: $(workspaces.source-code.path)/src/$(params.package)
     image: gcr.io/tekton-releases/dogfooding/test-runner:latest
     env:
     - name: GOPATH

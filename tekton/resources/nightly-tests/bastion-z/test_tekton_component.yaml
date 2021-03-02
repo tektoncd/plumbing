@@ -9,6 +9,9 @@ spec:
   - name: tests-path
     description: path to the tests within "tests" git resource
     default: ./test
+  - name: plumbing-path
+    description: path in the workspace for plumbing source code
+    default: src/github.com/tektoncd/plumbing
   - name: timeout
     description: timeout for the go test runner
     default: 30m
@@ -18,24 +21,19 @@ spec:
     default: e2e
   - name: target-arch
     description: target architecture for tests (s390x, ppc64le, arm64)
-  resources:
-    inputs:
-    - name: plumbing-source
-      type: git
-    - name: tekton-project-source
-      type: git
-      targetPath: src/$(params.package)
   workspaces:
   - name: k8s-shared
     description: workspace for k8s config, configuration file is expected to have `config` name
     mountPath: /root/.kube
+  - name: source-code
+    description: workspace with source code for tekton component
   steps:
   - name: run-e2e-tests
     image: gcr.io/tekton-releases/dogfooding/test-runner:latest
-    workingdir: /workspace/src/$(params.package)
+    workingdir: $(workspaces.source-code.path)/src/$(params.package)
     env:
     - name: REPO_ROOT_DIR
-      value: $(resources.inputs.tekton-project-source.path)
+      value: $(workspaces.source-code.path)/src/$(params.package)
     - name: GOPATH
       value: /workspace
     - name: KO_DOCKER_REPO
@@ -51,7 +49,7 @@ spec:
     args:
     - -ce
     - |
-      source $(resources.inputs.plumbing-source.path)/scripts/library.sh
+      source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
       # extend test timeout (from 10 minutes to 20 minutes) to resolve https://github.com/tektoncd/pipeline/issues/3627
       sed -i 's/timeout  = 10/timeout  = 20/g' test/wait.go
       header "Running Go $(params.tags) tests"
