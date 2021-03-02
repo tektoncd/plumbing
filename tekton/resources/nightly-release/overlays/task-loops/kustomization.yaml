@@ -1,4 +1,4 @@
-namePrefix: pipeline-
+namePrefix: task-loops-
 bases:
   - ../../base
 patchesJson6902:
