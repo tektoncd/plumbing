@@ -33,15 +33,15 @@ spec:
     spec:
       timeout: 2h
       workspaces:
-      # this workspace will be used to store k8s config
-      - name: k8s-shared
+      # this workspace will be used to share info between tasks
+      - name: shared-workspace
         volumeClaimTemplate:
           spec:
             accessModes:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 10Mi
+                storage: 1Gi
       # this workspace will be used to store ssh key
       - name: ssh-secret
         secret:
@@ -54,13 +54,8 @@ spec:
             # yamllint enable
       pipelineSpec:
         workspaces:
-        - name: k8s-shared
+        - name: shared-workspace
         - name: ssh-secret
-        resources:
-        - name: plumbing-source
-          type: git
-        - name: tekton-pipeline-source
-          type: git
         params:
         - name: package
         - name: container-registry
@@ -69,12 +64,43 @@ spec:
         - name: remote-port
         - name: remote-user
         tasks:
+        - name: git-clone-plumbing
+          taskRef:
+            name: git-clone
+          params:
+          - name: url
+            value: https://github.com/tektoncd/plumbing
+          - name: revision
+            value: main
+          - name: subdirectory
+            value: src/github.com/tektoncd/plumbing
+          workspaces:
+          - name: output
+            workspace: shared-workspace
+            subPath: source-code
+        - name: git-clone-pipeline
+          runAfter: [git-clone-plumbing]
+          taskRef:
+            name: git-clone
+          params:
+          - name: url
+            value: https://github.com/tektoncd/pipeline
+          - name: revision
+            value: master
+          - name: subdirectory
+            value: src/github.com/tektoncd/pipeline
+          workspaces:
+          - name: output
+            workspace: shared-workspace
+            subPath: source-code
         - name: create-k8s-cluster
+          runAfter: [git-clone-pipeline]
           taskRef:
             name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
           - name: k8s-shared
-            workspace: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
@@ -90,7 +116,11 @@ spec:
             name: deploy-tekton-project-nightly
           workspaces:
           - name: k8s-shared
-            workspace: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: source-code
+            workspace: shared-workspace
+            subPath: source-code
           params:
           - name: package
             value: $(params.package)
@@ -98,17 +128,17 @@ spec:
             value: $(params.container-registry)
           - name: target-arch
             value: $(params.target-arch)
-          resources:
-            inputs:
-            - name: tekton-project-source
-              resource: tekton-pipeline-source
         - name: e2e-test-pipeline
           runAfter: [deploy-pipeline]
           taskRef:
             name: test-e2e-tekton-component
           workspaces:
           - name: k8s-shared
-            workspace: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: source-code
+            workspace: shared-workspace
+            subPath: source-code
           retries: 2
           params:
           - name: package
@@ -117,19 +147,17 @@ spec:
             value: $(params.container-registry)
           - name: target-arch
             value: $(params.target-arch)
-          resources:
-            inputs:
-            - name: plumbing-source
-              resource: plumbing-source
-            - name: tekton-project-source
-              resource: tekton-pipeline-source
         - name: examples-test-pipeline
           runAfter: [e2e-test-pipeline]
           taskRef:
             name: test-e2e-tekton-component
           workspaces:
           - name: k8s-shared
-            workspace: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: source-code
+            workspace: shared-workspace
+            subPath: source-code
           retries: 2
           params:
           - name: package
@@ -140,19 +168,14 @@ spec:
             value: $(params.target-arch)
           - name: tags
             value: "examples"
-          resources:
-            inputs:
-            - name: plumbing-source
-              resource: plumbing-source
-            - name: tekton-project-source
-              resource: tekton-pipeline-source
         finally:
         - name: delete-k8s-cluster
           taskRef:
             name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
           - name: k8s-shared
-            workspace: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
@@ -177,20 +200,3 @@ spec:
         value: $(tt.params.remotePort)
       - name: remote-user
         value: $(tt.params.remoteUser)
-      resources:
-      - name: tekton-pipeline-source
-        resourceSpec:
-          type: git
-          params:
-          - name: revision
-            value: master
-          - name: url
-            value: https://github.com/tektoncd/pipeline
-      - name: plumbing-source
-        resourceSpec:
-          type: git
-          params:
-          - name: revision
-            value: main
-          - name: url
-            value: https://github.com/tektoncd/plumbing

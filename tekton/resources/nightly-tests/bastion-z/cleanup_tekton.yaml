@@ -8,24 +8,22 @@ spec:
   - name: resources
     description: space separated list of resources to be deleted
     default: "conditions pipelineresources tasks pipelines taskruns pipelineruns"
-  resources:
-    inputs:
-    - name: plumbing-source
-      type: git
-    - name: tekton-project-source
-      type: git
-      targetPath: src/$(params.package)
+  - name: plumbing-path
+    description: path in the workspace for plumbing source code
+    default: src/github.com/tektoncd/plumbing
   workspaces:
   - name: k8s-shared
-    description: |
-      k8s config
+    description: workspace for k8s config, configuration file is expected to have `config` name
     mountPath: /root/.kube
+  - name: source-code
+    description: workspace with source code for tekton component
+    mountPath: /workspace
   steps:
   - name: cleanup-resources
     image: gcr.io/tekton-releases/dogfooding/kubectl:latest
     env:
     - name: KUBECONFIG
-      value: /root/.kube/config
+      value: $(workspaces.k8s-shared.path)/config
     command:
     - /bin/sh
     args:
@@ -40,12 +38,12 @@ spec:
     workingdir: /workspace/src/$(params.package)
     env:
     - name: KUBECONFIG
-      value: /root/.kube/config
+      value: $(workspaces.k8s-shared.path)/config
     command:
     - /bin/bash
     args:
     - -ce
     - |
-      source $(resources.inputs.plumbing-source.path)/scripts/library.sh
+      source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
       ko delete --ignore-not-found=true -f config/
       wait_until_object_does_not_exist namespace tekton-pipelines
