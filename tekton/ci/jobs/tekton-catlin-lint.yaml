@@ -34,6 +34,10 @@ spec:
       image: gcr.io/tekton-releases/dogfooding/catlin:latest
       workingDir: $(resources.inputs.source.path)
       script: |
+        [[ ! -s $(workspaces.store-changed-files.path)/changed-files.txt ]] && {
+          echo "No file change detected in task directory"
+          exit 0
+        }
         catlin validate $(cat $(workspaces.store-changed-files.path)/changed-files.txt)
 ---
 apiVersion: tekton.dev/v1beta1
