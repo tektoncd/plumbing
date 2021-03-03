@@ -41,7 +41,7 @@ spec:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 10Mi
+                storage: 1Gi
       # this workspace will be used to store ssh key
       - name: ssh-secret
         secret:
