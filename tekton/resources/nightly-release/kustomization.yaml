@@ -8,3 +8,5 @@ resources:
 - overlays/pipeline
 - overlays/triggers
 - overlays/task-loops
+- overlays/cel
+- overlays/pipelines-in-pipelines

@@ -3,3 +3,5 @@ resources:
 - pipeline-nightly
 - triggers-nightly
 - task-loops-nightly
+- cel-nightly
+- pipelines-in-pipelines-nightly
