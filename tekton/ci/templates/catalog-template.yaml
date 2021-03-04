@@ -48,7 +48,13 @@ spec:
           name: catlin-linter
         workspaces:
           - name: store-changed-files
-            emptyDir: {}
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 5Mi
         params:
           - name: gitCloneDepth
             value: $(tt.params.gitCloneDepth)
@@ -56,6 +62,8 @@ spec:
             value: $(tt.params.gitHubCommand)
           - name: checkName
             value: pull-catalog-catlin-lint
+          - name: pullRequestUrl
+            value: $(tt.params.pullRequestUrl)
         resources:
           - name: source
             resourceSpec:
