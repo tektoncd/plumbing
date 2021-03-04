@@ -17,4 +17,4 @@ spec:
               - name: CLUSTER_RESOURCE
                 value: "dogfooding-tektoncd-cleaner"
               - name: CLEANUP_KEEP
-                value: "200"
+                value: "50"

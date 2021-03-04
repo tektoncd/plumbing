@@ -1,3 +1,6 @@
 resources:
 - default-nightly
 - tektonci-nightly
+- bastion-z-nightly
+- tekton-ci-nightly
+- tekton-nightly-nightly
