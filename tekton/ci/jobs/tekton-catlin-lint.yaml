@@ -40,11 +40,33 @@ spec:
       image: gcr.io/tekton-releases/dogfooding/catlin:latest
       workingDir: $(resources.inputs.source.path)
       script: |
+        set +e
         [[ ! -s $(workspaces.store-changed-files.path)/changed-files.txt ]] && {
           echo "No file change detected in task directory"
+          echo -n "" > $(workspaces.store-changed-files.path)/catlin.txt
           exit 0
         }
-        catlin validate $(cat $(workspaces.store-changed-files.path)/changed-files.txt)
+
+        # creating a file which will contain the final formatted output
+        # which needs to be added as a comment(if any)
+        echo '**Catlin Output**' >> $(workspaces.store-changed-files.path)/catlin.txt
+        echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
+
+        # performing catlin validate
+        catlin validate $(cat $(workspaces.store-changed-files.path)/changed-files.txt) | tee -a $(workspaces.store-changed-files.path)/catlin.txt
+        echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
+
+        # checking if there are any ERROR or WARN messages produced by catlin
+        isWarning=$(cat  $(workspaces.store-changed-files.path)/catlin.txt | grep -c "WARN")
+        isError=$(cat  $(workspaces.store-changed-files.path)/catlin.txt | grep -c "ERROR")
+
+        # if there are no ERROR or WARN messages then add a empty string which will not
+        # add a comment on the Github PR
+        [[ $isWarning -eq 0 ]] && [[ $isError -eq 0 ]] && \
+        echo -n "" > $(workspaces.store-changed-files.path)/catlin.txt
+
+        # if catlin produced the error then fail the task else success
+        [[ $isError -eq 1 ]] && exit 1 || exit 0
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -65,6 +87,8 @@ spec:
       description: The command that was used to trigger testing
     - name: checkName
       description: The name of the GitHub check that this pipeline is used for
+    - name: pullRequestUrl
+      description: The HTML URL for the pull request
   tasks:
     - name: lint-catalog
       conditions:
@@ -86,3 +110,19 @@ spec:
       params:
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
+  finally:
+    - name: post-comment
+      taskRef:
+        name: github-add-comment
+      params:
+        - name: COMMENT_OR_FILE
+          value: "catlin.txt"
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: bot-token-github
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: bot-token
+        - name: REQUEST_URL
+          value: $(params.pullRequestUrl)
+      workspaces:
+        - name: comment-file
+          workspace: store-changed-files
