@@ -12,3 +12,4 @@ resources:
 - overlays/pipelines-in-pipelines
 - overlays/add-pr-body
 - overlays/add-team-members
+- overlays/operator
