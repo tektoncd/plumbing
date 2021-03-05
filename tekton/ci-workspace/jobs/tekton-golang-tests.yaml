@@ -1,33 +1,21 @@
 ---
-apiVersion: tekton.dev/v1beta1
-kind: Task
+apiVersion: custom.tekton.dev/v1alpha1
+kind: TaskLoop
 metadata:
-  name: teps-lint
-  description: |
-    Lint teps and tep table
+  name: golang-tests
 spec:
-  params:
-    - name: teps-folder
-      description: The folders to lint with teps.py
-  workspaces:
-    - name: input
-  steps:
-  - name: teps-validate
-    image: gcr.io/tekton-releases/dogfooding/teps:latest
-    args: ['validate', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
-  - name: teps-table-refresh
-    image: gcr.io/tekton-releases/dogfooding/teps:latest
-    workingDir: $(workspaces.input.path)
-    args: ['table', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
-  - name: teps-table
-    image: alpine/git:latest
-    workingDir: $(workspaces.input.path)
-    args: ['diff', '--exit-code']
+  iterateParam: context
+  taskRef:
+    name: golang-test  # from the catalog
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: teps-linter
+  name: tekton-golang-tests
+  annotations:
+    description: |
+      Run unit tests against a list of root folders.
+      Requires the task-loops controller.
 spec:
   params:
     - name: pullRequestNumber
@@ -44,15 +32,18 @@ spec:
       description: The name of the GitHub check that this pipeline is used for
     - name: gitHubCommand
       description: The command that was used to trigger testing
-    - name: teps-folder
-      description: The folder that hold the teps
+    - name: package
+      description: package (and its children) under test
+    - name: folders
+      type: array
+      description: The folders to test
   workspaces:
     - name: sources
       description: Workspace where the git repo is prepared for testing
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-batch-merge  # from the catalog
+        name: git-batch-merge # from the catalog
       params:
         - name: url
           value: $(params.gitRepository)
@@ -87,19 +78,25 @@ spec:
       workspaces:
         - name: input
           workspace: sources
-    - name: teps-lint
-      when:  # implicit dependency on the check tasks
-        - input: $(tasks.check-name-matches.results.check)
-          operator: in
-          values: ["passed"]
-        - input: $(tasks.check-git-files-changed.results.check)
-          operator: in
-          values: ["passed"]
+    - name: unit-tests
+      when: # implicit dependency on the check tasks
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: TaskLoop
+        name: golang-tests # from the catalog
+      params:
+      - name: package
+        value: "$(params.package)"
+      - name: context
+        value: $(params.folders)
+      - name: version
+        value: "1.15"
       workspaces:
         - name: input
           workspace: sources
-      taskRef:
-        name: teps-lint
-      params:
-        - name: teps-folder
-          value: $(params.teps-folder)
