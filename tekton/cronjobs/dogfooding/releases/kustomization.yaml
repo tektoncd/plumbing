@@ -7,3 +7,4 @@ resources:
 - pipelines-in-pipelines-nightly
 - add-pr-body-nightly
 - add-team-members-nightly
+- operator-nightly
