@@ -140,7 +140,7 @@ spec:
         IMAGES_PATH=${IMAGES_PATH}/$(params.subfolder)
       fi
 
-      for cmd in add-team-member
+      for cmd in add-team-members
       do
         IMAGES="${IMAGES} ${IMAGES_PATH}/cmd/${cmd}:$(params.versionTag)"
       done
