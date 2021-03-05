@@ -16,3 +16,5 @@ Resources are organised in folders:
   create and verify releases
 - The [nightly-release](nightly-release) folder contains trigger resources used
   to trigger nightly releases for the tektoncd projects
+- The [nightly-tests](nightly-tests) folder contains tasks and trigger resources
+   used to trigger nightly e2e tests for the tektoncd projects
