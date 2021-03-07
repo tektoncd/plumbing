@@ -138,6 +138,26 @@ To reapply all cronjobs on dogfooding:
 kubectl replace -k tekton/cronjobs/dogfooding
 ```
 
+Make sure that RBAC is confifured properly to execute pipelinerun/taskrun
+triggered by cronjob. For cleanup, new RoleBinding should be added to
+[serviceaccount.yaml](../resources/cd/serviceaccount.yaml).
+
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tektoncd-cleaner-delete-pr-tr-default
+  namespace: mynamespace
+subjects:
+- kind: ServiceAccount
+  name: tekton-cleaner
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: delete-pr-tr
+```
+
 ## Adding a daily build for a new image
 
 To build daily a container image, follow these steps:
