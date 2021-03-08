@@ -8,3 +8,4 @@ resources:
 - add-pr-body-nightly
 - add-team-members-nightly
 - operator-nightly
+- wait-task-nightly
