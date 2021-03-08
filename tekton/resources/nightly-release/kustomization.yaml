@@ -13,3 +13,4 @@ resources:
 - overlays/add-pr-body
 - overlays/add-team-members
 - overlays/operator
+- overlays/wait-task
