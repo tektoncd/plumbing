@@ -1,0 +1,152 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: kaniko4ci
+spec:
+  description: >-
+    This Task builds source into a container image using Google's kaniko tool.
+
+    Copied from https://hub.tekton.dev/tekton/task/kaniko.
+    It allows defaulting the IMAGE parameter from the context
+
+  params:
+  - name: DOCKERFILE
+    description: Path to the Dockerfile to build.
+    default: ./Dockerfile
+  - name: CONTEXT
+    description: The build context used by Kaniko.
+    default: ./
+  - name: EXTRA_ARGS
+    default: ""
+  - name: pullRequestNumber
+    description: pull request number, used for the tag name
+  workspaces:
+  - name: source
+  results:
+  - name: IMAGE-DIGEST
+    description: Digest of the image just built.
+
+  steps:
+  - name: build-and-push
+    workingDir: $(workspaces.source.path)
+    image: gcr.io/kaniko-project/executor@sha256:e00dfdd4a44097867c8ef671e5a7f3e31d94bd09406dbdfba8a13a63fc6b8060  # debug image
+    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+    # https://github.com/tektoncd/pipeline/pull/706
+    env:
+    - name: DOCKER_CONFIG
+      value: /tekton/home/.docker
+    script: |
+      # Setup the image name
+      CONTEXT=$(workspaces.source.path)/$(params.CONTEXT)
+      IMAGE_NAME=$(basename "${CONTEXT}"):pr-$(params.pullRequestNumber)
+      # Run the build
+      /kaniko/executor \
+        - $(params.EXTRA_ARGS) \
+        --dockerfile=$(params.DOCKERFILE) \
+        --context=$(workspaces.source.path)/$(params.CONTEXT)  # The user does not need to care about the workspace and the source.
+        --destination=${IMAGE_NAME}
+        --digest-file=$(results.IMAGE-DIGEST.path)
+      # kaniko assumes it is running as root, which means this example fails on platforms
+      # that default to running containers as a random uid (like OpenShift). Adding this securityContext
+      # makes it explicit that it needs to run as root.
+    securityContext:
+      runAsUser: 0
+---
+apiVersion: custom.tekton.dev/v1alpha1
+kind: TaskLoop
+metadata:
+  name: image-build
+spec:
+  iterateParam: context
+  taskRef:
+    name: kaniko4ci
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tekton-image-build
+  annotations:
+    description: |
+      Build the images for all the Dockerfiles modified by the PR
+spec:
+  params:
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: package
+      description: package (and its children) under test
+    - name: imagePrefix
+      description: The prefix for the image reference to build
+      default: gcr.io/tekton-nightly/dogfooding/ci
+  workspaces:
+    - name: sources
+      description: Workspace where the git repo is prepared for testing
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-batch-merge # from the catalog
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+      workspaces:
+        - name: output
+          workspace: sources
+    - name: check-name-matches
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: $(params.checkName)
+    - name: check-git-files-changed
+      runAfter: ['clone-repo']
+      taskRef:
+        name: check-git-files-changed
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: regex
+          value: $(params.fileFilterRegex)
+      workspaces:
+        - name: input
+          workspace: sources
+    - name: images-build
+      when: # implicit dependency on the check tasks
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]
+      taskRef:
+        apiVersion: custom.tekton.dev/v1alpha1
+        kind: TaskLoop
+        name: image-build
+      params:
+      - name: pullRequestNumber
+        value: "$(params.pullRequestNumber)"
+      - name: CONTEXT
+        value: $(tasks.check-git-files-changed.results.files)
+      workspaces:
+        - name: source
+          workspace: sources
