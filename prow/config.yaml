@@ -1170,7 +1170,7 @@ postsubmits:
   tektoncd/cli:
   - name: post-tekton-cli-go-coverage
     branches:
-    - master
+    - main
     agent: kubernetes
     decorate: true
     spec:
