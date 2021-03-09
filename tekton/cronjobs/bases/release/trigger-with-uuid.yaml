@@ -33,10 +33,10 @@ spec:
               - -ce
               - |
                 GIT_SHA=$(git ls-remote --heads https://${GIT_REPO} | \
-                  awk '/refs\/heads\/master/{ print $1 }')
+                  awk '/refs\/heads\/main$/{ print $1 }')
                 if [ "${GIT_SHA}" == "" ]; then
                   GIT_SHA=$(git ls-remote --heads https://${GIT_REPO} | \
-                  awk '/refs\/heads\/main/{ print $1 }')
+                  awk '/refs\/heads\/master$/{ print $1 }')
                 fi
                 VERSION_TAG="v$(date +"%Y%m%d")-$(echo $GIT_SHA | cut -c 1-10)"
                 cat <<EOF > /shared/git
