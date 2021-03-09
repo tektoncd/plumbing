@@ -52,7 +52,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      generateName: mario-comment-github-$(uid)-
+      generateName: mario-comment-github-
     spec:
       serviceAccountName: mario-listener
       taskSpec:

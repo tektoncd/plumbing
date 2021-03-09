@@ -34,7 +34,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      name: pull-community-teps-lint-$(uid)
+      generateName: pull-community-teps-lint-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/kind: ci
