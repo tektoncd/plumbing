@@ -56,7 +56,7 @@ spec:
 
 ## Triggering from an Event Listener
 
-As this is a [Webhook interceptor](https://github.com/tektoncd/triggers/blob/master/docs/eventlisteners.md#Webhook-Interceptors) it needs to be configured in the list of interceptors for a trigger:
+As this is a [Webhook interceptor](https://github.com/tektoncd/triggers/blob/main/docs/eventlisteners.md#Webhook-Interceptors) it needs to be configured in the list of interceptors for a trigger:
 
 It does its own GitHub secret validation.
 

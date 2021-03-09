@@ -1,12 +1,12 @@
-#!/bin/bash 
+#!/bin/bash
 set -e -o pipefail
 
-declare GITHUB_USER GITHUB_TOKEN GITHUB_ORG GITHUB_REPO 
+declare GITHUB_USER GITHUB_TOKEN GITHUB_ORG GITHUB_REPO
 
 # This script deploys Tekton CI on a local kind cluster
 # It create GitHub webhook and deploys Tekton CI pipeline and tasks
 
-USAGE="Usage:  tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo> 
+USAGE="Usage:  tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo>
 
 Options:
  -u <github-user>         Your GitHub username
@@ -69,11 +69,11 @@ kubectl port-forward service/el-tekton-ci-webhook -n tektonci 9999:8080 &> ./el-
 smee --target http://127.0.0.1:9999/ &> ./smee.log &
 
 # Wait smee target ready
-sleep 5 
+sleep 5
 SMEE_TARGET=$(tail -1 ./smee.log | cut -d'/' -f3-)
 
 # Install a Task to create the webhook, create a secret used by it
-kubectl apply -f https://raw.githubusercontent.com/tektoncd/triggers/master/docs/getting-started/create-webhook.yaml
+kubectl apply -f https://raw.githubusercontent.com/tektoncd/triggers/main/docs/getting-started/create-webhook.yaml
 
 kubectl create secret generic github --from-literal=token=$GITHUB_TOKEN --from-literal=secret=$GITHUB_SECRET
 

@@ -101,7 +101,7 @@ spec:
           - name: url
             value: https://github.com/tektoncd/triggers
           - name: revision
-            value: master
+            value: main
           - name: subdirectory
             value: src/github.com/tektoncd/triggers
           workspaces:
