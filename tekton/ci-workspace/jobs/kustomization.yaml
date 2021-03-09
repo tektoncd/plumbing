@@ -1,3 +1,4 @@
 resources:
 - tekton-teps-validation.yaml
 - tekton-golang-tests.yaml
+- tekton-image-build.yaml
