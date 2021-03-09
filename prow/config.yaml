@@ -1239,7 +1239,7 @@ postsubmits:
   tektoncd/triggers:
   - name: post-tekton-triggers-go-coverage
     branches:
-    - master
+    - main
     agent: kubernetes
     decorate: true
     spec:
