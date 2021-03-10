@@ -1273,7 +1273,7 @@ periodics:
       - "--scenario=kubernetes_execute_bazel"
       - "--clean"
       - "--job=$(JOB_NAME)"
-      - "--repo=github.com/tektoncd/pipeline=master"
+      - "--repo=github.com/tektoncd/pipeline=main"
       - "--root=/go/src"
       - "--service-account=/etc/test-account/service-account.json"
       - "--upload=gs://tekton-prow/pr-logs"
