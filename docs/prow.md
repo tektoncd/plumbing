@@ -176,7 +176,7 @@ These values have been removed from the original
 
 [Tekton Pipelines](https://github.com/tektoncd/pipelines) is also installed in the `prow`
 cluster so that Prow can trigger the execution of
-[`PipelineRuns`](https://github.com/tektoncd/pipeline/blob/master/docs/pipelineruns.md).
+[`PipelineRuns`](https://github.com/tektoncd/pipeline/blob/main/docs/pipelineruns.md).
 
 Prow supports pipelines v1alpha1 up to v0.13.1:
 
@@ -184,7 +184,7 @@ Prow supports pipelines v1alpha1 up to v0.13.1:
 kubectl apply --filename  https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.13.1/release.yaml
 ```
 
-_See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/master/docs/install.md)._
+_See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/main/docs/install.md)._
 
 #### Hello World Pipeline
 
