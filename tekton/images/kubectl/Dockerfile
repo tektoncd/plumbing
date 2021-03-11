@@ -25,7 +25,7 @@ ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
 RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.9.3
 
-FROM alpine:3.12
+FROM alpine:3.13
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Kustomize requires git when pulling remote resources
