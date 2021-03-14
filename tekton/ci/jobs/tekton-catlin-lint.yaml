@@ -29,7 +29,13 @@ spec:
           git --no-pager diff --name-only HEAD~$(( $(params.gitCloneDepth) - 1 ))|grep 'task/[^\/]*/[^\/]*/*[^/]*.yaml'|xargs -I {} dirname {}
         }
         all_tests=$(detect_new_changed_tasks |sort -u || true)
-        echo -n $all_tests > $(workspaces.store-changed-files.path)/changed-files.txt
+        final_tests=""
+        # check for the tasks which are removed completely and skip them
+        for task in $all_tests; do
+          [[ ! -d $task ]] && continue
+          final_tests="$final_tests $task"
+        done
+        echo -n $final_tests > $(workspaces.store-changed-files.path)/changed-files.txt
     - name: lint-catalog
       image: gcr.io/tekton-releases/dogfooding/catlin:latest
       workingDir: $(resources.inputs.source.path)
