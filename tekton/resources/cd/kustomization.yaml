@@ -1,6 +1,19 @@
-namespace: default
 commonAnnotations:
   managed-by: Tekton
+
+patches:
+- target:
+    kind: ServiceAccount|Deployment|PipelineResource|EventListener|TriggerBinding|TriggerTemplate
+  patch: |-
+    - op: replace
+      path: /metadata/namespace
+      value: default
+- target:
+    kind: RoleBinding|ClusterRoleBinding
+  patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: default
 
 resources:
 - bindings.yaml
