@@ -34,8 +34,8 @@ have access to.
 There are several GCP projects used by Tekton:
 - The GCP project that is used for GKE, storage, etc. is called
   [`tekton-releases`](http://console.cloud.google.com/home/dashboard?project=tekton-releases). It has several GKE clusters:
-  - The GKE cluster that [`Prow`](prow/README.md), `Tekton`, and [`boskos`](boskos/README.md) run in is called
-    [`prow`](https://console.cloud.google.com/kubernetes/clusters/details/us-central1-a/prow?project=tekton-releases) and is used
+  - The GKE cluster that is used for [`Prow`](prow/README.md), `Tekton`, and [`boskos`](boskos/README.md) is called
+    [`prow`](https://console.cloud.google.com/kubernetes/clusters/details/us-central1-a/prow?project=tekton-releases)
   - The GKE cluster that is used for nightly releases and other dogfooding is called
     [`dogfooding`](https://console.cloud.google.com/kubernetes/clusters/details/us-central1-a/dogfooding?project=tekton-releases)
 - The GCP project
