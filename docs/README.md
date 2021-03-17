@@ -46,5 +46,6 @@ The script [adjustpermissions.py](../adjustpermissions.py) gives users access to
 
 ## DNS
 
-DNS Names are managed via [Netlify](https://www.netlify.com/). The setup of DNS
-record, for now, is manual only.
+DNS Names are managed via [Netlify](https://www.netlify.com/).
+Gardener External DNS Manager is deployed on the dogfooding and robocat clusters, and manages names
+via annotations on ingresses and services. Some of the names are defined manually in Netlify.

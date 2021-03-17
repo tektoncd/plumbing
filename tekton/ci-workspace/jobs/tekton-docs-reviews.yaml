@@ -1,0 +1,76 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: request-pr-docs-reviewer
+  annotations:
+    description: |
+      Run unit tests against a list of root folders.
+      Requires the task-loops controller.
+spec:
+  params:
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: package
+      description: package (and its children) under test
+  workspaces:
+    - name: sources
+      description: Workspace where the git repo is prepared for testing
+    - name: github
+      description: A secret with the github token
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-batch-merge # from the catalog
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+      workspaces:
+        - name: output
+          workspace: sources
+    - name: check-git-files-changed
+      runAfter: ['clone-repo']
+      taskRef:
+        name: check-git-files-changed
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: regex
+          value: $(params.fileFilterRegex)
+      workspaces:
+        - name: input
+          workspace: sources
+    - name: request-pr-reviewer
+      when: # implicit dependency on the check tasks
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]
+      taskRef:
+        name: github-request-reviewers
+      params:
+      - name: PACKAGE
+        value: "$(params.package)"
+      - name: PULL_REQUEST_NUMBER
+        value: "$(params.pullRequestNumber)"
+      - name: "GITHUB_TOKEN_FILE"
+        value: bot-token
+      - name: TEAM_REVIEWERS
+        value: "docs.reviewers"
+      workspaces:
+        - name: github
+          workspace: github
