@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-all-ci-pipeline
+  name: tekton-doc-reviews
 spec:
   params:
   - name: buildUUID
@@ -32,12 +32,43 @@ spec:
     description: List of labels currently on the Pull Request
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
-      generateName: noop-
+      generateName: request-pr-docs-reviewer-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
-      steps:
-        - name: nop
-          image: busybox
-          script: |
-            echo "no-op"
+      serviceAccountName: tekton-ci-jobs
+      timeout: 10m
+      workspaces:
+        - name: sources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: github
+          secret:
+            secretName: "bot-token-github"
+      pipelineRef:
+        name: request-pr-docs-reviewer
+      params:
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: pullRequestBaseRef
+          value: $(tt.params.pullRequestBaseRef)
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          # Start with docs, ends with .md or *.rst, but not in vendor/ or thirdparty/
+          value: "(^docs\\/.*|^(?!vendor\\/)(?!thirdparty\\/).*\\.(md|rst)$)"
+        - name: package
+          value: $(tt.params.package)
