@@ -64,7 +64,7 @@ spec:
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
-      name: tekton-pipeline-nightly-test-ppc64le
+      ref: tekton-pipeline-nightly-test-ppc64le
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
