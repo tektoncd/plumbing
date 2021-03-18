@@ -41,7 +41,7 @@ of the specific project, and pulled-in using `kustomize` remote resource abiliti
 
 ```yaml
 resources:
-  - github.com/tektoncd/dashboard/tekton/?ref=master
+  - github.com/tektoncd/dashboard/tekton/?ref=main
 ```
 
 ## LimitRange

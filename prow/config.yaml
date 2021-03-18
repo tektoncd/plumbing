@@ -1208,7 +1208,7 @@ postsubmits:
   tektoncd/operator:
   - name: post-tekton-operator-go-coverage
     branches:
-    - master
+    - main
     - main
     agent: kubernetes
     decorate: true
@@ -1224,7 +1224,7 @@ postsubmits:
   tektoncd/pipeline:
   - name: post-tekton-pipeline-go-coverage
     branches:
-    - master
+    - main
     agent: kubernetes
     decorate: true
     spec:
@@ -1261,7 +1261,7 @@ periodics:
   extra_refs:
   - org: tektoncd
     repo: pipeline
-    base_ref: master
+    base_ref: main
     path_alias: github.com/tektoncd/pipeline
   spec:
     containers:
@@ -1289,7 +1289,7 @@ periodics:
   extra_refs:
   - org: tektoncd
     repo: catalog
-    base_ref: master
+    base_ref: main
     path_alias: github.com/tektoncd/catalog
   spec:
     containers:
