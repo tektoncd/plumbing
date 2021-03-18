@@ -6,7 +6,6 @@ metadata:
   namespace: tektonci
 spec:
   serviceAccountName: tekton-ci-listener
-  serviceType: NodePort
   triggers:
     - name: plumbing-pull-request-ci
       interceptors:

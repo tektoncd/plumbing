@@ -67,7 +67,6 @@ metadata:
   name: mario-image-builder
 spec:
   serviceAccountName: mario-listener
-  serviceType: LoadBalancer
   triggers:
     - name: trigger
       interceptors:

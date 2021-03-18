@@ -5,6 +5,5 @@ metadata:
   name: tekton-ci
 spec:
   serviceAccountName: tekton-ci-workspace-listener
-  serviceType: NodePort
   namespaceSelector:
     matchNames: ['tekton-ci']
