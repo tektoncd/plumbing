@@ -11,3 +11,6 @@ resources:
 - operator-deploy-test-s390x-template.yaml
 - pipeline-deploy-test-ppc64le-template.yaml
 - serviceaccount.yaml
+- triggers-deploy-test-ppc64le-template.yaml
+- cli-deploy-test-ppc64le-template.yaml
+- operator-deploy-test-ppc64le-template.yaml

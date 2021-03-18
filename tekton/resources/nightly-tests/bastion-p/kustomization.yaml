@@ -3,6 +3,8 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
-- deploy_tekton_component.yaml
+- deploy_tekton_pipeline.yaml
+- deploy_tekton_triggers.yaml
 - test_tekton_component.yaml
 - cleanup_tekton.yaml
+- test_tekton_cli.yaml

@@ -14,7 +14,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-pipeline-nightly-test-ppc64le
+  name: tekton-operator-nightly-test-ppc64le
 spec:
   params:
   - name: containerRegistry
@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: tekton-pipeline-$(tt.params.targetArch)-nightly-run-
+      generateName: tekton-operator-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
       timeout: 2h
@@ -38,7 +38,7 @@ spec:
               - ReadWriteOnce
             resources:
               requests:
-                storage: 2Gi
+                storage: 1Gi
       # this workspace will be used to store k8s config
       - name: k8s-config
         secret:
@@ -58,43 +58,69 @@ spec:
         - name: registry-credentials
         - name: registry-certificate
         params:
-        - name: package
         - name: container-registry
         - name: target-arch
         tasks:
-        - name: git-clone-plumbing
+        - name: git-clone-operator
           taskRef:
             name: git-clone
           params:
           - name: url
-            value: https://github.com/tektoncd/plumbing
+            value: https://github.com/tektoncd/operator
           - name: revision
             value: main
           - name: subdirectory
-            value: src/github.com/tektoncd/plumbing
+            value: src/github.com/tektoncd/operator
           workspaces:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: git-clone-pipeline
-          runAfter: [git-clone-plumbing]
-          taskRef:
-            name: git-clone
+        - name: e2e-test-operator
+          runAfter: [git-clone-operator]
+          taskSpec:
+            params:
+            - name: container-registry
+            - name: target-arch
+            workspaces:
+            - name: k8s-config
+              description: workspace to get k8s config file
+              mountPath: /root/.kube
+            - name: registry-credentials
+              description: workspace to get registry credentials
+              mountPath: /tekton/home/.docker
+            - name: registry-certificate
+              description: workspace to get registry self-signed certificate
+              mountPath: /opt/ssl/certs
+            - name: source-code
+              description: workspace with source code for tekton component
+            steps:
+            - name: run-e2e-tests
+              image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+              workingdir: $(workspaces.source-code.path)/src/github.com/tektoncd/operator
+              env:
+              - name: GOPATH
+                value: /workspace
+              - name: KUBECONFIG
+                value: /root/.kube/config
+              - name: SSL_CERT_FILE
+                value: /opt/ssl/certs/registry.crt
+              - name: PLATFORM
+                value: linux/$(params.target-arch)
+              - name: KO_DOCKER_REPO
+                value: $(params.container-registry)
+              - name: E2E_DEBUG
+                value: "true"
+              command:
+              - /bin/bash
+              args:
+              - -ce
+              - |
+                test/e2e-tests.sh
           params:
-          - name: url
-            value: https://github.com/tektoncd/pipeline
-          - name: revision
-            value: main
-          - name: subdirectory
-            value: src/github.com/tektoncd/pipeline
-          workspaces:
-          - name: output
-            workspace: shared-workspace
-            subPath: source-code
-        - name: deploy-pipeline
-          runAfter: [git-clone-pipeline]
-          taskRef:
-            name: deploy-tekton-pipeline-nightly
+          - name: container-registry
+            value: $(params.container-registry)
+          - name: target-arch
+            value: $(params.target-arch)
           workspaces:
           - name: k8s-config
             workspace: k8s-config
@@ -106,35 +132,30 @@ spec:
             workspace: shared-workspace
             subPath: source-code
           retries: 2
-          params:
-          - name: package
-            value: $(params.package)
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
-        - name: e2e-test-pipeline
-          runAfter: [deploy-pipeline]
-          taskRef:
-            name: test-e2e-tekton-component
-          workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
-          retries: 2
-          params:
-          - name: package
-            value: $(params.package)
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
         finally:
         - name: cleanup
-          taskRef:
-            name: cleanup-tekton-nightly
+          taskSpec:
+            workspaces:
+            - name: k8s-config
+              description: workspace to get k8s config file
+              mountPath: /root/.kube
+            - name: source-code
+              description: workspace with source code for tekton component
+            steps:
+            - name: cleanup-operator
+              image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+              workingdir: $(workspaces.source-code.path)/src/github.com/tektoncd/operator
+              env:
+              - name: GOPATH
+                value: /workspace
+              - name: KUBECONFIG
+                value: /root/.kube/config
+              command:
+              - /bin/bash
+              args:
+              - -ce
+              - |
+                make clean
           workspaces:
           - name: k8s-config
             workspace: k8s-config
@@ -142,12 +163,7 @@ spec:
             workspace: shared-workspace
             subPath: source-code
           retries: 2
-          params:
-          - name: package
-            value: $(params.package)
       params:
-      - name: package
-        value: github.com/tektoncd/pipeline
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch
