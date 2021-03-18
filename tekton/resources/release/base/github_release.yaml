@@ -86,7 +86,7 @@ spec:
         UPPER_THRESHOLD=$(inputs.resources.source.revision)
         # COMMON_ANCESTOR is the common ancestor between the OLD_VERSION and UPPER_THRESHOLD
         COMMON_ANCESTOR=$(git merge-base ${OLD_VERSION} ${UPPER_THRESHOLD})
-        # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from master
+        # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from main
         OLD_RELEASE_SUBJECTS=$HOME/old_subjects.txt
         echo "Cherry-picked commits:"
         git log --format="%s" $COMMON_ANCESTOR..$OLD_VERSION | sort -u | tee $OLD_RELEASE_SUBJECTS
