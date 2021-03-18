@@ -14,7 +14,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-pipeline-nightly-test-ppc64le
+  name: tekton-cli-nightly-test-ppc64le
 spec:
   params:
   - name: containerRegistry
@@ -25,7 +25,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: tekton-pipeline-$(tt.params.targetArch)-nightly-run-
+      generateName: tekton-cli-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
       timeout: 2h
@@ -91,8 +91,38 @@ spec:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: deploy-pipeline
+        - name: git-clone-triggers
           runAfter: [git-clone-pipeline]
+          taskRef:
+            name: git-clone
+          params:
+          - name: url
+            value: https://github.com/tektoncd/triggers
+          - name: revision
+            value: main
+          - name: subdirectory
+            value: src/github.com/tektoncd/triggers
+          workspaces:
+          - name: output
+            workspace: shared-workspace
+            subPath: source-code
+        - name: git-clone-cli
+          runAfter: [git-clone-triggers]
+          taskRef:
+            name: git-clone
+          params:
+          - name: url
+            value: https://github.com/tektoncd/cli
+          - name: revision
+            value: main
+          - name: subdirectory
+            value: src/github.com/tektoncd/cli
+          workspaces:
+          - name: output
+            workspace: shared-workspace
+            subPath: source-code
+        - name: deploy-pipeline
+          runAfter: [git-clone-triggers]
           taskRef:
             name: deploy-tekton-pipeline-nightly
           workspaces:
@@ -108,15 +138,37 @@ spec:
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/pipeline
           - name: container-registry
             value: $(params.container-registry)
           - name: target-arch
             value: $(params.target-arch)
-        - name: e2e-test-pipeline
+        - name: deploy-triggers
           runAfter: [deploy-pipeline]
           taskRef:
-            name: test-e2e-tekton-component
+            name: deploy-tekton-triggers-nightly
+          workspaces:
+          - name: k8s-config
+            workspace: k8s-config
+          - name: registry-credentials
+            workspace: registry-credentials
+          - name: registry-certificate
+            workspace: registry-certificate
+          - name: source-code
+            workspace: shared-workspace
+            subPath: source-code
+          retries: 2
+          params:
+          - name: package
+            value: github.com/tektoncd/triggers
+          - name: container-registry
+            value: $(params.container-registry)
+          - name: target-arch
+            value: $(params.target-arch)
+        - name: e2e-test-cli
+          runAfter: [deploy-triggers]
+          taskRef:
+            name: test-e2e-tekton-cli
           workspaces:
           - name: k8s-config
             workspace: k8s-config
@@ -127,10 +179,6 @@ spec:
           params:
           - name: package
             value: $(params.package)
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
         finally:
         - name: cleanup
           taskRef:
@@ -144,10 +192,12 @@ spec:
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/pipeline
+          - name: triggers
+            value: "Yes"
       params:
       - name: package
-        value: github.com/tektoncd/pipeline
+        value: github.com/tektoncd/cli
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch

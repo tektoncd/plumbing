@@ -1,0 +1,5 @@
+bases:
+- ../../../../bases/nightly-tests
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-cli-ppc64le"
