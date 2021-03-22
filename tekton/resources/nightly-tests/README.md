@@ -60,6 +60,7 @@ The following pipelines are available:
 - triggers `e2e` tests
 - cli `e2e` tests
 - operator `e2e` tests
+- dashboard `e2e` tests
 
 They are running once a day automatically. The results can be seen
 at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-z/pipelineruns).

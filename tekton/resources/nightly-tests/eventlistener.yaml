@@ -53,6 +53,18 @@ spec:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-operator-nightly-test-s390x
+  - name: dashboard-nightly-test-trigger-s390x
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'dashboard' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 's390x'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      ref: tekton-dashboard-nightly-test-s390x
   - name: pipeline-nightly-test-trigger-ppc64le
     interceptors:
     - cel:
