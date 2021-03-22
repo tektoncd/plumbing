@@ -113,7 +113,7 @@ spec:
         - name: deploy-pipeline
           runAfter: [create-k8s-cluster]
           taskRef:
-            name: deploy-tekton-project-nightly
+            name: deploy-tekton-pipeline-nightly
           workspaces:
           - name: k8s-shared
             workspace: shared-workspace

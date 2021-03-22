@@ -5,5 +5,6 @@ commonAnnotations:
 resources:
 - k8s_cluster_setup.yaml
 - test_tekton_component.yaml
-- deploy_tekton_component.yaml
+- deploy_tekton_pipeline.yaml
+- deploy_tekton_triggers.yaml
 - test_tekton_cli.yaml
