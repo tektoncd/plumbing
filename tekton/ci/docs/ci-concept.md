@@ -1,4 +1,4 @@
-# CI with Tekton
+# CI with Tekton reviewed
 
 This document presents an overview of how to do CI on Tekton using Tekton
 itself. The same concept can be ported to other applications.
