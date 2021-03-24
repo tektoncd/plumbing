@@ -65,12 +65,3 @@ The following pipelines are available:
 They are running once a day automatically. The results can be seen
 at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-z/pipelineruns).
 
-## Catalog Tasks
-
-The nightly test pipelines depend on a git-clone task, which is installed
-manually to the `baston-z` namespace:
-
-```shell
-tkn task delete git-clone -n bastion-z || true
-tkn hub install task git-clone -n baston-z
-```

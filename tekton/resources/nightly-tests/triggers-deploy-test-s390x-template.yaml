@@ -57,7 +57,6 @@ spec:
         - name: shared-workspace
         - name: ssh-secret
         params:
-        - name: package
         - name: container-registry
         - name: target-arch
         - name: remote-host
@@ -67,6 +66,7 @@ spec:
         - name: git-clone-plumbing
           taskRef:
             name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/plumbing
@@ -78,25 +78,11 @@ spec:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: git-clone-pipeline
+        - name: git-clone-triggers
           runAfter: [git-clone-plumbing]
           taskRef:
             name: git-clone
-          params:
-          - name: url
-            value: https://github.com/tektoncd/pipeline
-          - name: revision
-            value: main
-          - name: subdirectory
-            value: src/github.com/tektoncd/pipeline
-          workspaces:
-          - name: output
-            workspace: shared-workspace
-            subPath: source-code
-        - name: git-clone-triggers
-          runAfter: [git-clone-pipeline]
-          taskRef:
-            name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/triggers
@@ -128,39 +114,27 @@ spec:
         - name: deploy-pipeline
           runAfter: [create-k8s-cluster]
           taskRef:
-            name: deploy-tekton-pipeline-nightly
+            name: deploy-tekton-component-nightly
           workspaces:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
           params:
           - name: package
-            value: github.com/tektoncd/pipeline
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
+            value: pipeline
         - name: deploy-triggers
           runAfter: [deploy-pipeline]
           taskRef:
-            name: deploy-tekton-triggers-nightly
+            name: deploy-tekton-component-nightly
           workspaces:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
           params:
           - name: package
-            value: $(params.package)
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
+            value: triggers
+          - name: extra-file
+            value: interceptors.yaml
         - name: e2e-test-triggers
           runAfter: [deploy-triggers]
           taskRef:
@@ -175,7 +149,7 @@ spec:
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/triggers
           - name: container-registry
             value: $(params.container-registry)
           - name: target-arch
@@ -200,8 +174,6 @@ spec:
           - name: action
             value: delete
       params:
-      - name: package
-        value: github.com/tektoncd/triggers
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch
