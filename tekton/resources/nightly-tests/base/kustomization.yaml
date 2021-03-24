@@ -1,0 +1,2 @@
+resources:
+- deploy_tekton_component.yaml

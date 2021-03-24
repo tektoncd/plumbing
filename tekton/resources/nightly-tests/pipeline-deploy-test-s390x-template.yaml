@@ -57,7 +57,6 @@ spec:
         - name: shared-workspace
         - name: ssh-secret
         params:
-        - name: package
         - name: container-registry
         - name: target-arch
         - name: remote-host
@@ -67,6 +66,7 @@ spec:
         - name: git-clone-plumbing
           taskRef:
             name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/plumbing
@@ -82,6 +82,7 @@ spec:
           runAfter: [git-clone-plumbing]
           taskRef:
             name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/pipeline
@@ -113,21 +114,14 @@ spec:
         - name: deploy-pipeline
           runAfter: [create-k8s-cluster]
           taskRef:
-            name: deploy-tekton-pipeline-nightly
+            name: deploy-tekton-component-nightly
           workspaces:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
           params:
           - name: package
-            value: $(params.package)
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
+            value: pipeline
         - name: e2e-test-pipeline
           runAfter: [deploy-pipeline]
           taskRef:
@@ -142,7 +136,7 @@ spec:
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/pipeline
           - name: container-registry
             value: $(params.container-registry)
           - name: target-arch
@@ -161,7 +155,7 @@ spec:
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/pipeline
           - name: container-registry
             value: $(params.container-registry)
           - name: target-arch
@@ -188,8 +182,6 @@ spec:
           - name: action
             value: delete
       params:
-      - name: package
-        value: github.com/tektoncd/pipeline
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch

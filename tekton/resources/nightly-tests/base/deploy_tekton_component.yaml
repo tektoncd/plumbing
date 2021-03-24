@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-tekton-component-nightly
+spec:
+  params:
+  - name: package
+    description: package to install
+  - name: version
+    description: version to install
+    default: latest
+  - name: extra-file
+    description: extra file to install (for instance, interceptors.yaml for triggers)
+    default: ""
+  workspaces:
+  - name: k8s-shared
+    description: workspace for k8s config, configuration file is expected to have `config` name
+    mountPath: /root/.kube
+  steps:
+  - name: deploy
+    image: gcr.io/tekton-releases/dogfooding/kubectl:latest
+    env:
+    - name: KUBECONFIG
+      value: $(workspaces.k8s-shared.path)/config
+    script: |
+      #!/usr/bin/env sh
+      set -exo pipefail
+      kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/$(params.package)/$(params.version)/release.yaml
+      if [ "$(params.extra-file)" != "" ]; then
+        kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/$(params.package)/$(params.version)/$(params.extra-file)
+      fi
+      APPLICATION="tekton-$(params.package)"
+      if [ "$(params.package)" == "pipeline" ]; then
+        APPLICATION="${APPLICATION}s"
+      fi
+      kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=120s -l app.kubernetes.io/part-of=$APPLICATION
+      kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
