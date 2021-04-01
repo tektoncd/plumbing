@@ -23,8 +23,11 @@ get_latest_release() {
 }
 
 # Read command line options
-while getopts ":p:t:d:" opt; do
+while getopts ":c:p:t:d:" opt; do
   case ${opt} in
+    c )
+      CLUSTER_NAME=$OPTARG
+      ;;
     p )
       TEKTON_PIPELINE_VERSION=$OPTARG
       ;;
@@ -37,7 +40,7 @@ while getopts ":p:t:d:" opt; do
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo "Usage:  tekton_in_kind.sh [-p pipeline-version -t triggers-version -d dashboard-version]"
+      echo "Usage:  tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version]"
       ;;
     : )
       echo "Invalid option: $OPTARG requires an argument" 1>&2
@@ -47,6 +50,8 @@ done
 shift $((OPTIND -1))
 
 # Check and defaults input params
+export KIND_CLUSTER_NAME=${CLUSTER_NAME:-"tekton"}
+
 if [ -z "$TEKTON_PIPELINE_VERSION" ]; then
   TEKTON_PIPELINE_VERSION=$(get_latest_release tektoncd/pipeline)
 fi
@@ -57,12 +62,48 @@ if [ -z "$TEKTON_DASHBOARD_VERSION" ]; then
   TEKTON_DASHBOARD_VERSION=$(get_latest_release tektoncd/dashboard)
 fi
 
-# Setup the kind cluster
-kind create cluster --name tekton
+# create registry container unless it already exists
+reg_name='kind-registry'
+reg_port='5000'
+running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
+if [ "${running}" != 'true' ]; then
+  docker run \
+    -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
+    registry:2
+fi
 
-# Install Tekton
+# Create the kind cluster
+# create a cluster with the local registry enabled in containerd
+running_cluster=$(kind get clusters | grep tekton)
+if [ "${running_cluster}" != "tekton" ]; then
+ cat <<EOF | kind create cluster --config=-
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+featureGates:
+  "EphemeralContainers": true
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
+    endpoint = ["http://${reg_name}:${reg_port}"]
+  [plugins."io.containerd.grpc.v1.cri".registry.mirrors."${reg_name}:${reg_port}"]
+    endpoint = ["http://${reg_name}:${reg_port}"]
+EOF
+fi
+
+# connect the registry to the cluster network
+# (the network may already be connected)
+docker network connect "kind" "${reg_name}" || true
+
+
+# Install Tekton Pipeline, Triggers and Dashboard
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
+kubectl wait --for=condition=Established --timeout=30s crds/clusterinterceptors.triggers.tekton.dev
+kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml
 kubectl apply -f https://github.com/tektoncd/dashboard/releases/download/${TEKTON_DASHBOARD_VERSION}/tekton-dashboard-release.yaml
 
 # Wait until all pods are ready
