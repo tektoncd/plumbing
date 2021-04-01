@@ -81,6 +81,10 @@ When a start, failed or succeeded event is received for a CI job, the
 [`github-template.yaml`](../resources/ci/github-template.yaml) is triggered,
 which takes care of updating the check status on GitHub side accordingly.
 
+Conditions must trigger github updates - because of have tasks that implement
+conditions must be named `check-*`, which is used in the trigger to skip the
+associated events.
+
 The `github-template` adds labels to the task runs it triggers to make it
 easier to associate them back with the source task run:
 
@@ -245,7 +249,7 @@ spec:
 ```
 
 In case the CI Job is made of multiple tasks, all should run after the task
-that evealuate the conditions are executed.
+that evaluate the conditions are executed.
 
 The `check-name-matches` task is required for the CI job to
 executed on demand via the `/test [regex]` command.

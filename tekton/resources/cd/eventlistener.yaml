@@ -120,6 +120,7 @@ spec:
               body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] in ['tekton-ci-webhook', 'tekton-ci'] &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
+              !(body.taskRun.metadata.name.IndexOf('check-') == 0) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
               - key: repo
@@ -140,6 +141,7 @@ spec:
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
+              !(body.taskRun.metadata.name.IndexOf('check-') == 0) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
               - key: repo
@@ -160,6 +162,7 @@ spec:
               body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
               !('tekton.dev/conditionName' in body.taskRun.metadata.labels) &&
               !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
+              !(body.taskRun.metadata.name.IndexOf('check-') == 0) &&
               'ownerReferences' in body.taskRun.metadata
             overlays:
               - key: repo
