@@ -7,7 +7,9 @@ RUN GOOS=linux GARCH=amd64 CGO_ENABLED=0 \
 
 FROM docker.io/library/alpine:3.12
 
-RUN apk --no-cache add bash
+RUN apk --no-cache add bash shellcheck py3-pip
+
+RUN pip3 install pylint
 
 WORKDIR /data
 
