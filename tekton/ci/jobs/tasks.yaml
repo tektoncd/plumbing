@@ -71,7 +71,7 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: check-kind-label
+  name: kind-label
   namespace: tektonci
   description: |
     Verifies that a PR has one valid kind label

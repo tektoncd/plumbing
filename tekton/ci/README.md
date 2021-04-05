@@ -146,7 +146,7 @@ Example of job names:
 - `pull-triggers-go-coverage`
 - `periodic-dashboard-integration-tests`
 - `post-catalog-publish-tasks`
-- `pull-check-kind-label`
+- `pull-kind-label`
 
 ### Tasks
 

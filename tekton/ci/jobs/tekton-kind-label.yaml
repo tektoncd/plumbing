@@ -12,7 +12,7 @@ spec:
     - name: labels
       description: The labels attached to the Pull Request
   tasks:
-  - name: check-kind-label
+  - name: kind-label
     conditions:
     - conditionRef: "check-name-matches"
       params:
@@ -21,7 +21,7 @@ spec:
       - name: checkName
         value: $(params.checkName)
     taskRef:
-      name: check-kind-label
+      name: kind-label
     params:
     - name: labels
       value: $(params.labels)
