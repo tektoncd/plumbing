@@ -1,0 +1,54 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: trigger
+spec:
+  serviceType: LoadBalancer
+  triggers:
+    - name: trigger
+      interceptors:
+        - ref:
+            name: "github-simple"
+          params: # rename this to config?
+            - name: config
+              value:
+                # Interceptor specific config
+                push:
+                  ref: ["refs/heads/*"]
+                pull_request:
+                  branch: ["*"]
+                  comment:
+                    approvers:
+                      path: "OWNERS"
+                      revision: "master"
+                    match: "/ok-to-test"
+      bindings:
+        - ref: git
+          kind: ClusterTriggerBinding
+        - ref: github
+          kind: ClusterTriggerBinding
+      template:
+        spec:
+          params:
+            - name: owner
+            - name: repo
+            - name: clone_url
+            - name: pr
+            - name: sha
+          resourcetemplates:
+            - apiVersion: tekton.dev/v1beta1
+              kind: TaskRun
+              metadata:
+                generateName: echo-hello-world-run-
+                annotations:
+                  github.integrations.tekton.dev/owner: "$(tt.params.owner)"
+                  github.integrations.tekton.dev/repo: "$(tt.params.repo)"
+                  github.integrations.tekton.dev/commit: "$(tt.params.sha)"
+              spec:
+                taskSpec:
+                  steps:
+                    - name: build-sources
+                      image: ubuntu
+                      command:
+                        - /bin/bash
+                      args: ['-c', 'echo $(tt.params.owner) $(tt.params.repo) $(tt.params.clone_url) $(tt.params.pr) $(tt.params.sha) !!']

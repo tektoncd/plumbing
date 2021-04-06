@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package tekton.plumbing.github.v1alpha1;
+
+option go_package = "github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/proto/v1alpha1/config_go_proto";
+
+message Config {
+  PushConfig push = 1;
+  PullRequestConfig pull_request = 2;
+}
+
+message PushConfig {
+  // Allowed git references to match.
+  // Default: ["refs/heads/*", "refs/tags/*"] (all branches and tags).
+  repeated string ref = 1;
+}
+
+message PullRequestConfig {
+  // Allowed target (branch you want to merge into) git branch names, without
+  // "refs/heads" ref prefix. Default: ["*"] (all branches).
+  repeated string branch = 1;
+
+  message CommentConfig {
+    // RE2 regex to match comment body against.
+    // Default: "/ok-to-test".
+    string comment = 1;
+    // File containing users allowed to approve pull requests (one username per
+    // line). Default: "OWNERS" file in the repo's default branch.
+    File approvers = 2;
+  }
+  // If set, require approvers to sign off on pull requests before running.
+  CommentConfig comment = 2;
+}
+
+message File {
+  string revision = 2;
+  string path = 3;
+}
