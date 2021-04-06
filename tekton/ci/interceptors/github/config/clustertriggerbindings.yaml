@@ -1,0 +1,21 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: ClusterTriggerBinding
+metadata:
+  name: git
+spec:
+  params:
+    - name: url
+      value: $(extensions.git.url)
+    - name: revision
+      value: $(extensions.git.revision)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: ClusterTriggerBinding
+metadata:
+  name: github
+spec:
+  params:
+    - name: owner
+      value: $(extensions.github.owner)
+    - name: repo
+      value: $(extensions.github.repo)
