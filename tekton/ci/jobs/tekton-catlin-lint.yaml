@@ -56,13 +56,19 @@ spec:
         catlin validate $(cat $(workspaces.store-changed-files.path)/changed-files.txt) | tee -a $(workspaces.store-changed-files.path)/catlin.txt
         echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
 
-        echo '**Catlin script lint Output**' >> $(workspaces.store-changed-files.path)/catlin.txt
-        echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
+        # performing catlin script validattion only on yaml files
+        for file in $(cat $(workspaces.store-changed-files.path)/changed-files.txt);do
+            if [[ ${file} == *.yaml ]];then
+                catlin lint script ${file} | tee -a $(workspaces.store-changed-files.path)/catlin-script.txt
+            fi
+        done
 
-        # performing catlin validate
-        catlin lint script $(cat $(workspaces.store-changed-files.path)/changed-files.txt) | tee -a $(workspaces.store-changed-files.path)/catlin.txt
-        echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
-
+        if [[ -s $(workspaces.store-changed-files.path)/catlin-script.txt ]];then
+          echo '**Catlin script lint Output**' >> $(workspaces.store-changed-files.path)/catlin.txt
+          echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
+          cat $(workspaces.store-changed-files.path)/catlin-script.txt >> $(workspaces.store-changed-files.path)/catlin.txt
+          echo '```' >> $(workspaces.store-changed-files.path)/catlin.txt
+        fi
 
         # checking if there are any ERROR or WARN messages produced by catlin
         isWarning=$(cat  $(workspaces.store-changed-files.path)/catlin.txt | grep -c "WARN")
