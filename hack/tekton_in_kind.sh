@@ -74,8 +74,8 @@ fi
 
 # Create the kind cluster
 # create a cluster with the local registry enabled in containerd
-running_cluster=$(kind get clusters | grep tekton)
-if [ "${running_cluster}" != "tekton" ]; then
+running_cluster=$(kind get clusters | grep tekton || true)
+if [ "${running_cluster}" != "$KIND_CLUSTER_NAME" ]; then
  cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -102,8 +102,8 @@ docker network connect "kind" "${reg_name}" || true
 # Install Tekton Pipeline, Triggers and Dashboard
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
-kubectl wait --for=condition=Established --timeout=30s crds/clusterinterceptors.triggers.tekton.dev
-kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml
+kubectl wait --for=condition=Established --timeout=30s crds/clusterinterceptors.triggers.tekton.dev || true # Starting from triggers v0.13
+kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml || true
 kubectl apply -f https://github.com/tektoncd/dashboard/releases/download/${TEKTON_DASHBOARD_VERSION}/tekton-dashboard-release.yaml
 
 # Wait until all pods are ready
