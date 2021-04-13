@@ -14,6 +14,6 @@
 FROM alpine:3.11
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ARG TKN_VERSION=0.17.1
+ARG TKN_VERSION=0.17.2
 
 RUN ARCH=$(uname -m) && wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_${ARCH}.tar.gz | tar zxf - -C /usr/local/bin
