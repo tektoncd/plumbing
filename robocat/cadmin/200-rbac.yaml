@@ -40,6 +40,10 @@ rules:
   - apiGroups: [autoscaling]
     resources: [horizontalpodautoscalers]
     verbs: ["*"]
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: ["patch"]
+    resourceNames: ["tekton-pipelines"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
