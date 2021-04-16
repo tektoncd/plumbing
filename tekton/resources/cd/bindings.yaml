@@ -94,6 +94,8 @@ spec:
     value: $(body.params.tekton.bucket)
   - name: releaseFile
     value: $(body.params.tekton.file)
+  - name: postReleaseFile
+    value: $(body.params.tekton.post-file)
   - name: tektonProject
     value: $(body.params.tekton.project)
   - name: tektonVersion

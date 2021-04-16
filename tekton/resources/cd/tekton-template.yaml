@@ -27,6 +27,9 @@ spec:
   - name: releaseFile
     description: Name of the release file
     default: release.yaml
+  - name: postReleaseFile
+    description: Name of the extra release file to install once pods and CRDs are ready
+    default: ""
   - name: releaseExtraPath
     description: Any extra path after bucket/project, starting with a "/"
     default: ""
@@ -59,6 +62,8 @@ spec:
         value: $(tt.params.targetCluster)
       - name: release-file
         value: $(tt.params.releaseFile)
+      - name: post-release-file
+        value: $(tt.params.postReleaseFile)
       resources:
         inputs:
           - name: release-bucket
