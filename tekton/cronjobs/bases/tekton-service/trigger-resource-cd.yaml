@@ -50,6 +50,7 @@ spec:
                       "environment": "$TEKTON_CLUSTER",
                       "bucket": "$RELEASE_BUCKET",
                       "file": "$RELEASE_FILE",
+                      "post-file": "$POST_RELEASE_FILE",
                       "extra-path": "$RELEASE_EXTRA_PATH"
                     },
                     "plumbing": {
@@ -74,6 +75,8 @@ spec:
                 value: "gs://tekton-releases"
               - name: RELEASE_FILE
                 value: "release.yaml"
+              - name: POST_RELEASE_FILE
+                value: ""
               - name: RELEASE_EXTRA_PATH
                 value: ""
               - name: NAMESPACE

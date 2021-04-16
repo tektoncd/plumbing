@@ -32,6 +32,9 @@ spec:
   - name: release-file
     description: Name of the release file
     default: release.yaml
+  - name: post-release-file
+    description: Name of the release file
+    default: ""
   resources:
     inputs:
       - name: release-bucket
@@ -40,6 +43,12 @@ spec:
         type: cluster
       - name: plumbing-library
         type: git
+
+  stepTemplate:
+    env:
+      - name: KUBECONFIG
+        value: /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
+
   steps:
 
   - name: deploy-tekton-project
@@ -49,7 +58,7 @@ spec:
       set -exo pipefail
 
       # Export KUBECONFIG so that it's available to pre-scripts too
-      export KUBECONFIG=/workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
+      export KUBECONFIG
       # Set up RELEASE_ROOT
       if [[ "$(params.version)" == "latest" ]]; then
         RELEASE_ROOT=$(resources.inputs.release-bucket.path)/$(params.version)
@@ -82,16 +91,35 @@ spec:
       fi
       kubectl apply --kubeconfig $KUBECONFIG $APPLY_MODE
 
-  - name: wait-until-pods-running
+  - name: wait-until-pods-and-crds
     image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
-      source $(resources.inputs.plumbing-library.path)/scripts/library.sh
-      wait_until_pods_running "$(params.namespace)"
-    env:
-      - name: KUBECONFIG
-        value: /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
+      APPLICATION="tekton-$(params.projectName)"
+      if [ "$(params.projectName)" == "pipeline" ]; then
+        APPLICATION="${APPLICATION}s"
+      fi
+      # Wait for pods to be ready and CRDs to be established
+      kubectl wait --for condition=ready --timeout=120s pods -l app.kubernetes.io/part-of=$APPLICATION -n $(params.namespace)
+      kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
+
+
+  - name: deploy-extra-manifest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
+    script: |
+      #!/usr/bin/env bash
+      set -exo pipefail
+      if [ "$(params.post-release-file)" != "" ]; then
+          # Set up RELEASE_ROOT
+          if [[ "$(params.version)" == "latest" ]]; then
+            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/$(params.version)
+          else
+            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/$(params.version)
+          fi
+          kubectl apply --kubeconfig $KUBECONFIG -f $RELEASE_ROOT/$(params.post-release-file)
+      fi
+
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
