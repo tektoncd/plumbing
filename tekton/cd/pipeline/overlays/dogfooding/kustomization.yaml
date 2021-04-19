@@ -6,3 +6,4 @@ patchesStrategicMerge:
 - config-observability.yaml
 - webhook.yaml
 - controller.yaml
+- feature-flags.yaml
