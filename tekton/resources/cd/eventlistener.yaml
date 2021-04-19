@@ -83,7 +83,9 @@ metadata:
   name: tekton-events
 spec:
   serviceAccountName: tektoncd
-  replicas: 3
+  resources:
+    kubernetesResource:
+      replicas: 3
   triggers:
     - name: cd-pipeline-failed
       interceptors:
