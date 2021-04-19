@@ -16,16 +16,6 @@ rules:
   resources: ["serviceaccounts"]
   verbs: ["impersonate"]
 ---
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: triggers-minimal-ci
-rules:
-# EventListeners need to be able to fetch any clustertriggerbindings
-- apiGroups: ["triggers.tekton.dev"]
-  resources: ["clustertriggerbindings"]
-  verbs: ["get", "list", "watch"]
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -64,18 +54,6 @@ roleRef:
   kind: Role
   name: triggers-minimal
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: tekton-ci-workspace-listener-triggers-minimal-ci
-subjects:
-- kind: ServiceAccount
-  name: tekton-ci-workspace-listener
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: triggers-minimal
----
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -103,7 +81,7 @@ metadata:
   name: tekton-ci-jobs-triggers
 rules:
 - apiGroups: ["triggers.tekton.dev"]
-  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "clustertriggerbindings"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "clustertriggerbindings", "clusterinterceptors"]
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
