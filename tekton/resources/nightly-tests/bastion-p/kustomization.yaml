@@ -8,3 +8,4 @@ resources:
 - test_tekton_component.yaml
 - cleanup_tekton.yaml
 - test_tekton_cli.yaml
+- k8s_cluster_setup.yaml

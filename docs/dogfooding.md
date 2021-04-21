@@ -29,6 +29,7 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
     - `registry-credentials` used to access registry on remote machine
     - `registry-certificate` self-signed certificate for registry on remote machine
     - `ppc64le-cluster` headless service & endpoint to resolve remote machine address
+    - `ppc64le-k8s-ssh` used to ssh access ppc64le remote machine
 - `GCP` secrets:
   - `nightly-account` is used by nightly releases to push releases
   to the nightly bucket. It's a token for service account
