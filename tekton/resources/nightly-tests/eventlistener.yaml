@@ -113,6 +113,18 @@ spec:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-operator-nightly-test-ppc64le
+  - name: dashboard-nightly-test-trigger-ppc64le
+    interceptors:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+           body['trigger-template'] == 'dashboard' &&
+           'arch' in body.params.target &&
+           body.params.target.arch == 'ppc64le'
+    bindings:
+    - ref: trigger-to-deploy-test-tekton-project
+    template:
+      ref: tekton-dashboard-nightly-test-ppc64le
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding

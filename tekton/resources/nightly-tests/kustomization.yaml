@@ -15,3 +15,4 @@ resources:
 - triggers-deploy-test-ppc64le-template.yaml
 - cli-deploy-test-ppc64le-template.yaml
 - operator-deploy-test-ppc64le-template.yaml
+- dashboard-deploy-test-ppc64le-template.yaml
