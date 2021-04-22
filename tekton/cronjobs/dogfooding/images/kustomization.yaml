@@ -13,3 +13,4 @@ resources:
 - buildx-gcloud-nightly
 - teps-community-nightly
 - catlin-nightly
+- kind-nightly
