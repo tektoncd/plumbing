@@ -152,7 +152,8 @@ function delete_leaked_network_resources() {
   fi
 }
 
-# Create a test cluster with kubetest and call the current script again.
+# Create a test cluster and call the current script again.
+# Parameters: $1 - cluster provider name, e.g. gke
 function create_test_cluster() {
   # Fail fast during setup.
   set -o errexit
@@ -164,6 +165,47 @@ function create_test_cluster() {
 
   echo "Cluster will have a minimum of ${E2E_MIN_CLUSTER_NODES} and a maximum of ${E2E_MAX_CLUSTER_NODES} nodes."
 
+  case "$1" in
+    gke) create_gke_test_cluster ;;
+    kind) create_kind_test_cluster ;;
+    *) echo "unsupported provider: $1"; exit 1 ;;
+  esac
+
+  echo "Test subprocess exited with code $?"
+  # Ignore any errors below, this is a best-effort cleanup and shouldn't affect the test result.
+  set +o errexit
+  function_exists cluster_teardown && cluster_teardown
+  delete_leaked_network_resources
+  local result=$(get_test_return_code)
+  echo "Artifacts were written to ${ARTIFACTS}"
+  echo "Test result code is ${result}"
+  exit ${result}
+}
+
+# Create a KIND test cluster with kubetest2 and run the test command.
+function create_kind_test_cluster() {
+  local cluster_creation_log=/tmp/${E2E_BASE_NAME}-cluster_creation-log
+  # Assume test failed (see details in set_test_return_code()).
+  set_test_return_code 1
+  local test_cmd_args="--run-tests"
+  (( EMIT_METRICS )) && test_cmd_args+=" --emit-metrics"
+  (( SKIP_TEKTON_SETUP )) && test_cmd_args+=" --skip-tekton-setup"
+  [[ -n "${E2E_SCRIPT_CUSTOM_FLAGS[@]}" ]] && test_cmd_args+=" ${E2E_SCRIPT_CUSTOM_FLAGS[@]}"
+
+  header "Creating test cluster in kind"
+  # Don't fail test for kubetest, as it might incorrectly report test failure
+  # if teardown fails (for details, see success() below)
+  set +o errexit
+  echo "${E2E_SCRIPT}"
+  echo "${test_cmd_args}"
+  { run_go_tool sigs.k8s.io/kubetest2 \
+    kubetest2 kind --up --down --test=exec -- "${E2E_SCRIPT}" "${test_cmd_args}"; } 2>&1 | tee ${cluster_creation_log}
+  # Exit if test succeeded
+  [[ "$(get_test_return_code)" == "0" ]] && return
+}
+
+# Create a GKE test cluster with kubetest and run the test command.
+function create_gke_test_cluster() {
   # Smallest cluster required to run the end-to-end-tests
   local CLUSTER_CREATION_ARGS=(
     --gke-create-command="container clusters create --quiet --enable-autoscaling --min-nodes=${E2E_MIN_CLUSTER_NODES} --max-nodes=${E2E_MAX_CLUSTER_NODES} --scopes=cloud-platform --enable-basic-auth --no-issue-client-certificate ${EXTRA_CLUSTER_CREATION_FLAGS[@]}"
@@ -209,15 +251,6 @@ function create_test_cluster() {
     --test-cmd-args "${test_cmd_args}" \
     ${extra_flags[@]} \
     ${EXTRA_KUBETEST_FLAGS[@]}
-  echo "Test subprocess exited with code $?"
-  # Ignore any errors below, this is a best-effort cleanup and shouldn't affect the test result.
-  set +o errexit
-  function_exists cluster_teardown && cluster_teardown
-  delete_leaked_network_resources
-  local result=$(get_test_return_code)
-  echo "Artifacts were written to ${ARTIFACTS}"
-  echo "Test result code is ${result}"
-  exit ${result}
 }
 
 # Retry backup regions/zones if cluster creations failed due to stockout.
@@ -271,26 +304,36 @@ function setup_test_cluster() {
 
   header "Setting up test cluster"
 
-  # Set the actual project the test cluster resides in
-  # It will be a project assigned by Boskos if test is running on Prow, 
-  # otherwise will be ${GCP_PROJECT} set up by user.
-  readonly export E2E_PROJECT_ID="$(gcloud config get-value project)"
-
-  # Save some metadata about cluster creation for using in prow and testgrid
-  save_metadata
-
-  local k8s_user=$(gcloud config get-value core/account)
+  local k8s_user="localhost"
   local k8s_cluster=$(kubectl config current-context)
 
-  # If cluster admin role isn't set, this is a brand new cluster
-  # Setup the admin role and also KO_DOCKER_REPO
-  if [[ -z "$(kubectl get clusterrolebinding cluster-admin-binding 2> /dev/null)" ]]; then
-    acquire_cluster_admin_role ${k8s_user} ${E2E_CLUSTER_NAME} ${E2E_CLUSTER_REGION} ${E2E_CLUSTER_ZONE}
-    kubectl config set-context ${k8s_cluster} --namespace=default
-    export KO_DOCKER_REPO=gcr.io/${E2E_PROJECT_ID}/${E2E_BASE_NAME}-e2e-img
+  if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
+    # Set the actual project the test cluster resides in
+    # It will be a project assigned by Boskos if test is running on Prow,
+    # otherwise will be ${GCP_PROJECT} set up by user.
+    readonly export E2E_PROJECT_ID="$(gcloud config get-value project)"
+
+    # Save some metadata about cluster creation for using in prow and testgrid
+    save_metadata
+
+    k8s_user=$(gcloud config get-value core/account)
+
+    # If cluster admin role isn't set, this is a brand new cluster
+    # Setup the admin role and also KO_DOCKER_REPO
+    if [[ -z "$(kubectl get clusterrolebinding cluster-admin-binding 2> /dev/null)" ]]; then
+      acquire_cluster_admin_role ${k8s_user} ${E2E_CLUSTER_NAME} ${E2E_CLUSTER_REGION} ${E2E_CLUSTER_ZONE}
+      kubectl config set-context ${k8s_cluster} --namespace=default
+      export KO_DOCKER_REPO=gcr.io/${E2E_PROJECT_ID}/${E2E_BASE_NAME}-e2e-img
+    fi
+
+    echo "- Project is ${E2E_PROJECT_ID}"
   fi
 
-  echo "- Project is ${E2E_PROJECT_ID}"
+  if [[ "${CLOUD_PROVIDER}" == "kind" ]]; then
+    export KIND_CLUSTER_NAME=kind-kubetest2
+    export KO_DOCKER_REPO=kind.local
+  fi
+
   echo "- Cluster is ${k8s_cluster}"
   echo "- User is ${k8s_user}"
   echo "- Docker is ${KO_DOCKER_REPO}"
@@ -355,6 +398,7 @@ E2E_CLUSTER_VERSION=""
 EXTRA_CLUSTER_CREATION_FLAGS=()
 EXTRA_KUBETEST_FLAGS=()
 E2E_SCRIPT_CUSTOM_FLAGS=()
+CLOUD_PROVIDER="gke"
 
 # Parse flags and initialize the test cluster.
 function initialize() {
@@ -391,22 +435,25 @@ function initialize() {
           --cluster-version) E2E_CLUSTER_VERSION=$1 ;;
           --cluster-creation-flag) EXTRA_CLUSTER_CREATION_FLAGS+=($1) ;;
           --kubetest-flag) EXTRA_KUBETEST_FLAGS+=($1) ;;
+          --cloud-provider) CLOUD_PROVIDER=$1 ;;
           *) abort "unknown option ${parameter}" ;;
         esac
     esac
     shift
   done
 
-  # Use PROJECT_ID if set, unless --gcp-project was used.
-  if [[ -n "${PROJECT_ID:-}" && -z "${GCP_PROJECT}" ]]; then
-    echo "\$PROJECT_ID is set to '${PROJECT_ID}', using it to run the tests"
-    GCP_PROJECT="${PROJECT_ID}"
-  fi
-  if (( ! IS_PROW )) && [[ -z "${GCP_PROJECT}" ]]; then
-    abort "set \$PROJECT_ID or use --gcp-project to select the GCP project where the tests are run"
-  fi
+  if [[ "${CLOUD_PROVIDER}" == "gke" ]]; then
+    # Use PROJECT_ID if set, unless --gcp-project was used.
+    if [[ -n "${PROJECT_ID:-}" && -z "${GCP_PROJECT}" ]]; then
+      echo "\$PROJECT_ID is set to '${PROJECT_ID}', using it to run the tests"
+      GCP_PROJECT="${PROJECT_ID}"
+    fi
+    if (( ! IS_PROW )) && [[ -z "${GCP_PROJECT}" ]]; then
+      abort "set \$PROJECT_ID or use --gcp-project to select the GCP project where the tests are run"
+    fi
 
-  (( IS_PROW )) && [[ -z "${GCP_PROJECT}" ]] && IS_BOSKOS=1
+    (( IS_PROW )) && [[ -z "${GCP_PROJECT}" ]] && IS_BOSKOS=1
+  fi
 
   # Safety checks
   is_protected_gcr ${KO_DOCKER_REPO} && \
@@ -421,7 +468,7 @@ function initialize() {
   readonly SKIP_TEKTON_SETUP
 
   if (( ! RUN_TESTS )); then
-    create_test_cluster
+    create_test_cluster "${CLOUD_PROVIDER}"
   else
     setup_test_cluster
   fi
