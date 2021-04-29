@@ -12,30 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers-interceptor-github
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tekton-triggers-interceptors-github
-  namespace: tekton-pipelines
+  name: tekton-triggers-interceptor-github
   labels:
     app.kubernetes.io/name: github-simple
-    app.kubernetes.io/component: interceptors
+    app.kubernetes.io/component: tekton-interceptors
 spec:
   replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: github-simple
-      app.kubernetes.io/component: interceptors
+      app.kubernetes.io/component: tekton-interceptors
   template:
     metadata:
       labels:
         app.kubernetes.io/name: github-simple
-        app.kubernetes.io/component: interceptors
+        app.kubernetes.io/component: tekton-interceptors
     spec:
-      serviceAccountName: tekton-triggers-core-interceptors
+      serviceAccountName: tekton-triggers-interceptor-github
       containers:
-        - name: tekton-triggers-core-interceptors
+        - name: tekton-triggers-interceptor-github
           image: "ko://github.com/tektoncd/plumbing/tekton/ci/interceptors/github"
+          args:
+            - "--webhook_secret_path=/etc/webhook-secret/webhook.txt"
           securityContext:
             allowPrivilegeEscalation: false
             # User 65532 is the distroless nonroot user ID
@@ -44,15 +50,22 @@ spec:
             capabilities:
               drop:
                 - all
+          volumeMounts:
+          - name: webhook-secret
+            mountPath: "/etc/webhook-secret"
+            readOnly: true
+      volumes:
+      - name: webhook-secret
+        secret:
+          secretName: github-webhook-secret
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app.kubernetes.io/name: github-simple
-    app.kubernetes.io/component: interceptors
-  name: tekton-triggers-interceptors-github
-  namespace: tekton-pipelines
+    app.kubernetes.io/component: tekton-interceptors
+  name: tekton-triggers-interceptor-github
 spec:
   ports:
     - name: "http"
@@ -60,7 +73,7 @@ spec:
       targetPort: 8080
   selector:
     app.kubernetes.io/name: github-simple
-    app.kubernetes.io/component: interceptors
+    app.kubernetes.io/component: tekton-interceptors
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: ClusterInterceptor
@@ -70,5 +83,5 @@ metadata:
 spec:
   clientConfig:
     service:
-      name: tekton-triggers-interceptors-github
-      namespace: tekton-pipelines
+      name: tekton-triggers-interceptor-github
+      namespace: default

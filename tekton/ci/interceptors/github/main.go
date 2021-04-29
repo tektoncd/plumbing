@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -24,7 +25,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	s := github.New(http.DefaultClient, webhookSecret)
+	s := github.New(http.DefaultClient, bytes.TrimSpace(webhookSecret))
 
 	http.ListenAndServe(":8080", s)
 }

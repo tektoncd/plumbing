@@ -76,7 +76,7 @@ func (s *Server) handle(r *http.Request) (*v1alpha1.InterceptorResponse, error) 
 	if sig := headers.Get("X-Hub-Signature-256"); sig != "" {
 		fmt.Println(sig)
 		if err := github.ValidateSignature(sig, []byte(in.Body), s.webhookSecret); err != nil {
-			return nil, Error(codes.InvalidArgument, "unknown signature")
+			return nil, Errorf(codes.InvalidArgument, "unknown signature: %v", err)
 		}
 	}
 
