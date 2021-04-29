@@ -10,3 +10,4 @@ resources:
 - releases
 - tekton
 - nightly-tests
+- catalog

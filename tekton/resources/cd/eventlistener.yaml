@@ -76,6 +76,22 @@ spec:
         - ref: cleanup-details
       template:
         ref: cleanup-runs
+    - name: catalog
+      interceptors:
+        - cel:
+            filter: >-
+              'trigger-template' in body &&
+              body['trigger-template'] == 'catalog'
+      bindings:
+        - ref: deploy-source-git
+        - name: registry
+          value: "$(body.params.catalog.registry)"
+        - name: registryPath
+          value: "$(body.params.catalog.registryPath)"
+        - name: catalogDescription
+          value: "$(body.params.catalog.description)"
+      template:
+        ref: publish-catalog
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
