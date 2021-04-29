@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/catalog
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-tekton-upstream"

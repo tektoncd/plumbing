@@ -1,0 +1,161 @@
+# Copyright 2021 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: catalog-publish
+spec:
+  params:
+  - name: gitRepository
+    description: The git URL of the catalog to publish
+    type: string
+    default: https://github.com/tektoncd/catalog
+  - name: gitRevision
+    description: The git revision of the catalog to publish
+    type: string
+    default: main
+  - name: registry
+    description: The registry to publish to
+    type: string
+  - name: registryPath
+    description: The base path in the registry
+    type: string
+  - name: serviceAccountFilename
+    description: The name of the GKE service account file on the serviceaccount workspace
+    type: string
+  workspaces:
+  - name: shared
+    description: Shared workspace for tasks
+  - name: serviceaccount
+    description: Hosts a GKE service account file
+  tasks:
+  - name: git-clone
+    taskRef:
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared
+    params:
+    - name: url
+      value: "$(params.gitRepository)"
+    - name: revision
+      value: "$(params.gitRevision)"
+  - name: create-dockerfile
+    runAfter: ['git-clone']
+    taskSpec:
+      workspaces:
+        - name: serviceaccount
+        - name: dockerfile
+      params:
+        - name: serviceAccountFilename
+        - name: registry
+      steps:
+        - name: gke-serviceaccount-to-dockerfile
+          image: debian:bullseye-slim
+          env:
+            - name: DOCKER_CONFIG_FOLDER
+              value: "$(workspaces.dockerfile.path)"
+            - name: SERVICE_ACCOUNT_FILE
+              value: "$(workspaces.serviceaccount.path)/$(params.serviceAccountFilename)"
+            - name: REGISTRY
+              value: "$(params.registry)"
+          script: |
+            set -e
+            # This step transforms sensitive information
+            # Make sure we don't write it to the logs
+            set +x
+            cat <<EOF > "${DOCKER_CONFIG_FOLDER}/config.json"
+            {
+              "auths": {
+                "$REGISTRY": {
+                  "auth": "$(echo "_json_key:$(cat ${SERVICE_ACCOUNT_FILE})" | base64 -w 0)"
+                }
+              }
+            }
+            EOF
+    params:
+      - name: serviceAccountFilename
+        value: "$(params.serviceAccountFilename)"
+      - name: registry
+        value: "$(params.registry)"
+    workspaces:
+      - name: serviceaccount
+        workspace: serviceaccount
+      - name: dockerfile
+        workspace: shared
+  - name: publish
+    runAfter: ['create-dockerfile']
+    workspaces:
+      - name: catalog
+        workspace: shared
+      - name: dockerconfig
+        workspace: shared
+    params:
+    - name: REGISTRY
+      value: "$(params.registry)"
+    - name: PATH
+      value: "$(params.registryPath)"
+    - name: TAG
+      value: "$(tasks.git-clone.results.commit)"
+    taskRef:
+      name: tekton-catalog-publish
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: publish-catalog
+spec:
+  params:
+  - name: gitRepository
+    description: URL of the repository that holds the catalog
+  - name: gitRevision
+    description: Git revision
+  - name: registry
+    description: The registry to publish to
+  - name: registryPath
+    description: The base path in the registry
+  - name: catalogDescription
+    description: A descriptive name for the catalog
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: publish-catalog-$(tt.params.catalogDescription)-
+    spec:
+      pipelineRef:
+        name: catalog-publish
+      params:
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitRevision
+          value: "$(tt.params.gitRevision)"
+        - name: registry
+          value: "$(tt.params.registry)"
+        - name: registryPath
+          value: "$(tt.params.registryPath)"
+        - name: serviceAccountFilename
+          value: "release.json"
+      workspaces:
+        - name: shared
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: serviceaccount
+          secret:
+            secretName: "release-secret"

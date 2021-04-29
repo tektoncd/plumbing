@@ -25,4 +25,5 @@ resources:
 - tekton-template.yaml
 - cleanup-template.yaml
 - notification-template.yaml
+- catalog-template.yaml
 - serviceaccount.yaml
