@@ -14,6 +14,29 @@ This interceptor expects its configuration in an InterceptorParam named
 `config`. The full config spec (including defaults) can be found at
 `pkg/proto/v1alpha1/config.proto`[./pkg/proto/v1alpha1/config.proto].
 
+## Deployment
+
+1. Generate the secret
+
+   ```bash
+   $ openssl rand -base64 32 > /tmp/webhook.txt
+   ```
+
+2. Create/Update GitHub webhook using secret (see
+   [Securing your webhooks](https://docs.github.com/en/developers/webhooks-and-events/securing-your-webhooks))
+
+3. Generate Kubernetes Secret
+
+   ```bash
+   $ kubectl create secret generic github-webhook-secret  --from-file=/tmp/webhook.txt
+   ```
+
+4. Deploy interceptor
+
+   ```bash
+   $ ko apply -f config
+   ```
+
 ### Cookbook
 
 #### Allow all pushes, pull requests
@@ -74,8 +97,8 @@ default fields.
 
 ## Extensions
 
-This interceptor will provide the following extension outputs that can be used in
-TriggerTemplates.
+This interceptor will provide the following extension outputs that can be used
+in TriggerTemplates.
 
 These values are intended to be recommended defaults. If you wish to use
 different values, simply specify the desired values in your Trigger binding.
