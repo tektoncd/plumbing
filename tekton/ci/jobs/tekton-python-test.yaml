@@ -12,6 +12,7 @@ spec:
     - name: fetch-repository
       taskRef:
         name: git-clone
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
       workspaces:
         - name: output
           workspace: shared-workspace
@@ -27,6 +28,7 @@ spec:
     - name: pytest
       taskRef:
         name: pytest
+        bundle: gcr.io/tekton-releases/catalog/upstream/pytest:0.1
       runAfter:
         - fetch-repository
       workspaces:

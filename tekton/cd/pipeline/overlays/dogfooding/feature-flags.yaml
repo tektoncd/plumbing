@@ -5,3 +5,4 @@ metadata:
   namespace: tekton-pipelines
 data:
   enable-custom-tasks: "true"
+  enable-tekton-oci-bundles: "true"

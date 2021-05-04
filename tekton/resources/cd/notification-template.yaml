@@ -35,6 +35,7 @@ spec:
     spec:
       taskRef:
         name: send-to-webhook-slack
+        bundle: gcr.io/tekton-releases/catalog/upstream/send-to-webhook-slack:0.1
       params:
         - name: webhook-secret
           value: robocat-slack-app-webhook

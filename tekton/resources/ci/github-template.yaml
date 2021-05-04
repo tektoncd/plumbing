@@ -47,6 +47,7 @@ spec:
           runAsUser: 1001
       taskRef:
         name: github-set-status
+        bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
       params:
         - name: REPO_FULL_NAME
           value: $(tt.params.gitHubRepo)
