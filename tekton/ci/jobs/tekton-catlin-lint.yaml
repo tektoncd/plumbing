@@ -128,6 +128,7 @@ spec:
     - name: post-comment
       taskRef:
         name: github-add-comment
+        bundle: gcr.io/tekton-releases/catalog/upstream/github-add-comment:0.4
       params:
         - name: COMMENT_OR_FILE
           value: "catlin.txt"

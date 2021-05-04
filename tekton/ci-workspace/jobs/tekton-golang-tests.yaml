@@ -6,7 +6,8 @@ metadata:
 spec:
   iterateParam: context
   taskRef:
-    name: golang-test  # from the catalog
+    name: golang-test
+    bundle: gcr.io/tekton-releases/catalog/upstream/golang-test:0.1
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -43,7 +44,8 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-batch-merge # from the catalog
+        name: git-batch-merge
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
       params:
         - name: url
           value: $(params.gitRepository)
@@ -89,7 +91,7 @@ spec:
       taskRef:
         apiVersion: custom.tekton.dev/v1alpha1
         kind: TaskLoop
-        name: golang-tests # from the catalog
+        name: golang-tests
       params:
       - name: package
         value: "$(params.package)"
