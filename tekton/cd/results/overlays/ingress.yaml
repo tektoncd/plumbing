@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: 'results.dogfooding.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
+  name: results
+  namespace: tekton-pipelines
+spec:
+  tls:
+  - secretName: tekton-results-tls
+    hosts:
+    - results.dogfooding.tekton.dev
+  rules:
+  - host: results.dogfooding.tekton.dev
+    http:
+      paths:
+      - backend:
+          serviceName: tekton-results-api-service
+          servicePort: 50051
+        path: /*
