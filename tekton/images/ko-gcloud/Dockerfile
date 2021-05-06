@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.15-alpine3.12 as build
+ARG GO_VERSION=1.16.3
+FROM golang:${GO_VERSION}-alpine3.12 as build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
@@ -29,8 +30,8 @@ FROM google/cloud-sdk:296.0.0-alpine
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Install golang
-RUN curl https://dl.google.com/go/go1.15.linux-amd64.tar.gz > go1.15.tar.gz
-RUN tar -C /usr/local -xzf go1.15.tar.gz
+RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz
+RUN tar -C /usr/local -xzf go${GO_VERSION}.tar.gz
 ENV PATH="${PATH}:/usr/local/go/bin"
 ENV GOROOT /usr/local/go
 
