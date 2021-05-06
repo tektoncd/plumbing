@@ -1364,7 +1364,7 @@ periodics:
       - |-
         --query=org:tektoncd
         -label:lifecycle/frozen
-        label:lifecycle/stale
+        -label:lifecycle/stale
         label:lifecycle/rotten
       - --updated=720h
       - --token=/etc/github-token/oauth
