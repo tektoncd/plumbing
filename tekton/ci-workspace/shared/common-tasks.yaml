@@ -82,6 +82,6 @@ spec:
         # If a command was specified, the regex should match the checkName
         REGEX="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
         [[ "$REGEX" == "" ]] && REGEX='.*'
-        echo "$(params.checkName)" | grep -E "$REGEX" \
-            || printf "failed" > $(results.check.path) \
-            && printf "passed" > $(results.check.path)
+        (echo "$(params.checkName)" | grep -E "$REGEX") \
+            && printf "passed" > $(results.check.path) \
+            || printf "failed" > $(results.check.path)
