@@ -1,0 +1,165 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: catlin-lint
+spec:
+  description: >-
+    This task detects changes in the pull request using git diff
+    and stores the changed tasks names in a workspace and passes
+    that to the catlin so that catlin can validate only changed
+    files.
+  workspaces:
+    - name: source
+      description: >
+        Workspace where the git repo is prepared for linting and catlin
+        output is stored.
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+  steps:
+    - name: find-changed-tasks
+      image: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
+      workingDir: $(workspaces.source.path)
+      script: |
+        function detect_new_changed_tasks() {
+          # detect for changes in the task manifest
+          git --no-pager diff --name-only HEAD~$(( $(params.gitCloneDepth) - 1 ))|grep 'task/[^\/]*/[^\/]*/*[^/]*.yaml'|xargs -I {} dirname {}
+        }
+        all_tests=$(detect_new_changed_tasks |sort -u || true)
+        final_tests=""
+        # check for the tasks which are removed completely and skip them
+        for task in $all_tests; do
+          [[ ! -d $task ]] && continue
+          final_tests="$final_tests $task"
+        done
+        echo -n $final_tests > changed-files.txt
+    - name: lint-catalog
+      image: gcr.io/tekton-releases/dogfooding/catlin:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        set +e
+        [[ ! -s changed-files.txt ]] && {
+          echo "No file change detected in task directory"
+          echo -n "" > catlin.txt
+          exit 0
+        }
+
+        # creating a file which will contain the final formatted output
+        # which needs to be added as a comment(if any)
+        echo '**Catlin Output**' >> catlin.txt
+        echo '```' >> catlin.txt
+
+        # performing catlin validate
+        catlin validate changed-files.txt | tee -a catlin.txt
+        echo '```' >> catlin.txt
+
+        # performing catlin script validattion only on yaml files
+        for file in $(cat changed-files.txt);do
+          catlin lint script ${file}/*.yaml | tee -a catlin-script.txt
+        done
+
+        if [[ -s catlin-script.txt ]];then
+          echo '**Catlin script lint Output**' >> catlin.txt
+          echo '```' >> catlin.txt
+          cat catlin-script.txt >> catlin.txt
+          echo '```' >> catlin.txt
+        fi
+
+        # checking if there are any ERROR or WARN messages produced by catlin
+        isWarning=$(cat catlin.txt | grep -c "WARN")
+        isError=$(cat catlin.txt | grep -c "ERROR")
+
+        # if there are no ERROR or WARN messages then add a empty string which will not
+        # add a comment on the Github PR
+        [[ $isWarning -eq 0 ]] && [[ $isError -eq 0 ]] && \
+        echo -n "" > catlin.txt
+
+        # if catlin produced the error then fail the task else success
+        [[ $isError -eq 1 ]] && exit 1 || exit 0
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: catlin-linter
+spec:
+  workspaces:
+    - name: source
+      description: Workspace where the git repo is prepared for linting.
+  params:
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: pullRequestUrl
+      description: The HTML URL for the pull request
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+  tasks:
+    - name: check-name-match
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: $(params.checkName)
+    - name: clone-repo
+      when:
+        - input: $(tasks.check-name-match.results.check)
+          operator: in
+          values: ["passed"]
+      taskRef:
+        name: git-batch-merge
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+    - name: lint-catalog
+      runAfter:
+        - "clone-repo"
+      taskRef:
+        name: catlin-lint
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+  finally:
+    - name: post-comment
+      when:
+        - input: $(tasks.check-name-match.results.check)
+          operator: in
+          values: ["passed"]
+      taskRef:
+        name: github-add-comment
+        bundle: gcr.io/tekton-releases/catalog/upstream/github-add-comment:0.3
+      params:
+        - name: COMMENT_OR_FILE
+          value: "catlin.txt"
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: bot-token-github
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: bot-token
+        - name: REQUEST_URL
+          value: $(params.pullRequestUrl)
+      workspaces:
+        - name: comment-file
+          workspace: source

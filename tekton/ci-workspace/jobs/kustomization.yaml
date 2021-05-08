@@ -3,3 +3,4 @@ resources:
 - tekton-golang-tests.yaml
 - tekton-image-build.yaml
 - tekton-docs-reviews.yaml
+- tekton-catalog-catlin-lint.yaml
