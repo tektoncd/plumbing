@@ -27,4 +27,5 @@ jobs:
   tekton-prow/pr-logs/directory/:
   - pull-tekton-pipeline-build-tests
   - pull-tekton-pipeline-integration-tests
+  - pull-tekton-pipeline-alpha-integration-tests
 recursive_artifacts: false

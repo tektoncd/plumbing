@@ -844,6 +844,35 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+  - name: pull-tekton-pipeline-alpha-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-pipeline-alpha-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-alpha-integration-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--integration-tests"
+        env:
+        - name: PIPELINE_FEATURE_GATE
+          value: "alpha"
   - name: pull-tekton-pipeline-go-coverage
     labels:
       preset-github-token: "true"
