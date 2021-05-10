@@ -53,7 +53,7 @@ spec:
     - name: clone-repo
       taskRef:
         name: git-batch-merge
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge :0.2
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
       params:
         - name: url
           value: $(params.gitRepository)
