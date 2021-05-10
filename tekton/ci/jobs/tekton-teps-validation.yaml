@@ -25,7 +25,7 @@ spec:
   - name: teps-table
     image: alpine/git:latest
     workingDir: $(resources.inputs.source.path)
-    args: ['diff', '--exit-code']
+    args: ['diff', '--exit-code', '$(params.teps-folder)/README.md']
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
