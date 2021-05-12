@@ -32,7 +32,7 @@ spec:
             args:
               - -ce
               - |
-                curl -v -H "Content-type: application/json -d @- "$SINK_URL" <<EOF
+                curl -v -H "Content-type: application/json" -d @- "$SINK_URL" <<EOF
                 {
                   "trigger-template": "catalog",
                   "params": {
