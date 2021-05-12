@@ -48,7 +48,7 @@ spec:
         pipelineRef:
           name: catlin-linter
         workspaces:
-          - name: store-changed-files
+          - name: source
             volumeClaimTemplate:
               spec:
                 accessModes:
