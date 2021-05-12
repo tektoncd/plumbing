@@ -37,7 +37,7 @@ spec:
           secretName: ci-webhook
           secretKey: secret
         eventTypes:
-          - pull_request
+          - issue_comment
     - cel:
         filter: >-
           body.repository.name == 'community' &&
@@ -57,7 +57,7 @@ spec:
     - cel:
         overlays:
           - key: git_clone_depth
-            expression: "string(body.extensions.add_pr_body.pull_request.commits + 1.0)"
+            expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-comment
