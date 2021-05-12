@@ -5,7 +5,7 @@ This folder holds the Slack buildcaptain bot code and configuration.
 * [Build Captain Runbook](https://docs.google.com/document/d/1QJV0z2bMXdz_BZOkBwfxIP1BiktUb8c1lcifwqxF5wg/edit)
 * [Build Captain Log](https://docs.google.com/document/d/1kUzH8SV4coOabXLntPA1QI01lbad3Y1wP5BVyh4qzmk/edit#)
 
-Current buildcaptains are:
+Current build captains are:
 - Andrea Frittoli @afrittoli (andrea.frittoli)
 - Billy Lynch @wlynch (wlynch)
 - Dibyo Mukherjee @dibyom (dibyo)
@@ -18,6 +18,7 @@ Current buildcaptains are:
 Other folks who are not build captains but have build captain access:
 - Piyush Garg @piyush-garg
 - Priti Desai @pritidesai
+- Priya Wadhwa @priyawadhwa
 
 Build captain access is given with [adjustpermissions.py](../../adjustpermissions.py).
 
