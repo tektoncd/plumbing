@@ -50,7 +50,7 @@ spec:
         echo '```' >> catlin.txt
 
         # performing catlin validate
-        catlin validate changed-files.txt | tee -a catlin.txt
+        catlin validate $(cat changed-files.txt) | tee -a catlin.txt
         echo '```' >> catlin.txt
 
         # performing catlin script validattion only on yaml files
