@@ -19,12 +19,10 @@ spec:
               - name: CHART_NAME
                 value: "cert-manager"
               - name: CHART_VERSION
-                value: "v0.14.0"
+                value: "v1.3"
               - name: CHART_PARAMS
-                value: fullnameOverride=cert-manager
+                value: fullnameOverride=cert-manager,installCRDs=true
               - name: CHART_DESCRIPTION
                 value: "cert-manager"
               - name: CHART_REPO
                 value: https://charts.jetstack.io
-              - name: PRE_DEPLOY_RESOURCES
-                value: "https://github.com/jetstack/cert-manager/releases/download/v0.14.0/cert-manager.crds.yaml"
