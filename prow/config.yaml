@@ -1179,29 +1179,6 @@ postsubmits:
         args:
         - "--artifacts=$(ARTIFACTS)"
         - "--cov-threshold-percentage=0"
-  tektoncd/experimental:
-  - name: tekton-dashboard-publish-images
-    labels:
-      preset-postsubmit-sh: "true"
-    always_run: true
-    decorate: true
-    spec:
-      containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/nightly-account/service-account.json"
-        - "--upload=gs://tekton-prow/logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/publish-images.sh"
   tektoncd/operator:
   - name: post-tekton-operator-go-coverage
     branches:
