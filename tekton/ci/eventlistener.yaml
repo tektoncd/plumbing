@@ -327,3 +327,4 @@ spec:
         - ref: tekton-ci-webhook-issue-labels
       template:
         ref: tekton-catalog-ci-pipeline
+    - triggerRef: results-ci
