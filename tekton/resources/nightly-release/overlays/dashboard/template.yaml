@@ -6,6 +6,8 @@
       metadata:
         generateName: dashboard-release-nightly-
       spec:
+        timeouts:
+          pipeline: "1h30m"
         pipelineRef:
           name: dashboard-release
         params:
