@@ -16,6 +16,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tekton-triggers-interceptor-github
+  namespace: tekton-ci
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -24,6 +25,7 @@ metadata:
   labels:
     app.kubernetes.io/name: github-simple
     app.kubernetes.io/component: tekton-interceptors
+  namespace: tekton-ci
 spec:
   replicas: 1
   selector:
@@ -41,7 +43,7 @@ spec:
         - name: tekton-triggers-interceptor-github
           image: "ko://github.com/tektoncd/plumbing/tekton/ci/interceptors/github"
           args:
-            - "--webhook_secret_path=/etc/webhook-secret/webhook.txt"
+            - "--webhook_secret_path=/etc/webhook-secret/secret"
           securityContext:
             allowPrivilegeEscalation: false
             # User 65532 is the distroless nonroot user ID
@@ -57,7 +59,7 @@ spec:
       volumes:
       - name: webhook-secret
         secret:
-          secretName: github-webhook-secret
+          secretName: ci-webhook
 ---
 apiVersion: v1
 kind: Service
@@ -66,6 +68,7 @@ metadata:
     app.kubernetes.io/name: github-simple
     app.kubernetes.io/component: tekton-interceptors
   name: tekton-triggers-interceptor-github
+  namespace: tekton-ci
 spec:
   ports:
     - name: "http"
@@ -84,4 +87,4 @@ spec:
   clientConfig:
     service:
       name: tekton-triggers-interceptor-github
-      namespace: default
+      namespace: tekton-ci
