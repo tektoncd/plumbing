@@ -14,6 +14,20 @@ This interceptor expects its configuration in an InterceptorParam named
 `config`. The full config spec (including defaults) can be found at
 `pkg/proto/v1alpha1/config.proto`[./pkg/proto/v1alpha1/config.proto].
 
+### Pull Request Approvers
+
+To gate pull request runs on OWNER approval, users can specify the `comment`
+field in their configuration to require OWNERS to comment on the pull request
+in order for the test to run. By default, the interceptor looks for a file named
+`OWNERS` in the top level directory of the repo, and expects the comment
+`/ok-to-test` (these can be modified).
+
+For compatibility with existing Prow setups, the interceptor expects the OWNERS
+file to match the Prow OWNERS config format
+(https://www.kubernetes.dev/docs/guide/owners). Any `approver` or `reviewer` is
+allowed to trigger pull request runs via comment. NOTE: filters are not
+yet supported.
+
 ## Deployment
 
 1. Generate the secret
