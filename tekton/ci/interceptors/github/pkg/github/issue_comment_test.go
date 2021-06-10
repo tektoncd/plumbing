@@ -12,11 +12,18 @@ import (
 	"net/url"
 	"testing"
 
+	_ "embed"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v34/github"
 	"github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/github/bindings"
 	pb "github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/proto/v1alpha1/config_go_proto"
 	"github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
+)
+
+var (
+	//go:embed testdata/TESTOWNERS
+	ownersFile string
 )
 
 func TestExecute_IssueComment(t *testing.T) {
@@ -31,7 +38,7 @@ func TestExecute_IssueComment(t *testing.T) {
 	mux.HandleFunc("/repos/tektoncd/results/contents/OWNERS", func(rw http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(rw).Encode(map[string]string{
 			"type":    "file",
-			"content": "Codercat",
+			"content": ownersFile,
 		})
 	})
 	pr := &github.PullRequest{
@@ -167,4 +174,37 @@ func mustParseURL(s string) *url.URL {
 		panic(fmt.Errorf("error parsing URL %s: %v", s, err))
 	}
 	return u
+}
+
+func TestContainsOwners(t *testing.T) {
+	for _, n := range []string{
+		"Codercat",
+		"Alice",
+	} {
+		t.Run(n, func(t *testing.T) {
+			ok, err := containsOwner(ownersFile, n)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !ok {
+				t.Fatal("user is not an OWNER")
+			}
+		})
+	}
+
+	t.Run("non-owner", func(t *testing.T) {
+		ok, err := containsOwner(ownersFile, "Bob")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ok {
+			t.Fatal("user is an OWNER")
+		}
+	})
+
+	t.Run("invalid file", func(t *testing.T) {
+		if _, err := containsOwner("asdf", ""); err == nil {
+			t.Fatal("expected error reading file")
+		}
+	})
 }

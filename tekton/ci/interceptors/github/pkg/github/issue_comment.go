@@ -1,18 +1,16 @@
 package github
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
-	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/google/go-github/v34/github"
 	"github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/github/bindings"
 	pb "github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/proto/v1alpha1/config_go_proto"
 	"github.com/tektoncd/triggers/pkg/apis/triggers/v1alpha1"
 	"google.golang.org/grpc/codes"
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -70,7 +68,11 @@ func (c *IssueComment) Execute(ctx context.Context, client *github.Client, cfg *
 	if err != nil {
 		return nil, err
 	}
-	if !containsOwner(owners, commentAuthor) {
+	ok, err := containsOwner(owners, commentAuthor)
+	if err != nil {
+		return nil, Errorf(codes.InvalidArgument, "unable to read OWNERS file")
+	}
+	if !ok {
 		return nil, Errorf(codes.PermissionDenied, "user not allowed to approve trigger")
 	}
 
@@ -97,13 +99,35 @@ func (c *IssueComment) Execute(ctx context.Context, client *github.Client, cfg *
 	}, nil
 }
 
-func containsOwner(content, owner string) bool {
-	scanner := bufio.NewScanner(strings.NewReader(content))
-	for scanner.Scan() {
-		fmt.Println(scanner.Text(), owner)
-		if scanner.Text() == owner {
-			return true
+// config is a fork of the prow OWNERS config file.
+// See https://pkg.go.dev/k8s.io/test-infra/prow/repoowners#Config
+type config struct {
+	Approvers []string `json:"approvers,omitempty"`
+	Reviewers []string `json:"reviewers,omitempty"`
+}
+
+// loadSimpleConfig loads SimpleConfig from bytes `b`
+func loadConfig(b []byte) (config, error) {
+	simple := new(config)
+	err := yaml.Unmarshal(b, simple)
+	return *simple, err
+}
+
+func containsOwner(content, owner string) (bool, error) {
+	cfg, err := loadConfig([]byte(content))
+	if err != nil {
+		return false, err
+	}
+
+	for _, o := range cfg.Approvers {
+		if owner == o {
+			return true, nil
 		}
 	}
-	return false
+	for _, o := range cfg.Reviewers {
+		if owner == o {
+			return true, nil
+		}
+	}
+	return false, nil
 }
