@@ -83,6 +83,10 @@ spec:
   - name: label-config-v2
     configMap:
       name: label-config-v2
+  stepTemplate:
+    env:
+      - name: HOME
+        value: /tekton/home
   steps:
   - name: install-pyyaml
     image: python:3-alpine
