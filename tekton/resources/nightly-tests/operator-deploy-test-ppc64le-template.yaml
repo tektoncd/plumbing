@@ -87,7 +87,7 @@ spec:
               mountPath: /root/.kube
             - name: registry-credentials
               description: workspace to get registry credentials
-              mountPath: /tekton/home/.docker
+              mountPath: /root/.docker
             - name: registry-certificate
               description: workspace to get registry self-signed certificate
               mountPath: /opt/ssl/certs
