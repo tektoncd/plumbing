@@ -45,7 +45,9 @@ metadata:
   name: peribolos-trigger
 spec:
   serviceAccountName: release-right-meow
-  serviceType: LoadBalancer
+  resources:
+    kubernetesResource:
+      serviceType: LoadBalancer
   triggers:
     - name: peribolos-trigger
       bindings:
