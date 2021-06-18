@@ -3,7 +3,9 @@ kind: EventListener
 metadata:
   name: trigger
 spec:
-  serviceType: LoadBalancer
+  resources:
+    kubernetesResource:
+      serviceType: LoadBalancer
   triggers:
     - name: trigger
       interceptors:
