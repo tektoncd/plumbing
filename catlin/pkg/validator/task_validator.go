@@ -97,6 +97,21 @@ func (t *taskValidator) validateStep(s v1beta1.Step) Result {
 		result.Error("Step %q uses image %q which must be tagged with a specific version", step, img)
 	}
 
+	// According to [CIS benchmarks](https://cloud.google.com/kubernetes-engine/docs/concepts/cis-benchmarks).
+	// > 5.4.1 Prefer using secrets as files over secrets as environment variables
+	for _, env := range s.Env {
+		if env.ValueFrom == nil || env.ValueFrom.SecretKeyRef == nil {
+			continue
+		}
+		result.Warn("Step %q uses secret to populate env %q. Prefer using secrets as files over secrets as environment variables", step, env.Name)
+	}
+	for _, envFrom := range s.EnvFrom {
+		if envFrom.SecretRef == nil {
+			continue
+		}
+		result.Warn("Step %q uses secret as environment variables. Prefer using secrets as files over secrets as environment variables", step)
+	}
+
 	return result
 }
 
