@@ -118,6 +118,58 @@ spec:
     image: docker.io/abc/foo:$(params.version)
 `
 
+const taskWithEnvFromSecret = `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: invalid-env-or-envfrom
+  labels:
+    app.kubernetes.io/version: a,b,c
+  annotations:
+    tekton.dev/tags: a,b,c
+    tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/displayName: My Example Task
+spec:
+  description: |-
+    A summary of the resource
+
+    A para about this valid task
+
+  params:
+  - name: secret
+    type: string
+  - name: configmap
+    type: string
+
+  steps:
+  - name: s1
+    image: docker.io/foo:bar
+    env:
+    - name: PASS
+      valueFrom:
+        secretKeyRef:
+          name: $(params.secret)
+          key: PASS
+  - name: s2
+    image: docker.io/foo:bar
+    env:
+    - name: USER
+      valueFrom:
+        configMapKeyRef:
+          name: $(params.configmap)
+          key: USER
+  - name: s3
+    image: docker.io/foo:bar
+    envFrom:
+    - secretRef:
+        name: $(params.secret)
+  - name: s4
+    image: docker.io/foo:bar
+    envFrom:
+    - configMapRef:
+        name: $(params.configmap)
+`
+
 func TestTaskValidator_ValidImageRef(t *testing.T) {
 
 	r := strings.NewReader(taskWithValidImageRef)
@@ -205,4 +257,27 @@ func TestTaskValidator_InvalidImageRef(t *testing.T) {
 	// image with variable
 	assert.Equal(t, Warning, lints[14].Kind)
 	assert.Equal(t, `Step "s13" uses image "docker.io/abc/foo:$(params.version)" that contains variables; skipping validation`, result.Lints[14].Message)
+}
+
+func TestTaskValidator_ValidEnvFromSecret(t *testing.T) {
+
+	r := strings.NewReader(taskWithEnvFromSecret)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	v := ForKind(res)
+	result := v.Validate()
+	assert.Equal(t, 0, result.Errors)
+
+	assert.Equal(t, 2, len(result.Lints))
+
+	// env.secretKeyRef generates a warning
+	assert.Equal(t, Warning, result.Lints[0].Kind)
+	assert.Equal(t, `Step "s1" uses secret to populate env "PASS". Prefer using secrets as files over secrets as environment variables`, result.Lints[0].Message)
+
+	// envFrom.secretRef generates a warning
+	assert.Equal(t, Warning, result.Lints[1].Kind)
+	assert.Equal(t, `Step "s3" uses secret as environment variables. Prefer using secrets as files over secrets as environment variables`, result.Lints[1].Message)
 }
