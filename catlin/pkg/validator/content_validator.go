@@ -16,6 +16,7 @@ package validator
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -65,6 +66,19 @@ func (v *ContentValidator) Validate() Result {
 	tags := strings.FieldsFunc(annotations[consts.TagsAnnotation], func(c rune) bool { return c == ' ' || c == ',' })
 	if len(tags) == 0 {
 		result.Recommend("%s is easily discoverable if it has annotation for tag %q", resName, consts.TagsAnnotation)
+	}
+
+	platforms := strings.FieldsFunc(annotations[consts.PlatformsAnnotation], func(c rune) bool { return c == ' ' || c == ',' })
+	if len(platforms) == 0 {
+		result.Recommend("%s is more usable if it has %q annotation about platforms to run", resName, consts.PlatformsAnnotation)
+	} else {
+		pattern := `^[a-z0-9]+\/[a-z0-9]+$`
+		re := regexp.MustCompile(pattern)
+		for _, platform := range platforms {
+			if !re.Match([]byte(platform)) {
+				result.Error("%q platform must be in OS/ARCH format, e.g., linux/amd64", platform)
+			}
+		}
 	}
 	return result
 }

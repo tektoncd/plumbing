@@ -19,4 +19,5 @@ const (
 	DisplayNameAnnotation        = "tekton.dev/displayName"
 	MinPipelineVersionAnnotation = "tekton.dev/pipelines.minVersion"
 	TagsAnnotation               = "tekton.dev/tags"
+	PlatformsAnnotation          = "tekton.dev/platforms"
 )

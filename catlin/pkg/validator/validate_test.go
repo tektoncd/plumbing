@@ -15,10 +15,9 @@
 package validator
 
 import (
+	"gotest.tools/v3/assert"
 	"strings"
 	"testing"
-
-	"gotest.tools/v3/assert"
 
 	"github.com/tektoncd/plumbing/catlin/pkg/parser"
 )
@@ -36,6 +35,7 @@ metadata:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
     tekton.dev/displayName: My Example Task
+    tekton.dev/platforms: linux/amd64,linux/s390x
 spec:
   description: |-
     A summary of the resource
@@ -62,6 +62,7 @@ metadata:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
     tekton.dev/displayName: My Example Task
+    tekton.dev/platforms: linux/amd64,linux/s390x
 spec:
   description: |-
     A summary of the resource
@@ -72,6 +73,47 @@ spec:
   - name: hello
     taskRef:
       name: hello
+`
+
+	taskWithInvalidPlatforms = `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: invalid
+  labels:
+    app.kubernetes.io/version: a,b,c
+  annotations:
+    tekton.dev/tags: a,b,c
+    tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/displayName: My Example Task
+    tekton.dev/platforms: linux,linux/amd64,something-else
+spec:
+  description: |-
+    A summary of the resource
+  steps:
+    - name: hello
+      image: abc.io/ubuntu:1.0
+      command: [sleep, infinity]
+`
+
+	taskWithoutPlatforms = `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: valid
+  labels:
+    app.kubernetes.io/version: a,b,c
+  annotations:
+    tekton.dev/tags: a,b,c
+    tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/displayName: My Example Task
+spec:
+  description: |-
+    A summary of the resource
+  steps:
+    - name: hello
+      image: abc.io/ubuntu:1.0
+      command: [sleep, infinity]
 `
 )
 
@@ -118,4 +160,44 @@ func TestValidatorForKind_Task(t *testing.T) {
 
 	assert.Equal(t, 0, result.Errors)
 	assert.Equal(t, 0, len(result.Lints))
+}
+
+func TestContentValidator_InvalidPlatforms(t *testing.T) {
+
+	r := strings.NewReader(taskWithInvalidPlatforms)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res)
+	result := v.Validate()
+	assert.Equal(t, 2, result.Errors)
+
+	lints := result.Lints
+	assert.Equal(t, 2, len(lints))
+
+	assert.Equal(t, Error, lints[0].Kind)
+	assert.Equal(t, `"linux" platform must be in OS/ARCH format, e.g., linux/amd64`, result.Lints[0].Message)
+	assert.Equal(t, Error, lints[1].Kind)
+	assert.Equal(t, `"something-else" platform must be in OS/ARCH format, e.g., linux/amd64`, result.Lints[1].Message)
+}
+
+func TestContentValidator_WithoutPlatforms(t *testing.T) {
+
+	r := strings.NewReader(taskWithoutPlatforms)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res)
+	result := v.Validate()
+	assert.Equal(t, 0, result.Errors)
+
+	lints := result.Lints
+	assert.Equal(t, 1, len(lints))
+
+	assert.Equal(t, Recommendation, lints[0].Kind)
+	assert.Equal(t, `Task: tekton.dev/v1beta1 - name: "valid" is more usable if it has "tekton.dev/platforms" annotation about platforms to run`, result.Lints[0].Message)
 }
