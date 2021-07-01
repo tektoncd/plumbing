@@ -15,7 +15,7 @@ This command validates
 - If the resource is a valid Tekton Resource
 - If all mandatory fields are added to the resource file
 - If all images used in Task Spec are tagged
-
+- If platforms are specified in correct format
 ```
 catlin validate <path-to-resource-file>
 ```
