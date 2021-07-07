@@ -38,6 +38,8 @@ spec:
           secretKeyRef:
             name: github-token
             key: GITHUB_TOKEN
+      - name: HOME
+        value: /tekton/home
       - name: VERSION
         value: $(params.release-tag)
       - name: PROJECT
