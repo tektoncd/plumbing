@@ -38,6 +38,8 @@ spec:
       value: $(workspaces.source-code.path)/src/$(params.package)/tkn
     - name: TEST_CLUSTERTASK_LIST_EMPTY
       value: "yes"
+    - name: SYSTEM_NAMESPACE
+      value: tekton-pipelines
     command:
     - /bin/bash
     args:
