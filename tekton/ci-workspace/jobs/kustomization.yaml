@@ -4,3 +4,4 @@ resources:
 - tekton-image-build.yaml
 - tekton-docs-reviews.yaml
 - tekton-catalog-catlin-lint.yaml
+- tekton-org-validation.yaml
