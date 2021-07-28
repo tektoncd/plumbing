@@ -17,7 +17,7 @@ See [DEVELOPMENT.md](https://github.com/tektoncd/plumbing/blob/main/DEVELOPMENT.
 
 ### tekton_in_kind.sh
 
-This script uses the [`kind` tool](https://kind.sigs.k8s.io/) to create a local K8s cluster in Docker and then deploys [Tekton Pipeline](https://github.com/tektoncd/pipeline), [Tekton Triggers](https://github.com/tektoncd/triggers) and [Tekton Dashboard](https://github.com/tektoncd/dashboard) components, into it.
+This script uses the [`kind`](https://kind.sigs.k8s.io/) to create a local K8s cluster in Docker and then deploys [Tekton Pipeline](https://github.com/tektoncd/pipeline), [Tekton Triggers](https://github.com/tektoncd/triggers) and [Tekton Dashboard](https://github.com/tektoncd/dashboard) components, into it.
 
 #### Installation and prerequisites
 
