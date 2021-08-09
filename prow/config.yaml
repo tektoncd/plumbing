@@ -194,20 +194,6 @@ presubmits:
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./tekton/images/test-runner/test.sh"
-  - name: try-out-prow-plus-tekton
-    agent: tekton-pipeline
-    always_run: false
-    rerun_command: "/run try-out-tekton"
-    trigger: "(?m)^/run (all|try-out-tekton),?(\\s+|$)"
-    pipeline_run_spec:
-      trigger: # Required by versions 0.2.0 - v0.3.1 of Tekton Pipelines https://github.com/kubernetes/test-infra/issues/13948
-        type: manual
-      pipelineRef:
-        name: special-hi-scott-pipeline
-      resources:
-      - name: git
-        resourceRef:
-          name: PROW_IMPLICIT_GIT_REF # Used by Prow to create a PipelineResource with the triggering git ref
 
   tektoncd/chains:
     - name: pull-tekton-chains-build-tests
