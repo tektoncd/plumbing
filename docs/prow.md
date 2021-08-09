@@ -186,17 +186,6 @@ kubectl apply --filename  https://storage.googleapis.com/tekton-releases/pipelin
 
 _See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/main/docs/install.md)._
 
-#### Hello World Pipeline
-
-Since Prow + Pipelines in this org are a WIP (see
-[#922](https://github.com/tektoncd/pipeline/issues/922)),
-the only job (besides [nightly releases](#nightly-tekton-pipelines-release))
-that is currently configured is
-[the hello scott Pipeline](../prow/helloscott.yaml).
-
-This `Pipeline` (`special-hi-scott-pipeline`) is executed on every PR to this repo
-(`plumbing`) via the `try-out-prow-plus-tekton` Prow job.
-
 ## Updating Prow configuration
 
 Changes to [config.yaml](../prow/config.yaml) are automatically applied to the Prow
