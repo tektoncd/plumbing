@@ -15,9 +15,10 @@
 package validator
 
 import (
-	"gotest.tools/v3/assert"
 	"strings"
 	"testing"
+
+	"gotest.tools/v3/assert"
 
 	"github.com/tektoncd/plumbing/catlin/pkg/parser"
 )
@@ -34,6 +35,35 @@ metadata:
   annotations:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/categories: Build Tools
+    tekton.dev/displayName: My Example Task
+    tekton.dev/platforms: linux/amd64,linux/s390x
+spec:
+  description: |-
+    A summary of the resource
+
+    A para about this valid task
+
+  steps:
+    - name: hello
+      image: abc.io/ubuntu:1.0
+      command: [sleep, infinity]
+    - name: foo-bar
+      image: abc.io/fedora:1.0@sha256:deadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33fdeadb33f
+`
+
+	inValidTask = `
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: invalid
+  labels:
+    app.kubernetes.io/version: a,b,c
+  annotations:
+    tekton.dev/tags: a,b,c
+    tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/categories: Example
     tekton.dev/displayName: My Example Task
     tekton.dev/platforms: linux/amd64,linux/s390x
 spec:
@@ -61,6 +91,7 @@ metadata:
   annotations:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/categories: Automation
     tekton.dev/displayName: My Example Task
     tekton.dev/platforms: linux/amd64,linux/s390x
 spec:
@@ -85,6 +116,7 @@ metadata:
   annotations:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/categories: Automation
     tekton.dev/displayName: My Example Task
     tekton.dev/platforms: linux,linux/amd64,something-else
 spec:
@@ -106,6 +138,7 @@ metadata:
   annotations:
     tekton.dev/tags: a,b,c
     tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/categories: "Automation"
     tekton.dev/displayName: My Example Task
 spec:
   description: |-
@@ -125,7 +158,10 @@ func TestContentValidator_Task(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(res)
+	cat, err := GetCategories()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res, cat)
 	result := v.Validate()
 
 	assert.Equal(t, 0, result.Errors)
@@ -140,7 +176,10 @@ func TestContentValidator_Pipeline(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(res)
+	cat, err := GetCategories()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res, cat)
 	result := v.Validate()
 
 	assert.Equal(t, 0, result.Errors)
@@ -170,7 +209,10 @@ func TestContentValidator_InvalidPlatforms(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(res)
+	cat, err := GetCategories()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res, cat)
 	result := v.Validate()
 	assert.Equal(t, 2, result.Errors)
 
@@ -191,7 +233,10 @@ func TestContentValidator_WithoutPlatforms(t *testing.T) {
 	res, err := parser.Parse()
 	assert.NilError(t, err)
 
-	v := NewContentValidator(res)
+	cat, err := GetCategories()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res, cat)
 	result := v.Validate()
 	assert.Equal(t, 0, result.Errors)
 
@@ -200,4 +245,26 @@ func TestContentValidator_WithoutPlatforms(t *testing.T) {
 
 	assert.Equal(t, Recommendation, lints[0].Kind)
 	assert.Equal(t, `Task: tekton.dev/v1beta1 - name: "valid" is more usable if it has "tekton.dev/platforms" annotation about platforms to run`, result.Lints[0].Message)
+}
+
+func TestCategoryValidatorInvalid_Task(t *testing.T) {
+
+	r := strings.NewReader(inValidTask)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	cat, err := GetCategories()
+	assert.NilError(t, err)
+
+	v := NewContentValidator(res, cat)
+	result := v.Validate()
+
+	const errMsg = `Category not defined
+You can choose from the categories present at location: https://raw.githubusercontent.com/tektoncd/hub/main/config.yaml"`
+
+	assert.Equal(t, 1, result.Errors)
+	assert.Equal(t, 1, len(result.Lints))
+	assert.Equal(t, result.Lints[0].Message, errMsg)
 }
