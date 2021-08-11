@@ -7,6 +7,7 @@ metadata:
   annotations:
     tekton.dev/pipelines.minVersion: "0.12.1"
     tekton.dev/tags: build-automation
+    tekton.dev/categories: Build Tools
     tekton.dev/displayName: "maven"
 spec:
   description: >-

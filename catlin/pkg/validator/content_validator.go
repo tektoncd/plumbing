@@ -26,13 +26,22 @@ import (
 )
 
 type ContentValidator struct {
-	res *parser.Resource
+	res        *parser.Resource
+	categories []string
 }
 
 var _ Validator = (*ContentValidator)(nil)
 
-func NewContentValidator(r *parser.Resource) *ContentValidator {
-	return &ContentValidator{res: r}
+func NewContentValidator(r *parser.Resource, c []string) *ContentValidator {
+	return &ContentValidator{res: r, categories: c}
+}
+
+type Data struct {
+	Categories []Category
+}
+
+type Category struct {
+	Name string
 }
 
 func (v *ContentValidator) Validate() Result {
@@ -51,8 +60,21 @@ func (v *ContentValidator) Validate() Result {
 	}
 
 	annotations := res.GetAnnotations()
+
 	if _, ok := annotations[consts.MinPipelineVersionAnnotation]; !ok {
 		result.Error("%s is missing a mandatory annotation for minimum pipeline version(%q)", resName, consts.MinPipelineVersionAnnotation)
+	}
+
+	if _, ok := annotations[consts.CategoryAnnotation]; !ok {
+		result.Error("%s is missing a mandatory annotation for category(%q)", resName, consts.CategoryAnnotation)
+	}
+
+	resourceCategories := strings.Split(annotations[consts.CategoryAnnotation], ",")
+	for i := range resourceCategories {
+		if !contains(v.categories, strings.TrimSpace(resourceCategories[i])) {
+			result.Error(`Category not defined
+You can choose from the categories present at location: https://raw.githubusercontent.com/tektoncd/hub/main/config.yaml"`)
+		}
 	}
 
 	if _, ok := annotations[consts.DisplayNameAnnotation]; !ok {

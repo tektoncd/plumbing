@@ -18,6 +18,7 @@ const (
 	VersionLabel                 = "app.kubernetes.io/version"
 	DisplayNameAnnotation        = "tekton.dev/displayName"
 	MinPipelineVersionAnnotation = "tekton.dev/pipelines.minVersion"
+	CategoryAnnotation           = "tekton.dev/categories"
 	TagsAnnotation               = "tekton.dev/tags"
 	PlatformsAnnotation          = "tekton.dev/platforms"
 )
