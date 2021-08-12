@@ -5,43 +5,70 @@ metadata:
   namespace: tektonci
 spec:
   params:
-    - name: gitCloneDepth
-      description: Number of commits in the change + 1
-    - name: fileFilterRegex
-      description: Names regex to be matched in the list of modified files
-    - name: checkName
-      description: The name of the GitHub check that this pipeline is used for
-    - name: gitHubCommand
-      description: The command that was used to trigger testing
-    - name: folders
-      description: The folders to lint with yamllint
-  resources:
-    - name: source
-      type: git
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: gitCloneDepth
+    description: Number of commits in the change + 1
+  - name: fileFilterRegex
+    description: Names regex to be matched in the list of modified files
+  - name: checkName
+    description: The name of the GitHub check that this pipeline is used for
+  - name: gitHubCommand
+    description: The command that was used to trigger testing
+  - name: folders
+    description: The folders to lint with yamllint
+  workspaces:
+  - name: source
   tasks:
+  - name: extract-check-from-command
+    taskRef:
+      name: extract-check-from-command
+    params:
+    - name: gitHubCommand
+      value: $(params.gitHubCommand)
+  - name: git-clone
+    taskRef:
+      name: git-clone
+    params:
+    - name: url
+      value: $(params.gitRepository)
+    - name: revision
+      value: $(params.gitRevision)
+    - name: depth
+      value: $(params.gitCloneDepth)
+    workspaces:
+    - name: output
+      workspace: source
+  - name: check-git-files-changed
+    runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
+    taskRef:
+      name: check-git-files-changed
+    params:
+    - name: gitCloneDepth
+      value: $(params.gitCloneDepth)
+    - name: regex
+      value: $(params.fileFilterRegex)
+    workspaces:
+    - name: source
+      workspace: source
   - name: lint
-    conditions:
-    - conditionRef: "check-git-files-changed"
-      params:
-      - name: gitCloneDepth
-        value: $(params.gitCloneDepth)
-      - name: regex
-        value: $(params.fileFilterRegex)
-      resources:
-      - name: source
-        resource: source
-    - conditionRef: "check-name-matches"
-      params:
-      - name: gitHubCommand
-        value: $(params.gitHubCommand)
-      - name: checkName
-        value: $(params.checkName)
+    when:
+    - input: "$(tasks.check-git-files-changed.results.numFilesChanged)"
+      operator: notin
+      values: ["0"]
+    - input: "$(tasks.extract-check-from-command.results.check)"
+      operator: in
+      values:
+      - "$(params.checkName)" # When it is explicitly run
+      - ".*"                  # When all checks are run
+      - ""                    # In cases triggered not by specific github comments
     taskRef:
       name: yamllint
     params:
     - name: folders
       value: $(params.folders)
-    resources:
-      inputs:
+    workspaces:
       - name: source
-        resource: source
+        workspace: source

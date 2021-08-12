@@ -45,6 +45,10 @@ spec:
       pipelineRef:
         name: tekton-yamllint
       params:
+        - name: gitRepository
+          value: $(tt.params.gitRepository)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
         - name: pullRequestNumber
           value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
@@ -57,17 +61,15 @@ spec:
           value: $(tt.params.gitHubCommand)
         - name: folders
           value: bots/buildcaptain/config bots/mariobot/config pipelinerun-logs/config boskos gubernator prow robocat tekton
-      resources:
-      - name: source
-        resourceSpec:
-          type: git
-          params:
-          - name: revision
-            value: $(tt.params.gitRevision)
-          - name: url
-            value: $(tt.params.gitRepository)
-          - name: depth
-            value: $(tt.params.gitCloneDepth)
+      workspaces:
+        - name: source
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:

@@ -19,7 +19,7 @@ All the resources used for CI are deployed in the `tektonci` namespace in the
 
 ## Setting up the response to pull requests and comments
 
-The resources in `eventlistener.yaml` and `ingress.yaml` set up the service and
+The CRDs in `eventlistener.yaml` and `ingress.yaml` set up the service and
 ingress that are configured in repository specific webhook settings on GitHub.
 The Event Listener uses a secret called `ci-webhook`:
 
@@ -35,7 +35,7 @@ type: Opaque
 ```
 
 A domain name `webhook-draft.ci.dogfooding.tekton.dev` is configured manually
-in Netifly to point to the public IP from the ingress.
+in Netlify to point to the public IP from the ingress.
 The ingress in annotated so that cert-manager automatically obtains a
 certificate from Let's Encrypt and configures HTTPs termination on the load
 balancer.
@@ -95,7 +95,7 @@ easier to associate them back with the source task run:
 ## CI Job Interface
 
 The existing overlays and bindings produce a set of parameters available to CI jobs
-via the trigger templates. This interface is maintained consistent across CI jobs and
+via the trigger templates. This interface is maintained consistently across CI jobs and
 trigger templates:
 
 Parameter Name    | Description                | Source                     | Notes
@@ -154,7 +154,7 @@ Tasks should be from the catalog when possible. Non catalog tasks shall be store
 in the `tektoncd/plumbing` repo under `tekton/ci/jobs` if they are applicable
 across repos, or in the `tekton` folder of the specific repository.
 
-*NOTE* Resources from the plumbing repo are deployed automatically to the `dogfooding`
+*NOTE* Configuration from the plumbing repo is deployed automatically to the `dogfooding`
 cluster. Tasks from the catalog and from other repos must be deployed and updated
 manually for now.
 
@@ -163,8 +163,10 @@ manually for now.
 Common CI pipelines shall be stored in the `tektoncd/plumbing` repo under
 `tekton/ci/jobs`, ideally one YAML file per pipeline.
 
-The current structure of pipelines is based on `Conditions`; it will be migrated
-to `when` expressions once they become available in a release.
+We are in the process of migrating pipelines to use
+[when expressions](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#guard-task-execution-using-when-expressions)
+instead of [the deprecated Conditions feature](https://github.com/tektoncd/pipeline/blob/main/docs/pipelines.md#guard-task-execution-using-conditions)
+but this is a work in progres and some pipelines still use `Conditions`.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -174,6 +176,10 @@ metadata:
   namespace: tektonci
 spec:
   params:
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitRevision
+      description: The Git revision to be used.
     - name: checkName
       description: The name of the GitHub check that this pipeline is used for
     - name: gitCloneDepth
@@ -184,43 +190,67 @@ spec:
       description: The command that was used to trigger testing
     # Additional parameters may be added here as required, as long as the
     # pipeline run will be in a position to supply them based on the CI interface
-  resources:
+  workspaces:
     - name: source
-      type: git
   tasks:
-  - name: [CI JOB specific name]
-    conditions:
-    - conditionRef: "check-git-files-changed"
-      params:
+  # The git-clone task should run first in order to clone the source needed for other Tasks.
+  - name: git-clone
+    taskRef:
+      name: git-clone
+    params:
+      - name: url
+        value: $(params.gitRepository)
+      - name: revision
+        value: $(params.gitRevision)
+      - name: depth
+        value: $(params.gitCloneDepth)
+    workspaces:
+      - name: output
+        workspace: source
+  - name: extract-check-from-command
+    taskRef:
+      name: extract-check-from-command
+    params:
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
+  - name: check-git-files-changed
+    runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
+    taskRef:
+      name: check-git-files-changed
+    params:
       - name: gitCloneDepth
         value: $(params.gitCloneDepth)
       - name: regex
         value: $(params.fileFilterRegex)
-      resources:
+    workspaces:
       - name: source
-        resource: source
-    - conditionRef: "check-name-matches"
-      params:
-      - name: gitHubCommand
-        value: $(params.gitHubCommand)
-      - name: checkName
-        value: $(params.checkName)
+        workspace: source
+  - name: [CI JOB specific name]
+    runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
+    when:
+      - input: "$(tasks.check-git-files-changed.results.numFilesChanged)"
+        operator: notin
+        values: ["0"]
+      - input: "$(tasks.extract-check-from-command.results.check)"
+        operator: in
+        values:
+          - "$(params.checkName)" # When it is explicitly run
+          - ".*"                  # When all checks are run
+          - ""                    # In cases triggered not by specific github comments
     taskRef:
       name: [CI JOB Task Ref]
-    resources:
-      inputs:
+    workspaces:
       - name: source
-        resource: source
+        workspace: source
 ```
 
 In case the CI Job is made of multiple tasks, all should run after an initial
 one to which conditions are applied.
 
-The `check-name-matches` condition is required for the CI job to
-excuted on demand via the `/test [regex]` command.
-The `check-git-files-changed` condition is optional, it is used to only execute
-the CI job when relevant files have been modified. This condition uses a
-`PipelineResource` of type `git`. Plan is to migrate to a workspace eventually.
+The `when` expression that uses the results of `extract-check-from-command`
+is required for the CI job to executed on demand via the `/test [regex]` command.
+The expression that uses the results of `check-git-files-changed` is optional,
+it is used to only execute the CI job when relevant files have been modified.
 
 ### PipelineRun
 
@@ -251,31 +281,21 @@ downstream CEL filters to work correctly.
       pipelineRef:
         name: PIPELINE_NAME # The name of the CI pipeline
       params:
+        - name: gitRepository
+          value: $(tt.params.gitRepository)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
         - name: checkName
-          value: CHECK-NAME # *MUST* be the GitHub check name
+          value: CHECK-NAME # *MUST* be the GitHub check name e.g. `plumbing-yamllint`
         - name: pullRequestNumber
           value: $(tt.params.pullRequestNumber)
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "some/relevant/path/**" # A RegExp to match all relevant files
-          # The match is executed roughly follows:
-          # git diff-tree --no-commit-id --name-only -r HEAD "$(params.gitCloneDepth) - 1" | \
-          #   grep -E '$(params.fileFilterRegex)
+          value: "some/relevant/path/**" # A RegExp to match all relevant files, see the check-git-files-changed to see how this is used
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         # Extra parameters required  by the pipeline shall be passed here
-      resources:
-      - name: source
-        resourceSpec: # Pipeline resources *MUST* be embedded
-          type: git
-          params:
-          - name: revision
-            value: $(tt.params.gitRevision)
-          - name: url
-            value: $(tt.params.gitRepository)
-          - name: depth
-            value: $(tt.params.gitCloneDepth)
 ```
 
 *NOTE* The naming convention for labels and annotations may change in future

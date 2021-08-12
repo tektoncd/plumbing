@@ -62,3 +62,68 @@ spec:
       REGEX="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
       [[ "$REGEX" == "" ]] && REGEX='.*'
       echo "$(params.checkName)" | grep -E "$REGEX"
+---
+# These tasks replace the above conditions with Tasks that have results which can be used in when expressions
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: check-git-files-changed
+  namespace: tektonci
+  annotations:
+    description: |
+      Returns the number of files (matching the regex) that have changed in the provided git repo
+spec:
+  params:
+    - name: gitCloneDepth
+      description: Number of commits + 1
+    - name: regex
+      description: Regular expression to match files changed
+  workspaces:
+    - name: source
+  results:
+    - name: numFilesChanged
+      description: |
+        Contains the number of files that have changed in the last N commits from
+        the revision of the git repo that is available in the source workspace
+  steps:
+    - name: count-files
+      image: alpine/git
+      script: |
+        set -o pipefail
+
+        BACK="HEAD~$(( $(params.gitCloneDepth) - 1 ))"
+
+        cd $(workspaces.source.path)
+        git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
+            grep -E '$(params.regex)' | \
+            wc -l | \
+            tr -d '\n' | \
+            tee $(results.numFilesChanged.path)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: extract-check-from-command
+  namespace: tektonci
+  annotations:
+    description: |
+      Extracts the name of the CI Job (GitHub Check) from the specified command.
+      If no command is specified, .* is returned to indicate all checks should be run.
+      This is assumed to filtered earlier on such that only commands that start with /test
+      will be processed this way.
+spec:
+  params:
+    - name: gitHubCommand
+      description: The whole comment left on GitHub
+  results:
+    - name: check
+      description: The extracted check or .* for all checks
+  steps:
+    - name: extract-command
+      image: alpine
+      script: |
+        set -o pipefail
+
+        COMMAND="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
+        [[ "$COMMAND" == "" ]] && COMMAND='.*'
+        printf "$COMMAND" > $(results.check.path)
