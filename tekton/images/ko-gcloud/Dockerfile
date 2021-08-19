@@ -27,6 +27,7 @@ ENV GO111MODULE on
 RUN go get sigs.k8s.io/kustomize/kustomize/v3@v3.5.4
 
 FROM google/cloud-sdk:296.0.0-alpine
+ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Install golang
