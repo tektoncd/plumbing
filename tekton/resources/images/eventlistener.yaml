@@ -15,14 +15,29 @@ spec:
         - ref: trigger-to-build-and-push-image
       template:
         ref: build-and-push-image
-    - name: multi-arch-build-trigger
+    - name: docker-multi-arch-build-trigger
       interceptors:
         - cel:
             filter: >-
               'platforms' in body &&
-              size(body['platforms']) != 0
+              size(body['platforms']) != 0 &&
+              'buildType' in body &&
+              body['buildType'] == 'docker'
       bindings:
         - ref: trigger-to-build-and-push-image
         - ref: trigger-to-build-and-push-image-platform
       template:
-        ref: build-and-push-image-multi-arch
+        ref: docker-build-and-push-image-multi-arch
+    - name: ko-multi-arch-build-trigger
+      interceptors:
+        - cel:
+            filter: >-
+              'platforms' in body &&
+              size(body['platforms']) != 0 &&
+              'buildType' in body &&
+              body['buildType'] == 'ko'
+      bindings:
+        - ref: trigger-to-build-and-push-image
+        - ref: trigger-to-build-and-push-image-platform
+      template:
+        ref: ko-build-and-push-image-multi-arch

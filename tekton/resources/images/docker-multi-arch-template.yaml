@@ -1,7 +1,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: build-and-push-image-multi-arch
+  name: docker-build-and-push-image-multi-arch
 spec:
   params:
   - name: gitRepository
