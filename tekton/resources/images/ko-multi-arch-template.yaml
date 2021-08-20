@@ -1,0 +1,71 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: ko-build-and-push-image-multi-arch
+spec:
+  params:
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: registry
+    description: The container registry *registry*/namespace/name tag
+  - name: namespace
+    description: The namespace (aka user, org, project) registry/*namespace*/name tag
+  - name: imageName
+    description: The image name (aka repository) registry/namespace/*name* tag
+  - name: imageTag
+    description: The image tag registry/namespace/name *tag*
+  - name: buildUUID
+    description: The build UUID is used for log collection
+  - name: platforms
+    description: Platforms for multi-arch build in form of `linux/amd64,linux/s390x`
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      generateName: build-and-push-$(tt.params.imageName)-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        plumbing.tekton.dev/image: $(tt.params.imageName)
+    spec:
+      taskSpec:
+        resources:
+          inputs:
+            - name: source
+              type: git
+        steps:
+        - env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /secret/release.json
+          - name: KO_DOCKER_REPO
+            value: $(tt.params.registry)/$(tt.params.namespace)
+          image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
+          name: build-image-multi-arch
+          script: |
+            #!/usr/bin/env sh
+
+            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+            gcloud auth configure-docker
+
+            cd $(resources.inputs.source.path)
+            ko publish --platform $(tt.params.platforms) --base-import-paths --tags $(tt.params.imageTag) $(tt.params.contextPath)
+          volumeMounts:
+          - mountPath: /secret
+            name: gcp-secret
+        volumes:
+        - name: gcp-secret
+          secret:
+            secretName: release-secret
+      resources:
+        inputs:
+          - name: source
+            resourceSpec:
+              type: git
+              params:
+              - name: revision
+                value: $(tt.params.gitRevision)
+              - name: url
+                value: https://$(tt.params.gitRepository)

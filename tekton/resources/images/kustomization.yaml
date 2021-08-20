@@ -6,4 +6,5 @@ resources:
 - bindings.yaml
 - single-arch-template.yaml
 - eventlistener.yaml
-- multi-arch-template.yaml
+- docker-multi-arch-template.yaml
+- ko-multi-arch-template.yaml
