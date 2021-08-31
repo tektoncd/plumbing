@@ -20,6 +20,9 @@ spec:
   - name: containerRegistry
   - name: targetArch
   - name: namespace
+  - name: remoteHost
+  - name: remotePort
+  - name: remoteUser
   - name: remoteSecret
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
@@ -39,31 +42,31 @@ spec:
             resources:
               requests:
                 storage: 1Gi
-      # this workspace will be used to store k8s config
-      - name: k8s-config
+      # this workspace will be used to store ssh key
+      - name: ssh-secret
         secret:
           secretName: $(tt.params.remoteSecret)
-      # this workspace will be used to store registry credentials
-      - name: registry-credentials
-        secret:
-          secretName: registry-credentials
-      # this workspace will be used to store registry self-signed certificate
-      - name: registry-certificate
-        secret:
-          secretName: registry-certificate
+          items:
+          - key: privatekey
+            path: id_rsa
+            # yamllint disable rule:octal-values
+            mode: 0600
+            # yamllint enable
       pipelineSpec:
         workspaces:
         - name: shared-workspace
-        - name: k8s-config
-        - name: registry-credentials
-        - name: registry-certificate
+        - name: ssh-secret
         params:
         - name: container-registry
         - name: target-arch
+        - name: remote-host
+        - name: remote-port
+        - name: remote-user
         tasks:
         - name: git-clone-operator
           taskRef:
             name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/operator
@@ -75,22 +78,39 @@ spec:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: e2e-test-operator
+        - name: create-k8s-cluster
           runAfter: [git-clone-operator]
+          taskRef:
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
+          workspaces:
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
+          - name: ssh-secret
+            workspace: ssh-secret
+          params:
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
+        - name: e2e-test-operator
+          runAfter: [create-k8s-cluster]
           taskSpec:
             params:
             - name: container-registry
             - name: target-arch
             workspaces:
-            - name: k8s-config
-              description: workspace to get k8s config file
+            - name: k8s-shared
+              description: workspace for k8s config, configuration file is expected to have `config` name
               mountPath: /root/.kube
-            - name: registry-credentials
-              description: workspace to get registry credentials
+            - name: registry-shared
+              description: workspace for registry credentials & certificate, files are expected to have `config.json` & `cert.pem` name respectively
               mountPath: /root/.docker
-            - name: registry-certificate
-              description: workspace to get registry self-signed certificate
-              mountPath: /opt/ssl/certs
             - name: source-code
               description: workspace with source code for tekton component
             steps:
@@ -101,9 +121,9 @@ spec:
               - name: GOPATH
                 value: /workspace
               - name: KUBECONFIG
-                value: /root/.kube/config
+                value: $(workspaces.k8s-shared.path)/config
               - name: SSL_CERT_FILE
-                value: /opt/ssl/certs/registry.crt
+                value: $(workspaces.registry-shared.path)/cert.pem
               - name: PLATFORM
                 value: linux/$(params.target-arch)
               - name: KO_DOCKER_REPO
@@ -122,49 +142,40 @@ spec:
           - name: target-arch
             value: $(params.target-arch)
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: registry-credentials
-            workspace: registry-credentials
-          - name: registry-certificate
-            workspace: registry-certificate
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
           retries: 2
         finally:
-        - name: cleanup
-          taskSpec:
-            workspaces:
-            - name: k8s-config
-              description: workspace to get k8s config file
-              mountPath: /root/.kube
-            - name: source-code
-              description: workspace with source code for tekton component
-            steps:
-            - name: cleanup-operator
-              image: gcr.io/tekton-releases/dogfooding/test-runner:latest
-              workingdir: $(workspaces.source-code.path)/src/github.com/tektoncd/operator
-              env:
-              - name: GOPATH
-                value: /workspace
-              - name: KUBECONFIG
-                value: /root/.kube/config
-              command:
-              - /bin/bash
-              args:
-              - -ce
-              - |
-                make clean
+        - name: delete-k8s-cluster
+          taskRef:
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
-          retries: 2
+          - name: ssh-secret
+            workspace: ssh-secret
+          params:
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
+          - name: action
+            value: delete
       params:
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch
         value: $(tt.params.targetArch)
+      - name: remote-host
+        value: $(tt.params.remoteHost)
+      - name: remote-port
+        value: $(tt.params.remotePort)
+      - name: remote-user
+        value: $(tt.params.remoteUser)

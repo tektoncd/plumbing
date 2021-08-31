@@ -20,6 +20,9 @@ spec:
   - name: containerRegistry
   - name: targetArch
   - name: namespace
+  - name: remoteHost
+  - name: remotePort
+  - name: remoteUser
   - name: remoteSecret
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
@@ -39,32 +42,31 @@ spec:
             resources:
               requests:
                 storage: 2Gi
-      # this workspace will be used to store k8s config
-      - name: k8s-config
+      # this workspace will be used to store ssh key
+      - name: ssh-secret
         secret:
           secretName: $(tt.params.remoteSecret)
-      # this workspace will be used to store registry credentials
-      - name: registry-credentials
-        secret:
-          secretName: registry-credentials
-      # this workspace will be used to store registry self-signed certificate
-      - name: registry-certificate
-        secret:
-          secretName: registry-certificate
+          items:
+          - key: privatekey
+            path: id_rsa
+            # yamllint disable rule:octal-values
+            mode: 0600
+            # yamllint enable
       pipelineSpec:
         workspaces:
         - name: shared-workspace
-        - name: k8s-config
-        - name: registry-credentials
-        - name: registry-certificate
+        - name: ssh-secret
         params:
-        - name: package
         - name: container-registry
         - name: target-arch
+        - name: remote-host
+        - name: remote-port
+        - name: remote-user
         tasks:
         - name: git-clone-plumbing
           taskRef:
             name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/plumbing
@@ -76,40 +78,11 @@ spec:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: git-clone-pipeline
+        - name: git-clone-cli
           runAfter: [git-clone-plumbing]
           taskRef:
             name: git-clone
-          params:
-          - name: url
-            value: https://github.com/tektoncd/pipeline
-          - name: revision
-            value: main
-          - name: subdirectory
-            value: src/github.com/tektoncd/pipeline
-          workspaces:
-          - name: output
-            workspace: shared-workspace
-            subPath: source-code
-        - name: git-clone-triggers
-          runAfter: [git-clone-pipeline]
-          taskRef:
-            name: git-clone
-          params:
-          - name: url
-            value: https://github.com/tektoncd/triggers
-          - name: revision
-            value: main
-          - name: subdirectory
-            value: src/github.com/tektoncd/triggers
-          workspaces:
-          - name: output
-            workspace: shared-workspace
-            subPath: source-code
-        - name: git-clone-cli
-          runAfter: [git-clone-triggers]
-          taskRef:
-            name: git-clone
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
           params:
           - name: url
             value: https://github.com/tektoncd/cli
@@ -121,84 +94,89 @@ spec:
           - name: output
             workspace: shared-workspace
             subPath: source-code
-        - name: deploy-pipeline
-          runAfter: [git-clone-triggers]
+        - name: create-k8s-cluster
+          runAfter: [git-clone-cli]
           taskRef:
-            name: deploy-tekton-pipeline-nightly
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: registry-credentials
-            workspace: registry-credentials
-          - name: registry-certificate
-            workspace: registry-certificate
-          - name: source-code
+          - name: k8s-shared
             workspace: shared-workspace
-            subPath: source-code
-          retries: 2
+            subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
+          - name: ssh-secret
+            workspace: ssh-secret
+          params:
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
+        - name: deploy-pipeline
+          runAfter: [create-k8s-cluster]
+          taskRef:
+            name: deploy-tekton-component-nightly
+          workspaces:
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
           params:
           - name: package
-            value: github.com/tektoncd/pipeline
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
+            value: pipeline
         - name: deploy-triggers
           runAfter: [deploy-pipeline]
           taskRef:
-            name: deploy-tekton-triggers-nightly
+            name: deploy-tekton-component-nightly
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: registry-credentials
-            workspace: registry-credentials
-          - name: registry-certificate
-            workspace: registry-certificate
-          - name: source-code
+          - name: k8s-shared
             workspace: shared-workspace
-            subPath: source-code
-          retries: 2
+            subPath: k8s-shared
           params:
           - name: package
-            value: github.com/tektoncd/triggers
-          - name: container-registry
-            value: $(params.container-registry)
-          - name: target-arch
-            value: $(params.target-arch)
+            value: triggers
+          - name: extra-file
+            value: interceptors.yaml
         - name: e2e-test-cli
           runAfter: [deploy-triggers]
           taskRef:
             name: test-e2e-tekton-cli
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
           retries: 2
           params:
           - name: package
-            value: $(params.package)
+            value: github.com/tektoncd/cli
         finally:
-        - name: cleanup
+        - name: delete-k8s-cluster
           taskRef:
-            name: cleanup-tekton-nightly
+            name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
-          - name: k8s-config
-            workspace: k8s-config
-          - name: source-code
-            workspace: shared-workspace
-            subPath: source-code
-          retries: 2
+          - name: ssh-secret
+            workspace: ssh-secret
           params:
-          - name: package
-            value: github.com/tektoncd/pipeline
-          - name: triggers
-            value: "Yes"
+          - name: remote-host
+            value: $(params.remote-host)
+          - name: remote-port
+            value: $(params.remote-port)
+          - name: remote-user
+            value: $(params.remote-user)
+          - name: action
+            value: delete
       params:
-      - name: package
-        value: github.com/tektoncd/cli
       - name: container-registry
         value: $(tt.params.containerRegistry)
       - name: target-arch
         value: $(tt.params.targetArch)
+      - name: remote-host
+        value: $(tt.params.remoteHost)
+      - name: remote-port
+        value: $(tt.params.remotePort)
+      - name: remote-user
+        value: $(tt.params.remoteUser)
