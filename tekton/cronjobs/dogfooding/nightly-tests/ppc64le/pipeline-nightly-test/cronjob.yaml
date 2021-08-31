@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: nightly-test-trigger
 spec:
-  schedule: "0 1 * * *"
+  schedule: "0 19 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
@@ -23,4 +23,10 @@ spec:
             - name: TARGET_ARCH
               value: "ppc64le"
             - name: REMOTE_SECRET_NAME
-              value: "ppc64le-kubeconfig"
+              value: "ppc64le-k8s-ssh"
+            - name: REMOTE_HOST
+              value: "ppc64le-cluster.bastion-p.svc.cluster.local"
+            - name: REMOTE_PORT
+              value: "22"
+            - name: REMOTE_USER
+              value: "root"

@@ -25,9 +25,6 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
   - In the bastion-z namespace:
     - `s390x-k8s-ssh` used to ssh access s390x remote machine
   - In the bastion-p namespace:
-    - `ppc64le-kubeconfig` used to access ppc64le remote k8 cluster
-    - `registry-credentials` used to access registry on remote machine
-    - `registry-certificate` self-signed certificate for registry on remote machine
     - `ppc64le-cluster` headless service & endpoint to resolve remote machine address
     - `ppc64le-k8s-ssh` used to ssh access ppc64le remote machine
 - `GCP` secrets:

@@ -65,3 +65,21 @@ The following pipelines are available:
 They are running once a day automatically. The results can be seen
 at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-z/pipelineruns).
 
+### IBM Power Systems (ppc64le) architecture
+
+For ppc64le architecture `bastion-p` namespace is used to run the tests. 
+It is manually precreated.
+
+`ppc64le-k8s-ssh` secret & `ppc64le-cluster` headless service & endpoint were manually created in the namespace 
+to gain ssh access to provided P machine.
+
+The following pipelines are available:
+- pipeline `e2e` e2e tests
+- triggers `e2e` tests
+- cli `e2e` tests
+- operator `e2e` tests
+- dashboard `e2e` tests
+
+They are running once a day automatically. The results can be seen
+at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-p/pipelineruns).
+
