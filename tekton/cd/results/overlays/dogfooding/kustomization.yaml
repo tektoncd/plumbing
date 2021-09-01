@@ -2,6 +2,7 @@ bases:
 - ../../base
 patchesStrategicMerge:
 - service.yaml
+- watcher.yaml
 resources:
 - ingress.yaml
 - bec.yaml

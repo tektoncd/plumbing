@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-results-watcher
+  namespace: tekton-pipelines
+spec:
+  template:
+    spec:
+      containers:
+        - name: tekton-results-watcher
+          args:
+            [
+              "-api_addr",
+              "dns:///results.dogfooding.tekton.dev",
+              "-auth_mode",
+              "token",
+            ]
