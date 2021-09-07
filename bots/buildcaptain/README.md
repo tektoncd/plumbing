@@ -16,9 +16,10 @@ Current build captains are:
 - Vincent Demeester @vdemeester (vdemeest)
 
 Other folks who are not build captains but have build captain access:
-- Piyush Garg @piyush-garg
-- Priti Desai @pritidesai
-- Priya Wadhwa @priyawadhwa
+- Piyush Garg @piyush-garg (for maintaining the Hub in dogfooding)
+- Priti Desai @pritidesai (for Pipelines releases)
+- Priya Wadhwa @priyawadhwa (for Chains releases)
+- Alan Greene @AlanGreene (for Dashboard releases)
 
 Build captain access is given with [adjustpermissions.py](../../adjustpermissions.py).
 
