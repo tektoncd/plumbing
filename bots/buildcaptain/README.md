@@ -11,7 +11,6 @@ Current build captains are:
 - Dibyo Mukherjee @dibyom (dibyo)
 - Nikhil Thomas @nikhil-thomas (nikthoma)
 - Savita Ashture @savitaashture (sashture)
-- Scott @sbwsg (sbws)
 - Sharon Jerop Kipruto @jerop (jerop)
 - Vincent Demeester @vdemeester (vdemeest)
 
