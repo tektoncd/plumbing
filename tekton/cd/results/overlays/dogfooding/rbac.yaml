@@ -1,0 +1,22 @@
+# Viewer service account for Results API.
+# While we could grant access to individual human users, we're not 100%
+# confident this is a good idea yet. This is a workaround to let users
+# who have access to the cluster to get the token for this user, which
+# will be scoped to have minimal RO permissions for result resources.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-results-viewer
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-results-viewer
+subjects:
+- kind: ServiceAccount
+  name: tekton-results-viewer
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: tekton-results-readonly
+  apiGroup: rbac.authorization.k8s.io

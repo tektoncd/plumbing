@@ -6,3 +6,4 @@ patchesStrategicMerge:
 resources:
 - ingress.yaml
 - bec.yaml
+- rbac.yaml
