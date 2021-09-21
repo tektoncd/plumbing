@@ -18,7 +18,7 @@ ENV GOROOT /usr/local/go
 RUN apk add --no-cache curl ca-certificates
 RUN update-ca-certificates
 
-ARG KO_VERSION=0.7.0
+ARG KO_VERSION=0.9.1
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
