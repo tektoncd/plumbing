@@ -274,6 +274,31 @@ presubmits:
           - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
           - "./test/presubmit-tests.sh"
           - "--integration-tests"
+    - name: pull-tekton-chains-go-coverage
+      labels:
+        preset-github-token: "true"
+      agent: kubernetes
+      always_run: true
+      rerun_command: "/test pull-tekton-chains-go-coverage"
+      trigger: "(?m)^/test (all|pull-tekton-chains-go-coverage),?(\\s+|$)"
+      optional: true
+      decorate: true
+      clone_uri: "https://github.com/tektoncd/chains.git"
+      spec:
+        containers:
+        - image: gcr.io/tekton-releases/dogfooding/coverage:latest
+          imagePullPolicy: Always
+          command:
+          - "/coverage"
+          args:
+          - "--postsubmit-gcs-bucket=tekton-prow"
+          - "--postsubmit-job-name=post-tekton-chains-go-coverage"
+          - "--artifacts=$(ARTIFACTS)"
+          - "--profile-name=coverage_profile.txt"
+          - "--cov-target=."
+          - "--cov-threshold-percentage=0"
+          - "--github-token=/etc/github-token/oauth"
+
   tektoncd/cli:
   - name: pull-tekton-cli-build-tests
     labels:
@@ -1150,6 +1175,21 @@ presubmits:
         - "--github-token=/etc/github-token/oauth"
 
 postsubmits:
+  tektoncd/chains:
+  - name: post-tekton-chains-go-coverage
+    branches:
+    - main
+    agent: kubernetes
+    decorate: true
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/coverage:latest
+        imagePullPolicy: Always
+        command:
+        - "/coverage"
+        args:
+        - "--artifacts=$(ARTIFACTS)"
+        - "--cov-threshold-percentage=0"
   tektoncd/cli:
   - name: post-tekton-cli-go-coverage
     branches:
