@@ -65,7 +65,8 @@ spec:
                   "namespace": "$NAMESPACE",
                   "imageName": "$IMAGE",
                   "imageTag": "$TAG",
-                  "platforms": "$PLATFORMS"
+                  "platforms": "$PLATFORMS",
+                  "buildType": "$BUILD_TYPE"
                 }
                 EOF
                 curl -d @/workspace/post-body.json $SINK_URL
@@ -82,5 +83,7 @@ spec:
               - name: TARGET_IMAGE
                 value: "gcr.io/tekton-releases/dogfooding/myimage:latest"
               - name: PLATFORMS
+                value: ""
+              - name: BUILD_TYPE
                 value: ""
           restartPolicy: Never
