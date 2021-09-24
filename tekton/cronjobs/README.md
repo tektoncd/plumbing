@@ -213,11 +213,13 @@ spec:
               value: tekton/images/myimage
 ```
 
-4. Add PLATFORMS to `cronjob.yaml` if you want to build multi-arch image. List target architectures for the image.
+4. Add PLATFORMS and BUILD_TYPE to `cronjob.yaml` if you want to build multi-arch image. List target architectures for the image. For BUILD_TYPE use [docker](../resources/images/docker-multi-arch-template.yaml) or [ko](../resources/images/ko-multi-arch-template.yaml) value to choose the image build tool.
 ```
 ...
             - name: PLATFORMS
               value: "linux/amd64,linux/s390x,linux/ppc64le"
+            - name: BUILD_TYPE
+              value: docker
 ```
 **Note**
 Please, make sure that the image is buildable for listed architectures. For instance, base image in corresponding Dockerfile should support the same(or larger) list of architectures.

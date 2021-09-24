@@ -14,3 +14,4 @@ resources:
 - teps-community-nightly
 - catlin-nightly
 - kind-nightly
+- go-rest-api-test-nightly

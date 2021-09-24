@@ -15,14 +15,14 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: GIT_REPOSITORY
-              value: github.com/tektoncd/plumbing
+              value: github.com/chmouel/go-rest-api-test
             - name: GIT_REVISION
-              value: main
+              value: master
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/koparse:latest
+              value: gcr.io/tekton-releases/dogfooding/go-rest-api-test:latest
             - name: CONTEXT_PATH
-              value: tekton/images/koparse
+              value: .
             - name: BUILD_TYPE
-              value: docker
+              value: ko
             - name: PLATFORMS
-              value: "linux/amd64,linux/s390x,linux/ppc64le"
+              value: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"
