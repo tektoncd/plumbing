@@ -1313,6 +1313,8 @@ periodics:
       - name: TEST_RUN_ALL_TESTS
         value: "true"
 - name: periodic-tekton-stale
+  labels:
+    preset-github-token: "true"
   interval: 1h
   decorate: true
   spec:
@@ -1341,14 +1343,9 @@ periodics:
       - --template
       - --ceiling=10
       - --confirm
-      volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-    volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
 - name: periodic-tekton-rotten
+  labels:
+    preset-github-token: "true"
   interval: 1h
   decorate: true
   spec:
@@ -1377,14 +1374,9 @@ periodics:
       - --template
       - --ceiling=10
       - --confirm
-      volumeMounts:
-        - name: github-token
-          mountPath: /etc/github-token
-    volumes:
-      - name: github-token
-        secret:
-          secretName: oauth-token
 - name: periodic-tekton-close
+  labels:
+    preset-github-token: "true"
   interval: 1h
   decorate: true
   spec:
