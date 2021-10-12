@@ -162,8 +162,14 @@ default:
       addedBy: anyone
     - color: 8F0891
       name: hacktoberfest-accepted
-      description: Categorizes issue or PR as one for Hacktoberfest 2021
-      target: both
+      description: Categorizes PRs as one accepted Hacktoberfest 2021
+      target: prs
+      prowPlugin: label
+      addedBy: humans
+    - color: 8F0891
+      name: Hacktoberfest
+      description: Categorizes issue as one for Hacktoberfest 2021
+      target: issues
       prowPlugin: label
       addedBy: humans
     # For further discussion in the next Productivity WG meeting
