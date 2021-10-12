@@ -110,11 +110,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(b))
+	log.Println("Pushing manifest:", string(b))
 
 	log.Println("pushing...")
 	if err := remote.WriteIndex(dstr, dsti, remote.WithAuthFromKeychain(authn.DefaultKeychain)); err != nil {
 		log.Fatalf("pushing %q: %v", dst, err)
 	}
 	log.Println("pushed")
+
+	d, err := dsti.Digest()
+	if err != nil {
+		log.Fatalf("digest: %v", err)
+	}
+
+	fmt.Print(dstr.Context().Digest(d.String()))
 }
