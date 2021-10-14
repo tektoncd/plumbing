@@ -4,4 +4,3 @@ resources:
 - tekton-cd-template.yaml
 - bindings.yaml
 - website-template.yaml
-- catalog-template.yaml
