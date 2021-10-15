@@ -9,3 +9,4 @@ resources:
 - add-team-members-nightly
 - operator-nightly
 - wait-task-nightly
+- pipeline-to-taskrun-nightly

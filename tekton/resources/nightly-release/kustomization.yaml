@@ -14,3 +14,4 @@ resources:
 - overlays/add-team-members
 - overlays/operator
 - overlays/wait-task
+- overlays/pipeline-to-taskrun
