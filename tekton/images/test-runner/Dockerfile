@@ -187,6 +187,11 @@ RUN gem install mdl -v 0.5.0
 # Extra tools through pip
 RUN python -m pip install yamllint
 
+# Install yq
+ARG YQ_VERSION=4.13.4
+RUN wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -O /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq
+
 COPY --from=kubetest /go/bin/kubetest /usr/local/bin
 
 # note the runner is also responsible for making docker in docker function if
