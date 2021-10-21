@@ -343,6 +343,7 @@ spec:
     - ref: tekton-ci-webhook-pull-request
     - ref: tekton-ci-webhook-pr-labels
     - ref: tekton-ci-clone-depth
+    - ref: tekton-ci-webhook-pr-body
   template:
     ref: tekton-plumbing-ci-pipeline
 ```
@@ -366,6 +367,7 @@ spec:
     - ref: tekton-ci-webhook-comment
     - ref: tekton-ci-clone-depth
     - ref: tekton-ci-webhook-issue-labels
+    - ref: tekton-ci-webhook-pr-body
   template:
     ref: tekton-plumbing-ci-pipeline
 ```
