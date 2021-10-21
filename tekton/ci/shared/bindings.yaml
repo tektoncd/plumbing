@@ -85,3 +85,13 @@ spec:
   params:
   - name: labels
     value: $(body.issue.labels)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-pr-body
+  namespace: tektonci
+spec:
+  params:
+    - name: body
+      value: $(body.pull_request.body)

@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: github-tasks-completed
+  namespace: tektonci
+  description: |
+    Verifies that a PR has all the tasks completed. A task is considered to be any part of the text that looks like a github markdown checkbox ("- []").
+spec:
+  params:
+    - name: body
+      description: The body of the Pull Request
+  stepTemplate:
+    env:
+      - name: HOME
+        value: /tekton/home
+      - name: PULL_REQUEST_BODY
+        value: $(params.body)
+  steps:
+    - name: install-pyyaml
+      image: python:3-alpine
+      script: |
+        pip install pyyaml --user
+    - name: check-github-tasks-completed
+      image: python:3-alpine
+      script: |
+        #!/usr/bin/env python
+        import sys
+        prBodyText = os.getenv('PULL_REQUEST_BODY')
+        incompleteTasks = prBodyText.count("\n- []")
+        if incompleteTasks > 0:
+          msg = "Error: {} incomplete GitHub Tasks found, expecting no incomplete GitHub Tasks".format(incompleteTasks)
+          print(msg)
+          # TODO (jerop): comment out in a follow up PR
+          # Check failed. Return exit code 1.
+          # sys.exit(1)
+        else:
+          print("Found no incomplete GitHub Tasks)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tekton-github-tasks-completed
+  namespace: tektonci
+spec:
+  params:
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: body
+      description: The body of the Pull Request
+  tasks:
+    - name: check-name-matches
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: $(params.checkName)
+    - name: github-tasks-completed
+      taskRef:
+        name: github-tasks-completed
+      when:
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      params:
+        - name: body
+          value: $(params.body)
