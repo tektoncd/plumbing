@@ -2,4 +2,4 @@ bases:
 - ../../../bases/release
 patchesStrategicMerge:
 - cronjob.yaml
-nameSuffix: "-pipeline-to-taskrun-nightly-release"
+nameSuffix: "-pipeline-to-tr-nightly-release"
