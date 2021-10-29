@@ -4,3 +4,4 @@ patchesStrategicMerge:
 - tekton-dashboard-service.yaml
 resources:
 - ingress.yaml
+- extensions.yaml
