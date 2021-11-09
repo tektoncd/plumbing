@@ -12,33 +12,25 @@
         params:
         - name: package
           value: $(tt.params.gitrepository)
+        - name: gitRevision
+          value: $(tt.params.gitrevision)
         - name: imageRegistry
-          value: gcr.io/tekton-nightly
+          value: $(tt.params.imageRegistry)
+        - name: imageRegistryPath
+          value: $(tt.params.imageRegistryPath)
         - name: versionTag
           value: $(tt.params.versionTag)
-        resources:
-        - name: dashboard-source-repo
-          resourceSpec:
-            type: git
-            params:
-            - name: revision
-              value: $(tt.params.gitrevision)
-            - name: url
-              value: https://$(tt.params.gitrepository)
-        - name: bucket-for-dashboard
-          resourceSpec:
-            type: storage
-            params:
-            - name: type
-              value: gcs
-            - name: location
-              value: gs://tekton-releases-nightly/$(tt.params.projectName)
-            - name: dir
-              value: "y"
-            secrets:
-            - fieldName: GOOGLE_APPLICATION_CREDENTIALS
-              secretKey: service-account.json
-              secretName: nightly-account
-        - name: builtDashboardImage
-          resourceRef:
-            name: dashboard-image
+        - name: serviceAccountPath
+          value: release.json
+        workspaces:
+          - name: workarea
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 2Gi
+          - name: release-secret
+            secret:
+              secretName: release-secret
