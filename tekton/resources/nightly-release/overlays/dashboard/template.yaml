@@ -30,7 +30,7 @@
                   - ReadWriteOnce
                 resources:
                   requests:
-                    storage: 2Gi
+                    storage: 5Gi
           - name: release-secret
             secret:
               secretName: release-secret
