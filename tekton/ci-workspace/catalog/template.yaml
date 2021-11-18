@@ -6,8 +6,6 @@ spec:
   params:
     - name: buildUUID
       description: UUID used to track a CI Pipeline Run in logs
-    - name: package
-      description: org/repo
     - name: pullRequestNumber
       description: The pullRequestNumber
     - name: pullRequestUrl
@@ -71,3 +69,59 @@ spec:
             value: $(tt.params.pullRequestBaseRef)
           - name: gitRepository
             value: "$(tt.params.gitRepository)"
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-catalog-diff-task-template
+spec:
+  params:
+    - name: buildUUID
+      description: UUID used to track a CI Pipeline Run in logs
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+    - name: pullRequestUrl
+      description: The HTML URL for the pull request
+    - name: pullRequestBaseRef
+      description: |
+        The base git ref for the pull request. This is the branch the
+        pull request would merge onto once approved.
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitRevision
+      description: The Git revision to be used.
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: pull-catalog-diff-task-run-
+        labels:
+          prow.k8s.io/build-id: $(tt.params.buildUUID)
+          tekton.dev/kind: ci
+          tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+        annotations:
+          tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+          tekton.dev/gitURL: "$(tt.params.gitRepository)"
+      spec:
+        serviceAccountName: tekton-ci-jobs
+        pipelineRef:
+          name: diff-task-job
+        workspaces:
+          - name: source
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+        params:
+          - name: pullRequestUrl
+            value: $(tt.params.pullRequestUrl)
+          - name: pullRequestNumber
+            value: $(tt.params.pullRequestNumber)
+          - name: pullRequestBaseRef
+            value: $(tt.params.pullRequestBaseRef)
+          - name: gitRepository
+            value: "$(tt.params.gitRepository)"
+---
