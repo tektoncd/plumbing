@@ -42,7 +42,21 @@ There are several GCP projects used by Tekton:
   [`tekton-nightly`](http://console.cloud.google.com/home/dashboard?project=tekton-nightly)
   is used to hold nightly release artifacts and [the robocat cluster](#the-robocat-cluster)
 
+### Adjusting GCP permissions
 The script [adjustpermissions.py](../adjustpermissions.py) gives users access to these projects.
+
+```sh
+# Create and activate a python virtual environment
+python3 -m venv .venv
+. .venv/bin/activate
+
+# Install required dependencies
+pip3 install -r ./teps/tools/requirements.txt
+
+# Add or remove permissions
+python3 -m adjustpermissions --users "user1@example.com,user2@example.com"
+```
+
 
 ## DNS
 

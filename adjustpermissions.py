@@ -62,9 +62,9 @@ def update_all_projects(users: List[str], projects: List[str], remove: bool) -> 
 
 def parse_boskos_projects() -> List[str]:
   config = urllib.request.urlopen(BOSKOS_CONFIG_URL).read()
-  c = yaml.load(config)
+  c = yaml.safe_load(config)
   nested_config = c["data"]["config"]
-  cc = yaml.load(nested_config)
+  cc = yaml.safe_load(nested_config)
   return cc["resources"][0]["names"]
 
 
