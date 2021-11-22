@@ -84,6 +84,6 @@ spec:
 
 ## Configuring the GitHub secret
 
-The Mario Bot requires a GitHub Hook Secret in the environment variable `GITHUB_SECRET_TOKEN`.
+The Mario Bot requires a GitHub Hook Secret in the environment variable `token`.
 
 The bot uses [secrets in the dogfooding cluster](../README.md#dogfooding-secrets).

@@ -5,17 +5,17 @@ metadata:
 spec:
   params:
   - name: pullRequestID
-    value: $(body.taskRun.metadata.labels.mario\.bot/pull-request-id)
-  - name: buildUUID
-    value: $(body.taskRun.metadata.labels.prow\.k8s\.io/build-id)
+    value: $(body.pull-request-id)
   - name: gitURL
-    value: $(body.taskRun.spec.resources.inputs[?(@.name == 'source')].resourceSpec.params[?(@.name == 'url')].value)
+    value: $(body.git-url)
   - name: gitRevision
-    value: $(body.taskRun.spec.resources.inputs[?(@.name == 'source')].resourceSpec.params[?(@.name == 'revision')].value)
-  - name: targetImageResourceName
-    value: $(body.taskRun.spec.resources.outputs[?(@.name == 'image')].resourceRef.name)
+    value: $(body.git-revision)
+  - name: targetImage
+    value: $(body.target-image)
   - name: passedOrFailed
-    value: $(body.taskRun.status.conditions[?(@.type == 'Succeeded')].status)
+    value: $(body.status)
+  - name: buildPipelineRun
+    value: $(body.build-pipelinerun)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
@@ -38,121 +38,160 @@ spec:
   params:
   - name: pullRequestID
     description: The pullRequestID to comment to
-  - name: buildUUID
-    description: The buildUUID for the logs link
   - name: gitURL
     description: The URL of the git repo
-  - name: gitRevision
-    description: The git revision
-  - name: targetImageResourceName
-    description: The name of the target image pipelineresource
+  - name: targetImage
+    description: The fully qualified image target e.g. repo/name:tag
   - name: passedOrFailed
     description: Whether the triggering event was successful or not
+  - name: buildPipelineRun
+    description: The name of the image build PipelineRun for the logs link
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
       generateName: mario-comment-github-
     spec:
       serviceAccountName: mario-listener
-      taskSpec:
-        resources:
-          inputs:
-            - name: source
-              type: git
-            - name: pr
-              type: pullRequest
-          outputs:
-            - name: image
-              type: image
-            - name: pr
-              type: pullRequest
-        steps:
-        - name: copy-pr-to-output
-          image: busybox
-          script: |
-            #!/bin/sh
-            mkdir -p $(resources.outputs.pr.path)
-            cp -r $(resources.inputs.pr.path)/* $(resources.outputs.pr.path)/
-        - name: setup-comment
-          image: python:3-alpine
-          script: |
-            #!/usr/bin/env python
-            import json
-            import random
+      pipelineRef:
+        name: mario-comment-github
+      workspaces:
+      - name: pr
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Mi
+      params:
+      - name: pullRequestID
+        value: $(tt.params.pullRequestID)
+      - name: gitURL
+        value: $(tt.params.gitURL)
+      - name: targetImage
+        value: $(tt.params.targetImage)
+      - name: passedOrFailed
+        value: $(tt.params.passedOrFailed)
+      - name: buildPipelineRun
+        value: $(tt.params.buildPipelineRun)
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: mario-comment-github
+spec:
+  params:
+  - name: pullRequestID
+  - name: gitURL
+  - name: targetImage
+  - name: passedOrFailed
+  - name: buildPipelineRun
+  workspaces:
+  - name: pr
+  tasks:
+  # TODO: Replace this task with custom interceptor that extends event payload with PR data
+  # example usage: https://github.com/tektoncd/plumbing/blob/def914a109d482355453d7f6dc766e476a371705/tekton/ci-workspace/plumbing/trigger.yaml#L48-L56
+  - name: download-pr-info
+    taskRef:
+      name: pull-request
+      bundle: gcr.io/tekton-releases/catalog/upstream/pull-request:0.1
+    workspaces:
+    - name: pr
+      workspace: pr
+    params:
+    - name: mode
+      value: download
+    - name: url
+      value: $(params.gitURL)/pull/$(params.pullRequestID)
+    - name: provider
+      value: github
+    - name: secret-key-ref
+      value: mario-github-token
+  - name: setup-comment
+    runAfter:
+    - download-pr-info
+    params:
+    - name: passedOrFailed
+      value: $(params.passedOrFailed)
+    - name: targetImage
+      value: $(params.targetImage)
+    - name: buildPipelineRun
+      value: $(params.buildPipelineRun)
+    workspaces:
+    - name: pr
+      workspace: pr
+    taskSpec:
+      params:
+      - name: passedOrFailed
+      - name: targetImage
+      - name: buildPipelineRun
+      workspaces:
+      - name: pr
+      steps:
+      - name: setup-comment
+        image: python:3-alpine
+        script: |
+          #!/usr/bin/env python
+          import json
+          import random
 
-            marios_pics_root = 'https://storage.googleapis.com/mario-bot/pics'
-            ok_pics = ['mario', 'luigi', 'tekton']
-            failed_pics = ['goomba']
-            logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
-            successful = ("$(tt.params.passedOrFailed)" == "True")
-            print("PassedOrFailed: {}".format("$(tt.params.passedOrFailed)"))
+          marios_pics_root = 'https://storage.googleapis.com/mario-bot/pics'
+          ok_pics = ['mario', 'luigi', 'tekton']
+          failed_pics = ['goomba']
+          logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
+          successful = ("$(params.passedOrFailed)" == "Succeeded")
+          print("PassedOrFailed: {}".format("$(params.passedOrFailed)"))
 
-            # Service Image
-            comment_template = (
-              '<img width="200" alt="{pic_alt}" src="{pic_src}">'
-              ' at your service! </p>'
-            )
+          # Service Image
+          comment_template = (
+          '<img width="200" alt="{pic_alt}" src="{pic_src}">'
+          ' at your service! </p>'
+          )
 
-            if successful:
-              chosen_pic = random.choice(ok_pics)
-            else:
-              chosen_pic = random.choice(failed_pics)
-            pic_url = "/".join([marios_pics_root, chosen_pic]) + '.png'
-            comment_params = dict(pic_alt=chosen_pic, pic_src=pic_url)
+          if successful:
+            chosen_pic = random.choice(ok_pics)
+          else:
+            chosen_pic = random.choice(failed_pics)
+          pic_url = "/".join([marios_pics_root, chosen_pic]) + '.png'
+          comment_params = dict(pic_alt=chosen_pic, pic_src=pic_url)
 
-            if successful:
-              comment_template += (
-                'Here is the image you requested: '
-                '<a href="https://{imageurl}">built image</a>|'
-              )
-              comment_params['imageurl'] = '$(resources.outputs.image.url)'
-            else:
-              comment_template += (
-                'Cloud not build the requested image. Please check the '
-              )
-
+          if successful:
             comment_template += (
-              '<a href="http://35.222.249.224/?buildid={buildid}&'
-              'namespace=mario">build logs</a>'
+            'Here is the image you requested: '
+            '<a href="https://{imageurl}">built image</a>|'
             )
-            comment_params['buildid'] = '$(tt.params.buildUUID)'
+            comment_params['imageurl'] = '$(params.targetImage)'
+          else:
+            comment_template += (
+            'Could not build the requested image. Please check the '
+            )
 
-            new_comment_path = "$(resources.outputs.pr.path)/comments/new.json"
-            comment_body = dict(body=comment_template.format(**comment_params))
-            with open(new_comment_path, "w") as comment:
-              json.dump(comment_body, comment)
-      resources:
-        inputs:
-          - name: source
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.gitRevision)
-              - name: url
-                value: $(tt.params.gitURL)
-          - name: pr
-            resourceSpec:
-              type: pullRequest
-              params:
-                - name: url
-                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
-              secrets:
-                - fieldName: authToken
-                  secretName: mario-github-token
-                  secretKey: GITHUB_TOKEN
-        outputs:
-          - name: image
-            resourceRef:
-              name: $(tt.params.targetImageResourceName)
-          - name: pr
-            resourceSpec:
-              type: pullRequest
-              params:
-                - name: url
-                  value: $(tt.params.gitURL)/pull/$(tt.params.pullRequestID)
-              secrets:
-                - fieldName: authToken
-                  secretName: mario-github-token
-                  secretKey: GITHUB_TOKEN
+          comment_template += (
+            '<a href="http://dashboard.dogfooding.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push'
+            'namespace=mario">build logs</a>'
+          )
+          comment_params['buildpipelinerun'] = '$(params.buildPipelineRun)'
+
+          new_comment_path = "$(workspaces.pr.path)/comments/new.json"
+          comment_body = dict(body=comment_template.format(**comment_params))
+          with open(new_comment_path, "w") as comment:
+            json.dump(comment_body, comment)
+  - name: publish-comment
+    runAfter:
+    - setup-comment
+    taskRef:
+      name: pull-request
+      bundle: gcr.io/tekton-releases/catalog/upstream/pull-request:0.1
+    params:
+    - name: mode
+      value: upload
+    - name: url
+      value: $(params.gitURL)/pull/$(params.pullRequestID)
+    - name: provider
+      value: github
+    - name: secret-key-ref
+      value: mario-github-token
+    workspaces:
+    - name: pr
+      workspace: pr
