@@ -6,3 +6,4 @@ resources:
 - tekton-catalog-catlin-lint.yaml
 - tekton-org-validation.yaml
 - tekton-python-unit-tests.yaml
+- tekton-catalog-diff-task.yaml
