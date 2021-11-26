@@ -66,7 +66,7 @@ spec:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "*"
+          value: '^(cmd/|examples/|images/|pkg/|test/|go\.)'
         - name: checkName
           value: pull-pipeline-kind-k8s-v1-20-e2e
         - name: gitHubCommand
