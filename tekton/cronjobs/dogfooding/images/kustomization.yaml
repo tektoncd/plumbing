@@ -15,3 +15,4 @@ resources:
 - catlin-nightly
 - kind-nightly
 - go-rest-api-test-nightly
+- kind-e2e-nightly
