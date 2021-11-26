@@ -378,3 +378,26 @@ To react to issue comments:
       template:
         ref: tekton-plumbing-ci-pipeline
 ```
+
+### Integration Test Jobs with KinD
+
+Project who want to define an test job running that run on a KinD Kubernetes cluster.
+The [`kind-e2e` pipeline](../ci-workspace/jobs/e2e-task.yaml) defines a pipeline that
+can clones the project repo, sets up Kubernetes in a sidecar using KinD, and runs
+an executable script from the project repo. The behaviour of that script can be
+customized through environment variables stored in an `.env` file in the project repo.
+
+To run the CI job as part of the project CI, a project shall:
+
+- create the test script and `.env` file. In many cases it may be possible to re-use
+  the existing test script that is used in `Prow` based e2e tests jobs
+- add a `PipelineRun` to the project `TriggerTemplate`. The `PipelineRun` runs the
+  `kind-e2e` pipeline and passes to it the name and path of the script and `.env`
+  file (a full example is available in the [pipeline template](../ci-workspace/pipeline/template.yaml)):
+
+```yaml
+        - name: e2e-script
+          value: test/e2e-kind.sh
+        - name: e2e-env
+          value: test/e2e-tests-kind.env
+```

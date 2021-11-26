@@ -7,3 +7,4 @@ resources:
 - tekton-org-validation.yaml
 - tekton-python-unit-tests.yaml
 - tekton-catalog-diff-task.yaml
+- e2e-kind.yaml
