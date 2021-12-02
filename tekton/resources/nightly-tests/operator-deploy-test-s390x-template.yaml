@@ -120,7 +120,7 @@ spec:
                 value: linux/$(params.target-arch)
               - name: KO_DOCKER_REPO
                 value: $(params.container-registry)
-              - name: E2E_DEBUG
+              - name: E2E_SKIP_CLUSTER_CREATION
                 value: "true"
               command:
               - /bin/bash
