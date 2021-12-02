@@ -17,7 +17,7 @@ LABEL description="Build container"
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
 RUN update-ca-certificates
 
-ARG KUBECTL_VERSION=1.18.1
+ARG KUBECTL_VERSION=1.20.12
 RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
 
 # Install Kustomize
