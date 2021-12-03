@@ -92,7 +92,7 @@ spec:
             if [[ "$(params.deployMethod)" == "replace" ]]; then
               kubectl create $NAMESPACE_PARAM -f $TARGET  2> $CREATE_OUTPUT || true
               # If there was some unexpected message in the error log, fail
-              if grep -v "already exists" $CREATE_OUTPUT; then
+              if egrep -v '(already exists|^Warning)' $CREATE_OUTPUT; then
                   echo "Something went wrong when creating resources"
                   exit 1
               fi
