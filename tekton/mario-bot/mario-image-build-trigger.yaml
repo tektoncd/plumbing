@@ -23,7 +23,7 @@ metadata:
 rules:
 # EventListeners need to be able to fetch any clustertriggerbindings
 - apiGroups: ["triggers.tekton.dev"]
-  resources: ["clustertriggerbindings"]
+  resources: ["clustertriggerbindings", "clusterinterceptors"]
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: v1
