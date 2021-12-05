@@ -46,12 +46,14 @@ spec:
 
         # creating a file which will contain the final formatted output
         # which needs to be added as a comment(if any)
-        echo '**Catlin Output**' >> catlin.txt
+        echo '<details><summary>Catlin Output</summary>' >> catlin.txt
+        echo '' >> catlin.txt
         echo '```' >> catlin.txt
 
         # performing catlin validate
         catlin validate $(cat changed-files.txt) | tee -a catlin.txt
         echo '```' >> catlin.txt
+        echo "</details>" >> catlin.txt
 
         # performing catlin script validattion only on yaml files
         for file in $(cat changed-files.txt);do
@@ -59,7 +61,8 @@ spec:
         done
 
         if [[ -s catlin-script.txt ]];then
-          echo '**Catlin script lint Output**' >> catlin.txt
+          echo '<details><summary>Catlin script lint Output</summary>' >> catlin.txt
+          echo '' >> catlin.txt
           echo '```' >> catlin.txt
           cat catlin-script.txt >> catlin.txt
           echo '```' >> catlin.txt
