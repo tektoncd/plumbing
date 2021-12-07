@@ -74,6 +74,6 @@ spec:
         - name: k8s-version
           value: v1.20.x
         - name: e2e-script
-          value: test/e2e-kind.sh
+          value: test/e2e-tests.sh
         - name: e2e-env
           value: test/e2e-tests-kind.env
