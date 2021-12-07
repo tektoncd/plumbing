@@ -4,5 +4,4 @@ metadata:
   name: feature-flags
   namespace: tekton-pipelines
 data:
-  enable-custom-tasks: "true"
-  enable-tekton-oci-bundles: "true"
+  enable-api-fields: "alpha"
