@@ -1,4 +1,3 @@
 resources:
 - plumbing-template.yaml
-- all-template.yaml
 - bindings.yaml

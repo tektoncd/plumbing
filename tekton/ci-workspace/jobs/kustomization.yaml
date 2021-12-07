@@ -8,3 +8,4 @@ resources:
 - tekton-python-unit-tests.yaml
 - tekton-catalog-diff-task.yaml
 - e2e-kind.yaml
+- tekton-kind-label.yaml
