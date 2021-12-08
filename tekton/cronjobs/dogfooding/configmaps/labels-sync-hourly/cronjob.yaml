@@ -19,7 +19,7 @@ spec:
               - name: CONFIG_PATH
                 value: "label_sync/labels.yaml"
               - name: NAMESPACE
-                value: "tektonci"
+                value: "tekton-ci"
               - name: CLUSTER_RESOURCE
                 value: "dogfooding-tektonci-default"
               - name: CONFIGMAP_NAME
