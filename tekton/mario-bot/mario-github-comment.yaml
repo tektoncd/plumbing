@@ -47,14 +47,16 @@ spec:
   - name: buildPipelineRun
     description: The name of the image build PipelineRun for the logs link
   resourcetemplates:
-  - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+  - apiVersion: tekton.dev/v1alpha1
+    kind: Run
     metadata:
       generateName: mario-comment-github-
     spec:
-      serviceAccountName: mario-listener
-      pipelineRef:
+      ref:
+        apiVersion: tekton.dev/v1alpha1
+        kind: PipelineToTaskRun
         name: mario-comment-github
+      serviceAccountName: mario-listener
       workspaces:
       - name: pr
         volumeClaimTemplate:
@@ -95,7 +97,6 @@ spec:
   - name: download-pr-info
     taskRef:
       name: pull-request
-      bundle: gcr.io/tekton-releases/catalog/upstream/pull-request:0.1
     workspaces:
     - name: pr
       workspace: pr
@@ -175,7 +176,7 @@ spec:
             )
 
           comment_template += (
-            '<a href="http://dashboard.dogfooding.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push'
+            '<a href="http://dashboard.dogfooding.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push&'
             'namespace=mario">build logs</a>'
           )
           comment_params['buildpipelinerun'] = '${BUILD_PIPELINERUN}'
@@ -189,7 +190,6 @@ spec:
     - setup-comment
     taskRef:
       name: pull-request
-      bundle: gcr.io/tekton-releases/catalog/upstream/pull-request:0.1
     params:
     - name: mode
       value: upload
