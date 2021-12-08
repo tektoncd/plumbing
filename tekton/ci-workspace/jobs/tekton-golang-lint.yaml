@@ -1,0 +1,113 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tekton-golang-lint
+spec:
+  params:
+    - name: pullRequestNumber
+      description: The pullRequestNumber
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: package
+      description: base package (and its children) under validation
+    - name: context
+      description: path to the directory to use as context.
+      default: "."
+    - name: flags
+      description: flags to use for the test command
+      default: --verbose
+    - name: version
+      description: golangci-lint version to use
+      default: "v1.39"
+    - name: GOOS
+      description: "running operating system target"
+      default: linux
+    - name: GOARCH
+      description: "running architecture target"
+      default: amd64
+    - name: GO111MODULE
+      description: "value of module support"
+      default: auto
+  workspaces:
+    - name: sources
+      description: Workspace where the git repo is prepared for testing
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-batch-merge
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+        - name: subdirectory
+          value: $(params.package)
+      workspaces:
+        - name: output
+          workspace: sources
+    - name: check-name-matches
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: $(params.checkName)
+    - name: check-git-files-changed
+      runAfter: ['clone-repo']
+      taskRef:
+        name: check-git-files-changed
+      params:
+        - name: gitCloneDepth
+          value: $(params.gitCloneDepth)
+        - name: regex
+          value: $(params.fileFilterRegex)
+      workspaces:
+        - name: input
+          workspace: sources
+    - name: lint
+      when: # implicit dependency on the check tasks
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]
+      taskRef:
+        name: golangci-lint
+        bundle: gcr.io/tekton-releases/catalog/upstream/golangci-lint:0.2
+      workspaces:
+        - name: input
+          workspace: sources
+      params:
+        - name: package
+          value: $(params.package)
+        - name: context
+          value: $(params.context)
+        - name: flags
+          value: $(params.flags)
+        - name: version
+          value: $(params.version)
+        - name: GOOS
+          value: $(params.GOOS)
+        - name: GOARCH
+          value: $(params.GOARCH)
+        - name: GO111MODULE
+          value: $(params.GO111MODULE)

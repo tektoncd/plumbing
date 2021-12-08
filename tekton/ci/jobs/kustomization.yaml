@@ -1,6 +1,4 @@
 resources:
 - conditions.yaml
 - tasks.yaml
-- tekton-golang-lint.yaml
 - tekton-yamllint.yaml
-- tekton-python-test.yaml

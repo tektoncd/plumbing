@@ -9,3 +9,4 @@ resources:
 - tekton-catalog-diff-task.yaml
 - e2e-kind.yaml
 - tekton-kind-label.yaml
+- tekton-golang-lint.yaml
