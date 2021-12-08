@@ -4,5 +4,4 @@ commonAnnotations:
 resources:
 - resources
 - ci
-- ci-workspace
 - mario-bot

@@ -1,10 +1,13 @@
-namespace: tektonci
+namespace: tekton-ci
 commonAnnotations:
   managed-by: Tekton
 
 resources:
-- 0001_rbac.yaml
-- eventlistener.yaml
-- ingress.yaml
+- infra
+- shared
 - jobs
-- templates
+- community
+- plumbing
+- catalog
+- website
+- pipeline

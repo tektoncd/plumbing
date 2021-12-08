@@ -53,7 +53,7 @@ spec:
           kind: Service
           name: add-pr-body
           apiVersion: v1
-          namespace: tektonci
+          namespace: tekton-ci
     - cel:
         overlays:
           - key: git_clone_depth
@@ -120,7 +120,7 @@ spec:
           kind: Service
           name: add-pr-body
           apiVersion: v1
-          namespace: tektonci
+          namespace: tekton-ci
     - cel:
         overlays:
           - key: git_clone_depth

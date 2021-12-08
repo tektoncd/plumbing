@@ -14,8 +14,8 @@ Secrets which have been applied to the dogfooding cluster but are not committed 
   - In the default namespace:
     - `bot-token-github` used for syncing label configuration and org configuration
     - `github-token` used to create a draft release
-  - In the `tektonci` namespace:
-    - `bot-token-github` used for ?
+  - In the `tekton-ci` namespace:
+    - `bot-token-github` used for custom interceptors and CI jobs
     - `ci-webhook` contains the secret used to verify pull request webhook requests for
       plumbing CI.
   - In the [mario](../mariobot) namespace:

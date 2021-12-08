@@ -84,12 +84,12 @@ spec:
           workspace: sources
     - name: lint
       when: # implicit dependency on the check tasks
-      - input: $(tasks.check-name-matches.results.check)
-        operator: in
-        values: ["passed"]
-      - input: $(tasks.check-git-files-changed.results.check)
-        operator: in
-        values: ["passed"]
+        - input: $(tasks.check-name-matches.results.check)
+          operator: in
+          values: ["passed"]
+        - input: $(tasks.check-git-files-changed.results.check)
+          operator: in
+          values: ["passed"]
       taskRef:
         name: golangci-lint
         bundle: gcr.io/tekton-releases/catalog/upstream/golangci-lint:0.2

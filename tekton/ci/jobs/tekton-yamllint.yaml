@@ -2,23 +2,24 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: tekton-yamllint
-  namespace: tektonci
+  namespace: tekton-ci
 spec:
   params:
-  - name: gitRepository
-    description: The git repository that hosts context and Dockerfile
-  - name: gitRevision
-    description: The Git revision to be used.
-  - name: gitCloneDepth
-    description: Number of commits in the change + 1
-  - name: fileFilterRegex
-    description: Names regex to be matched in the list of modified files
-  - name: checkName
-    description: The name of the GitHub check that this pipeline is used for
-  - name: gitHubCommand
-    description: The command that was used to trigger testing
-  - name: folders
-    description: The folders to lint with yamllint
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitRevision
+      description: The Git revision to be used.
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: args
+      type: array
+      description: The list of args to be passed to yamllint
   workspaces:
   - name: source
   tasks:
@@ -26,50 +27,48 @@ spec:
     taskRef:
       name: extract-check-from-command
     params:
-    - name: gitHubCommand
-      value: $(params.gitHubCommand)
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
   - name: git-clone
     taskRef:
       name: git-clone
       bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.4
     params:
-    - name: url
-      value: $(params.gitRepository)
-    - name: revision
-      value: $(params.gitRevision)
-    - name: depth
-      value: $(params.gitCloneDepth)
+      - name: url
+        value: $(params.gitRepository)
+      - name: revision
+        value: $(params.gitRevision)
+      - name: depth
+        value: $(params.gitCloneDepth)
     workspaces:
-    - name: output
-      workspace: source
+      - name: output
+        workspace: source
   - name: check-git-files-changed
     runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
     taskRef:
       name: check-git-files-changed
     params:
-    - name: gitCloneDepth
-      value: $(params.gitCloneDepth)
-    - name: regex
-      value: $(params.fileFilterRegex)
-    workspaces:
-    - name: source
-      workspace: source
-  - name: lint
-    when:
-    - input: "$(tasks.check-git-files-changed.results.numFilesChanged)"
-      operator: notin
-      values: ["0"]
-    - input: "$(tasks.extract-check-from-command.results.check)"
-      operator: in
-      values:
-      - "$(params.checkName)" # When it is explicitly run
-      - ".*"                  # When all checks are run
-      - ""                    # In cases triggered not by specific github comments
-    taskRef:
-      name: yamllint
-    params:
-    - name: folders
-      value: $(params.folders)
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: $(params.fileFilterRegex)
     workspaces:
       - name: source
+        workspace: source
+  - name: lint
+    when:
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]              # In cases triggered not by specific github comments
+    taskRef:
+      name: yamllint
+      bundle: gcr.io/tekton-releases/catalog/upstream/yamllint:0.1
+    params:
+    - name: args
+      value: ["$(params.arguments[*])"]
+    workspaces:
+      - name: shared-workspace
         workspace: source

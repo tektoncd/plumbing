@@ -32,7 +32,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: org-validation
-  namespace: tektonci
+  namespace: tekton-ci
 spec:
   params:
     - name: pullRequestNumber
