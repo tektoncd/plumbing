@@ -125,3 +125,49 @@ spec:
           value: $(tt.params.package)
         - name: imagePrefix
           value: gcr.io/tekton-nightly/dogfooding/ci
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: tekton-golang-lint-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/check-name: plumbing-golang-lint
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      workspaces:
+        - name: sources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+      pipelineRef:
+        name: tekton-golang-lint
+      params:
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: pullRequestBaseRef
+          value: $(tt.params.pullRequestBaseRef)
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: "tekton/images/**"
+        - name: checkName
+          value: plumbing-image-build
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+        - name: fileFilterRegex
+          value: ".*"
+        - name: checkName
+          value: plumbing-golang-lint
+        - name: package
+          value: $(tt.params.package)
