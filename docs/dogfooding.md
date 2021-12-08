@@ -1,6 +1,6 @@
 # Dogfooding Cluster
 
-The dogfooding runs the instance of Tekton that is used for all the CI/CD needs
+The `dogfooding` clusterruns the instance of Tekton that is used for all the CI/CD needs
 of Tekton itself.
 
 - Configuration for the CI is in [tekton](../tekton)
@@ -8,7 +8,7 @@ of Tekton itself.
 
 ## Secrets
 
-Secrets which have been applied to the dogfooding cluster but are not committed here are:
+Secrets which have been applied to the `dogfooding` cluster but are not committed here are:
 
 - `GitHub` personal access tokens:
   - In the default namespace:
@@ -61,26 +61,51 @@ SSL Certificate are generated automatically using a `ClusterIssuer` managed by
 kubectl apply -f https://github.com/tektoncd/plumbing/blob/main/tekton/certificates/clusterissuer.yaml
 ```
 
-- Apply the ingress resources and update the `*.tekton.dev` DNS configuration.
-  Ingress resources are deployed along with the corresponding service.
+The [DNS names](#dns-names) are automatically provisioned through annotations on the
+ingresses themselves.
 
-The following DNS names and corresponding ingresses are defined:
-
-- `dashboard.dogfooding.tekton.dev`: [ingress](https://github.com/tektoncd/plumbing/blob/main/tekton/cd/dashboard/overlays/dogfooding/ingress.yaml)
-
-To see the IP of the ingress in the new cluster:
+To see the IP of an ingress in the cluster:
 
 ```bash
-kubectl get ingress ing
+kubectl get ingress <ingress-name>
+```
+
+A full example of an ingress with HTTPS certificate and DNS name provisioning:
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: 'dashboard.dogfooding.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
+  name: ing
+  namespace: tekton-pipelines
+spec:
+  tls:
+  - secretName: dashboard-dogfooding-tekton-dev-tls
+    hosts:
+    - dashboard.dogfooding.tekton.dev
+  rules:
+  - host: dashboard.dogfooding.tekton.dev
+    http:
+      paths:
+      - backend:
+          serviceName: tekton-dashboard
+          servicePort: 9097
+        path: /*
 ```
 
 ## Node Pools
 
-Dogfooding is comprised of two node pools. One is used for workloads that operate with Workload Identity,
-a feature of GKE which maps Kubernetes Service Accounts to Google Cloud IAM Service Accounts. The other
-is used for workloads that don't use Workload Identity and rely instead on mechanisms like mounted Secrets
-or that run unauthenticated. Choosing the correct pool for a workload should really only depend on whether
-it utilizes the Workload Identity feature or not.
+The `dogfooding` cluster  is comprised of two node pools. One is used for workloads that operate with
+Workload Identity, a feature of GKE which maps Kubernetes Service Accounts to Google Cloud IAM Service
+Accounts. The other is used for workloads that don't use Workload Identity and rely instead on mechanisms
+like mounted Secrets or that run unauthenticated.
+Choosing the correct pool for a workload should really only depend on whether it utilizes the
+Workload Identity feature or not.
 
 - `default-pool` is used for most workloads. It doesn't have the GKE Metadata Server enabled
 and therefore doesn't support workloads running with Workload Identity.
@@ -90,7 +115,7 @@ which shows Stackdriver log entries for PipelineRuns.
 
 ## Manifests
 
-Manifests for various resources are deployed to the dogfooding clusters from different repositories.
+Manifests for various resources are deployed to the `dogfooding` clusters from different repositories.
 For the plumbing repo, manifest are applied nightly through two cronjobs:
 
 - [tekton](https://github.com/tektoncd/plumbing/tree/main/tekton/cronjobs/dogfooding/manifests/plumbing-tekton)
@@ -115,7 +140,7 @@ deploys the result to the `dogfooding` cluster using a dedicated service account
 ## DNS Names
 
 DNS records for the `tekton.dev` are hosted by Netlify. [Gardeners External DNS Manager](https://github.com/gardener/external-dns-management)
-is installed in the dogfooding cluster in the `dns-manager` namespace, and it watches for `DNSEntries` and annotated
+is installed in the `dogfooding` cluster in the `dns-manager` namespace, and it watches for `DNSEntries` and annotated
 ingresses and services in all namespaces.
 
 DNS Manager is installed using helm as follows:
@@ -144,4 +169,159 @@ spec:
   domains:
     include:
     - tekton.dev
+```
+
+## Eventing
+
+Tekton Pipelines is configured in the `dogfooding` cluster to generate `CloudEvents`
+which are sent every time a `TaskRun` or `PipelineRun` is executed.
+`CloudEvents` are sent by Tekton Pipelines to an event broker. `Trigger` resources
+can be defined to pick-up events from broken and have them delivered to consumers.
+
+### CloudEvents Broker
+
+The broker installed is based on Knative Eventing running on top of a Kafka backend.
+Knative Eventing is installed following the [official guide](https://knative.dev/docs/install/eventing/install-eventing-with-yaml/)
+from the Knative project:
+
+```shell
+# Install the CRDs
+kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.0.0/eventing-crds.yaml
+
+# Install the core components
+kubectl apply -f https://github.com/knative/eventing/releases/download/knative-v1.0.0/eventing-core.yaml
+
+# Verify the installation
+kubectl get pods -n knative-eventing
+```
+
+The Kafka backend is installed, as recommended in the Knative guide, using the [strimzi](https://strimzi.io/quickstarts/) operator:
+
+```shell
+# Create the namespace
+kubectl create namespace kafka
+
+# Install in the kafka namespace
+kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
+
+# Apply the `Kafka` Cluster CR file
+kubectl apply -f https://strimzi.io/examples/latest/kafka/kafka-persistent-single.yaml -n kafka
+
+# Verify the installation
+kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n kafka 
+```
+
+A [Knative Channel](https://github.com/knative-sandbox/eventing-kafka) is installed next:
+
+```shell
+# Install the Kafka "Consolidated" Channel
+kubectl apply -f https://storage.googleapis.com/knative-nightly/eventing-kafka/latest/channel-consolidated.yaml
+
+# Edit the "config-kafka" config-map in the "knative-eventing" namespace
+# Replace "REPLACE_WITH_CLUSTER_URL" with my-cluster-kafka-bootstrap.kafka:9092/
+kubectl edit cm/config-kafka -n knative-eventing
+```
+
+Install the [Knative Kafka Broken](https://knative.dev/docs/install/eventing/install-eventing-with-yaml/#optional-install-a-broker-layer)
+following the official guide:
+
+```shell
+# Kafka Controller
+kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.0.0/eventing-kafka-controller.yaml
+
+# Kafka Broken Data plane
+kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.0.0/eventing-kafka-broker.yaml
+```
+
+### Kafka UI
+
+The [Kafka UI](https://github.com/provectus/kafka-ui) allows viewing and searching for events stored by Kafka.
+Events are retained by Kafka for some time (but not indefinitely), which helps when debugging event based integrations.
+The Kafka UI allows managing channels and creating new events, so it is not publicly accessible. To access
+the Kafka UI, port-forward the service port:
+
+```shell
+# Set up port forwarding
+export POD_NAME=$(kubectl get pods --namespace kafka -l "app.kubernetes.io/name=kafka-ui,app.kubernetes.io/instance=kafka-ui" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace kafka port-forward $POD_NAME 8080:8080
+
+# Point the browser to http://localhost:8080
+```
+
+The Kafka UI is installed via an helm chart as recommended in the [Kubernetes installation guide](https://github.com/provectus/kafka-ui#running-in-kubernetes).
+
+```shell
+helm install kafka-ui kafka-ui/kafka-ui --set envs.config.KAFKA_CLUSTERS_0_NAME=my-cluster --set envs.config.KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=my-cluster-kafka-bootstrap:9092 --set envs.config.KAFKA_CLUSTERS_0_ZOOKEEPER=my-cluster-zookeeper-nodes:2181 --namespace kafka
+```
+
+### CloudEvents Producer
+
+Tekton Pipelines is the only `CloudEvents` producer in the cluster. It's [configured](../)tekton/cd/pipeline/overlays/dogfooding/config-defaults.yaml) to send all events to the broker:
+
+```yaml
+data:
+  default-cloud-events-sink: http://kafka-broker-ingress.knative-eventing.svc.cluster.local/default/default
+```
+
+### CloudEvents Consumers
+
+`CloudEvents` are consumed from the broker via a Knative Eventing CRD called `Trigger`.
+The `dogfooding` cluster is setup so that all `TaskRun` start, running and finish events are forwarded from the
+broker to the `tekton-events` event listener, in the `default` namespace.
+This initial filtering of events allows to reduce the load on the event listener.
+
+The following `Triggers` are defined in the cluster:
+
+```yaml
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: taskrun-start-events-to-tekton-events-el
+  namespace: default
+spec:
+  broker: default
+  filter:
+    attributes:
+      type: dev.tekton.event.taskrun.started.v1
+  subscriber:
+    uri: http://el-tekton-events.default.svc.cluster.local:8080
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: taskrun-running-events-to-tekton-events-el
+  namespace: default
+spec:
+  broker: default
+  filter:
+    attributes:
+      type: dev.tekton.event.taskrun.running.v1
+  subscriber:
+    uri: http://el-tekton-events.default.svc.cluster.local:8080
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: taskrun-successful-events-to-tekton-events-el
+  namespace: default
+spec:
+  broker: default
+  filter:
+    attributes:
+      type: dev.tekton.event.taskrun.successful.v1
+  subscriber:
+    uri: http://el-tekton-events.default.svc.cluster.local:8080
+---
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: taskrun-failed-events-to-tekton-events-el
+  namespace: default
+spec:
+  broker: default
+  filter:
+    attributes:
+      type: dev.tekton.event.taskrun.failed.v1
+  subscriber:
+    uri: http://el-tekton-events.default.svc.cluster.local:8080
 ```
