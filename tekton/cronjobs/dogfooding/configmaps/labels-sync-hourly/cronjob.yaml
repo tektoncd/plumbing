@@ -21,7 +21,7 @@ spec:
               - name: NAMESPACE
                 value: "tekton-ci"
               - name: CLUSTER_RESOURCE
-                value: "dogfooding-tektonci-default"
+                value: "dogfooding-tekton-ci-default"
               - name: CONFIGMAP_NAME
                 value: "label-config-v2"
               - name: CONFIGMAP_KEY
