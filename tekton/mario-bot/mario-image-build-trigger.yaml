@@ -145,8 +145,66 @@ spec:
         mario.bot/pull-request-id: $(tt.params.pullRequestID)
     spec:
       serviceAccountName: mario-releaser
-      pipelineRef:
-        name: clone-and-build
+      pipelineSpec:
+        workspaces:
+        - name: source-code
+        - name: gcp-secret
+        params:
+        - name: contextPath
+        - name: gitRepository
+        - name: gitRevision
+        - name: targetImage
+        - name: contextPath
+        - name: pullRequestID
+        - name: cloudEventSink
+          default: http://el-github-feedback-trigger.mario:8080
+        tasks:
+        - name: clone-and-build
+          taskRef:
+            apiVersion: tekton.dev/v1alpha1
+            kind: PipelineToTaskRun
+            name: clone-and-build
+          params:
+          - name: gitRepository
+            value: $(params.gitRepository)
+          - name: gitRevision
+            value: $(params.gitRevision)
+          - name: targetImage
+            value: $(params.targetImage)
+          - name: contextPath
+            value: $(params.contextPath)
+          - name: pullRequestID
+            value: $(params.pullRequestID)
+          workspaces:
+          - name: source-code
+            workspace: source-code
+          - name: gcp-secret
+            workspace: gcp-secret
+        finally:
+        - name: publish-event
+          params:
+          - name: sink
+            value: $(params.cloudEventSink)
+          - name: eventID
+            value: $(context.taskRun.name)
+          - name: eventType
+            value: "dev.tekton.event.task.$(tasks.clone-and-build.status)"
+          - name: data
+            value: '{"pull-request-id": "$(params.pullRequestID)", "build-pipelinerun": "$(context.pipelineRun.name)", "git-url": "https://$(params.gitRepository)", "git-revision": "$(params.gitRevision)", "target-image": "$(params.targetImage)", "status": "$(tasks.clone-and-build.status)"}'
+          taskRef:
+            name: cloudevent
+            bundle: gcr.io/tekton-releases/catalog/upstream/cloudevent:0.1
+      params:
+      - name: pullRequestID
+        value: $(tt.params.pullRequestID)
+      - name: gitRepository
+        value: $(tt.params.gitRepository)
+      - name: gitRevision
+        value: $(tt.params.gitRevision)
+      - name: contextPath
+        value: $(tt.params.contextPath)
+      - name: targetImage
+        value: $(tt.params.targetImage)
       workspaces:
       - name: source-code
         volumeClaimTemplate:
@@ -159,19 +217,6 @@ spec:
       - name: gcp-secret
         secret:
           secretName: release-secret
-      params:
-      - name: contextPath
-        value: $(tt.params.contextPath)
-      - name: gitRepository
-        value: $(tt.params.gitRepository)
-      - name: gitRevision
-        value: $(tt.params.gitRevision)
-      - name: targetImage
-        value: $(tt.params.targetImage)
-      - name: contextPath
-        value: $(tt.params.contextPath)
-      - name: pullRequestID
-        value: $(tt.params.pullRequestID)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -185,8 +230,6 @@ spec:
     default: "10"
   - name: targetImage
   - name: contextPath
-  - name: cloudEventSink
-    default: http://el-github-feedback-trigger.mario:8080
   - name: pullRequestID
   workspaces:
   - name: source-code
@@ -195,7 +238,6 @@ spec:
   - name: clone
     taskRef:
       name: git-clone
-      bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.4
     params:
     - name: url
       value: https://$(params.gitRepository)
@@ -226,30 +268,15 @@ spec:
       workspaces:
       - name: source-code
       - name: gcp-secret
-        mountPath: /secret
       steps:
       - name: build-and-push
         workingdir: $(workspaces.source-code.path)
         image: gcr.io/kaniko-project/executor:v0.13.0
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
-          value: /secret/release.json
+          value: $(workspaces.gcp-secret.path)/release.json
         command:
         - /kaniko/executor
         - --dockerfile=Dockerfile
         - --context=$(params.contextPath)
         - --destination=$(params.targetImage)
-  finally:
-  - name: publish-event
-    params:
-    - name: sink
-      value: $(params.cloudEventSink)
-    - name: eventID
-      value: $(context.taskRun.name)
-    - name: eventType
-      value: "dev.tekton.event.task.$(tasks.build.status)"
-    - name: data
-      value: '{"pull-request-id": "$(params.pullRequestID)", "build-pipelinerun": "$(context.pipelineRun.name)", "git-url": "https://$(params.gitRepository)", "git-revision": "$(params.gitRevision)", "target-image": "$(params.targetImage)", "status": "$(tasks.build.status)"}'
-    taskRef:
-      name: cloudevent
-      bundle: gcr.io/tekton-releases/catalog/upstream/cloudevent:0.1
