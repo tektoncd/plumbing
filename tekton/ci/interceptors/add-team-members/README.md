@@ -96,7 +96,7 @@ A trigger in an event listener:
           kind: Service
           name: add-team-member
           apiVersion: v1
-          namespace: tektonci
+          namespace: tekton-ci
     - cel:
         filter: >-
           body.comment.user.login in body.extensions.add_team_members.maintainers_team_members

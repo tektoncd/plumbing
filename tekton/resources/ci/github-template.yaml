@@ -34,7 +34,7 @@ spec:
     kind: TaskRun
     metadata:
       generateName: $(tt.params.checkName)-pr-$(tt.params.gitHubCheckStatus)-
-      namespace: tektonci
+      namespace: tekton-ci
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
