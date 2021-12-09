@@ -10,6 +10,7 @@ resources:
 - cli-deploy-test-s390x-template.yaml
 - operator-deploy-test-s390x-template.yaml
 - dashboard-deploy-test-s390x-template.yaml
+- catalog-deploy-test-s390x-template.yaml
 - pipeline-deploy-test-ppc64le-template.yaml
 - serviceaccount.yaml
 - triggers-deploy-test-ppc64le-template.yaml
