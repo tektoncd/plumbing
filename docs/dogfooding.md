@@ -1,6 +1,6 @@
 # Dogfooding Cluster
 
-The `dogfooding` clusterruns the instance of Tekton that is used for all the CI/CD needs
+The `dogfooding` cluster runs the instance of Tekton that is used for all the CI/CD needs
 of Tekton itself.
 
 - Configuration for the CI is in [tekton](../tekton)
