@@ -59,7 +59,7 @@ spec:
           secretName: ci-webhook
           secretKey: secret
         eventTypes:
-          - pull_request
+          - issue_comment
     - cel:
         filter: >-
           body.repository.full_name.startsWith('tektoncd/') &&
@@ -76,7 +76,7 @@ spec:
           kind: Service
           name: add-pr-body
           apiVersion: v1
-          namespace: tektonci
+          namespace: tekton-ci
     - cel:
         overlays:
         - key: git_clone_depth
