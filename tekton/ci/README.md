@@ -258,9 +258,11 @@ the CI job when relevant files have been modified.
 
 ### PipelineRun
 
-The `PipelineRun` is added to the relevant `TriggerTemplate` in the
+`PipelineRuns` are added to the relevant `TriggerTemplate` in the
 `tektoncd/plumbing` repo under `tekton/ci/<project>/template.yaml`.
 The `shared` folder is used for jobs that are shared across repos.
+Unless `PipelineRuns` *require* a different `Trigger`, they should all be
+added to a single `TriggerTemplate`.
 
 The event listener will trigger the correct template based on the event.
 The `PipelineRun` must define specific metadata for the conditions and the
@@ -283,6 +285,15 @@ downstream CEL filters to work correctly.
       serviceAccountName: tekton-ci-jobs
       pipelineRef:
         name: PIPELINE_NAME # The name of the CI pipeline
+      workspaces:
+        - name: source
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
       params:
         - name: checkName
           value: CHECK-NAME # *MUST* be the GitHub check name
@@ -298,17 +309,6 @@ downstream CEL filters to work correctly.
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         # Extra parameters required  by the pipeline shall be passed here
-      resources:
-      - name: source
-        resourceSpec: # Pipeline resources *MUST* be embedded
-          type: git
-          params:
-          - name: revision
-            value: $(tt.params.gitRevision)
-          - name: url
-            value: $(tt.params.gitRepository)
-          - name: depth
-            value: $(tt.params.gitCloneDepth)
 ```
 
 *NOTE* The naming convention for labels and annotations may change in future
@@ -318,78 +318,56 @@ as the `tekton.dev` namespace has been reserved for Tekton itself only.
 
 If a `TriggerTemplate` for a specific repository does not exists yet, it must be
 created under `tekton/ci/templates` and named `REPO-template.yaml`.
-When a new trigger template is added, the event listener needs to be updated to
-trigger the new template for the right events.
+When a new trigger template is added, corresponding `Trigger` resources need to
+be added to use the new template when events are received.
 
 A good starting point is to look at the two triggers already defined for the
 `plumbing` repo and replicate them for the new repo.
+
 To react to pull requests:
 
 ```yaml
-  triggers:
-    - name: plumbing-pull-request-ci
-      interceptors:
-        - github:
-            secretRef:
-              secretName: ci-webhook
-              secretKey: secret
-            eventTypes:
-              - pull_request
-        - cel:
-            filter: >-
-              body.repository.full_name == 'tektoncd/plumbing' &&
-              (body.action == 'opened' || body.action == 'synchronize')
-            overlays:
-            - key: git_clone_depth
-              expression: "string(body.pull_request.commits + 1.0)"
-      bindings:
-        - ref: tekton-ci-github-base
-        - ref: tekton-ci-webhook-pull-request
-        - ref: tekton-ci-clone-depth
-        - ref: tekton-ci-webhook-pr-labels
-      template:
-        ref: tekton-plumbing-ci-pipeline
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: plumbing-pull-request
+  labels:
+    ci.tekton.dev/trigger-type: github.pull-request
+spec:
+  interceptors:
+    - cel:
+        filter: >-
+          body.repository.name == 'plumbing'
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-pull-request
+    - ref: tekton-ci-webhook-pr-labels
+    - ref: tekton-ci-clone-depth
+  template:
+    ref: tekton-plumbing-ci-pipeline
 ```
 
 To react to issue comments:
 
 ```yaml
-    - name: all-comment-ci
-      interceptors:
-        - github:
-            secretRef:
-              secretName: ci-webhook
-              secretKey: secret
-            eventTypes:
-              - issue_comment
-        - cel:
-            filter: >-
-              body.repository.full_name.startsWith('tektoncd/') &&
-              body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'catalog', 'hub'] &&
-              body.action == 'created' &&
-              'pull_request' in body.issue &&
-              body.issue.state == 'open' &&
-              body.comment.body.matches('^/test($| [^ ]*[ ]*$)')
-            overlays:
-            - key: add_pr_body.pull_request_url
-              expression: "body.issue.pull_request.url"
-        - webhook:
-            objectRef:
-              kind: Service
-              name: add-pr-body
-              apiVersion: v1
-              namespace: tekton-ci
-        - cel:
-            overlays:
-            - key: git_clone_depth
-              expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
-      bindings:
-        - ref: tekton-ci-github-base
-        - ref: tekton-ci-webhook-comment
-        - ref: tekton-ci-clone-depth
-        - ref: tekton-ci-webhook-pr-labels
-      template:
-        ref: tekton-plumbing-ci-pipeline
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: plumbing-issue-comment
+  labels:
+    ci.tekton.dev/trigger-type: github.issue-comment
+spec:
+  interceptors:
+    - cel:
+        filter: >-
+          body.repository.name == 'plumbing'
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-comment
+    - ref: tekton-ci-clone-depth
+    - ref: tekton-ci-webhook-issue-labels
+  template:
+    ref: tekton-plumbing-ci-pipeline
 ```
 
 ### Integration Test Jobs with KinD
