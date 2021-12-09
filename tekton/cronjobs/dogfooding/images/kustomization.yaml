@@ -9,7 +9,6 @@ resources:
 - pipeline-test-runner-nightly
 - skopeo-nightly
 - tkn-nightly
-- yamllint-nightly
 - buildx-gcloud-nightly
 - teps-community-nightly
 - catlin-nightly
