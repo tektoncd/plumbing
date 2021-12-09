@@ -3,21 +3,13 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
 metadata:
   name: catalog-pull-request
+  labels:
+    ci.tekton.dev/trigger-type: github.pull-request
 spec:
   interceptors:
-    - github:
-        secretRef:
-          secretName: ci-webhook
-          secretKey: secret
-        eventTypes:
-          - pull_request
     - cel:
         filter: >-
-          body.repository.full_name == 'tektoncd/catalog' &&
-          body.action in ['opened','synchronize']
-        overlays:
-          - key: git_clone_depth
-            expression: "string(body.pull_request.commits + 1.0)"
+          body.repository.full_name == 'tektoncd/catalog'
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-pull-request
@@ -30,34 +22,13 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: Trigger
 metadata:
   name: catalog-issue-comment
+  labels:
+    ci.tekton.dev/trigger-type: github.issue-comment
 spec:
   interceptors:
-    - github:
-        secretRef:
-          secretName: ci-webhook
-          secretKey: secret
-        eventTypes:
-          - issue_comment
     - cel:
         filter: >-
-          body.repository.full_name == 'tektoncd/catalog' &&
-          body.action == 'created' &&
-          'pull_request' in body.issue &&
-          body.issue.state == 'open' &&
-          body.comment.body.matches('^/test($| [^ ]*[ ]*$)')
-        overlays:
-          - key: add_pr_body.pull_request_url
-            expression: "body.issue.pull_request.url"
-    - webhook:
-        objectRef:
-          kind: Service
-          name: add-pr-body
-          apiVersion: v1
-          namespace: tekton-ci
-    - cel:
-        overlays:
-          - key: git_clone_depth
-            expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
+          body.repository.full_name == 'tektoncd/catalog'
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-comment
@@ -65,70 +36,3 @@ spec:
     - ref: tekton-ci-webhook-issue-labels
   template:
     ref: tekton-catalog-ci-pipeline
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: catalog-pull-request-diff-task
-spec:
-  interceptors:
-    - github:
-        secretRef:
-          secretName: ci-webhook
-          secretKey: secret
-        eventTypes:
-          - pull_request
-    - cel:
-        filter: >-
-          body.repository.full_name == 'tektoncd/catalog' &&
-          body.action in ['opened','synchronize']
-        overlays:
-          - key: git_clone_depth
-            expression: "string(body.pull_request.commits + 1.0)"
-  bindings:
-    - ref: tekton-ci-github-base
-    - ref: tekton-ci-webhook-pull-request
-    - ref: tekton-ci-clone-depth
-    - ref: tekton-ci-webhook-pr-labels
-  template:
-    ref: tekton-catalog-diff-task-template
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: catalog-issue-comment-diff-task
-spec:
-  interceptors:
-    - github:
-        secretRef:
-          secretName: ci-webhook
-          secretKey: secret
-        eventTypes:
-          - issue_comment
-    - cel:
-        filter: >-
-          body.repository.full_name == 'tektoncd/catalog' &&
-          body.action == 'created' &&
-          'pull_request' in body.issue &&
-          body.issue.state == 'open' &&
-          body.comment.body.matches('^/diff-task')
-        overlays:
-          - key: add_pr_body.pull_request_url
-            expression: "body.issue.pull_request.url"
-    - webhook:
-        objectRef:
-          kind: Service
-          name: add-pr-body
-          apiVersion: v1
-          namespace: tekton-ci
-    - cel:
-        overlays:
-          - key: git_clone_depth
-            expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
-  bindings:
-    - ref: tekton-ci-github-base
-    - ref: tekton-ci-webhook-comment
-    - ref: tekton-ci-clone-depth
-    - ref: tekton-ci-webhook-issue-labels
-  template:
-    ref: tekton-catalog-diff-task-template

@@ -69,28 +69,6 @@ spec:
             value: $(tt.params.pullRequestBaseRef)
           - name: gitRepository
             value: "$(tt.params.gitRepository)"
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerTemplate
-metadata:
-  name: tekton-catalog-diff-task-template
-spec:
-  params:
-    - name: buildUUID
-      description: UUID used to track a CI Pipeline Run in logs
-    - name: pullRequestNumber
-      description: The pullRequestNumber
-    - name: pullRequestUrl
-      description: The HTML URL for the pull request
-    - name: pullRequestBaseRef
-      description: |
-        The base git ref for the pull request. This is the branch the
-        pull request would merge onto once approved.
-    - name: gitRepository
-      description: The git repository that hosts context and Dockerfile
-    - name: gitRevision
-      description: The Git revision to be used.
-  resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
       kind: PipelineRun
       metadata:
@@ -124,4 +102,3 @@ spec:
             value: $(tt.params.pullRequestBaseRef)
           - name: gitRepository
             value: "$(tt.params.gitRepository)"
----
