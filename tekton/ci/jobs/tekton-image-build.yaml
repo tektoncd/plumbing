@@ -30,27 +30,27 @@ spec:
   - name: build-and-push
     workingDir: $(workspaces.source.path)
     image: gcr.io/kaniko-project/executor@sha256:e00dfdd4a44097867c8ef671e5a7f3e31d94bd09406dbdfba8a13a63fc6b8060  # debug image
-    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
-    # https://github.com/tektoncd/pipeline/pull/706
     env:
-    - name: DOCKER_CONFIG
-      value: /tekton/home/.docker
+      - name: FQ_DOCKER_FILE
+        value: $(workspaces.source.path)/$(params.CONTEXT)
+      - name: PR_NUMBER
+        value: $(params.pullRequestNumber)
+      - name: EXTRA_ARGS
+        value: $(params.EXTRA_ARGS)
+      - name: DIGEST_FILE
+        value: $(results.IMAGE-DIGEST.path)
     script: |
+      #!/busybox/sh
       # Setup the image name
-      CONTEXT=$(workspaces.source.path)/$(params.CONTEXT)
-      IMAGE_NAME=$(basename "${CONTEXT}"):pr-$(params.pullRequestNumber)
+      CONTEXT=$(dirname ${FQ_DOCKER_FILE}) # This works with a Dockerfile in the root of the context
+      IMAGE_NAME=$(basename "${CONTEXT}"):pr-${PR_NUMBER}
       # Run the build
       /kaniko/executor \
-        - $(params.EXTRA_ARGS) \
-        --dockerfile=$(params.DOCKERFILE) \
-        --context=$(workspaces.source.path)/$(params.CONTEXT)  # The user does not need to care about the workspace and the source.
-        --destination=${IMAGE_NAME}
-        --digest-file=$(results.IMAGE-DIGEST.path)
-      # kaniko assumes it is running as root, which means this example fails on platforms
-      # that default to running containers as a random uid (like OpenShift). Adding this securityContext
-      # makes it explicit that it needs to run as root.
-    securityContext:
-      runAsUser: 0
+        - ${EXTRA_ARGS} \
+        --context=${CONTEXT} \
+        --destination=${IMAGE_NAME} \
+        --digest-file=${DIGEST_FILE} \
+        --no-push
 ---
 apiVersion: custom.tekton.dev/v1alpha1
 kind: TaskLoop
