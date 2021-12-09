@@ -23,12 +23,6 @@ spec:
   workspaces:
   - name: source
   tasks:
-  - name: extract-check-from-command
-    taskRef:
-      name: extract-check-from-command
-    params:
-      - name: gitHubCommand
-        value: $(params.gitHubCommand)
   - name: git-clone
     taskRef:
       name: git-clone
@@ -43,6 +37,14 @@ spec:
     workspaces:
       - name: output
         workspace: source
+  - name: check-name-matches
+    taskRef:
+      name: check-name-matches
+    params:
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
+      - name: checkName
+        value: $(params.checkName)
   - name: check-git-files-changed
     runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
     taskRef:
@@ -53,7 +55,7 @@ spec:
       - name: regex
         value: $(params.fileFilterRegex)
     workspaces:
-      - name: source
+      - name: input
         workspace: source
   - name: lint
     when:
@@ -64,11 +66,11 @@ spec:
         operator: in
         values: ["passed"]              # In cases triggered not by specific github comments
     taskRef:
-      name: yamllint
-      bundle: gcr.io/tekton-releases/catalog/upstream/yamllint:0.1
+      name: yaml-lint
+      bundle: gcr.io/tekton-releases/catalog/upstream/yaml-lint:0.1
     params:
     - name: args
-      value: ["$(params.arguments[*])"]
+      value: ["$(params.args[*])"]
     workspaces:
       - name: shared-workspace
         workspace: source
