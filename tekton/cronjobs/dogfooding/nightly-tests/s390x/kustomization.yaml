@@ -5,3 +5,4 @@ resources:
 - cli-nightly-test
 - operator-nightly-test
 - dashboard-nightly-test
+- catalog-nightly-test
