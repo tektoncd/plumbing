@@ -14,8 +14,8 @@ spec:
           params:
             - name: "secretRef"
               value:
-                secretName: github-secret
-                secretKey: secretToken
+                secretName: ci-webhook
+                secretKey: secret
             - name: "eventTypes"
               value:
                 - "pull_request"
@@ -46,8 +46,8 @@ spec:
           params:
             - name: "secretRef"
               value:
-                secretName: github-secret
-                secretKey: secretToken
+                secretName: ci-webhook
+                secretKey: secret
             - name: "eventTypes"
               value:
                 - "issue_comment"
