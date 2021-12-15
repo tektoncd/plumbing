@@ -1,0 +1,49 @@
+# Copyright 2021 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: add-pr-body-interceptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: add-pr-body-interceptor
+  template:
+    metadata:
+      labels:
+        app: add-pr-body-interceptor
+    spec:
+      serviceAccountName: add-pr-body-bot
+      containers:
+        - name: add-pr-body-interceptor
+          image: ko://github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body/cmd/interceptor
+          securityContext:
+            allowPrivilegeEscalation: false
+            # User 65532 is the distroless nonroot user ID
+            runAsUser: 65532
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: add-pr-body-interceptor
+spec:
+  type: ClusterIP
+  selector:
+    app: add-pr-body-interceptor
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

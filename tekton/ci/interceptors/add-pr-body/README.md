@@ -1,10 +1,14 @@
 # Add PR Body
 
-`add-pr-body` is a custom interceptor for Tekton Triggers that enriches the
-payload of an incoming request with the JSON representation of a pull request,
-as returned by the GitHub API.
+This folder contains a webhook interceptor that enriches the payload of an incoming request with the JSON representation of a pull request as returned by the GitHub API. 
 
-## Interface
+See also an implementaiton of this using the cluster interceptor interface in [tekton/ci/cluster-interceptors/add-pr-body](../../cluster-interceptors/add-pr-body).
+## Add PR Body Webhook Interceptor
+
+This implementation uses the Webhook Interceptor interface. As such, it directly modifes the event body with the PR payload
+under the `extensions.add-pr-body.pull-request-body` field.
+
+### Webhook Interceptor Interface
 
 `add-pr-body` expects the URL to the PR representation to be included in the
 incoming JSON as follows:
@@ -47,7 +51,7 @@ It returns the original JSON payload untouched, with the addition of the PR:
 
 HTTP Headers are left untouched.
 
-## Example usage:
+### Example usage
 
 A trigger in an event listener:
 
@@ -69,24 +73,27 @@ A trigger in an event listener:
         overlays:
         - key: add-pr-body.pull-request-url
           expression: "body.issue.pull_request.url"
+// TODO: Complete this example
 ```
 
-## Installation
+### Webhook Interceptor Installation
 
 The interceptor is installed via `ko`:
-```
+
+```bash
 export KO_DOCKER_REPO=gcr.io/tekton-releases/dogfooding
 ko apply -P -f tekton/ci/interceptors/add-pr-body/config/
 ```
 
 Eventually it should be included in nightly releases and installed from there.
 
-## GitHub Enterprise
+### GitHub Enterprise
 
-The interceptor needs authentication if you are using GitHub Enterprise. 
+The interceptor needs authentication if you are using GitHub Enterprise.
 In order to authenticate to GitHub Enterprise API, you need to set `GITHUB_OAUTH_SECRET` environment variable.
 
-Add GitHub OAuth secret to the deployment like below.
+Add GitHub OAuth secret to the deployment in `config/add-pr-body.yaml` like below.
+
 ```yaml
     spec:
       serviceAccountName: add-pr-body-bot
