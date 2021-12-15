@@ -62,28 +62,6 @@ spec:
                 'pull_request' in body.issue &&
                 body.issue.state == 'open' &&
                 body.comment.body.matches('^/test($| [^ ]*[ ]*$)')
-            - name: "overlays"
-              value:
-                - key: add_pr_body.pull_request_url
-                  expression: "body.issue.pull_request.url"
-        - name: "Fetch the PR body"
-          ref:
-            name: "webhook"
-          params:
-            - name: "objectRef"
-              value:
-                kind: Service
-                name: add-pr-body
-                apiVersion: v1
-                namespace: tektonci
-        - name: "Add git_clone_depth"
-          ref:
-            name: "cel"
-          params:
-            - name: "overlays"
-              value:
-                - key: git_clone_depth
-                  expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
       triggerSelector:
         namespaceSelector:
           matchNames:
