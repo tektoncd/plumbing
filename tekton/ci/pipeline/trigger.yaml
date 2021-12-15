@@ -29,6 +29,19 @@ spec:
     - cel:
         filter: >-
           body.repository.name == 'pipeline'
+        overlays:
+        - key: add_pr_body.pull_request_url
+          expression: "body.issue.pull_request.url"
+    - webhook:
+        objectRef:
+          kind: Service
+          name: add-pr-body
+          apiVersion: v1
+          namespace: tekton-ci
+    - cel:
+        overlays:
+        - key: git_clone_depth
+          expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-comment
