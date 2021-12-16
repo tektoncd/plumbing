@@ -39,9 +39,6 @@ spec:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
         ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
-        ci.tekton.dev/repo: $(tt.params.gitHubRepo)
-        ci.tekton.dev/pr-number: $(tt.params.pullRequestNumber)
-        ci.tekton.dev/check-status: $(tt.params.gitHubCheckStatus)
     spec:
       serviceAccountName: tekton-ci-jobs
       podTemplate:
