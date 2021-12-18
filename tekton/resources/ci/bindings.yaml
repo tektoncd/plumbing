@@ -69,3 +69,5 @@ spec:
   params:
   - name: gitHubRepo
     value: $(extensions.repo)
+  - name: shortBuildUUID
+    value: $(extensions.shortBuildUUID)
