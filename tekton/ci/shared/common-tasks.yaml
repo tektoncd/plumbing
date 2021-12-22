@@ -27,18 +27,23 @@ spec:
   steps:
     - name: check-files-changed
       image: alpine/git
+      env:
+      - name: GIT_CLONE_DEPTH
+        value: $(params.gitCloneDepth)
+      - name: REGEX
+        value: $(params.regex)
       script: |
         #!/bin/sh
         set -ex
         set -o pipefail
 
-        BACK="HEAD~$(( $(params.gitCloneDepth) - 1 ))"
+        BACK="HEAD~$(( ${GIT_CLONE_DEPTH} - 1 ))"
         CHECK="failed"
         cd $(workspaces.input.path)
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-            grep -E '$(params.regex)' > $(results.files.path) || true
+            grep -E '${REGEX}' > $(results.files.path) || true
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-            grep -E '$(params.regex)' && CHECK="passed"
+            grep -E '${REGEX}' && CHECK="passed"
         printf $CHECK > $(results.check.path)
 ---
 apiVersion: tekton.dev/v1alpha1
@@ -65,6 +70,11 @@ spec:
   steps:
     - name: check-name
       image: alpine
+      env:
+      - name: GITHUB_COMMAND
+        value: $(params.gitHubCommand)
+      - name: CHECK_NAME
+        value: $(params.checkName)
       script: |
         #!/bin/sh
         set -ex
@@ -77,11 +87,11 @@ spec:
         # we can attach unit tests to it.
 
         # If no command was specified, the check is successful
-        [[ "$(params.gitHubCommand)" == "" ]] && exit 0
+        [[ "${GITHUB_COMMAND}" == "" ]] && exit 0
 
         # If a command was specified, the regex should match the checkName
-        REGEX="$(echo $(params.gitHubCommand) | awk '{ print $2}')"
+        REGEX="$(echo ${GITHUB_COMMAND} | awk '{ print $2}')"
         [[ "$REGEX" == "" ]] && REGEX='.*'
-        (echo "$(params.checkName)" | grep -E "$REGEX") \
+        (echo "${CHECK_NAME}" | grep -E "$REGEX") \
             && printf "passed" > $(results.check.path) \
             || printf "failed" > $(results.check.path)
