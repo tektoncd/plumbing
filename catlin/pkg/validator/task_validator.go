@@ -28,6 +28,7 @@ import (
 const (
 	parameterSubstitution = `[_a-zA-Z][_a-zA-Z0-9.-]*(\[\*\])?`
 	braceMatchingRegex    = "(\\$(\\(%s.(?P<var>%s)\\)))"
+	parameterName         = `params\.(` + parameterSubstitution + `)`
 )
 
 type taskValidator struct {
@@ -110,6 +111,17 @@ func (t *taskValidator) validateStep(s v1beta1.Step) Result {
 			continue
 		}
 		result.Warn("Step %q uses secret as environment variables. Prefer using secrets as files over secrets as environment variables", step)
+	}
+
+	if s.Script != "" {
+		expr, _ := extractExpressionFromString(s.Script, "params")
+		if expr != "" {
+			result.Warn(
+				"Step %q references %q directly from its script block. For reliability and security, consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.",
+				step,
+				expr)
+
+		}
 	}
 
 	return result
