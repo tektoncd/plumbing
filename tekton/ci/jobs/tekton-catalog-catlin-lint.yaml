@@ -20,10 +20,13 @@ spec:
     - name: find-changed-tasks
       image: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
       workingDir: $(workspaces.source.path)
+      env:
+      - name: GIT_CLONE_DEPTH
+        value: $(params.gitCloneDepth)
       script: |
         function detect_new_changed_tasks() {
           # detect for changes in the task manifest
-          git --no-pager diff --name-only HEAD~$(( $(params.gitCloneDepth) - 1 ))|grep 'task/[^\/]*/[^\/]*/*[^/]*.yaml'|xargs -I {} dirname {}
+          git --no-pager diff --name-only HEAD~$(( ${GIT_CLONE_DEPTH} - 1 ))|grep 'task/[^\/]*/[^\/]*/*[^/]*.yaml'|xargs -I {} dirname {}
         }
         all_tests=$(detect_new_changed_tasks |sort -u || true)
         final_tests=""

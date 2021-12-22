@@ -27,6 +27,9 @@ spec:
     volumeMounts:
       - name: label-config-v2
         mountPath: /etc/config
+    env:
+      - name: LABELS
+        value: $(params.labels)
     script: |
       #!/usr/bin/env python
 
@@ -34,7 +37,7 @@ spec:
       import yaml
       import sys
 
-      prLabelsText = """$(params.labels)"""
+      prLabelsText = os.getenv('LABELS')
       prLabels = json.loads(prLabelsText)
 
       availableLabels = None
