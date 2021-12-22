@@ -57,6 +57,14 @@ spec:
           env:
           - name: KUBECONFIG
             value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+          - name: FOLDER_PATH
+            value: $(params.folderPath)
+          - name: NAMESPACE
+            value: $(params.namespace)
+          - name: DEPLOY_METHOD
+            value: $(params.deployMethod)
+          - name: IS_OVERLAY
+            value: $(params.isOverlay)
         steps:
         - name: deploy-from-folder
           image: gcr.io/tekton-releases/dogfooding/kubectl
@@ -65,15 +73,15 @@ spec:
             set -ex
 
             # Determine whether to enforce namespace across resources
-            NAMESPACE_PARAM="-n $(params.namespace)"
-            [[ "$(params.namespace)" == "" ]] && NAMESPACE_PARAM=""
+            NAMESPACE_PARAM="-n ${NAMESPACE}"
+            [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
 
             # Handle overlays
-            TARGET=$(resources.inputs.source.path)/$(params.folderPath)
-            if [[ "$(params.isOverlay)" == "true" ]]; then
+            TARGET=$(resources.inputs.source.path)/${FOLDER_PATH}
+            if [[ "${IS_OVERLAY}" == "true" ]]; then
               TARGET=target.yaml
               kustomize build \
-                $(resources.inputs.source.path)/$(params.folderPath) > $TARGET
+                $(resources.inputs.source.path)/${FOLDER_PATH} > $TARGET
             fi
 
             # Check if there is any diff
@@ -89,7 +97,7 @@ spec:
             # When deploying with replace, we need to do a create first,
             # to ensure new resources are created
             CREATE_OUTPUT=create.txt
-            if [[ "$(params.deployMethod)" == "replace" ]]; then
+            if [[ "${DEPLOY_METHOD}" == "replace" ]]; then
               kubectl create $NAMESPACE_PARAM -f $TARGET  2> $CREATE_OUTPUT || true
               # If there was some unexpected message in the error log, fail
               if egrep -v '(already exists|^Warning)' $CREATE_OUTPUT; then
@@ -99,7 +107,7 @@ spec:
             fi
 
             # Run the actual deployment. If it fails, it will fail the step.
-            kubectl "$(params.deployMethod)" $NAMESPACE_PARAM -f $TARGET
+            kubectl "${DEPLOY_METHOD}" $NAMESPACE_PARAM -f $TARGET
       params:
       - name: folderPath
         value: $(tt.params.folderPath)

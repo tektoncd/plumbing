@@ -46,9 +46,15 @@ spec:
       value: $(inputs.params.GOARCH)
     - name: GO111MODULE
       value: $(inputs.params.GO111MODULE)
+    - name: FLAGS
+      value: $(inputs.params.flags)
+    - name: PACKAGES
+      value: $(inputs.params.packages)
+    - name: PACKAGE
+      value: $(inputs.params.package)
     image: golang:$(inputs.params.version)
     name: unit-test
     resources: {}
     script: |
-      go test $(inputs.params.flags) $(inputs.params.packages)
-    workingDir: /workspace/src/$(inputs.params.package)
+      go test ${FLAGS} ${PACKAGES}
+    workingDir: /workspace/src/${PACKAGE}

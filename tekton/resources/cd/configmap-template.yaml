@@ -56,42 +56,50 @@ spec:
           env:
           - name: KUBECONFIG
             value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
+          - name: CONFIG_PATH
+            value: $(params.configPath)
+          - name: NAMESPACE
+            value: $(params.namespace)
+          - name: CONFIG_MAP_NAME
+            value: $(params.configMapName)
+          - name: CONFIG_MAP_KEY
+            value: $(params.configMapKey)
         steps:
         - name: fetch-current-config
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
             set -ex
-            kubectl get configmap -n $(params.namespace) \
-              $(params.configMapName) -o template \
-              --template='{{ index .data "$(params.configMapKey)" }}' > \
-               /workspace/$(params.configMapKey) || \
-               rm /workspace/$(params.configMapKey)
+            kubectl get configmap -n ${NAMESPACE} \
+              ${CONFIG_MAP_NAME} -o template \
+              --template='{{ index .data "${CONFIG_MAP_KEY}" }}' > \
+               /workspace/${CONFIG_MAP_KEY} || \
+               rm /workspace/${CONFIG_MAP_KEY}
         - name: deploy
           image: gcr.io/tekton-releases/dogfooding/kubectl
           script: |
             #!/bin/sh
             set -ex
-            if [ ! -f /workspace/$(params.configMapKey) ]; then
+            if [ ! -f /workspace/${CONFIG_MAP_KEY} ]; then
               echo "First time deployment"
-              kubectl create configmap $(params.configMapName) \
-                --from-file=$(params.configMapKey)=$(resources.inputs.source.path)/$(params.configPath) \
-                -n $(params.namespace)
+              kubectl create configmap ${CONFIG_MAP_NAME} \
+                --from-file=${CONFIG_MAP_KEY}=$(resources.inputs.source.path)/${CONFIG_PATH} \
+                -n ${NAMESPACE}
                 exit 0
             fi
             echo "diff [current-config] [new config]"
             has_diff=0
-            diff /workspace/$(params.configMapKey) \
-              $(resources.inputs.source.path)/$(params.configPath) || has_diff=1
+            diff /workspace/${CONFIG_MAP_KEY} \
+              $(resources.inputs.source.path)/${CONFIG_PATH} || has_diff=1
             if [ $has_diff -eq 0 ]; then
               echo "No change in config detected. Nothing to be done."
               exit 0
             fi
             # Apply configuration changes
-            kubectl create configmap $(params.configMapName) \
-              --from-file=$(params.configMapKey)=$(resources.inputs.source.path)/$(params.configPath) \
+            kubectl create configmap ${CONFIG_MAP_NAME} \
+              --from-file=${CONFIG_MAP_KEY}=$(resources.inputs.source.path)/${CONFIG_PATH} \
               --dry-run -o yaml | \
-              kubectl replace configmap $(params.configMapName) -n $(params.namespace) -f -
+              kubectl replace configmap ${CONFIG_MAP_NAME} -n ${NAMESPACE} -f -
       params:
       - name: configPath
         value: $(tt.params.configPath)

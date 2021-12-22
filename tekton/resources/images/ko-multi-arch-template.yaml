@@ -42,6 +42,12 @@ spec:
             value: /secret/release.json
           - name: KO_DOCKER_REPO
             value: $(tt.params.registry)/$(tt.params.namespace)
+          - name: PLATFORMS
+            value: $(tt.params.platforms)
+          - name: IMAGE_TAG
+            value: $(tt.params.imageTag)
+          - name: CONTEXT_PATH
+            value: $(tt.params.contextPath)
           image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
           name: build-image-multi-arch
           script: |
@@ -51,7 +57,7 @@ spec:
             gcloud auth configure-docker
 
             cd $(resources.inputs.source.path)
-            ko publish --platform $(tt.params.platforms) --base-import-paths --tags $(tt.params.imageTag) $(tt.params.contextPath)
+            ko publish --platform ${PLATFORMS} --base-import-paths --tags ${IMAGE_TAG} ${CONTEXT_PATH}
           volumeMounts:
           - mountPath: /secret
             name: gcp-secret

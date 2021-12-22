@@ -49,6 +49,10 @@ spec:
             value: /certs/client
           - name: GOOGLE_APPLICATION_CREDENTIALS
             value: /secret/release.json
+          - name: PLATFORMS
+            value: $(tt.params.platforms)
+          - name: CONTEXT_PATH
+            value: $(tt.params.contextPath)
           image: gcr.io/tekton-releases/dogfooding/buildx-gcloud:latest
           name: build-image-multi-arch
           script: |
@@ -62,15 +66,15 @@ spec:
 
             docker context create context1
 
-            docker buildx create context1 --name builder-buildx1 --driver docker-container --platform $(tt.params.platforms) --use
+            docker buildx create context1 --name builder-buildx1 --driver docker-container --platform ${PLATFORMS} --use
             docker buildx inspect --bootstrap --builder builder-buildx1
 
             cd $(resources.inputs.source.path)
             docker buildx build \
-            --platform $(tt.params.platforms) \
+            --platform ${PLATFORMS} \
             --tag $(resources.outputs.image.url) \
             --push \
-            $(tt.params.contextPath)
+            ${CONTEXT_PATH}
           volumeMounts:
           - mountPath: /certs/client
             name: dind-certs
