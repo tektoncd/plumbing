@@ -131,6 +131,13 @@ spec:
       steps:
       - name: setup-comment
         image: python:3-alpine
+        env:
+        - name: PASSED_OR_FAILED
+          value: $(params.passedOrFailed)
+        - name: TARGET_IMAGE
+          value: $(params.targetImage)
+        - name: BUILD_PIPELINERUN
+          value: $(params.buildPipelineRun)
         script: |
           #!/usr/bin/env python
           import json
@@ -140,8 +147,8 @@ spec:
           ok_pics = ['mario', 'luigi', 'tekton']
           failed_pics = ['goomba']
           logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
-          successful = ("$(params.passedOrFailed)" == "Succeeded")
-          print("PassedOrFailed: {}".format("$(params.passedOrFailed)"))
+          successful = ("${PASSED_OR_FAILED}" == "Succeeded")
+          print("PassedOrFailed: {}".format("${PASSED_OR_FAILED}"))
 
           # Service Image
           comment_template = (
@@ -161,7 +168,7 @@ spec:
             'Here is the image you requested: '
             '<a href="https://{imageurl}">built image</a>|'
             )
-            comment_params['imageurl'] = '$(params.targetImage)'
+            comment_params['imageurl'] = '${TARGET_IMAGE}'
           else:
             comment_template += (
             'Could not build the requested image. Please check the '
@@ -171,7 +178,7 @@ spec:
             '<a href="http://dashboard.dogfooding.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push'
             'namespace=mario">build logs</a>'
           )
-          comment_params['buildpipelinerun'] = '$(params.buildPipelineRun)'
+          comment_params['buildpipelinerun'] = '${BUILD_PIPELINERUN}'
 
           new_comment_path = "$(workspaces.pr.path)/comments/new.json"
           comment_body = dict(body=comment_template.format(**comment_params))
