@@ -172,6 +172,11 @@ spec:
         steps:
           - name: create-results
             image: alpine
+            env:
+            - name: VERSION_TAG
+              value: $(params.versionTag)
+            - name: RELEASE_BUCKET
+              value: $(params.releaseBucket)
             script: |
-              echo "$(params.releaseBucket)/previous/$(params.versionTag)/release.yaml" > $(results.release.path)
-              echo "$(params.releaseBucket)/previous/$(params.versionTag)/release.notag.yaml" > $(results.release-no-tag.path)
+              echo "${RELEASE_BUCKET}/previous/${VERSION_TAG}/release.yaml" > $(results.release.path)
+              echo "${RELEASE_BUCKET}/previous/${VERSION_TAG}/release.notag.yaml" > $(results.release-no-tag.path)
