@@ -33,13 +33,22 @@ spec:
       type: string
       description: create and delete actions are supported
       default: create
+  env:
+    - name: REMOTE_HOST
+      value: $(params.remote-host)
+    - name: REMOTE_USER
+      value: $(params.remote-user)
+    - name: REMOTE_PORT
+      value: $(params.remote-port)
+    - name: ACTION
+      value: $(params.action)
   steps:
     - name: ssh
       image: kroniak/ssh-client
       script: |
-        ssh -p $(params.remote-port) -o StrictHostKeyChecking=no -o LogLevel=ERROR $(params.remote-user)@$(params.remote-host) k8smanager $(params.action)
-        if [ "$(params.action)" == "create" ]; then
-          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P $(params.remote-port) $(params.remote-user)@$(params.remote-host):/root/data/share/config $(workspaces.k8s-shared.path)/config
-          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P $(params.remote-port) $(params.remote-user)@$(params.remote-host):/root/data/share/config.json $(workspaces.registry-shared.path)/config.json
-          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P $(params.remote-port) $(params.remote-user)@$(params.remote-host):/root/data/share/cert.pem $(workspaces.registry-shared.path)/cert.pem
+        ssh -p ${REMOTE_PORT} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
+        if [ "${ACTION}" == "create" ]; then
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/root/data/share/config $(workspaces.k8s-shared.path)/config
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/root/data/share/config.json $(workspaces.registry-shared.path)/config.json
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/root/data/share/cert.pem $(workspaces.registry-shared.path)/cert.pem
         fi

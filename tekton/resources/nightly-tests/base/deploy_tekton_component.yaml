@@ -12,6 +12,13 @@ spec:
   - name: extra-file
     description: extra file to install (for instance, interceptors.yaml for triggers)
     default: ""
+  env:
+  - name: PACKAGE
+    value: $(params.package)
+  - name: VERSION
+    value: $(params.version)
+  - name: EXTRA_FILE
+    value: $(params.extra-file)
   workspaces:
   - name: k8s-shared
     description: workspace for k8s config, configuration file is expected to have `config` name
@@ -25,12 +32,12 @@ spec:
     script: |
       #!/usr/bin/env sh
       set -exo pipefail
-      kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/$(params.package)/$(params.version)/release.yaml
-      if [ "$(params.extra-file)" != "" ]; then
-        kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/$(params.package)/$(params.version)/$(params.extra-file)
+      kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/${PACKAGE}/${VERSION}/release.yaml
+      if [ "${EXTRA_FILE}" != "" ]; then
+        kubectl apply --filename https://storage.googleapis.com/tekton-releases-nightly/${PACKAGE}/${VERSION}/${EXTRA_FILE}
       fi
-      APPLICATION="tekton-$(params.package)"
-      if [ "$(params.package)" == "pipeline" ]; then
+      APPLICATION="tekton-${PACKAGE}"
+      if [ "${PACKAGE}" == "pipeline" ]; then
         APPLICATION="${APPLICATION}s"
       fi
       kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=120s -l app.kubernetes.io/part-of=$APPLICATION

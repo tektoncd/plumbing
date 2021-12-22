@@ -46,6 +46,8 @@ spec:
         value: $(params.package)
       - name: OLD_VERSION
         value: $(params.previous-release-tag)
+      - name: RELEASE_NAME
+        value: $(params.release-name)
   steps:
     - name: header
       image: gcr.io/tekton-releases/dogfooding/hub
@@ -55,7 +57,7 @@ spec:
         TEKTON_PROJECT=$(basename $PROJECT)
 
         cat <<EOF | tee $HOME/release.md
-        Tekton ${TEKTON_PROJECT^} release ${VERSION} "$(params.release-name)"
+        Tekton ${TEKTON_PROJECT^} release ${VERSION} "${RELEASE_NAME}"
 
         # 🎉 [Tag Line - to be done] 🎉
 

@@ -43,11 +43,22 @@ spec:
         type: cluster
       - name: plumbing-library
         type: git
-
   stepTemplate:
     env:
       - name: KUBECONFIG
         value: /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
+      - name: PROJECT_NAME
+        value: $(params.projectName)
+      - name: NAMESPACE
+        value: $(params.namespace)
+      - name: VERSION
+        value: $(params.version)
+      - name: ENVIRONMENT
+        value: $(params.environment)
+      - name: RELEASE_FILE
+        value: $(params.release-file)
+      - name: POST_RELEASE_FILE
+        value: $(params.post-release-file)
 
   steps:
 
@@ -60,29 +71,29 @@ spec:
       # Export KUBECONFIG so that it's available to pre-scripts too
       export KUBECONFIG
       # Set up RELEASE_ROOT
-      if [[ "$(params.version)" == "latest" ]]; then
-        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/$(params.version)
+      if [[ "${VERSION}" == "latest" ]]; then
+        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/${VERSION}
       else
-        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/$(params.version)
+        RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/${VERSION}
       fi
 
       # Handle Overlays
-      OVERLAY_FOLDER=$(params.projectName)/overlays/$(params.environment)
+      OVERLAY_FOLDER=${PROJECT_NAME}/overlays/${ENVIRONMENT}
       APPLY_MODE="-k $OVERLAY_FOLDER"
 
       cd $(resources.inputs.plumbing-library.path)/tekton/cd
 
-      if [ ! -d $(params.projectName) ]; then
-        # There are is not base or project for $(params.projectName)
+      if [ ! -d ${PROJECT_NAME} ]; then
+        # There are is not base or project for ${PROJECT_NAME}
         # Apply the release as is
-        APPLY_MODE="--filename $RELEASE_ROOT/$(params.release-file)"
+        APPLY_MODE="--filename $RELEASE_ROOT/${RELEASE_FILE}"
       else
         # If the base exists, an overlay for the specified environment must exist
         if [ ! -d  "$OVERLAY_FOLDER" ]; then
-          echo "Environment $(params.environment) not found for project $(params.projectName)"
+          echo "Environment ${ENVIRONMENT} not found for project ${PARAM.PROJECT_NAME}"
           exit 1
         fi
-        cp $RELEASE_ROOT/$(params.release-file) $(params.projectName)/base/release.yaml
+        cp $RELEASE_ROOT/${RELEASE_FILE} ${PROJECT_NAME}/base/release.yaml
         find .
 
         # Execute pre-deploy scripts if any
@@ -96,12 +107,12 @@ spec:
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
-      APPLICATION="tekton-$(params.projectName)"
-      if [ "$(params.projectName)" == "pipeline" ]; then
+      APPLICATION="tekton-${PROJECT_NAME}"
+      if [ "${PROJECT_NAME}" == "pipeline" ]; then
         APPLICATION="${APPLICATION}s"
       fi
       # Wait for pods to be ready and CRDs to be established
-      kubectl wait --for condition=ready --timeout=120s pods -l app.kubernetes.io/part-of=$APPLICATION -n $(params.namespace)
+      kubectl wait --for condition=ready --timeout=120s pods -l app.kubernetes.io/part-of=$APPLICATION -n ${NAMESPACE}
       kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
 
 
@@ -110,14 +121,14 @@ spec:
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
-      if [ "$(params.post-release-file)" != "" ]; then
+      if [ "${POST_RELEASE_FILE}" != "" ]; then
           # Set up RELEASE_ROOT
-          if [[ "$(params.version)" == "latest" ]]; then
-            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/$(params.version)
+          if [[ "${VERSION}" == "latest" ]]; then
+            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/${VERSION}
           else
-            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/$(params.version)
+            RELEASE_ROOT=$(resources.inputs.release-bucket.path)/previous/${VERSION}
           fi
-          kubectl apply --kubeconfig $KUBECONFIG -f $RELEASE_ROOT/$(params.post-release-file)
+          kubectl apply --kubeconfig $KUBECONFIG -f $RELEASE_ROOT/${POST_RELEASE_FILE}
       fi
 
 ---
@@ -140,15 +151,20 @@ spec:
 
   - name: compare-github-vs-bucket
     image: gcr.io/tekton-releases/tests/test-runner
+    env:
+    - name: PROJECT_NAME
+      value: $(params.projectName)
+    - name: VERSION
+      value: $(params.version)
     command:
     - /bin/sh
     args:
     - -ce
     - |
-      curl -L https://github.com/tektoncd/$(params.projectName)/releases/download/$(params.version)/release.yaml > /workspace/release-github.yaml
+      curl -L https://github.com/tektoncd/${PROJECT_NAME}/releases/download/${VERSION}/release.yaml > /workspace/release-github.yaml
       diff \
         /workspace/release-github.yaml \
-        $(resources.inputs.release-bucket.path)/$(params.projectName)/previous/$(params.version)/release.yaml # Diff exists with 0 only if there is no difference
+        $(resources.inputs.release-bucket.path)/${PROJECT_NAME}/previous/${VERSION}/release.yaml # Diff exists with 0 only if there is no difference
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -172,6 +188,16 @@ spec:
         type: cluster
       - name: plumbing-library
         type: git
+  stepTemplate:
+    env:
+    - name: PROJECT_NAME
+      value: $(params.projectName)
+    - name: NAMESPACE
+      value: $(params.namespace)
+    - name: VERSION
+      value: $(params.version)
+    - name: RESOURCES
+      value: $(params.resources)
   steps:
 
   - name: cleanup-resources
@@ -182,7 +208,7 @@ spec:
     - -ce
     - |
       # Make sure that everything is cleaned up in the current namespace.
-      for res in $(params.resources); do
+      for res in ${RESOURCES}; do
         kubectl delete --ignore-not-found=true ${res}.tekton.dev --all \
         --kubeconfig /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
       done
@@ -199,7 +225,7 @@ spec:
     - |
       source $(resources.inputs.plumbing-library.path)/scripts/library.sh
 
-      kubectl delete --ignore-not-found=true -f "https://github.com/tektoncd/$(params.projectName)/releases/download/$(params.version)/release.yaml" \
+      kubectl delete --ignore-not-found=true -f "https://github.com/tektoncd/${PROJECT_NAME}/releases/download/${VERSION}/release.yaml" \
       --kubeconfig /workspace/$(resources.inputs.k8s-cluster.name)/kubeconfig
 
-      wait_until_object_does_not_exist namespace $(params.namespace)
+      wait_until_object_does_not_exist namespace ${NAMESPACE}

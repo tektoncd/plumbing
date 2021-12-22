@@ -31,8 +31,17 @@ spec:
   steps:
     - name: ssh
       image: kroniak/ssh-client
+      env:
+      - name: REMOTE_HOST
+        value: $(params.remote-host)
+      - name: REMOTE_PORT
+        value: $(params.remote-port)
+      - name: REMOTE_USER
+        value: $(params.remote-user)
+      - name: ACTION
+        value: $(params.action)
       script: |
-        ssh -p $(params.remote-port) -o StrictHostKeyChecking=no -o LogLevel=ERROR $(params.remote-user)@$(params.remote-host) k8smanager $(params.action)
-        if [ "$(params.action)" == "create" ]; then
-          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P $(params.remote-port) $(params.remote-user)@$(params.remote-host):/home/k8smanager/kubeconfig/kubeconfig.conf $(workspaces.k8s-shared.path)/config
+        ssh -p ${REMOTE_HOST} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
+        if [ "${ACTION}" == "create" ]; then
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/kubeconfig/kubeconfig.conf $(workspaces.k8s-shared.path)/config
         fi
