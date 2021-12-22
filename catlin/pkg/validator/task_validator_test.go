@@ -170,6 +170,34 @@ spec:
         name: $(params.configmap)
 `
 
+const taskWithScriptUsingParams = `
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: invalid-env-or-envfrom
+  labels:
+    app.kubernetes.io/version: a,b,c
+  annotations:
+    tekton.dev/tags: a,b,c
+    tekton.dev/pipelines.minVersion: "0.12"
+    tekton.dev/displayName: My Example Task
+spec:
+  description: foo
+  params:
+  - name: secret
+    type: string
+  steps:
+  - name: s1
+    image: docker.io/foo:bar
+    script: |
+      echo "$(params.secret)"
+  - name: s2
+    image: docker.io/foo:bar
+    script: |
+      #!/usr/bin/env python
+      print("""$(params.secret)""")
+`
+
 func TestTaskValidator_ValidImageRef(t *testing.T) {
 
 	r := strings.NewReader(taskWithValidImageRef)
@@ -280,4 +308,24 @@ func TestTaskValidator_ValidEnvFromSecret(t *testing.T) {
 	// envFrom.secretRef generates a warning
 	assert.Equal(t, Warning, result.Lints[1].Kind)
 	assert.Equal(t, `Step "s3" uses secret as environment variables. Prefer using secrets as files over secrets as environment variables`, result.Lints[1].Message)
+}
+
+func TestTaskValidator_ScriptUsingParams(t *testing.T) {
+	r := strings.NewReader(taskWithScriptUsingParams)
+	parser := parser.ForReader(r)
+
+	res, err := parser.Parse()
+	assert.NilError(t, err)
+
+	v := ForKind(res)
+	result := v.Validate()
+	assert.Equal(t, 0, result.Errors)
+
+	assert.Equal(t, 2, len(result.Lints))
+
+	assert.Equal(t, Warning, result.Lints[0].Kind)
+	assert.Equal(t, `Step "s1" references "$(params.secret)" directly from its script block. Consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[0].Message)
+
+	assert.Equal(t, Warning, result.Lints[1].Kind)
+	assert.Equal(t, `Step "s2" references "$(params.secret)" directly from its script block. Consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[1].Message)
 }
