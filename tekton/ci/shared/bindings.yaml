@@ -85,3 +85,23 @@ spec:
   params:
   - name: labels
     value: $(body.issue.labels)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-tep-notifier
+  namespace: tekton-ci
+spec:
+  params:
+    - name: pullRequestAction
+      value: $(body.action)
+    - name: pullRequestNumber
+      value: $(body.pull_request.number)
+    - name: pullRequestTitle
+      value: $(body.pull_request.title)
+    - name: pullRequestBody
+      value: $(body.pull_request.body)
+    - name: package
+      value: $(body.repository.full_name)
+    - name: pullRequestIsMerged
+      value: $(body.pull_request.merged)
