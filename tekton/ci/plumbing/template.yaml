@@ -81,6 +81,7 @@ spec:
             - pipelinerun-logs
             - tekton/ci/interceptors/add-team-members
             - tekton/ci/interceptors/add-pr-body
+            - tep-notifier
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
@@ -216,6 +217,7 @@ spec:
             - bots/buildcaptain/config
             - bots/mariobot/config
             - pipelinerun-logs/config
+            - tep-notifier
             - boskos
             - gubernator
             - prow
