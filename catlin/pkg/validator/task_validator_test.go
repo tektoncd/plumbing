@@ -324,8 +324,8 @@ func TestTaskValidator_ScriptUsingParams(t *testing.T) {
 	assert.Equal(t, 2, len(result.Lints))
 
 	assert.Equal(t, Warning, result.Lints[0].Kind)
-	assert.Equal(t, `Step "s1" references "$(params.secret)" directly from its script block. Consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[0].Message)
+	assert.Equal(t, `Step "s1" references "$(params.secret)" directly from its script block. For reliability and security, consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[0].Message)
 
 	assert.Equal(t, Warning, result.Lints[1].Kind)
-	assert.Equal(t, `Step "s2" references "$(params.secret)" directly from its script block. Consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[1].Message)
+	assert.Equal(t, `Step "s2" references "$(params.secret)" directly from its script block. For reliability and security, consider putting the param into an environment variable of the Step and accessing that environment variable in your script instead.`, result.Lints[1].Message)
 }
