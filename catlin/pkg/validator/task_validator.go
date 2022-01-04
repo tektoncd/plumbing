@@ -28,7 +28,6 @@ import (
 const (
 	parameterSubstitution = `[_a-zA-Z][_a-zA-Z0-9.-]*(\[\*\])?`
 	braceMatchingRegex    = "(\\$(\\(%s.(?P<var>%s)\\)))"
-	parameterName         = `params\.(` + parameterSubstitution + `)`
 )
 
 type taskValidator struct {
