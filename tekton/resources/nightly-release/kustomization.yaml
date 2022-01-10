@@ -15,4 +15,3 @@ resources:
 - overlays/operator
 - overlays/wait-task
 - overlays/pipeline-to-taskrun
-- overlays/tep-notifier

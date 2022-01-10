@@ -99,7 +99,7 @@ spec:
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: tekton-ci-webhook-tep-notifier
+  name: tekton-ci-webhook-tep-automation
   namespace: tekton-ci
 spec:
   params:
@@ -115,3 +115,5 @@ spec:
       value: $(body.repository.full_name)
     - name: pullRequestIsMerged
       value: $(body.pull_request.merged)
+    - name: gitRevision
+      value: $(body.pull_request.head.sha)

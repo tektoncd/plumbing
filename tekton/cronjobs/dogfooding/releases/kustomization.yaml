@@ -10,4 +10,3 @@ resources:
 - operator-nightly
 - wait-task-nightly
 - pipeline-to-taskrun-nightly
-- tep-notifier-nightly

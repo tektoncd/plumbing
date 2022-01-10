@@ -1,5 +1,0 @@
-bases:
-- ../../../bases/release
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-tep-notifier-nightly-release"
