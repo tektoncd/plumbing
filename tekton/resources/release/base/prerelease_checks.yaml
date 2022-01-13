@@ -25,13 +25,14 @@ spec:
   - name: releaseBucket
     description: >-
       The bucket where to look for the release, in the format gs://<bucket-name>/<project-name>
-  env:
-  - name: PACKAGE
-    value: $(params.package)
-  - name: VERSION_TAG
-    value: $(params.versionTag)
-  - name: RELEASE_BUCKET
-    value: $(params.releaseBucket)
+  stepTemplate:
+    env:
+    - name: PACKAGE
+      value: $(params.package)
+    - name: VERSION_TAG
+      value: $(params.versionTag)
+    - name: RELEASE_BUCKET
+      value: $(params.releaseBucket)
   workspaces:
     - name: source-to-release
       description: The workspace where the repo has been cloned
