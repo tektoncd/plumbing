@@ -34,7 +34,7 @@ spec:
           # Check failed. Return exit code 1.
           # sys.exit(1)
         else:
-          print("Found no incomplete GitHub Tasks)
+          print("Found no incomplete GitHub Tasks")
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
