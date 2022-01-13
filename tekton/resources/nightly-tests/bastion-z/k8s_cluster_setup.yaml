@@ -41,7 +41,7 @@ spec:
       - name: ACTION
         value: $(params.action)
       script: |
-        ssh -p ${REMOTE_HOST} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
+        ssh -p ${REMOTE_PORT} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
         if [ "${ACTION}" == "create" ]; then
           scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/kubeconfig/kubeconfig.conf $(workspaces.k8s-shared.path)/config
         fi
