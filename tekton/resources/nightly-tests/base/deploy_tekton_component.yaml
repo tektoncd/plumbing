@@ -12,13 +12,6 @@ spec:
   - name: extra-file
     description: extra file to install (for instance, interceptors.yaml for triggers)
     default: ""
-  env:
-  - name: PACKAGE
-    value: $(params.package)
-  - name: VERSION
-    value: $(params.version)
-  - name: EXTRA_FILE
-    value: $(params.extra-file)
   workspaces:
   - name: k8s-shared
     description: workspace for k8s config, configuration file is expected to have `config` name
@@ -29,6 +22,12 @@ spec:
     env:
     - name: KUBECONFIG
       value: $(workspaces.k8s-shared.path)/config
+    - name: PACKAGE
+      value: $(params.package)
+    - name: VERSION
+      value: $(params.version)
+    - name: EXTRA_FILE
+      value: $(params.extra-file)
     script: |
       #!/usr/bin/env sh
       set -exo pipefail

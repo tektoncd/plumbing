@@ -33,18 +33,18 @@ spec:
       type: string
       description: create and delete actions are supported
       default: create
-  env:
-    - name: REMOTE_HOST
-      value: $(params.remote-host)
-    - name: REMOTE_USER
-      value: $(params.remote-user)
-    - name: REMOTE_PORT
-      value: $(params.remote-port)
-    - name: ACTION
-      value: $(params.action)
   steps:
     - name: ssh
       image: kroniak/ssh-client
+      env:
+        - name: REMOTE_HOST
+          value: $(params.remote-host)
+        - name: REMOTE_USER
+          value: $(params.remote-user)
+        - name: REMOTE_PORT
+          value: $(params.remote-port)
+        - name: ACTION
+          value: $(params.action)
       script: |
         ssh -p ${REMOTE_PORT} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
         if [ "${ACTION}" == "create" ]; then
