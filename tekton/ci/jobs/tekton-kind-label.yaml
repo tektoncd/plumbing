@@ -36,6 +36,7 @@ spec:
       import json
       import yaml
       import sys
+      import os
 
       prLabelsText = os.getenv('LABELS')
       prLabels = json.loads(prLabelsText)
