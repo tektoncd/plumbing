@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: github-tasks-completed
-  namespace: tektonci
+  namespace: tekton-ci
   description: |
     Verifies that a PR has all the tasks completed. A task is considered to be any part of the text that looks like a github markdown checkbox ("- []").
 spec:
@@ -25,8 +25,9 @@ spec:
       script: |
         #!/usr/bin/env python
         import sys
+        import os
         prBodyText = os.getenv('PULL_REQUEST_BODY')
-        incompleteTasks = prBodyText.count("\n- []")
+        incompleteTasks = prBodyText.count("\n- [ ]")
         if incompleteTasks > 0:
           msg = "Error: {} incomplete GitHub Tasks found, expecting no incomplete GitHub Tasks".format(incompleteTasks)
           print(msg)
@@ -40,7 +41,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: tekton-github-tasks-completed
-  namespace: tektonci
+  namespace: tekton-ci
 spec:
   params:
     - name: checkName
