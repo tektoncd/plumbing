@@ -114,6 +114,13 @@ func (p *IssueManager) Perform(ctx context.Context, opts *PerformerOptions) krec
 				TEPPRs:    []int{opts.PRNumber},
 				Assignees: t.Authors,
 			}
+			// By default, we'll set the TEP status on the tracking issue to "tep-status/new" for completely new TEPs which
+			// haven't been merged as proposed, but we need to handle pre-existing TEPs without tracking issues. In cases
+			// where we're creating a tracking issue for a TEP but the TEP in the PR isn't marked as proposed, we'll actually
+			// use its status, so that follow-up PRs to pre-existing TEPs will get their tracking issues created properly.
+			if t.Status != tep.ProposedStatus {
+				issue.TEPStatus = t.Status
+			}
 			issueBody, err := issue.GetBody(t.Filename)
 			if err != nil {
 				return kreconciler.NewEvent(corev1.EventTypeWarning, "TrackingIssueBody", "Failure generating tracking issue body for TEP-%s: %s", t.ID, err)

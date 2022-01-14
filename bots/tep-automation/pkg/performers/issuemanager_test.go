@@ -100,6 +100,25 @@ func TestIssueCreator_Perform(t *testing.T) {
 			expectedReason:    "TrackingIssuesUpdatedOrCreated",
 		},
 		{
+			name: "existing TEP without an issue",
+			listFilesResponse: []*github.CommitFile{{
+				SHA:      github.String("some-sha"),
+				Filename: github.String("teps/5678-just-cats.md"),
+				Status:   github.String("modified"),
+			}},
+			createdIssues: []expectedIssue{{
+				TrackingIssue: tep.TrackingIssue{
+					TEPStatus: tep.ImplementingStatus,
+					TEPID:     "5678",
+					TEPPRs:    []int{1},
+					Assignees: []string{"abayer", "bobcatfish"},
+				},
+				filename: "5678-just-cats.md",
+			}},
+			expectedEventType: corev1.EventTypeNormal,
+			expectedReason:    "TrackingIssuesUpdatedOrCreated",
+		},
+		{
 			name:     "modified TEP",
 			prAction: performers.SynchronizeAction,
 			listFilesResponse: []*github.CommitFile{{
