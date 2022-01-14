@@ -31,6 +31,14 @@ var (
 	TrackingIssueTEPPRsRegex = regexp.MustCompile(`<!-- TEP PR: (\d+) -->`)
 	// TrackingIssueImplementationPRsRegex parses out references to PRs implementing a TEP from an issue's body.
 	TrackingIssueImplementationPRsRegex = regexp.MustCompile(`<!-- Implementation PR: repo: (.*?) number: (\d+) -->`)
+	// TrackingIssueDescriptionRegex parses out the "Description: ..." from the issue's body
+	TrackingIssueDescriptionRegex = regexp.MustCompile(`(?m)^Description: (.*)$`)
+	// TrackingIssueAlphaTargetRegex parses out the "* Alpha: ..." from the issue's body
+	TrackingIssueAlphaTargetRegex = regexp.MustCompile(`(?m)^\* Alpha: (.*)$`)
+	// TrackingIssueBetaTargetRegex parses out the "* Beta: ..." from the issue's body
+	TrackingIssueBetaTargetRegex = regexp.MustCompile(`(?m)^\* Beta: (.*)$`)
+	// TrackingIssueProjectsRegex parses out the "Projects: ..." from the issue's body
+	TrackingIssueProjectsRegex = regexp.MustCompile(`(?m)^Projects: (.*)$`)
 )
 
 // ExtractTEPsFromReadme takes the body of https://github.com/tektoncd/community/blob/main/teps/README.md and extracts a
@@ -175,17 +183,21 @@ func TEPInfoFromMarkdown(id string, filename string, contents string) (TEPInfo, 
 	return info, nil
 }
 
-// PRsForTrackingIssue parses the body of a tracking issue to find all TEP PRs and implementation PRs within the metadata
-// in the body, and returns them.
-func PRsForTrackingIssue(body string) ([]int, []ImplementationPR, error) {
+// ParseTrackingIssue parses the body of a tracking issue to find all TEP PRs and implementation PRs within the metadata
+// in the body, as well as the description and alpha/beta release targets if present, and returns them.
+func ParseTrackingIssue(body string) ([]int, []ImplementationPR, string, string, string, string, error) {
 	var tepPRIDs []int
 	var implPRs []ImplementationPR
+	desc := ""
+	alphaTarget := ""
+	betaTarget := ""
+	projects := ""
 
 	for _, m := range TrackingIssueTEPPRsRegex.FindAllStringSubmatch(body, -1) {
 		if len(m) > 1 {
 			id, err := strconv.Atoi(m[1])
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, "", "", "", "", err
 			}
 			tepPRIDs = append(tepPRIDs, id)
 		}
@@ -195,7 +207,7 @@ func PRsForTrackingIssue(body string) ([]int, []ImplementationPR, error) {
 		if len(m) > 1 {
 			id, err := strconv.Atoi(m[2])
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, "", "", "", "", err
 			}
 			implPRs = append(implPRs, ImplementationPR{
 				Repo:   m[1],
@@ -204,5 +216,22 @@ func PRsForTrackingIssue(body string) ([]int, []ImplementationPR, error) {
 		}
 	}
 
-	return tepPRIDs, implPRs, nil
+	descMatcher := TrackingIssueDescriptionRegex.FindStringSubmatch(body)
+	if len(descMatcher) > 1 {
+		desc = descMatcher[1]
+	}
+	alphaMatcher := TrackingIssueAlphaTargetRegex.FindStringSubmatch(body)
+	if len(alphaMatcher) > 1 {
+		alphaTarget = alphaMatcher[1]
+	}
+	betaMatcher := TrackingIssueBetaTargetRegex.FindStringSubmatch(body)
+	if len(betaMatcher) > 1 {
+		betaTarget = betaMatcher[1]
+	}
+	projectsMatcher := TrackingIssueProjectsRegex.FindStringSubmatch(body)
+	if len(projectsMatcher) > 1 {
+		projects = projectsMatcher[1]
+	}
+
+	return tepPRIDs, implPRs, desc, alphaTarget, betaTarget, projects, nil
 }

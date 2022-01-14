@@ -26,15 +26,27 @@ const (
 	// CommunityBlobBaseURL is the base URL for links to blobs in github.com/tektoncd/community/teps
 	CommunityBlobBaseURL = "https://github.com/tektoncd/community/blob/main/teps/"
 
+	// DefaultTrackingIssueDescription is used in the tracking issue when no description already exists in the issue body.
+	DefaultTrackingIssueDescription = "(specify a one-line description of the TEP)"
+	// DefaultTrackingIssueField is used in the tracking issue when no release target (for either alpha or beta)
+	// or project(s) already exists in the issue body.
+	DefaultTrackingIssueField = "(unspecified)"
+
 	// TrackingIssueBodyTmpl is the template (using text/template) for the body of tracking issues.
 	TrackingIssueBodyTmpl = `This issue tracks TEP-{{ .issue.TEPID }}.
 
 Use this issue for discussion of this TEP not directly related to pull requests updating or implementing the TEP.
 
 TEP: ({{ .tepURL }})
+Description: {{ .description }}
 Current status: {{ .mdStatus }}
 Authors:{{ range .issue.Assignees }}
 - @{{ . }}{{ end }}
+Project(s): {{ .projects }}
+Release Targets:
+* Alpha: {{ .alphaTarget }}
+* Beta: {{ .betaTarget }}
+
 TEP PRs:{{ range .issue.TEPPRs }}
 - (https://github.com/tektoncd/community/pull/{{ . }}){{ end }}
 {{ if .issue.ImplementationPRs }}Implementation PRs:{{ range .issue.ImplementationPRs }}
@@ -79,6 +91,10 @@ type TrackingIssue struct {
 	TEPPRs            []int
 	ImplementationPRs []ImplementationPR
 	Assignees         []string
+	Description       string
+	AlphaTarget       string
+	BetaTarget        string
+	Projects          string
 }
 
 // AddAssignee adds an assignee to the tracking issue, if it's not already present
@@ -135,6 +151,26 @@ func (ti *TrackingIssue) GetBody(filename string) (string, error) {
 		"issue":    ti,
 		"tepURL":   fmt.Sprintf("%s%s", CommunityBlobBaseURL, filename),
 		"mdStatus": ti.TEPStatus.ForMarkdown(),
+	}
+	if ti.Description != "" {
+		data["description"] = ti.Description
+	} else {
+		data["description"] = DefaultTrackingIssueDescription
+	}
+	if ti.AlphaTarget != "" {
+		data["alphaTarget"] = ti.AlphaTarget
+	} else {
+		data["alphaTarget"] = DefaultTrackingIssueField
+	}
+	if ti.BetaTarget != "" {
+		data["betaTarget"] = ti.BetaTarget
+	} else {
+		data["betaTarget"] = DefaultTrackingIssueField
+	}
+	if ti.Projects != "" {
+		data["projects"] = ti.Projects
+	} else {
+		data["projects"] = DefaultTrackingIssueField
 	}
 
 	buf := bytes.NewBufferString("")

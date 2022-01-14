@@ -349,13 +349,17 @@ func (tgc *TEPGHClient) GetTrackingIssues(ctx context.Context, opts *GetTracking
 				}
 			}
 
-			tepPRIDs, implPRs, err := tep.PRsForTrackingIssue(iss.GetBody())
+			tepPRIDs, implPRs, desc, alphaTarget, betaTarget, projects, err := tep.ParseTrackingIssue(iss.GetBody())
 			if err != nil {
 				return nil, errors.Wrapf(err, "parsing TEP and implementation PRs from tracking issue body '%s'", iss.GetBody())
 			}
 
 			ti.TEPPRs = tepPRIDs
 			ti.ImplementationPRs = implPRs
+			ti.Description = desc
+			ti.AlphaTarget = alphaTarget
+			ti.BetaTarget = betaTarget
+			ti.Projects = projects
 
 			foundIssues[ti.TEPID] = ti
 		}

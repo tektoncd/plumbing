@@ -248,6 +248,10 @@ func TestPRsForTrackingIssue(t *testing.T) {
 		body        string
 		tepPRs      []int
 		implPRs     []tep.ImplementationPR
+		desc        string
+		alphaTarget string
+		betaTarget  string
+		projects    string
 		expectedErr error
 	}{
 		{
@@ -303,17 +307,35 @@ func TestPRsForTrackingIssue(t *testing.T) {
 			name: "not a number for implementation PR",
 			body: "<!-- Implementation PR: repo: pipeline number: ajaj -->",
 		},
+		{
+			name: "with other fields",
+			body: `Some line
+Description: something
+* Alpha: 1.0.0
+* Beta: 2.0.0
+Some other line
+Projects: pipeline, triggers
+`,
+			desc:        "something",
+			alphaTarget: "1.0.0",
+			betaTarget:  "2.0.0",
+			projects:    "pipeline, triggers",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tepPRs, implPRs, err := tep.PRsForTrackingIssue(tc.body)
+			tepPRs, implPRs, desc, alphaTarget, betaTarget, projects, err := tep.ParseTrackingIssue(tc.body)
 			if tc.expectedErr != nil {
 				require.Equal(t, tc.expectedErr, err)
 			} else {
 				require.NoError(t, err)
 				assert.ElementsMatch(t, tc.tepPRs, tepPRs)
 				assert.Equal(t, tc.implPRs, implPRs)
+				assert.Equal(t, tc.desc, desc)
+				assert.Equal(t, tc.alphaTarget, alphaTarget)
+				assert.Equal(t, tc.betaTarget, betaTarget)
+				assert.Equal(t, tc.projects, projects)
 			}
 		})
 	}
