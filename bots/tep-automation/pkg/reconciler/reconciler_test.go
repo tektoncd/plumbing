@@ -340,7 +340,7 @@ func TestReconcileKind(t *testing.T) {
 				GHClient: tgc,
 				Performers: []performers.Performer{
 					performers.NewPRNotifier(tgc),
-					performers.NewIssueCreator(tgc),
+					performers.NewIssueManager(tgc),
 				},
 			}
 

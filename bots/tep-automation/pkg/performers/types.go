@@ -13,9 +13,14 @@ import (
 )
 
 const (
-	closedAction = "closed"
-	openedAction = "opened"
-	editedAction = "edited"
+	// ClosedAction is the PR action when the PR has been closed.
+	ClosedAction = "closed"
+	// OpenedAction is the PR action when the PR has just been opened.
+	OpenedAction = "opened"
+	// EditedAction is the PR action when the PR has been edited.
+	EditedAction = "edited"
+	// SynchronizeAction is the PR action when the PR has had new commits pushed to it.
+	SynchronizeAction = "synchronize"
 )
 
 // Performer is an interface to actually perform the action for a given event

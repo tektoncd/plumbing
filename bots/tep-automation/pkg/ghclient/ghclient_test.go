@@ -377,6 +377,53 @@ func TestUpdateTrackingIssue(t *testing.T) {
 	require.NoError(t, tgc.UpdateTrackingIssue(ctx, issueNumber, "12345", expectedBody, []string{"abayer", "vdemeester"}, tep.NewStatus))
 }
 
+func TestCloseTrackingIssue(t *testing.T) {
+	client, mux, closeFunc := testutil.SetupFakeGitHub()
+	defer closeFunc()
+
+	commentInput := &github.IssueComment{
+		Body: github.String("some body"),
+	}
+
+	issueInput := &github.IssueRequest{
+		State: github.String("closed"),
+	}
+
+	issueNumber := 5
+
+	mux.HandleFunc("/repos/tektoncd/community/issues/5/comments",
+		func(w http.ResponseWriter, r *http.Request) {
+			v := new(github.IssueComment)
+			require.NoError(t, json.NewDecoder(r.Body).Decode(v))
+
+			require.Equal(t, "POST", r.Method)
+
+			if d := cmp.Diff(commentInput, v); d != "" {
+				t.Errorf("difference in POST body: %s", d)
+			}
+			_, _ = fmt.Fprint(w, `{"id":1}`)
+		})
+
+	mux.HandleFunc(fmt.Sprintf("/repos/tektoncd/community/issues/%d", issueNumber),
+		func(w http.ResponseWriter, r *http.Request) {
+			v := new(github.IssueRequest)
+			require.NoError(t, json.NewDecoder(r.Body).Decode(v))
+
+			require.Equal(t, "PATCH", r.Method)
+
+			if d := cmp.Diff(issueInput, v); d != "" {
+				t.Errorf("difference in PATCH body: %s", d)
+			}
+			_, _ = fmt.Fprint(w, `{"number":5}`)
+		})
+
+	tgc := ghclient.NewTEPGHClient(client)
+
+	ctx := context.Background()
+
+	require.NoError(t, tgc.CloseTrackingIssue(ctx, issueNumber, "some body"))
+}
+
 func TestExtractTEPInfoFromTEPPR(t *testing.T) {
 	prNumber := 1
 	contentsRef := "some-ref"

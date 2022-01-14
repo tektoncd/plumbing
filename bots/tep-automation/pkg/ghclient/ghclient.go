@@ -199,6 +199,22 @@ func (tgc *TEPGHClient) UpdateTrackingIssue(ctx context.Context, issueNumber int
 	return err
 }
 
+// CloseTrackingIssue adds a comment and closes a tracking issue for a TEP in the community repo
+func (tgc *TEPGHClient) CloseTrackingIssue(ctx context.Context, issueNumber int, comment string) error {
+	_, _, err := tgc.client.Issues.CreateComment(ctx, TEPsOwner, TEPsRepo, issueNumber, &github.IssueComment{Body: github.String(comment)})
+	if err != nil {
+		return err
+
+	}
+
+	input := &github.IssueRequest{
+		State: github.String("closed"),
+	}
+
+	_, _, err = tgc.client.Issues.Edit(ctx, TEPsOwner, TEPsRepo, issueNumber, input)
+	return err
+}
+
 // ExtractTEPInfoFromTEPPR checks the given PR for changes to TEP markdown files. If one isn't present, it returns nil,
 // and if one or more is present, their metadata is parsed and returned.
 func (tgc *TEPGHClient) ExtractTEPInfoFromTEPPR(ctx context.Context, prNumber int, prRef string) ([]tep.TEPInfo, error) {

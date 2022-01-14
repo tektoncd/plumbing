@@ -36,6 +36,13 @@ var (
 		WithdrawnStatus,
 		ReplacedStatus,
 	}
+
+	// TerminalStatuses a list of all valid TEP statuses that are terminal - i.e., the TEP is implemented, withdrawn, or replaced.
+	TerminalStatuses = []Status{
+		ImplementedStatus,
+		WithdrawnStatus,
+		ReplacedStatus,
+	}
 )
 
 // Status is a valid TEP status
@@ -49,6 +56,17 @@ func (s Status) TrackingLabel() string {
 // ForMarkdown returns the status surrounded by backticks for use in GitHub comments, issue bodies, etc.
 func (s Status) ForMarkdown() string {
 	return fmt.Sprintf("`%s`", s)
+}
+
+// IsTerminalStatus returns true if the status is a terminal one
+func (s Status) IsTerminalStatus() bool {
+	for _, ts := range TerminalStatuses {
+		if s == ts {
+			return true
+		}
+	}
+
+	return false
 }
 
 // FromTrackingIssueLabel extracts the status from the "tep-status/whatever" label and returns the appropriate Status.

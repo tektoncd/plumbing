@@ -25,6 +25,6 @@ func main() {
 		reconciler.NewController(
 			*ghToken,
 			performers.NewPRNotifierAsPerformer,
-			performers.NewIssueCreatorAsPerformer,
+			performers.NewIssueManagerAsPerformer,
 		))
 }

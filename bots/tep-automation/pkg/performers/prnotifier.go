@@ -57,13 +57,13 @@ func (n *PRNotifier) Perform(ctx context.Context, opts *PerformerOptions) krecon
 	logger.Debugf("Performing implementation PR notification (if needed) for %s/%s", opts.RunNamespace, opts.RunName)
 
 	// Short-circuit for PR actions other than `closed`, `edited`, or `opened`.
-	if opts.Action != closedAction && opts.Action != editedAction && opts.Action != openedAction {
+	if opts.Action != ClosedAction && opts.Action != EditedAction && opts.Action != OpenedAction {
 		logger.Infof("Ignoring PR action %s; will do nothing", opts.Action)
 		return nil
 	}
 
 	// Short-circuit if the action is "closed" but the PR is not merged.
-	if opts.Action == closedAction && !opts.IsMerged {
+	if opts.Action == ClosedAction && !opts.IsMerged {
 		logger.Info("Ignoring closed PR because the PR was not merged; will do nothing")
 		return nil
 	}
@@ -77,7 +77,7 @@ func (n *PRNotifier) Perform(ctx context.Context, opts *PerformerOptions) krecon
 	var commentFunc func([]tep.TEPInfo) string
 	var transitionStates []tep.Status
 
-	if opts.Action == closedAction {
+	if opts.Action == ClosedAction {
 		commentFunc = PRMergedComment
 		transitionStates = append(transitionStates, tep.ImplementingStatus)
 	} else {
@@ -109,10 +109,10 @@ func (n *PRNotifier) Perform(ctx context.Context, opts *PerformerOptions) krecon
 
 		var commentToUpdate *tep.CommentInfo
 		for _, cmt := range existingComments {
-			if opts.Action == closedAction && cmt.ToImplemented {
+			if opts.Action == ClosedAction && cmt.ToImplemented {
 				commentToUpdate = &cmt
 				break
-			} else if opts.Action == editedAction || opts.Action == openedAction {
+			} else if opts.Action == EditedAction || opts.Action == OpenedAction {
 				commentToUpdate = &cmt
 			}
 		}

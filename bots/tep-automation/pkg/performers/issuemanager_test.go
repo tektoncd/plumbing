@@ -27,6 +27,11 @@ type expectedIssue struct {
 	filename string
 }
 
+type closedIssue struct {
+	number  int
+	comment string
+}
+
 func (ei expectedIssue) toIssueRequest(t *testing.T) *github.IssueRequest {
 	body, err := ei.GetBody(ei.filename)
 	require.NoError(t, err)
@@ -50,8 +55,10 @@ func TestIssueCreator_Perform(t *testing.T) {
 		prRepo            string
 		prNumber          int
 		prAction          string
+		prIsMerged        bool
 		listFilesResponse []*github.CommitFile
 		existingIssues    []*github.Issue
+		closedIssues      []closedIssue
 		createdIssues     []expectedIssue
 		modifiedIssues    []expectedIssue
 		doesNothing       bool
@@ -93,11 +100,115 @@ func TestIssueCreator_Perform(t *testing.T) {
 			expectedReason:    "TrackingIssuesUpdatedOrCreated",
 		},
 		{
-			name: "modified TEP",
+			name:     "modified TEP",
+			prAction: performers.SynchronizeAction,
 			listFilesResponse: []*github.CommitFile{{
 				SHA:      github.String("some-sha"),
 				Filename: github.String("teps/1234-some-proposal.md"),
 				Status:   github.String("modified"),
+			}},
+			existingIssues: []*github.Issue{{
+				Title:  github.String("TEP-1234 Tracking Issue"),
+				Number: github.Int(1),
+				State:  github.String("open"),
+				Assignees: []*github.User{
+					{
+						Login: github.String("abayer"),
+					},
+					{
+						Login: github.String("vdemeester"),
+					},
+				},
+				Labels: []*github.Label{
+					{
+						Name: github.String(ghclient.TrackingIssueLabel),
+					},
+					{
+						Name: github.String(tep.NewStatus.TrackingLabel()),
+					},
+				},
+				Body: github.String(`<!-- TEP PR: 55 -->
+<!-- Implementation PR: repo: pipeline number: 77 -->
+<!-- Implementation PR: repo: triggers number: 88 -->`),
+			}},
+			modifiedIssues: []expectedIssue{{
+				TrackingIssue: tep.TrackingIssue{
+					IssueNumber: 1,
+					TEPStatus:   tep.NewStatus,
+					TEPID:       "1234",
+					TEPPRs:      []int{55, 1},
+					Assignees:   []string{"abayer", "vdemeester"},
+					ImplementationPRs: []tep.ImplementationPR{
+						{
+							Repo:   "pipeline",
+							Number: 77,
+						},
+						{
+							Repo:   "triggers",
+							Number: 88,
+						},
+					},
+				},
+				filename: "1234-some-proposal.md",
+			}},
+			expectedEventType: corev1.EventTypeNormal,
+			expectedReason:    "TrackingIssuesUpdatedOrCreated",
+		},
+		{
+			name: "one new, one modified but not in new state",
+			listFilesResponse: []*github.CommitFile{
+				{
+					SHA:      github.String("some-sha"),
+					Filename: github.String("teps/1234-some-proposal.md"),
+					Status:   github.String("added"),
+				},
+				{
+					SHA:      github.String("some-sha"),
+					Filename: github.String("teps/5678-just-cats.md"),
+					Status:   github.String("modified"),
+				},
+			},
+			existingIssues: []*github.Issue{{
+				Title:  github.String("TEP-5678 Tracking Issue"),
+				Number: github.Int(5),
+				State:  github.String("open"),
+				Assignees: []*github.User{
+					{
+						Login: github.String("abayer"),
+					},
+				},
+				Labels: []*github.Label{
+					{
+						Name: github.String(ghclient.TrackingIssueLabel),
+					},
+					{
+						Name: github.String(tep.ImplementableStatus.TrackingLabel()),
+					},
+				},
+				Body: github.String(`<!-- TEP PR: 55 -->
+<!-- Implementation PR: repo: pipeline number: 77 -->
+<!-- Implementation PR: repo: triggers number: 88 -->`),
+			}},
+			createdIssues: []expectedIssue{{
+				TrackingIssue: tep.TrackingIssue{
+					TEPStatus: tep.NewStatus,
+					TEPID:     "1234",
+					TEPPRs:    []int{1},
+					Assignees: []string{"abayer", "vdemeester"},
+				},
+				filename: "1234-some-proposal.md",
+			}},
+			expectedEventType: corev1.EventTypeNormal,
+			expectedReason:    "TrackingIssuesUpdatedOrCreated",
+		},
+		{
+			name:       "merged PR",
+			prAction:   performers.ClosedAction,
+			prIsMerged: true,
+			listFilesResponse: []*github.CommitFile{{
+				SHA:      github.String("some-sha"),
+				Filename: github.String("teps/1234-some-proposal.md"),
+				Status:   github.String("added"),
 			}},
 			existingIssues: []*github.Issue{{
 				Title:  github.String("TEP-1234 Tracking Issue"),
@@ -147,22 +258,51 @@ func TestIssueCreator_Perform(t *testing.T) {
 			expectedReason:    "TrackingIssuesUpdatedOrCreated",
 		},
 		{
-			name: "one new, one modified",
-			listFilesResponse: []*github.CommitFile{
-				{
-					SHA:      github.String("some-sha"),
-					Filename: github.String("teps/1234-some-proposal.md"),
-					Status:   github.String("added"),
-				},
-				{
-					SHA:      github.String("some-sha"),
-					Filename: github.String("teps/5678-just-cats.md"),
-					Status:   github.String("modified"),
-				},
-			},
+			name:     "closed and unmerged PR",
+			prAction: performers.ClosedAction,
+			listFilesResponse: []*github.CommitFile{{
+				SHA:      github.String("some-sha"),
+				Filename: github.String("teps/1234-some-proposal.md"),
+				Status:   github.String("added"),
+			}},
 			existingIssues: []*github.Issue{{
-				Title:  github.String("TEP-5678 Tracking Issue"),
-				Number: github.Int(5),
+				Title:  github.String("TEP-1234 Tracking Issue"),
+				Number: github.Int(1),
+				State:  github.String("open"),
+				Assignees: []*github.User{
+					{
+						Login: github.String("abayer"),
+					},
+					{
+						Login: github.String("vdemeester"),
+					},
+				},
+				Labels: []*github.Label{
+					{
+						Name: github.String(ghclient.TrackingIssueLabel),
+					},
+					{
+						Name: github.String(tep.NewStatus.TrackingLabel()),
+					},
+				},
+				Body: github.String(`<!-- TEP PR: 55 -->
+<!-- Implementation PR: repo: pipeline number: 77 -->
+<!-- Implementation PR: repo: triggers number: 88 -->`),
+			}},
+			doesNothing: true,
+		},
+		{
+			name:       "merged PR in terminal status",
+			prAction:   performers.ClosedAction,
+			prIsMerged: true,
+			listFilesResponse: []*github.CommitFile{{
+				SHA:      github.String("some-sha"),
+				Filename: github.String("teps/4321-another-proposal.md"),
+				Status:   github.String("modified"),
+			}},
+			existingIssues: []*github.Issue{{
+				Title:  github.String("TEP-4321 Tracking Issue"),
+				Number: github.Int(1),
 				State:  github.String("open"),
 				Assignees: []*github.User{
 					{
@@ -174,20 +314,24 @@ func TestIssueCreator_Perform(t *testing.T) {
 						Name: github.String(ghclient.TrackingIssueLabel),
 					},
 					{
-						Name: github.String(tep.ImplementableStatus.TrackingLabel()),
+						Name: github.String(tep.ImplementingStatus.TrackingLabel()),
 					},
 				},
 				Body: github.String(`<!-- TEP PR: 55 -->
 <!-- Implementation PR: repo: pipeline number: 77 -->
 <!-- Implementation PR: repo: triggers number: 88 -->`),
 			}},
+			closedIssues: []closedIssue{{
+				comment: "Closing tracking issue for TEP-4321 because it has reached the terminal status `implemented`",
+				number:  1,
+			}},
 			modifiedIssues: []expectedIssue{{
 				TrackingIssue: tep.TrackingIssue{
-					IssueNumber: 5,
-					TEPStatus:   tep.ImplementingStatus,
-					TEPID:       "5678",
+					IssueNumber: 1,
+					TEPStatus:   tep.ImplementedStatus,
+					TEPID:       "4321",
 					TEPPRs:      []int{55, 1},
-					Assignees:   []string{"abayer", "bobcatfish"},
+					Assignees:   []string{"abayer"},
 					ImplementationPRs: []tep.ImplementationPR{
 						{
 							Repo:   "pipeline",
@@ -199,16 +343,7 @@ func TestIssueCreator_Perform(t *testing.T) {
 						},
 					},
 				},
-				filename: "5678-just-cats.md",
-			}},
-			createdIssues: []expectedIssue{{
-				TrackingIssue: tep.TrackingIssue{
-					TEPStatus: tep.NewStatus,
-					TEPID:     "1234",
-					TEPPRs:    []int{1},
-					Assignees: []string{"abayer", "vdemeester"},
-				},
-				filename: "1234-some-proposal.md",
+				filename: "4321-another-proposal.md",
 			}},
 			expectedEventType: corev1.EventTypeNormal,
 			expectedReason:    "TrackingIssuesUpdatedOrCreated",
@@ -235,6 +370,31 @@ func TestIssueCreator_Perform(t *testing.T) {
 			prAction := tc.prAction
 			if prAction == "" {
 				prAction = "opened"
+			}
+
+			expectedClosedIssues := make(map[int]bool)
+
+			for _, closed := range tc.closedIssues {
+				// Mark that we expect to see this issue closed by adding it to the map with a false value
+				expectedClosedIssues[closed.number] = false
+
+				mux.HandleFunc(fmt.Sprintf("/repos/tektoncd/community/issues/%d/comments", closed.number),
+					func(w http.ResponseWriter, r *http.Request) {
+						v := new(github.IssueComment)
+						require.NoError(t, json.NewDecoder(r.Body).Decode(v))
+
+						require.Equal(t, "POST", r.Method)
+
+						expected := &github.IssueComment{
+							Body: github.String(closed.comment),
+						}
+
+						if d := cmp.Diff(expected, v); d != "" {
+							t.Errorf("difference in PATCH body: %s", d)
+						}
+
+						_, _ = fmt.Fprint(w, `{"number":1}`)
+					})
 			}
 
 			mux.HandleFunc(fmt.Sprintf("/repos/%s/%s/pulls/%d/files", ghclient.TEPsOwner, ghclient.TEPsRepo, prNumber),
@@ -265,6 +425,8 @@ func TestIssueCreator_Perform(t *testing.T) {
 				}
 			}
 
+			createdIssueCalls := 0
+
 			mux.HandleFunc(fmt.Sprintf("/repos/%s/%s/issues", ghclient.TEPsOwner, ghclient.TEPsRepo),
 				func(w http.ResponseWriter, r *http.Request) {
 					if r.Method == "GET" {
@@ -291,9 +453,14 @@ func TestIssueCreator_Perform(t *testing.T) {
 							unknownReq, _ := json.MarshalIndent(v, "", "  ")
 							t.Fatalf("received unexpected IssueRequest:\n%s", string(unknownReq))
 						}
+
+						createdIssueCalls++
 						_, _ = fmt.Fprint(w, `{"number":1}`)
 					}
 				})
+
+			closedIssueCalls := 0
+			modifiedIssueCalls := 0
 
 			for _, modified := range tc.modifiedIssues {
 				mux.HandleFunc(fmt.Sprintf("/repos/tektoncd/community/issues/%d", modified.IssueNumber),
@@ -303,16 +470,27 @@ func TestIssueCreator_Perform(t *testing.T) {
 
 						require.Equal(t, "PATCH", r.Method)
 
-						ir := modified.toIssueRequest(t)
+						// If this is a close, check against expectedClosedIssues
+						if v.GetState() == "closed" {
+							_, ok := expectedClosedIssues[modified.IssueNumber]
+							assert.Truef(t, ok, "did not expect to receive close for issue %d", modified.IssueNumber)
+							expectedClosedIssues[modified.IssueNumber] = true
+							closedIssueCalls++
+						} else {
+							ir := modified.toIssueRequest(t)
 
-						if d := cmp.Diff(ir, v); d != "" {
-							t.Errorf("difference in PATCH body: %s", d)
+							if d := cmp.Diff(ir, v); d != "" {
+								t.Errorf("difference in PATCH body: %s", d)
+							}
+
+							modifiedIssueCalls++
 						}
+
 						_, _ = fmt.Fprint(w, `{"number":1}`)
 					})
 			}
 
-			n := performers.NewIssueCreator(tgc)
+			n := performers.NewIssueManager(tgc)
 
 			opts := &performers.PerformerOptions{
 				RunName:      "test-reconcile-run",
@@ -322,7 +500,7 @@ func TestIssueCreator_Perform(t *testing.T) {
 				Title:        "some-title",
 				Body:         "some-body",
 				Repo:         prRepo,
-				IsMerged:     false,
+				IsMerged:     tc.prIsMerged,
 				GitRevision:  contentsRef,
 			}
 
@@ -345,6 +523,9 @@ func TestIssueCreator_Perform(t *testing.T) {
 							t.Errorf("Expected reason to be %q but was %q with message %s", tc.expectedReason, recEvt.Reason, recEvt.Error())
 						}
 					}
+					assert.Equal(t, len(tc.createdIssues), createdIssueCalls, "wrong number of issue creation calls")
+					assert.Equal(t, len(tc.modifiedIssues), modifiedIssueCalls, "wrong number of issue modification calls")
+					assert.Equal(t, len(tc.closedIssues), closedIssueCalls, "wrong number of issue close calls")
 				}
 			}
 		})
