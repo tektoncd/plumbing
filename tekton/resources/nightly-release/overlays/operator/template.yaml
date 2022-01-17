@@ -7,7 +7,7 @@
         generateName: operator-release-nightly-
       spec:
         pipelineRef:
-          name: operator-nightly-release
+          name: operator-release
         params:
         - name: package
           value: $(tt.params.gitrepository)
