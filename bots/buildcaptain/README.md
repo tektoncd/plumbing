@@ -27,6 +27,18 @@ Build captain access is given with [adjustpermissions.py](../../adjustpermission
 * The rotation is stored in [rotation.csv](rotation.csv).
 * Update the rotation with [generate-rotation-csv](cmd/generate-rotation-csv).
 
+### Generate a new rotation
+
+Here's a one-liner for generating a new rotation:
+
+```bash
+go run ./cmd/generate-rotation-csv/main.go \
+  -start-date $(date +%Y-%m-%d) \
+  -days 365 \
+  -names andrea.frittoli,wlynch,dibyo,nikthoma,sashture,jerop,vdemeest \
+  > ./rotation.csv
+```
+
 ## Configuration
 
 ```yaml
