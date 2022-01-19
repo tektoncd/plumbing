@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Grab Minio credentials and injects them in the storage secret used by
 # Tekton Pipeline

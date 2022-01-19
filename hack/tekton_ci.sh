@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e -o pipefail
 
 declare GITHUB_USER GITHUB_TOKEN GITHUB_ORG GITHUB_REPO
