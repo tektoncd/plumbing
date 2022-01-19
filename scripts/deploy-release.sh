@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -eu -o pipefail
 
 declare TEKTON_PROJECT TEKTON_VERSION RELEASE_BUCKET_OPT RELEASE_EXTRA_PATH RELEASE_FILE POST_RELEASE_FILE
