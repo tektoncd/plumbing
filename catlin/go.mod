@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/google/go-containerregistry v0.1.1
+	github.com/otiai10/copy v1.7.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.0
 	github.com/tektoncd/pipeline v0.15.2
