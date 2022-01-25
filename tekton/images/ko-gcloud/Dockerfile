@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG GO_VERSION=1.16.3
-FROM golang:${GO_VERSION}-alpine3.12 as build
+ARG GO_VERSION=1.16.13
+FROM golang:${GO_VERSION}-alpine3.15 as build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
