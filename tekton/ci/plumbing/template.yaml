@@ -77,6 +77,7 @@ spec:
           value:
             - bots/buildcaptain
             - bots/mariobot
+            - bots/tep-automation
             - catlin
             - pipelinerun-logs
             - tekton/ci/interceptors/add-team-members
@@ -215,6 +216,7 @@ spec:
           value:
             - bots/buildcaptain/config
             - bots/mariobot/config
+            - boots/tep-automation/config
             - pipelinerun-logs/config
             - boskos
             - gubernator
