@@ -41,9 +41,9 @@ spec:
         CHECK="failed"
         cd $(workspaces.input.path)
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-            grep -E '${REGEX}' > $(results.files.path) || true
+            grep -E "${REGEX}" > $(results.files.path) || true
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-            grep -E '${REGEX}' && CHECK="passed"
+            grep -E "${REGEX}" && CHECK="passed"
         printf $CHECK > $(results.check.path)
 ---
 apiVersion: tekton.dev/v1alpha1
