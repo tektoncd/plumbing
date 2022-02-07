@@ -143,7 +143,7 @@ DNS records for the `tekton.dev` are hosted by Netlify. [Gardeners External DNS 
 is installed in the `dogfooding` cluster in the `dns-manager` namespace, and it watches for `DNSEntries` and annotated
 ingresses and services in all namespaces.
 
-DNS Manager is installed using helm as follows:
+DNS Manager is installed from the v0.11.4 tag using helm as follows:
 
 ```shell
 # From a cloned https://github.com/gardener/external-dns-management
@@ -151,7 +151,12 @@ helm install dns-manager charts/external-dns-management \
   --namespace=dns-manager \
   --set configuration.disableNamespaceRestriction=true \
   --set configuration.identifier=tekton-dogfooding-default \
-  --set vpa.enabled=false
+  --set vpa.enabled=false \
+  --set createCRDs=true \
+  --set resources.requests.memory=64Mi \
+  --set resources.limits.memory=256Mi \
+  --set 'custom.volumes:' \
+  --set 'custom.volumeMounts:'
 ```
 
 The DNS Provider for Netlify is installed through the following resource:
