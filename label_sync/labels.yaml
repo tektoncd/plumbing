@@ -97,6 +97,11 @@ default:
       name: area/performance
       target: both
       addedBy: label
+    - color: ba3b09
+      description: Issues or PRs that are related to Secure Software Supply Chain (S3C)
+      name: area/s3c
+      target: both
+      addedBy: label
 
     # Kinds
     - color: d876e3
