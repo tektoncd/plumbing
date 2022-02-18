@@ -52,6 +52,7 @@ tide:
     - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
+    - tektoncd/resolution
     - tektoncd/results
     - tektoncd/triggers
     - tektoncd/website
@@ -78,6 +79,7 @@ tide:
     tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
+    tektoncd/resolution: rebase
     tektoncd/results: rebase
     tektoncd/triggers: rebase
     tektoncd/website: rebase
@@ -987,6 +989,89 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+  tektoncd/resolution:
+  - name: pull-tekton-resolution-build-tests
+    labels:
+      preset-presubmit-sh: "true"
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-resolution-build-tests"
+    trigger: "(?m)^/test (all|pull-tekton-resolution-build-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--build-tests"
+  - name: pull-tekton-resolution-unit-tests
+    labels:
+      preset-presubmit-sh: "true"
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test tekton-resolution-unit-tests"
+    trigger: "(?m)^/test (all|tekton-resolution-unit-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--unit-tests"
+  - name: pull-tekton-resolution-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-resolution-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-resolution-integration-tests),?(\\s+|$)"
+    spec:
+      containers:
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+        imagePullPolicy: Always
+        command:
+        - /usr/local/bin/entrypoint.sh
+        args:
+        - "--scenario=kubernetes_execute_bazel"
+        - "--clean"
+        - "--job=$(JOB_NAME)"
+        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
+        - "--root=/go/src"
+        - "--service-account=/etc/test-account/service-account.json"
+        - "--upload=gs://tekton-prow/pr-logs"
+        - "--" # end bootstrap args, scenario args below
+        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+        - "./test/presubmit-tests.sh"
+        - "--integration-tests"
+        securityContext:
+          privileged: true
   tektoncd/results:
   - name: pull-tekton-results-build-tests
     labels:
