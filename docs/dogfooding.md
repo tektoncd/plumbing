@@ -73,7 +73,7 @@ kubectl get ingress <ingress-name>
 A full example of an ingress with HTTPS certificate and DNS name provisioning:
 
 ```yaml
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -93,9 +93,12 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: tekton-dashboard
-          servicePort: 9097
+          service:
+            name: tekton-dashboard
+            port:
+              number: 9097
         path: /*
+        pathType: ImplementationSpecific
 ```
 
 ## Node Pools

@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
@@ -17,6 +17,9 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: el-tekton-ci
-          servicePort: 8080
+          service:
+            name: el-tekton-ci
+            port:
+              number: 8080
         path: /*
+        pathType: ImplementationSpecific

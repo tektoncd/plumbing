@@ -5,9 +5,9 @@ of interest for the team that maintain the Tekton own CI/CD setup as well as
 for anyone interested in using Tekton to run (part of) their own CI/CD
 infrastructure.
 
-* [Clusters](#clusters)
-* [GCP Projects](#gcp-projects)
-* [DNS](#dns)
+- [Clusters](#clusters)
+- [GCP Projects](#gcp-projects)
+- [DNS](#dns)
 
 ## Clusters
 
@@ -32,6 +32,7 @@ Automation for the `tektoncd` org runs in a GKE cluster which
 have access to.
 
 There are several GCP projects used by Tekton:
+
 - The GCP project that is used for GKE, storage, etc. is called
   [`tekton-releases`](http://console.cloud.google.com/home/dashboard?project=tekton-releases). It has several GKE clusters:
   - The GKE cluster that is used for [`Prow`](prow/README.md), `Tekton`, and [`boskos`](boskos/README.md) is called
@@ -56,7 +57,6 @@ pip3 install -r ./teps/tools/requirements.txt
 # Add or remove permissions
 python3 -m adjustpermissions --users "user1@example.com,user2@example.com"
 ```
-
 
 ## DNS
 

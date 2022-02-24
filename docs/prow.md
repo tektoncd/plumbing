@@ -23,12 +23,12 @@ Prow and the PR process, and see [Prow's own docs](https://github.com/kubernetes
 Secrets which have been applied to the prow cluster but are not committed here are:
 
 - `GitHub` personal access tokens:
- - `bot-token-github` in the default namespace
- - `bot-token-github` in the github-admin namespace
- - `hmac-token` for authenticating GitHub
- - `oauth-token` which is a GitHub access token for [`tekton-robot`](https://github.com/tekton-robot),
-   used by Prow itself as well as by containers started by Prow via [the Prow config](../prow/config.yaml).
-   See [the GitHub secret Prow docs](https://github.com/kubernetes/test-infra/blob/068e83ba2f8e9261c0af4cee598c70b92775945f/prow/getting_started_deploy.md#create-the-github-secrets).
+  - `bot-token-github` in the default namespace
+  - `bot-token-github` in the github-admin namespace
+  - `hmac-token` for authenticating GitHub
+  - `oauth-token` which is a GitHub access token for [`tekton-robot`](https://github.com/tekton-robot),
+    used by Prow itself as well as by containers started by Prow via [the Prow config](../prow/config.yaml).
+    See [the GitHub secret Prow docs](https://github.com/kubernetes/test-infra/blob/068e83ba2f8e9261c0af4cee598c70b92775945f/prow/getting_started_deploy.md#create-the-github-secrets).
 - `GCP` secrets:
   - `test-account` is a token for the service account
     `prow-account@tekton-releases.iam.gserviceaccount.com`. This account can
