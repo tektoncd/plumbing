@@ -1,6 +1,6 @@
 # The robocat cluster
 
-The robocat cluster [lives in the tekton-nightly GCP project](.../README.md#gcp-projects) and is
+The `robocat` cluster [lives in the tekton-nightly GCP project](.../README.md#gcp-projects) and is
 used to deploy nightly versions of Tekton components for testing.
 
 ## Setting up the Robocat cluster from scratch
@@ -15,7 +15,7 @@ the `robocat` cluster. This "driver" cluster is the `dogfooding` cluster.
 The initial step is done on the `robocat` cluster directly, so point your
 configuration to it:
 
-```
+```shell
 kubectl config use-context gke_tekton-nightly_europe-north1-a_robocat
 ```
 
@@ -24,7 +24,7 @@ kubectl config use-context gke_tekton-nightly_europe-north1-a_robocat
 To setup the [cluster admin](root/README.md) service account, authenticate to
 the cluster with an admin user, and apply the content of the `root` folder:
 
-```
+```shell
 kubectl apply -f robocat/root
 ```
 
@@ -33,7 +33,7 @@ that holds the token for the `cadmin`. This secret is used by the
 `robocat-cadmin` pipeline resource, which is used by the automation to drive
 deployments in the `robotcat` cluster.
 
-```
+```shell
 # Fetch the secret data from robocat
 CADMIN_SECRET=$(kubectl get -n tektoncd sa/cadmin -o jsonpath='{.secrets[0].name}')
 CA_CRT=$(kubectl get -n tektoncd secret/$CADMIN_SECRET -o jsonpath='{.data.ca\.crt}')
@@ -56,7 +56,7 @@ EOF
 
 Obtain the URL of the cluster:
 
-```
+```shell
 kubectl cluster-info
 ```
 
@@ -78,7 +78,7 @@ Future hanges to the resources will be deployed nightly from git.
 From this point on, most of the work will be done on the `dogfooding` cluster,
 so switch your configuration to point to it:
 
-```
+```shell
 kubectl config use-context gke_tekton-releases_us-central1-a_dogfooding
 ```
 
@@ -88,7 +88,8 @@ Cronjobs can be used to deploy a folder or resources, a config map, an Helm
 chart or a Tekton services from a release.
 
 The generic command to run a cronjob is:
-```
+
+```shell
 kubectl create job --from=cronjob/$JOB_NAME $JOB_NAME-$(date +%s)
 ```
 
@@ -99,14 +100,13 @@ JOB_NAME | Details | Definition | Type
 `JOB_NAME=folder-cd-trigger-robotcat-cluster-issuer` | [`ClusterIssuer`](./certificates/README.md) | [Cronjob](../tekton/cronjobs/robocat-certificates-on-demand) | [Folder](../tekton/cronjobs/folder-cd-cron-base)
 `JOB_NAME=helm-cd-trigger-minio-helm` | [Minio S3 Buckets](certificates/README.md) | [Cronjob](../tekton/cronjobs/minio-helm-cron) | [Helm Chart](../tekton/cronjobs/helm-cd-cron-base)
 
-
 The following jobs are executed with the `tekton-deployer` service account,
 instead of `cadmin`. The `tekton-deployer` service account is created during
 of the first cronjob `folder-cd-trigger-robotcat-cadmin`.
 Before running the next jobs, make sure the secret token for `tekton-deployer`
 in the `dogfooding` cluster is up to date:
 
-```
+```shell
 # Fetch the secret data from robocat
 TD_SECRET=$(kubectl --cluster gke_tekton-nightly_europe-north1-a_robocat \
   get -n tekton-pipelines sa/tekton-deployer -o jsonpath='{.secrets[0].name}')
@@ -137,24 +137,8 @@ JOB_NAME | Details | Definition | Type
 
 Monitor the progress by looking at the logs of recent `TaskRuns`:
 
-```
+```shell
 tkn tr logs -f
-```
-
-### Set up the DNS name for the dashboard
-
-The Tekton dashboard is publicly available, to that end an ingress it attached
-to it. To get the public IP check the ingress:
-
-```
-echo "Public IP: $(kubectl get ing/ing -n tekton-pipelines -o jsonpath='{.status.loadBalancer.ingress[0].ip}')"
-```
-
-It may take a couple of minutes before the IP is assigned.
-Login to Netifly and create a new DNS `A` record:
-
-```
-dashboard.robotcat.tekton.dev   3600   IN   A   <PLUBLIC_IP>
 ```
 
 ### Set up `robocat` to drive deployments to the `dogfooding` cluster
