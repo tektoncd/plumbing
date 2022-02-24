@@ -50,6 +50,9 @@ while getopts ":p:v:b:e:f:g:c:r:" opt; do
   esac
 done
 shift $((OPTIND -1))
+RELEASE_FILE=${RELEASE_FILE:-""}
+POST_RELEASE_FILE=${POST_RELEASE_FILE:-""}
+RELEASE_EXTRA_PATH=${RELEASE_EXTRA_PATH:-""}
 
 # Check and defaults input params
 if [ -z "$TEKTON_PROJECT" ]; then
