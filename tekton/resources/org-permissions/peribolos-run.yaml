@@ -1,15 +1,24 @@
-apiVersion: tekton.dev/v1alpha1
-kind: TaskRun
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
 metadata:
   generateName: peribolos-run-
 spec:
-  taskRef:
-    name: peribolos
-  resources:
-    inputs:
-      - name: repo
-        resourceSpec:
-          type: git
-          params:
-          - name: url
-            value: https://github.com/tektoncd/community.git
+  pipelineRef:
+    name: peribolos-sync
+  params:
+  - name: url
+    value: https://github.com/tektoncd/community.git
+  - name: revision
+    value: main
+  workspaces:
+    - name: github-oauth
+      secret:
+        secretName: bot-token-github
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
