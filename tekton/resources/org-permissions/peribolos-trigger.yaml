@@ -4,10 +4,10 @@ metadata:
   name: peribolos-binding
 spec:
   params:
-  - name: gitrevision
-    value: $(body.head_commit.id)
-  - name: gitrepositoryurl
-    value: $(body.repository.url)
+    - name: gitrevision
+      value: $(body.head_commit.id)
+    - name: gitrepositoryurl
+      value: $(body.repository.url)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -15,29 +15,36 @@ metadata:
   name: peribolos-template
 spec:
   params:
-  - name: gitrevision
-    description: The git revision
-    default: main
-  - name: gitrepositoryurl
-    description: The git repository url
+    - name: gitrevision
+      description: The git revision
+      default: main
+    - name: gitrepositoryurl
+      description: The git repository url
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: TaskRun
-    metadata:
-      generateName: peribolos-run-
-    spec:
-      taskRef:
-        name: peribolos
-      resources:
-        inputs:
-          - name: repo
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.gitrevision)
-              - name: url
-                value: $(tt.params.gitrepositoryurl)
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: peribolos-run-
+      spec:
+        pipelineRef:
+          name: peribolos-sync
+        params:
+          - name: url
+            value: $(tt.params.gitrepositoryurl)
+          - name: revision
+            value: $(tt.params.gitrevision)
+        workspaces:
+          - name: github-oauth
+            secret:
+              secretName: bot-token-github
+          - name: shared-workspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
@@ -50,6 +57,13 @@ spec:
       serviceType: LoadBalancer
   triggers:
     - name: peribolos-trigger
+      interceptors:
+        - cel:
+            filter: >-
+              body.action in ['push'] &&
+              body.repository.full_name == 'tektoncd/community' &&
+              body.repository.fork == false &&
+              body.base_ref == "refs/heads/main"
       bindings:
         - ref: peribolos-binding
       template:

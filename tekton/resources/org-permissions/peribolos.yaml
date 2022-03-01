@@ -6,24 +6,22 @@ spec:
   params:
   - name: configPath
     default: org/org.yaml
-  resources:
-    inputs:
-      - name: repo
-        type: git
+  workspaces:
+  - name: source
+  - name: github-oauth
+    mountPath: /etc/github
   steps:
   - name: peribolos
     image: gcr.io/k8s-prow/peribolos:v20220203-9315ecd1a0
     command:
     - /bin/sh
+    env:
+    - name: WORKSPACE_SOURCE_PATH
+      value: $(workspaces.source.path)
+    - name: PARAM_CONFIG_PATH
+      value: $(params.configPath)
     args:
     - -c
     - |
       set -ex
-      /peribolos -config-path /workspace/repo/$(params.configPath) -fix-org -fix-org-members -fix-teams -fix-team-repos -fix-team-members -github-token-path /etc/github/bot-token -confirm=true
-    volumeMounts:
-    - name: github-oauth
-      mountPath: /etc/github
-  volumes:
-  - name: github-oauth
-    secret:
-      secretName: bot-token-github
+      /peribolos -config-path ${WORKSPACE_SOURCE_PATH}/${PARAM_CONFIG_PATH} -fix-org -fix-org-members -fix-teams -fix-team-repos -fix-team-members -github-token-path /etc/github/bot-token -confirm=true
