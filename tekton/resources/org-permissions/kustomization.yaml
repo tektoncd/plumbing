@@ -5,3 +5,4 @@ commonAnnotations:
 resources:
 - peribolos.yaml
 - peribolos-trigger.yaml
+- peribolos-sync.yaml
