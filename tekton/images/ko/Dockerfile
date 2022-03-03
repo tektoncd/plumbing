@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.16.13-alpine3.15
+FROM golang:1.17.7-alpine3.15
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GOROOT /usr/local/go
