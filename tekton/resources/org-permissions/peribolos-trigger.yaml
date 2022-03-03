@@ -60,10 +60,13 @@ spec:
       interceptors:
         - cel:
             filter: >-
-              body.action in ['push'] &&
-              body.repository.full_name == 'tektoncd/community' &&
-              body.repository.fork == false &&
-              body.base_ref == "refs/heads/main"
+              'action' in body &&
+              'repository' in body &&
+              'base_ref' in body &&
+              body['action'] == 'push' &&
+              body['repository']['full_name'] == 'tektoncd/community' &&
+              body['repository']['fork'] == false &&
+              body['base_ref'] == 'refs/heads/main'
       bindings:
         - ref: peribolos-binding
       template:
