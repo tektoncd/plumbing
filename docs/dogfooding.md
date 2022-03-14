@@ -156,8 +156,8 @@ helm install dns-manager charts/external-dns-management \
   --set configuration.identifier=tekton-dogfooding-default \
   --set vpa.enabled=false \
   --set createCRDs=true \
-  --set resources.requests.memory=64Mi \
-  --set resources.limits.memory=256Mi \
+  --set resources.requests.memory=256Mi \
+  --set resources.limits.memory=512Mi \
   --set 'custom.volumes:' \
   --set 'custom.volumeMounts:'
 ```
@@ -216,7 +216,7 @@ kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
 kubectl apply -f https://strimzi.io/examples/latest/kafka/kafka-persistent-single.yaml -n kafka
 
 # Verify the installation
-kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n kafka 
+kubectl wait kafka/my-cluster --for=condition=Ready --timeout=300s -n kafka
 ```
 
 A [Knative Channel](https://github.com/knative-sandbox/eventing-kafka) is installed next:
