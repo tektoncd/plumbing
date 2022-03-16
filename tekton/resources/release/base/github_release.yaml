@@ -27,6 +27,8 @@ spec:
     description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
   - name: previous-release-tag
     description: Previous release number - for author and PR list calculation
+  - name: rekor-uuid
+    description: The Rekor UUID associated to the attestation
   workspaces:
   - name: shared
     description: contains the cloned repo and the release files
@@ -49,6 +51,8 @@ spec:
         value: $(params.release-name)
       - name: GIT_REVISION
         value: $(params.git-revision)
+      - name: REKOR_UUID
+        value: $(params.rekor-uuid)
   steps:
     - name: header
       image: gcr.io/tekton-releases/dogfooding/hub
@@ -71,6 +75,33 @@ spec:
 
         \`\`\`
         kubectl apply -f https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        \`\`\`
+
+        ## Attestation
+
+        The Rekor UUID for this release is \`${REKOR_UUID}\`
+
+        Obtain the attestation:
+        \`\`\`shell
+        REKOR_UUID=${REKOR_UUID}
+        rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | base64 --decode | jq
+        \`\`\`
+
+        Verify that all container images in the attestation are in the release file:
+        \`\`\`shell
+        RELEASE_FILE=https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        REKOR_UUID=${REKOR_UUID}
+
+        # Obtains the list of images with sha from the attestation
+        REKOR_ATTESTATION_IMAGES=$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | base64 --decode | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
+
+        # Download the release file
+        curl "$RELEASE_FILE" > release.yaml
+
+        # For each image in the attestation, match it to the release file
+        for image in $REKOR_ATTESTATION_IMAGES; do
+          printf $image; grep -q $image release.yaml && echo " ===> ok" || echo " ===> no match";
+        done
         \`\`\`
 
         <!-- Any special upgrade notice
@@ -182,21 +213,21 @@ spec:
         [Fill list here]
         -->
 
-        # Fixes
+        ### Fixes
 
         $(awk -F";" '/kind\/bug/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/flake/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
         $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
-        # Misc
+        ### Misc
 
         $(awk -F";" '/kind\/cleanup/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/misc/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/cleanup/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
         $(awk -F";" '/kind\/misc/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
-        # Docs
+        ### Docs
 
         $(awk -F";" '/kind\/documentation/{ print "echo -e \"* :book: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/documentation/{ print "* :book: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
@@ -227,22 +258,24 @@ spec:
 
         cat <<EOF | tee -a $HOME/release.md
 
+        <!--
         ## Unsorted PR List
         $(egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }')
 
         To Be Done: Deprecation Notices, Backward Incompatible Changes
-
+        -->
         EOF
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(workspaces.shared.path)/release
+      workingdir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
 
+        RELEASE_PATH="../release"
         TEKTON_PROJECT=$(basename $PROJECT)
         # List the files in the release folder
-        RELEASE_FILES=$(ls | awk '{ print "-a "$1" " }' | tr '\n' ' ')
+        RELEASE_FILES=$(find "${RELEASE_PATH}" -type f | awk '{ print "-a "$1 }' | tr '\n' ' ')
 
         hub release create --draft --prerelease \
           --commitish ${GIT_REVISION} ${RELEASE_FILES} \
@@ -266,9 +299,13 @@ spec:
     description: Previous release number - for author and PR list calculation
   - name: bucket
     description: GCS bucket where to get the release files from (e.g. gs://tekton-releases/pipeline)
+  - name: rekor-uuid
+    description: The Rekor UUID associated to the attestation
   workspaces:
     - name: shared
       description: Workspace where the git repo is prepared for testing
+    - name: credentials
+      description: GCS credentials
   tasks:
     - name: clone-repo
       taskRef:
@@ -289,7 +326,7 @@ spec:
         bundle: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
       params:
         - name: path
-          value: $(workspaces.shared.path)
+          value: .
         - name: location
           value: $(params.bucket)/previous/$(params.release-tag)
         - name: typeDir
@@ -298,12 +335,14 @@ spec:
         - name: output
           workspace: shared
           subPath: release
+        - name: credentials
+          workspace: credentials
     - name: create-draft-release
       runAfter: ['clone-repo', 'clone-bucket']
       taskRef:
         name: create-draft-release
       workspaces:
-        - name: output
+        - name: shared
           workspace: shared
       params:
         - name: package
@@ -316,3 +355,5 @@ spec:
           value: $(params.release-tag)
         - name: previous-release-tag
           value: $(params.previous-release-tag)
+        - name: rekor-uuid
+          value: $(params.rekor-uuid)
