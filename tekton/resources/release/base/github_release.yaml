@@ -19,18 +19,17 @@ spec:
   params:
   - name: package
     description: package (and its children) under test
+  - name: git-revision
+    description: the git revision of the release
   - name: release-name
     description: The name of the release (e.g. Cat + Robot for pipeline)
   - name: release-tag
     description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
   - name: previous-release-tag
     description: Previous release number - for author and PR list calculation
-  resources:
-    inputs:
-      - name: source
-        type: git
-      - name: release-bucket
-        type: storage
+  workspaces:
+  - name: shared
+    description: contains the cloned repo and the release files
   stepTemplate:
     env:
       - name: GITHUB_TOKEN
@@ -48,6 +47,8 @@ spec:
         value: $(params.previous-release-tag)
       - name: RELEASE_NAME
         value: $(params.release-name)
+      - name: GIT_REVISION
+        value: $(params.git-revision)
   steps:
     - name: header
       image: gcr.io/tekton-releases/dogfooding/hub
@@ -59,7 +60,9 @@ spec:
         cat <<EOF | tee $HOME/release.md
         Tekton ${TEKTON_PROJECT^} release ${VERSION} "${RELEASE_NAME}"
 
+        <!-- For major releases, add a tag line
         # 🎉 [Tag Line - to be done] 🎉
+        -->
 
         -[Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
         -[Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
@@ -70,15 +73,15 @@ spec:
         kubectl apply -f https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
         \`\`\`
 
+        <!-- Any special upgrade notice
         ## Upgrade Notices
-
-        [TBD]
+        -->
 
         ## Changes
         EOF
     - name: filter-data
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(resources.inputs.source.path)
+      workingdir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -87,7 +90,7 @@ spec:
         git fetch --unshallow
 
         # UPPER_THRESHOLD is the newest sha we are interested in
-        UPPER_THRESHOLD=$(inputs.resources.source.revision)
+        UPPER_THRESHOLD=${GIT_REVISION}
         # COMMON_ANCESTOR is the common ancestor between the OLD_VERSION and UPPER_THRESHOLD
         COMMON_ANCESTOR=$(git merge-base ${OLD_VERSION} ${UPPER_THRESHOLD})
         # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from main
@@ -157,6 +160,7 @@ spec:
         $(awk -F";" '/kind\/feature/{ print "echo -e \"* :sparkles: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/feature/{ print "* :sparkles: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
+        <!-- Fill in deprecation notices when applicable
         # Deprecation Notices
 
         * :rotating_light: [Deprecation Notice Title]
@@ -164,7 +168,9 @@ spec:
         [Detailed deprecation notice description] (#Number).
 
         [Fill list here]
+        -->
 
+        <!-- Fill in backward incompatible changes when applicable
         # Backwards incompatible changes
 
         In current release:
@@ -174,6 +180,7 @@ spec:
         [Detailed change description] (#Number).
 
         [Fill list here]
+        -->
 
         # Fixes
 
@@ -198,7 +205,7 @@ spec:
 
     - name: authors
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(resources.inputs.source.path)
+      workingdir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -213,7 +220,7 @@ spec:
         EOF
     - name: pr-data
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(inputs.resources.source.path)
+      workingdir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -228,13 +235,84 @@ spec:
         EOF
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(resources.inputs.source.path)
+      workingdir: $(workspaces.shared.path)/release
       script: |
         #!/usr/bin/env bash
         set -ex
 
+        TEKTON_PROJECT=$(basename $PROJECT)
+        # List the files in the release folder
+        RELEASE_FILES=$(ls | awk '{ print "-a "$1" " }' | tr '\n' ' ')
+
         hub release create --draft --prerelease \
-          --commitish $(inputs.resources.source.revision) \
-          -a $(inputs.resources.release-bucket.path)/previous/${VERSION}/release.yaml \
-          -a $(inputs.resources.release-bucket.path)/previous/${VERSION}/release.notags.yaml \
+          --commitish ${GIT_REVISION} ${RELEASE_FILES} \
           --file $HOME/release.md ${VERSION}
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: release-draft
+spec:
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: git-revision
+    description: the git revision of the release
+  - name: release-name
+    description: The name of the release (e.g. Cat + Robot for pipeline)
+  - name: release-tag
+    description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
+  - name: previous-release-tag
+    description: Previous release number - for author and PR list calculation
+  - name: bucket
+    description: GCS bucket where to get the release files from (e.g. gs://tekton-releases/pipeline)
+  workspaces:
+    - name: shared
+      description: Workspace where the git repo is prepared for testing
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.5
+      params:
+        - name: url
+          value: https://github.com/$(params.package)
+        - name: revision
+          value: $(params.git-revision)
+      workspaces:
+        - name: output
+          workspace: shared
+          subPath: repo
+    - name: clone-bucket
+      taskRef:
+        name: gcs-download
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+      params:
+        - name: path
+          value: $(workspaces.shared.path)
+        - name: location
+          value: $(params.bucket)/previous/$(params.release-tag)
+        - name: typeDir
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared
+          subPath: release
+    - name: create-draft-release
+      runAfter: ['clone-repo', 'clone-bucket']
+      taskRef:
+        name: create-draft-release
+      workspaces:
+        - name: output
+          workspace: shared
+      params:
+        - name: package
+          value: $(params.package)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: release-name
+          value: $(params.release-name)
+        - name: release-tag
+          value: $(params.release-tag)
+        - name: previous-release-tag
+          value: $(params.previous-release-tag)
