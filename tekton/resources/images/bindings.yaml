@@ -1,4 +1,4 @@
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
   name: trigger-to-build-and-push-image
@@ -18,10 +18,10 @@ spec:
     value: $(body.namespace)
   - name: imageName
     value: $(body.imageName)
-  - name: imageTag
-    value: $(body.imageTag)
+  - name: imageTags
+    value: $(body.imageTags)
 ---
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
   name: trigger-to-build-and-push-image-platform

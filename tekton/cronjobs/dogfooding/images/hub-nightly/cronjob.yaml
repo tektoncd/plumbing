@@ -9,16 +9,19 @@ spec:
     spec:
       template:
         spec:
+          initContainers:
+          - name: git
+            env:
+            - name: GIT_REPOSITORY
+              value: github.com/tektoncd/plumbing
+            - name: GIT_REVISION
+              value: main
           containers:
           - name: trigger
             env:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
-            - name: GIT_REPOSITORY
-              value: github.com/tektoncd/plumbing
-            - name: GIT_REVISION
-              value: main
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/hub:latest
+              value: gcr.io/tekton-releases/dogfooding/hub
             - name: CONTEXT_PATH
               value: tekton/images/hub

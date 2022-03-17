@@ -1,4 +1,4 @@
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: image-builder
@@ -7,22 +7,30 @@ spec:
   triggers:
     - name: single-arch-build-trigger
       interceptors:
-        - cel:
-            filter: >-
-              !('platforms' in body) ||
-              size(body['platforms']) == 0
+        - name: "Filter if there's no platform"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                !('platforms' in body) ||
+                size(body['platforms']) == 0
       bindings:
         - ref: trigger-to-build-and-push-image
       template:
         ref: build-and-push-image
     - name: docker-multi-arch-build-trigger
       interceptors:
-        - cel:
-            filter: >-
-              'platforms' in body &&
-              size(body['platforms']) != 0 &&
-              'buildType' in body &&
-              body['buildType'] == 'docker'
+        - name: "Filter if platform and docker build"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                'platforms' in body &&
+                size(body['platforms']) != 0 &&
+                'buildType' in body &&
+                body['buildType'] == 'docker'
       bindings:
         - ref: trigger-to-build-and-push-image
         - ref: trigger-to-build-and-push-image-platform
@@ -30,12 +38,16 @@ spec:
         ref: docker-build-and-push-image-multi-arch
     - name: ko-multi-arch-build-trigger
       interceptors:
-        - cel:
-            filter: >-
-              'platforms' in body &&
-              size(body['platforms']) != 0 &&
-              'buildType' in body &&
-              body['buildType'] == 'ko'
+        - name: "Filter if platform and ko build"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                'platforms' in body &&
+                size(body['platforms']) != 0 &&
+                'buildType' in body &&
+                body['buildType'] == 'ko'
       bindings:
         - ref: trigger-to-build-and-push-image
         - ref: trigger-to-build-and-push-image-platform

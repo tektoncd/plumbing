@@ -25,6 +25,30 @@ spec:
           - name: workspace
             emptyDir: {}
           initContainers:
+          - name: git
+            image: alpine/git
+            command:
+            - /bin/sh
+            args:
+              - -ce
+              - |
+                # Find the sha associated with the requested reference
+                GIT_SHA=$(git ls-remote --heads https://${GIT_REPOSITORY} | \
+                  grep "refs/heads/${GIT_REVISION}" | cut -f1)
+                VERSION_TAG="v$(date +"%Y%m%d")-$(echo $GIT_SHA | cut -c 1-10)"
+                cat <<EOF > /workspace/git
+                export GIT_SHA=$GIT_SHA
+                export GIT_REPOSITORY=$GIT_REPOSITORY
+                export VERSION_TAG=$VERSION_TAG
+                EOF
+            volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            env:
+              - name: GIT_REPOSITORY
+                value: "github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "main"
           - name: uuid
             image: python:3.6-alpine3.9
             command:
@@ -50,21 +74,21 @@ spec:
                 set -ex
 
                 . /workspace/uuid
-                TAG=$(echo $TARGET_IMAGE | cut -d':' -f2)
-                NO_TAG=$(echo $TARGET_IMAGE | cut -d':' -f1)
-                IMAGE=$(echo $NO_TAG | rev | cut -d'/' -f1 | rev)
-                REGISTRY=$(echo $NO_TAG | cut -d'/' -f1)
-                NAMESPACE=$(echo $NO_TAG | cut -d'/' -f2- | rev | cut -d'/' -f2- | rev)
+                . /workspace/git
+                TAGS="${TAGS},${VERSION_TAG}"
+                IMAGE=$(echo $TARGET_IMAGE | rev | cut -d'/' -f1 | rev)
+                REGISTRY=$(echo $TARGET_IMAGE | cut -d'/' -f1)
+                NAMESPACE=$(echo $TARGET_IMAGE | cut -d'/' -f2- | rev | cut -d'/' -f2- | rev)
                 cat <<EOF > /workspace/post-body.json
                 {
                   "buildUUID": "$TRIGGER_UUID",
                   "gitRepository": "$GIT_REPOSITORY",
-                  "gitRevision": "$GIT_REVISION",
+                  "gitRevision": "$GIT_SHA",
                   "contextPath": "$CONTEXT_PATH",
                   "registry": "$REGISTRY",
                   "namespace": "$NAMESPACE",
                   "imageName": "$IMAGE",
-                  "imageTag": "$TAG",
+                  "imageTags": "$TAGS",
                   "platforms": "$PLATFORMS",
                   "buildType": "$BUILD_TYPE"
                 }
@@ -76,12 +100,10 @@ spec:
             env:
               - name: SINK_URL
                 value: "sink-url"
-              - name: GIT_REPOSITORY
-                value: "github.com/tektoncd/plumbing"
-              - name: GIT_REVISION
-                value: "main"
               - name: TARGET_IMAGE
-                value: "gcr.io/tekton-releases/dogfooding/myimage:latest"
+                value: "gcr.io/tekton-releases/dogfooding/myimage"
+              - name: TAGS
+                value: "latest"
               - name: PLATFORMS
                 value: ""
               - name: BUILD_TYPE
