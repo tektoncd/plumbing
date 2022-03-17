@@ -24,4 +24,4 @@ spec:
                 - name: TARGET_IMAGE
                   value: gcr.io/tekton-releases/dogfooding/catlin
                 - name: CONTEXT_PATH
-                  value: catlin
+                  value: "."
