@@ -121,69 +121,49 @@ GOOGLE_APPLICATION_CREDENTIALS   xyz
 
 ## Create Draft Release
 
-The task `create-draft-release` calculates the list of PRs merged between the
+The pipeline `release-draft` calculates the list of PRs merged between the
 previous release and a specified revision. It also builds a list of authors and
 uses PRs and authors to build a draft new release in GitHub. It also attaches
 the `release.yaml` from the release bucket to the GitHub release.
 
-This task must be executed after the release images and YAML have been produced.
-Running this task multiple times will create multiple drafts; old drafts have to
-be pruned manually when needed.
+This pipeline must be executed after the release images and YAML have been
+produced. Running this task multiple times will create multiple drafts; old
+drafts have to be pruned manually when needed.
 
 Once the draft release is created, the release manager needs to edit the draft,
 arranging PRs in the right category, highlighting important changes and creating
 a release tag line.
 
-Parameters are `package`, `release-name`, `release-tag` and
-`previous-release-tag`.
-Resources:
-- A git resource that points to the release git revision
-- A read-only resource that points to the project folder within the release
-  bucket for the `release.yaml`.
+Parameters are: `package`, `release-name`, `release-tag`, `previous-release-tag`
+, `git-revision`, `bucket` and `rekor-uuid`.
 
-This resources expects a secret named `github-token` to exists, with a GitHub
-token in `GITHUB_TOKEN` with enough privileges to list PRs and create a draft
-release.
+An example using `tkn`. Start defining a few environment variables, obtain the
+REKOR_UUID and then run the pipeline:
 
-An example using `tkn`:
-
-```
-export TEKTON_RELEASE_GIT_RESOURCE=pipeline-git-v0-9-0
-export TEKTON_BUCKET_RESOURCE=pipeline-tekton-bucket
+```shell
+export TEKTON_RELEASE_GIT_SHA=9c884fb3d3bf35c0a251936626f2ca9f17b5c183
 export TEKTON_PACKAGE=tektoncd/pipeline
 export TEKTON_VERSION=v0.9.0
 export TEKTON_OLD_VERSION=v0.8.0
 export TEKTON_RELEASE_NAME="Bengal Bender"
 
-tkn task start \
-  -i source=$TEKTON_RELEASE_GIT_RESOURCE \
-  -i release-bucket=$TEKTON_BUCKET_RESOURCE \
-  -p package=$TEKTON_PACKAGE \
-  -p release-tag=$TEKTON_VERSION \
-  -p previous-release-tag=$TEKTON_OLD_VERSION \
-  -p release-name=$TEKTON_RELEASE_NAME \
-  create-draft-release
+RELEASE_FILE=https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_VERSION}/release.yaml
+CONTROLLER_IMAGE_SHA=$(curl $RELEASE_FILE | egrep 'gcr.io.*controller' | cut -d'@' -f2)
+REKOR_UUID=$(rekor-cli search --sha $CONTROLLER_IMAGE_SHA | grep -v Found | head -1)
+echo -e "CONTROLLER_IMAGE_SHA: ${CONTROLLER_IMAGE_SHA}\nREKOR_UUID: ${REKOR_UUID}"
+
+tkn pipeline start \
+  --workspace name=shared,volumeClaimTemplateFile=workspace-template.yaml \
+  --workspace name=credentials,secret=release-secret \
+  -p package="${TEKTON_PACKAGE}" \
+  -p git-revision="$TEKTON_RELEASE_GIT_SHA" \
+  -p release-tag="${TEKTON_VERSION}" \
+  -p previous-release-tag="${TEKTON_OLD_VERSION}" \
+  -p release-name="${TEKTON_RELEASE_NAME}" \
+  -p bucket="gs://tekton-releases/pipeline" \
+  -p rekor-uuid="$REKOR_UUID" \
+  release-draft
 ```
-
-The bucket resource:
-```
-$ tkn resource describe pipeline-tekton-bucket
-Name:                    pipeline-tekton-bucket
-Namespace:               default
-PipelineResource Type:   storage
-
-Params
-
- NAME         VALUE
- ∙ type       gcs
- ∙ location   gs://tekton-releases/pipeline
- ∙ dir        y
-
-Secret Params
-
- No secret params
-```
-
 
 ## Pipelines
 

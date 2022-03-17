@@ -60,6 +60,7 @@ spec:
         #!/bin/bash
         set -ex
         TEKTON_PROJECT=$(basename $PROJECT)
+        BQ="\`" # Backquote
 
         cat <<EOF | tee $HOME/release.md
         Tekton ${TEKTON_PROJECT^} release ${VERSION} "${RELEASE_NAME}"
@@ -73,36 +74,36 @@ spec:
 
         ## Installation one-liner
 
-        \`\`\`
+        ${BQ}${BQ}${BQ}shell
         kubectl apply -f https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
-        \`\`\`
+        ${BQ}${BQ}${BQ}
 
         ## Attestation
 
         The Rekor UUID for this release is \`${REKOR_UUID}\`
 
         Obtain the attestation:
-        \`\`\`shell
+        ${BQ}${BQ}${BQ}shell
         REKOR_UUID=${REKOR_UUID}
         rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | base64 --decode | jq
-        \`\`\`
+        ${BQ}${BQ}${BQ}
 
         Verify that all container images in the attestation are in the release file:
-        \`\`\`shell
+        ${BQ}${BQ}${BQ}shell
         RELEASE_FILE=https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
         REKOR_UUID=${REKOR_UUID}
 
         # Obtains the list of images with sha from the attestation
-        REKOR_ATTESTATION_IMAGES=$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | base64 --decode | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
+        REKOR_ATTESTATION_IMAGES=\$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | base64 --decode | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
 
         # Download the release file
-        curl "$RELEASE_FILE" > release.yaml
+        curl "\$RELEASE_FILE" > release.yaml
 
         # For each image in the attestation, match it to the release file
-        for image in $REKOR_ATTESTATION_IMAGES; do
-          printf $image; grep -q $image release.yaml && echo " ===> ok" || echo " ===> no match";
+        for image in \$REKOR_ATTESTATION_IMAGES; do
+          printf \$image; grep -q \$image release.yaml && echo " ===> ok" || echo " ===> no match";
         done
-        \`\`\`
+        ${BQ}${BQ}${BQ}
 
         <!-- Any special upgrade notice
         ## Upgrade Notices
