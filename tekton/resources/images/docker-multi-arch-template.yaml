@@ -1,44 +1,65 @@
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerTemplate
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
 metadata:
-  name: docker-build-and-push-image-multi-arch
+  name: "docker-multi-arch-build-and-push"
 spec:
   params:
-  - name: gitRepository
-    description: The git repository that hosts context and Dockerfile
-  - name: gitRevision
-    description: The Git revision to be used.
-  - name: contextPath
-    description: The path to the context within 'gitRepository'
-  - name: registry
-    description: The container registry *registry*/namespace/name tag
-  - name: namespace
-    description: The namespace (aka user, org, project) registry/*namespace*/name tag
-  - name: imageName
-    description: The image name (aka repository) registry/namespace/*name* tag
-  - name: imageTag
-    description: The image tag registry/namespace/name *tag*
-  - name: buildUUID
-    description: The build UUID is used for log collection
-  - name: platforms
-    description: Platforms for multi-arch build in form of `linux/amd64,linux/s390x`
-  resourcetemplates:
-  - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
-    metadata:
-      generateName: build-and-push-$(tt.params.imageName)-
-      labels:
-        prow.k8s.io/build-id: $(tt.params.buildUUID)
-        plumbing.tekton.dev/image: $(tt.params.imageName)
-    spec:
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitRevision
+      description: The Git revision to be used.
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: imageUrl
+      description: The url to push the built image to
+    - name: tags
+      description: Comma separated list of tags
+    - name: contextPath
+      description: Path to the context in the repo to use when building the image
+    - name: platforms
+      description: Comma separated list of platforms
+  workspaces:
+    - name: source
+    - name: secret
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: revision
+          value: $(params.gitRevision)
+        - name: depth
+          value: $(params.gitCloneDepth)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-and-push
+      runAfter: [git-clone]
+      params:
+        - name: contextPath
+          value: $(params.contextPath)
+        - name: imageUrl
+          value: $(params.imageUrl)
+        - name: tags
+          value: $(params.tags)
+        - name: platforms
+          value: $(params.platforms)
+      workspaces:
+        - name: source
+          workspace: source
+        - name: secret
+          workspace: secret
       taskSpec:
-        resources:
-          inputs:
-            - name: source
-              type: git
-          outputs:
-            - name: image
-              type: image
+        params:
+          - name: contextPath
+          - name: imageUrl
+          - name: tags
+          - name: platforms
+        workspaces:
+          - name: source
+          - name: secret
         steps:
         - env:
           - name: DOCKER_HOST
@@ -48,15 +69,25 @@ spec:
           - name: DOCKER_CERT_PATH
             value: /certs/client
           - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /secret/release.json
+            value: $(workspaces.secret.path)/release.json
           - name: PLATFORMS
-            value: $(tt.params.platforms)
+            value: $(params.platforms)
           - name: CONTEXT_PATH
-            value: $(tt.params.contextPath)
+            value: $(params.contextPath)
+          - name: TAGS
+            value: $(params.tags)
+          - name: IMAGE_URL
+            value: $(params.imageUrl)
           image: gcr.io/tekton-releases/dogfooding/buildx-gcloud:latest
           name: build-image-multi-arch
           script: |
             #!/usr/bin/env sh
+            OIFS=$IFS
+            IFS=","
+            DESTINATIONS=""
+            # Docker buildx build supports a stringArray of destinations
+            for tag in ${TAGS}; do DESTINATIONS="${DESTINATIONS} --tag ${IMAGE_URL}:${tag}"; done
+            IFS=$OIFS
 
             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
             gcloud auth configure-docker
@@ -69,21 +100,14 @@ spec:
             docker buildx create context1 --name builder-buildx1 --driver docker-container --platform ${PLATFORMS} --use
             docker buildx inspect --bootstrap --builder builder-buildx1
 
-            cd $(resources.inputs.source.path)
-            docker buildx build \
-            --platform ${PLATFORMS} \
-            --tag $(resources.outputs.image.url) \
-            --push \
-            ${CONTEXT_PATH}
+            cd $(workspaces.source.path)
+            echo docker buildx build --push --platform ${PLATFORMS} ${DESTINATIONS} ${CONTEXT_PATH}
+
+            docker buildx build --push --platform ${PLATFORMS} ${DESTINATIONS} ${CONTEXT_PATH}
           volumeMounts:
           - mountPath: /certs/client
             name: dind-certs
-          - mountPath: /secret
-            name: gcp-secret
         volumes:
-        - name: gcp-secret
-          secret:
-            secretName: release-secret
         - emptyDir: {}
           name: dind-certs
         sidecars:
@@ -107,20 +131,66 @@ spec:
           volumeMounts:
           - mountPath: /certs/client
             name: dind-certs
-      resources:
-        inputs:
-          - name: source
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.gitRevision)
-              - name: url
-                value: https://$(tt.params.gitRepository)
-        outputs:
-          - name: image
-            resourceSpec:
-              type: image
-              params:
-              - name: url
-                value: $(tt.params.registry)/$(tt.params.namespace)/$(tt.params.imageName):$(tt.params.imageTag)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: docker-build-and-push-image-multi-arch
+spec:
+  params:
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: registry
+    description: The container registry *registry*/namespace/name tag
+  - name: namespace
+    description: The namespace (aka user, org, project) registry/*namespace*/name tag
+  - name: imageName
+    description: The image name (aka repository) registry/namespace/*name* tag
+  - name: imageTags
+    description: The image tag registry/namespace/name *tag*
+  - name: buildUUID
+    description: The build UUID is used for log collection
+  - name: platforms
+    description: Platforms for multi-arch build in form of `linux/amd64,linux/s390x`
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: build-and-push-$(tt.params.imageName)-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        plumbing.tekton.dev/image: $(tt.params.imageName)
+    spec:
+      pipelineRef:
+        name: docker-multi-arch-build-and-push
+      workspaces:
+      - name: source
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+      - name: secret
+        secret:
+          secretName: release-secret
+      params:
+        - name: contextPath
+          value: $(tt.params.contextPath)
+        - name: gitRepository
+          value: "https://$(tt.params.gitRepository)"
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: gitCloneDepth
+          value: "2"
+        - name: imageUrl
+          value: "$(tt.params.registry)/$(tt.params.namespace)/$(tt.params.imageName)"
+        - name: tags
+          value: $(tt.params.imageTags)
+        - name: platforms
+          value: $(tt.params.platforms)

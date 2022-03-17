@@ -9,17 +9,20 @@ spec:
     spec:
       template:
         spec:
+          initContainers:
+          - name: git
+            env:
+            - name: GIT_REPOSITORY
+              value: github.com/chmouel/go-rest-api-test
+            - name: GIT_REVISION
+              value: main
           containers:
           - name: trigger
             env:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
-            - name: GIT_REPOSITORY
-              value: github.com/chmouel/go-rest-api-test
-            - name: GIT_REVISION
-              value: master
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/go-rest-api-test:latest
+              value: gcr.io/tekton-releases/dogfooding/go-rest-api-test
             - name: CONTEXT_PATH
               value: .
             - name: BUILD_TYPE
