@@ -120,6 +120,7 @@ spec:
 
         # Restore full git history
         git fetch --unshallow
+        git fetch --tags
 
         # UPPER_THRESHOLD is the newest sha we are interested in
         UPPER_THRESHOLD=${GIT_REVISION}
