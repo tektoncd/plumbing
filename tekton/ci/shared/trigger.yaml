@@ -113,6 +113,6 @@ spec:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-comment
     - ref: tekton-ci-clone-depth
-    - ref: tekton-ci-webhook-pr-body
+    - ref: tekton-ci-webhook-issue-labels
   template:
     ref: check-github-tasks-completed
