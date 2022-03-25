@@ -105,7 +105,7 @@ spec:
       description: The command that was used to trigger testing
     - name: k8s-version
       type: string
-      description: The version of k8s (v1.20.x, v1.21.x or v1.22.x)
+      description: The version of k8s (e.g. v1.21.x, v1.22.x or v1.23.x)
     - name: e2e-script
       type: string
       description: the path to the e2e script in the sources
