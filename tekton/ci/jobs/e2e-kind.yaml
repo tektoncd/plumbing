@@ -36,6 +36,16 @@ spec:
   workspaces:
     - name: source
   steps:
+    - name: make-artifacts-folder
+      image: alpine:3.15.3
+      env:
+        - name: ARTIFACTS_FOLDER
+          value: "$(workspaces.source.path)/artifacts"
+      script: |
+        #!/bin/sh
+        set -ex
+        mkdir -p "$ARTIFACTS_FOLDER"
+        echo "Created folder $ARTIFACTS_FOLDER"
     - image: gcr.io/tekton-releases/dogfooding/kind-e2e:latest
       imagePullPolicy: Always
       workingDir: $(workspaces.source.path)
@@ -119,6 +129,8 @@ spec:
   workspaces:
     - name: sources
       description: Workspace where the git repo is prepared for testing
+    - name: credentials
+      description: Credentials for uploading logs
   tasks:
     - name: clone-repo
       taskRef:
@@ -182,5 +194,20 @@ spec:
           - --e2e-env
           - "$(params.e2e-env)"
       workspaces:
+        - name: source
+          workspace: sources
+  finally:
+    - name: upload-logs
+      taskRef:
+        name: gcs-upload
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+      params:
+        - name: path
+          value: artifacts
+        - name: location
+          value: gs://tekton-prow/pr-logs/pull/tektoncd_pipeline/$(params.pullRequestNumber)/$(params.checkName)/$(context.pipelineRun.name)/artifacts"
+      workspaces:
+        - name: credentials
+          workspace: credentials
         - name: source
           workspace: sources
