@@ -54,6 +54,9 @@ spec:
               resources:
                 requests:
                   storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: "release-secret"
       pipelineRef:
         name: kind-e2e
       params:
