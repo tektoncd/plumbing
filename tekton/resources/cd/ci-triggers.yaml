@@ -1,0 +1,56 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: ci-job-started-github-notification
+  labels:
+    ci.tekton.dev/trigger-type: ci-job.triggered
+spec:
+  interceptors:
+    - cel:
+        filter: >-
+          header.match('ce-type', 'dev.tekton.event.taskrun.started.v1')
+  bindings:
+    - ref: tekton-ci-taskrun-cloudevent
+    - ref: tekton-ci-check-pending
+    - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
+    - ref: tekton-ci-overlays
+  template:
+    ref: tekton-ci-github-check-update
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: ci-job-success-github-notification
+  labels:
+    ci.tekton.dev/trigger-type: ci-job.triggered
+spec:
+  interceptors:
+    - cel:
+        filter: >-
+          header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1')
+  bindings:
+    - ref: tekton-ci-taskrun-cloudevent
+    - ref: tekton-ci-check-success
+    - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
+    - ref: tekton-ci-overlays
+  template:
+    ref: tekton-ci-github-check-update
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: ci-job-failure-github-notification
+  labels:
+    ci.tekton.dev/trigger-type: ci-job.triggered
+spec:
+  interceptors:
+    - cel:
+        filter: >-
+          header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
+  bindings:
+    - ref: tekton-ci-taskrun-cloudevent
+    - ref: tekton-ci-check-failure
+    - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
+    - ref: tekton-ci-overlays
+  template:
+    ref: tekton-ci-github-check-update

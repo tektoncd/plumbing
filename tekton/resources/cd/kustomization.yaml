@@ -27,3 +27,5 @@ resources:
 - notification-template.yaml
 - catalog-template.yaml
 - serviceaccount.yaml
+- notification-triggers.yaml
+- ci-triggers.yaml
