@@ -5,3 +5,4 @@ commonAnnotations:
 resources:
 - bindings.yaml
 - github-template.yaml
+- gubernator-metadata.yaml
