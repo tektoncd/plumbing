@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.16.13 as buildcoverage
+FROM golang:1.17.8 as buildcoverage
 RUN git clone https://github.com/knative/test-infra /go/src/knative.dev/test-infra
 RUN make -C /go/src/knative.dev/test-infra/tools/coverage
 
-FROM golang:1.16.13
+FROM golang:1.17.8
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
