@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: tekton-cd
@@ -93,7 +93,7 @@ spec:
       template:
         ref: publish-catalog
 ---
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener
 metadata:
   name: tekton-events
@@ -102,102 +102,48 @@ spec:
   resources:
     kubernetesResource:
       replicas: 3
-  triggers:
-    - name: cd-pipeline-failed
+  triggerGroups:
+    - name: cd-taskrun-failed
       interceptors:
-        - cel:
-            filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] in ['configmaps', 'folders', 'helm']
-      bindings:
-      - ref: cd-pipeline-type
-      - ref: taskrun-meta
-      - ref: dashboard-url-dogfooding
-      template:
-        ref: cd-pipeline-failed-slack
-    - name: cd-pipeline-nightly-release-failed
+        - name: "Failed TaskRuns"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            cd.tekton.dev/trigger-type: failure-notification
+    - name: ci-job-triggers
       interceptors:
-        - cel:
-            filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'].endsWith('nightly-release-cron') &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/trigger'].endsWith('nightly-release-cron-trigger')
-      bindings:
-      - ref: cd-pipeline-type-nightly
-      - ref: pipelinerun-meta
-      - ref: dashboard-url-dogfooding
-      template:
-        ref: cd-pipeline-failed-slack
-    - name: github-check-start
-      interceptors:
-        - cel:
-            filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.started.v1') &&
-              body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci' &&
-              !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
-              (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
-              'ownerReferences' in body.taskRun.metadata
-            overlays:
-              - key: repo
-                expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
-              - key: shortBuildUUID
-                expression: body.taskRun.metadata.labels['prow.k8s.io/build-id'].truncate(13)
-      bindings:
-        - ref: tekton-ci-taskrun-cloudevent
-        - ref: tekton-ci-check-pending
-        - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
-        - ref: tekton-ci-overlays
-      template:
-        ref: tekton-ci-github-check-update
-    - name: github-check-success
-      interceptors:
-        - cel:
-            filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1') &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci' &&
-              body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
-              !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
-              (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
-              'ownerReferences' in body.taskRun.metadata
-            overlays:
-              - key: repo
-                expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
-              - key: shortBuildUUID
-                expression: body.taskRun.metadata.labels['prow.k8s.io/build-id'].truncate(13)
-      bindings:
-        - ref: tekton-ci-taskrun-cloudevent
-        - ref: tekton-ci-check-success
-        - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
-        - ref: tekton-ci-overlays
-      template:
-        ref: tekton-ci-github-check-update
-    - name: github-check-failure
-      interceptors:
-        - cel:
-            filter: >-
-              header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1') &&
-              body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci' &&
-              body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
-              !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
-              (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
-              (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
-              'ownerReferences' in body.taskRun.metadata
-            overlays:
-              - key: repo
-                expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
-              - key: shortBuildUUID
-                expression: body.taskRun.metadata.labels['prow.k8s.io/build-id'].truncate(13)
-      bindings:
-        - ref: tekton-ci-taskrun-cloudevent
-        - ref: tekton-ci-check-failure
-        - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
-        - ref: tekton-ci-overlays
-      template:
-        ref: tekton-ci-github-check-update
+        - name: "Tekton CI Jobs"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
+                body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci' &&
+                !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
+                (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
+                'ownerReferences' in body.taskRun.metadata
+            - name: "overlays"
+              value:
+                - key: repo
+                  expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
+                - key: shortBuildUUID
+                  expression: body.taskRun.metadata.labels['prow.k8s.io/build-id'].truncate(13)
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: ci-job.triggered
