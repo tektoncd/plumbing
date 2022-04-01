@@ -6,9 +6,12 @@ metadata:
     ci.tekton.dev/trigger-type: ci-job.triggered
 spec:
   interceptors:
-    - cel:
-        filter: >-
-          header.match('ce-type', 'dev.tekton.event.taskrun.started.v1')
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            header.match('ce-type', 'dev.tekton.event.taskrun.started.v1')
   bindings:
     - ref: tekton-ci-taskrun-cloudevent
     - ref: tekton-ci-check-pending
@@ -25,9 +28,12 @@ metadata:
     ci.tekton.dev/trigger-type: ci-job.triggered
 spec:
   interceptors:
-    - cel:
-        filter: >-
-          header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1')
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            header.match('ce-type', 'dev.tekton.event.taskrun.successful.v1')
   bindings:
     - ref: tekton-ci-taskrun-cloudevent
     - ref: tekton-ci-check-success
@@ -44,9 +50,12 @@ metadata:
     ci.tekton.dev/trigger-type: ci-job.triggered
 spec:
   interceptors:
-    - cel:
-        filter: >-
-          header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
   bindings:
     - ref: tekton-ci-taskrun-cloudevent
     - ref: tekton-ci-check-failure

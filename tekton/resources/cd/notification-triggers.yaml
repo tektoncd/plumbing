@@ -6,10 +6,13 @@ metadata:
     cd.tekton.dev/trigger-type: failure-notification
 spec:
   interceptors:
-    - cel:
-        filter: >-
-          body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
-          body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] in ['configmaps', 'folders', 'helm']
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-cd' &&
+            body.taskRun.metadata.labels['triggers.tekton.dev/trigger'] in ['configmaps', 'folders', 'helm']
   bindings:
   - ref: cd-pipeline-type
   - ref: taskrun-meta
@@ -25,10 +28,13 @@ metadata:
     cd.tekton.dev/trigger-type: failure-notification
 spec:
   interceptors:
-    - cel:
-        filter: >-
-          body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'].endsWith('nightly-release-cron') &&
-          body.taskRun.metadata.labels['triggers.tekton.dev/trigger'].endsWith('nightly-release-cron-trigger')
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'].endsWith('nightly-release-cron') &&
+            body.taskRun.metadata.labels['triggers.tekton.dev/trigger'].endsWith('nightly-release-cron-trigger')
   bindings:
   - ref: cd-pipeline-type-nightly
   - ref: pipelinerun-meta
