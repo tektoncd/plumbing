@@ -142,6 +142,8 @@ spec:
       description: Name of the CI job
     - name: jobRunName
       description: The name (or number) of the job execution
+    - name: pullRequestNumber
+      description: The GitHub pull request number
     - name: jobStatus
       description: "true if the CI job was successful else false"
     - name: gitRevision
@@ -223,8 +225,8 @@ spec:
       taskRef:
         name: gubernator-start
       workspaces:
-        - name: source
-          workspace: source
+        - name: shared
+          workspace: shared
       params:
         - name: package
           value: $(params.package)
@@ -252,7 +254,7 @@ spec:
         - name: credentials
           workspace: credentials
         - name: source
-          workspace: sources
+          workspace: shared
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -273,6 +275,8 @@ spec:
       description: The name (or number) of the job execution
     - name: jobStatus
       description: "true if the CI job was successful else false"
+    - name: pullRequestNumber
+      description: The GitHub pull request number
     - name: gitRevision
       description: The git ref of the top commit in the pull request
     - name: bucket
@@ -283,8 +287,8 @@ spec:
       taskRef:
         name: gubernator-stop
       workspaces:
-        - name: source
-          workspace: source
+        - name: shared
+          workspace: shared
       params:
         - name: package
           value: $(params.package)
@@ -294,6 +298,8 @@ spec:
           value: $(params.jobRunName)
         - name: jobStatus
           value: $(params.jobStatus)
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
         - name: gitRevision
           value: $(params.gitRevision)
     - name: upload-data
@@ -310,4 +316,4 @@ spec:
         - name: credentials
           workspace: credentials
         - name: source
-          workspace: sources
+          workspace: shared
