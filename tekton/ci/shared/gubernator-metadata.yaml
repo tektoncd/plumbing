@@ -58,9 +58,9 @@ spec:
   stepTemplate:
     env:
       - name: DIRECTORY_PATH
-        value: $(workspaces.shared.path)/pr-logs/directory/$(params.jobName)
+        value: pr-logs/directory/$(params.jobName)
       - name: PULL_ROOT_PATH
-        value: $(workspaces.shared.path)/pr-logs/pull
+        value: pr-logs/pull
       - name: LATEST_BUILD_LEAF_PATH
         value: $(params.pullRequestNumber)/$(params.jobName)
       - name: PACKAGE
@@ -76,16 +76,16 @@ spec:
   steps:
     - name: write-data
       image: gcr.io/tekton-releases/dogfooding/tkn:v20220331-17fc70470d@sha256:d17fec04f655551464a47dd59553c9b44cf660cc72dbcdbd52c0b8e8668c0579
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.shared.path)
       script: |
         #!/usr/bin/env sh
         set -e
 
         # Create the directory folder
-        mdkir -p "${DIRECTORY_PATH}"
+        mkdir -p "${DIRECTORY_PATH}"
 
         # Add path to the artifacts in the ${BUILD_NUMBER}.txt
-        echo "${BUCKET}/pr-logs/pull/${PACKAGE/\//_}/JOB_LEAF_PATH" > "${DIRECTORY_PATH}/${BUILD_NUMBER}.txt"
+        echo "${BUCKET}/pr-logs/pull/${PACKAGE/\//_}/${LATEST_BUILD_LEAF_PATH}/${BUILD_NUMBER}" > "${DIRECTORY_PATH}/${BUILD_NUMBER}.txt"
         # Add the ${BUILD_NUMBER} into latest-build.txt
         echo "${BUILD_NUMBER}" > "${DIRECTORY_PATH}/latest-build.txt"
 
@@ -145,7 +145,7 @@ spec:
     - name: pullRequestNumber
       description: The GitHub pull request number
     - name: jobStatus
-      description: "true if the CI job was successful else false"
+      description: "success if the CI job was successful else failure"
     - name: gitRevision
       description: The git ref of the top commit in the pull request
   stepTemplate:
@@ -165,7 +165,7 @@ spec:
   steps:
     - name: write-data
       image: gcr.io/tekton-releases/dogfooding/tkn:v20220331-17fc70470d@sha256:d17fec04f655551464a47dd59553c9b44cf660cc72dbcdbd52c0b8e8668c0579
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.shared.path)
       script: |
         #!/usr/bin/env sh
         set -e
@@ -177,12 +177,12 @@ spec:
         # Collect the build log - it will still be there unless the PipelineRun
         # has been cancelled or there is some very aggressive Pod pruning happening
         # This is specific to the Tekton dogfooding CI (hardcoded namespace)
-        tkn pr logs -n tekton-ci "${BUILD_NUMBER}" > "${BUILD_PATH}/build-log.txt
+        tkn pr logs -n tekton-ci "${BUILD_NUMBER}" > "${BUILD_PATH}/build-log.txt"
 
         # Create the finished.json file
         # Use the "time now" to simplify the logic
         # Build the results from the status to simplify the logic
-        if [ "$JOB_STATUS" == "false" ]; then
+        if [ "$JOB_STATUS" == "failure" ]; then
           JOB_RESULT="FAILURE"
         else
           JOB_RESULT="SUCCESS"
@@ -244,7 +244,7 @@ spec:
       runAfter: ["create-data"]
       taskRef:
         name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.2
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
       params:
         - name: path
           value: "."
@@ -274,7 +274,7 @@ spec:
     - name: jobRunName
       description: The name (or number) of the job execution
     - name: jobStatus
-      description: "true if the CI job was successful else false"
+      description: "success if the CI job was successful else failure"
     - name: pullRequestNumber
       description: The GitHub pull request number
     - name: gitRevision
@@ -306,7 +306,7 @@ spec:
       runAfter: ["create-data"]
       taskRef:
         name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.2
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
       params:
         - name: path
           value: "."

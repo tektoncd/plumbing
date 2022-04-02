@@ -4,3 +4,4 @@ resources:
 - bindings.yaml
 - common-tasks.yaml
 - eventlistener.yaml
+- gubernator-metadata.yaml

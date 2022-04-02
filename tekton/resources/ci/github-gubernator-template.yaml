@@ -1,0 +1,146 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-gubernator-start
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: shortBuildUUID
+    description: A truncated version of the buildUUID
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
+    description: A description to be displayed for the status of the check
+  - name: taskRunName
+    description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: $(tt.params.shortBuildUUID)-$(tt.params.checkName)-logs-start
+      namespace: tekton-ci
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      pipelineRef:
+        name: gubernator-start
+      params:
+        - name: package
+          value: $(tt.params.gitHubRepo)
+        - name: jobName
+          value: $(tt.params.checkName)
+        - name: jobRunName
+          value: $(tt.params.parentPipelineRunName)
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: bucket
+          value: "gs://tekton-prow"
+      workspaces:
+        - name: shared
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: release-secret
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-gubernator-stop
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: shortBuildUUID
+    description: A truncated version of the buildUUID
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
+    description: A description to be displayed for the status of the check
+  - name: taskRunName
+    description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: $(tt.params.shortBuildUUID)-$(tt.params.checkName)-logs-stop
+      namespace: tekton-ci
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+    spec:
+      serviceAccountName: tekton-ci-logs
+      pipelineRef:
+        name: gubernator-stop
+      params:
+        - name: package
+          value: $(tt.params.gitHubRepo)
+        - name: jobName
+          value: $(tt.params.checkName)
+        - name: jobRunName
+          value: $(tt.params.parentPipelineRunName)
+        - name: jobStatus
+          value: $(tt.params.gitHubCheckStatus)
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: bucket
+          value: "gs://tekton-prow"
+      workspaces:
+        - name: shared
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: release-secret
