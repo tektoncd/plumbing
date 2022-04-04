@@ -78,6 +78,10 @@ kubectl apply -f boskos/boskos.yaml # Must be applied first to create the namesp
 kubectl apply -f boskos/boskos-config.yaml
 kubectl apply -f boskos/storage-class.yaml
 
+# Deploy GitHub Proxy
+kubectl apply -f prow/gce-ssd-retain_storageclass.yaml
+kubectl apply -f prow/ghproxy.yaml
+
 # Deploy Prow
 kubectl apply -f prow/prow.yaml
 
