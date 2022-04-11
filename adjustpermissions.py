@@ -60,9 +60,20 @@ def update_all_projects(users: List[str], projects: List[str], remove: bool, rea
   for user in users:
     for project in projects:
       for role in roles:
-        subprocess.check_call(shlex.split(
-            "gcloud projects {} {} --member user:{} --role {}".format(command, project, user, role)
-        ))
+        try:
+            subprocess.check_call(shlex.split(
+                "gcloud projects {} {} --member user:{} --role {}".format(command, project, user, role)
+            ))
+        except subprocess.CalledProcessError as e:
+            # when removing permissions, if the permission doesn't exist an error will be returned - but that's okay
+            # since the goal is to remove it (and if the permissions list has new entries since the permissions
+            # were granted, this will be hit)
+            if remove:
+                print("unable to run {} for project {} user {} role {}: {}".format( command, project, user, role, e),
+                     file=sys.stderr
+                )
+            else:
+                raise e
 
 
 def parse_boskos_projects() -> List[str]:
