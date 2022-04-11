@@ -12,6 +12,9 @@ This script will add the permissions allowed to folks on the governing board
 (https://github.com/tektoncd/community/blob/main/governance.md#permissions-and-access)
 to all GCP projects. It can also be used to remove permissions if needed.
 
+The script can also be used to add "readonly" permission if the `--readonly` flag
+is provided.
+
 This script requires the `gcloud` command line tool and the python
 `PyYaml` library.
 
@@ -77,7 +80,7 @@ if __name__ == '__main__':
                           help="The names of the users' accounts, usually their email address, comma separated")
   arg_parser.add_argument("--remove", action="store_true",
                           help="Use this flag to remove user access instead of adding it")
-  arg_parser.add_argument("--readonly", type=bool, default=True, help="Grant only read permissions")
+  arg_parser.add_argument("--readonly", type=bool, default=False, help="Grant only read permissions")
   args = arg_parser.parse_args()
 
   gcloud_required()
