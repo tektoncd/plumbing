@@ -22,6 +22,12 @@ Example usage:
   python3 adjustpermissions.py --users "foo@something.com,bar@something.com"
 Or to remove access for foo@something.com and bar@something.com:
   python3 adjustpermissions.py --users "foo@something.com,bar@something.com --remove"
+
+Troubleshooting:
+* "The policy contains bindings with conditions..." - If you see this prompt, someone has added a conditional
+  policy to the IAM policies for the project. This is not currently supported by this script. The easiest solution
+  is to remove the conditional policy from the project (e.g. via the command line or via the IAM section of the
+  GCP UI)
 """
 import argparse
 import shlex
