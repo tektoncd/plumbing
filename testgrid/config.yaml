@@ -1,0 +1,27 @@
+# config proto: https://github.com/GoogleCloudPlatform/testgrid/blob/master/pb/config/config.proto
+dashboards:
+- dashboard_tab:
+  - code_search_path: https://github.com/tektoncd/pipeline/search
+    code_search_url_template:
+      url: https://github.com/tektoncd/pipeline/main/compare/<start-custom-0>...<end-custom-0>
+    file_bug_template:
+      options:
+      - key: short_desc
+        value: 'test: <test-name>'
+      - key: cf_environment
+        value: 'test: <test-name>'
+      - key: comment
+        value: 'test: <test-name> failed, see job: <link>'
+      url: https://github.com/tektoncd/pipeline/issues/new
+    name: pull-tekton-pipeline-integration-tests
+    open_bug_template:
+      url: https://github.com/tektoncd/pipeline/issues/
+    open_test_template:
+      url: https://prow.tekton.dev/view/gs/<gcs_prefix>/<changelist>
+    results_url_template:
+      url: https://prow.tekton.dev/job-history/<gcs_prefix>
+    test_group_name: pull-tekton-pipeline-integration-tests
+  name: tektoncd-pipeline
+test_groups:
+- name: pull-tekton-pipeline-integration-tests
+  gcs_prefix: tekton-prow/pr-logs/pull/tektoncd_pipeline/
