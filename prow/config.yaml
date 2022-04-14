@@ -198,7 +198,29 @@ presubmits:
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./tekton/images/test-runner/test.sh"
-
+  - name: pull-tekton-plumbing-check-testgrid-config
+    run_if_changed: '^(prow/.*\.yaml)|(testgrid\.yaml)$'
+    decorate: true
+    annotations:
+      testgrid-create-test-group: "false"
+    labels:
+      preset-presubmit-sh: "true"
+    spec:
+      containers:
+      - image: gcr.io/k8s-prow/configurator:v20220412-66078146cd
+        command:
+        - configurator
+        args:
+        - --yaml=testgrid/config.yaml
+        - --default=testgrid/default.yaml
+        - --prow-config=prow/config.yaml
+        - --prow-job-config=prow/config.yaml
+        - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
+        - --update-description
+        - --validate-config-file
+        resources:
+          requests:
+            memory: "1Gi"
   tektoncd/catlin:
     - name: pull-tekton-catlin-build-tests
       labels:
@@ -302,7 +324,6 @@ presubmits:
           - "--cov-target=."
           - "--cov-threshold-percentage=0"
           - "--github-token=/etc/github-token/oauth"
-
   tektoncd/chains:
     - name: pull-tekton-chains-build-tests
       labels:
@@ -1366,6 +1387,33 @@ presubmits:
         - "--github-token=/etc/github-token/oauth"
 
 postsubmits:
+  tektoncd/plumbing:
+  - name: post-tekton-plumbing-upload-testgrid-config
+    branches:
+    - main
+    agent: kubernetes
+    decorate: true
+    annotations:
+      testgrid-create-test-group: "false"
+    labels:
+      preset-postsubmit-sh: "true"
+    spec:
+      containers:
+      - image: gcr.io/k8s-prow/configurator:v20220412-66078146cd
+        command:
+        - configurator
+        args:
+        - --yaml=testgrid/config.yaml
+        - --default=testgrid/default.yaml
+        - --prow-config=prow/config.yaml
+        - --prow-job-config=prow/config.yaml
+        - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
+        - --update-description
+        - --oneshot
+        - --output=gcs://tekton-prow/testgrid/config.yaml
+        resources:
+          requests:
+            memory: "1Gi"
   tektoncd/catlin:
   - name: post-tekton-catlin-go-coverage
     branches:
