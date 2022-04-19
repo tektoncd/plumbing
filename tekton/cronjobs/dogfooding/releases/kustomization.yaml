@@ -11,3 +11,4 @@ resources:
 - wait-task-nightly
 - pipeline-to-taskrun-nightly
 - cloudevents-nightly
+- chains-nightly
