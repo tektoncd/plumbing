@@ -1409,7 +1409,7 @@ postsubmits:
         - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
         - --update-description
         - --oneshot
-        - --output=gs://tekton-prow/testgrid/config.yaml
+        - --output=gs://tekton-prow/testgrid/config
         resources:
           requests:
             memory: "1Gi"
