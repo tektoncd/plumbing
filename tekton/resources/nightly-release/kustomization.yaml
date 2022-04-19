@@ -16,3 +16,4 @@ resources:
 - overlays/wait-task
 - overlays/pipeline-to-taskrun
 - overlays/cloudevents
+- overlays/chains
