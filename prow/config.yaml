@@ -199,7 +199,7 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./tekton/images/test-runner/test.sh"
   - name: pull-tekton-plumbing-check-testgrid-config
-    run_if_changed: '^(prow/.*\.yaml)|(testgrid\.yaml)$'
+    run_if_changed: '^(prow/.*\.yaml)|(testgrid/.*\.yaml)$'
     decorate: true
     annotations:
       testgrid-create-test-group: "false"
