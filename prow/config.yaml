@@ -205,6 +205,7 @@ presubmits:
       testgrid-create-test-group: "false"
     labels:
       preset-presubmit-sh: "true"
+    optional: true
     spec:
       containers:
       - image: gcr.io/k8s-prow/configurator:v20220412-66078146cd
@@ -214,7 +215,6 @@ presubmits:
         - --yaml=testgrid/config.yaml
         - --default=testgrid/default.yaml
         - --prow-config=prow/config.yaml
-        - --prow-job-config=prow/config.yaml
         - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
         - --update-description
         - --validate-config-file
@@ -1410,7 +1410,7 @@ postsubmits:
         - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
         - --update-description
         - --oneshot
-        - --output=gcs://tekton-prow/testgrid/config.yaml
+        - --output=gs://tekton-prow/testgrid/config.yaml
         resources:
           requests:
             memory: "1Gi"
