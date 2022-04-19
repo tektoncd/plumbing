@@ -1406,7 +1406,6 @@ postsubmits:
         - --yaml=testgrid/config.yaml
         - --default=testgrid/default.yaml
         - --prow-config=prow/config.yaml
-        - --prow-job-config=prow/config.yaml
         - --prowjob-url-prefix=https://github.com/tektoncd/plumbing/tree/main/prow/
         - --update-description
         - --oneshot
