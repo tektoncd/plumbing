@@ -3,7 +3,13 @@
 # Changes
 
 <!-- Describe your changes here- ideally you can get that description straight from
-your descriptive commit message(s)! -->
+your descriptive commit message(s)!
+
+In addition, categorize the changes you're making using the "/kind" Prow command, example:
+
+/kind <kind>
+Supported kinds are: bug, cleanup, design, documentation, feature, flake, misc, question, tep
+-->
 
 # Submitter Checklist
 
