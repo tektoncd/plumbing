@@ -205,7 +205,6 @@ presubmits:
       testgrid-create-test-group: "false"
     labels:
       preset-presubmit-sh: "true"
-    optional: true
     spec:
       containers:
       - image: gcr.io/k8s-prow/configurator:v20220412-66078146cd
