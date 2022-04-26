@@ -21,6 +21,8 @@
           value: $(tt.params.versionTag)
         - name: serviceAccountPath
           value: release.json
+        - name: releaseBucket
+          value: gs://tekton-releases-nightly/chains
         workspaces:
           - name: workarea
             volumeClaimTemplate:
