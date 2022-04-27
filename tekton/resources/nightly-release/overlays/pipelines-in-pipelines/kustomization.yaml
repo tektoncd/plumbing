@@ -15,4 +15,4 @@ patchesJson6902:
       name: nightly
     path: trigger.yaml
 resources:
-  - github.com/tektoncd/experimental/pipelines-in-pipelines/tekton/?ref=main
+  - github.com/tektoncd/experimental/tekton/?ref=main
