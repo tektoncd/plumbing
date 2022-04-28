@@ -1,0 +1,18 @@
+namePrefix: add-pr-body-ci-
+bases:
+  - ../../base
+patchesJson6902:
+  - target:
+      group: triggers.tekton.dev
+      version: v1alpha1
+      kind: TriggerTemplate
+      name: template
+    path: template.yaml
+  - target:
+      group: triggers.tekton.dev
+      version: v1alpha1
+      kind: Trigger
+      name: nightly
+    path: trigger.yaml
+resources:
+  - github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body/tekton/?ref=main

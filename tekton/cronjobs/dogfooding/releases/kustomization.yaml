@@ -6,6 +6,7 @@ resources:
 - cel-nightly
 - pipelines-in-pipelines-nightly
 - add-pr-body-nightly
+- add-pr-body-ci-nightly
 - add-team-members-nightly
 - operator-nightly
 - wait-task-nightly
