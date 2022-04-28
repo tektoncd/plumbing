@@ -11,6 +11,7 @@ resources:
 - overlays/cel
 - overlays/pipelines-in-pipelines
 - overlays/add-pr-body
+- overlays/add-pr-body-ci
 - overlays/add-team-members
 - overlays/operator
 - overlays/wait-task

@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/release
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-add-pr-body-ci-nightly-release"
