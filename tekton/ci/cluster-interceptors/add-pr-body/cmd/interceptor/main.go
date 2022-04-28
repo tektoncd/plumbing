@@ -24,7 +24,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/tektoncd/plumbing/tekton/ci/interceptors/add-pr-body/pkg"
+	"github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body/pkg"
 	"github.com/tektoncd/triggers/pkg/interceptors/server"
 
 	"knative.dev/pkg/logging"
