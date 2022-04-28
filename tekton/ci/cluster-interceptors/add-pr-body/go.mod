@@ -1,4 +1,4 @@
-module github.com/tektoncd/plumbing/tekton/ci/interceptors/add-pr-body
+module github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body
 
 go 1.16
 
