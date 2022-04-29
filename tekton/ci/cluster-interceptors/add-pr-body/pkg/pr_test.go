@@ -3,12 +3,13 @@ package pkg
 import (
 	"bytes"
 	"context"
-	"github.com/google/go-cmp/cmp"
-	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1beta1"
-	"google.golang.org/grpc/codes"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1beta1"
+	"google.golang.org/grpc/codes"
 )
 
 func TestInterceptor_Process(t *testing.T) {
@@ -21,9 +22,8 @@ func TestInterceptor_Process(t *testing.T) {
 				},
 			},
 		},
-		Continue:   true,
+		Continue: true,
 	}
-
 
 	t.Run("without auth token", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -72,9 +72,9 @@ func TestInterceptor_Process(t *testing.T) {
 }
 
 func TestInterceptor_Process_Error(t *testing.T) {
-	for _, tc := range []struct{
+	for _, tc := range []struct {
 		name string
-		req triggersv1.InterceptorRequest
+		req  triggersv1.InterceptorRequest
 		want triggersv1.InterceptorResponse
 	}{{
 		name: "empty extensions",
@@ -84,8 +84,8 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		want: triggersv1.InterceptorResponse{
 			Extensions: nil,
 			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.FailedPrecondition,
+			Status: triggersv1.Status{
+				Code:    codes.FailedPrecondition,
 				Message: "no 'add-pr-body' found in the extensions",
 			},
 		},
@@ -99,8 +99,8 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		want: triggersv1.InterceptorResponse{
 			Extensions: nil,
 			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.FailedPrecondition,
+			Status: triggersv1.Status{
+				Code:    codes.FailedPrecondition,
 				Message: "no 'add-pr-body' found in the extensions",
 			},
 		},
@@ -116,8 +116,8 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		want: triggersv1.InterceptorResponse{
 			Extensions: nil,
 			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.FailedPrecondition,
+			Status: triggersv1.Status{
+				Code:    codes.FailedPrecondition,
 				Message: "no 'pull-request-url' found",
 			},
 		},
@@ -133,8 +133,8 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		want: triggersv1.InterceptorResponse{
 			Extensions: nil,
 			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.FailedPrecondition,
+			Status: triggersv1.Status{
+				Code:    codes.FailedPrecondition,
 				Message: "'pull-request-url' found, but not a string",
 			},
 		},
@@ -150,29 +150,12 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		want: triggersv1.InterceptorResponse{
 			Extensions: nil,
 			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.Internal, // TODO(dibyom): This should be a different error code
+			Status: triggersv1.Status{
+				Code:    codes.Internal, // TODO(dibyom): This should be a different error code
 				Message: `Get "bad_url": unsupported protocol scheme ""`,
 			},
 		},
-	}, {
-		name: "cannot fetch url",
-		req: triggersv1.InterceptorRequest{
-			Extensions: map[string]interface{}{
-				"add_pr_body": map[string]interface{}{
-					"pull_request_url": "https://foo.bar/blah",
-				},
-			},
-		},
-		want: triggersv1.InterceptorResponse{
-			Extensions: nil,
-			Continue:   false,
-			Status:     triggersv1.Status{
-				Code: codes.Internal, // TODO(dibyom): This should be a different error code
-				Message: `Get "https://foo.bar/blah": dial tcp: lookup foo.bar: no such host`,
-			},
-		},
-	}}{
+	}} {
 		t.Run(tc.name, func(t *testing.T) {
 			i := Interceptor{}
 			got := i.Process(context.Background(), &tc.req)
@@ -182,7 +165,6 @@ func TestInterceptor_Process_Error(t *testing.T) {
 		})
 	}
 }
-
 
 type requestOption func(*http.Request)
 
