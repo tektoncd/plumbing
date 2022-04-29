@@ -7,7 +7,6 @@ This folder holds the Slack buildcaptain bot code and configuration.
 
 Current build captains are:
 - Andrea Frittoli @afrittoli (andrea.frittoli)
-- Billy Lynch @wlynch (wlynch)
 - Dibyo Mukherjee @dibyom (dibyo)
 - Nikhil Thomas @nikhil-thomas (nikthoma)
 - Savita Ashture @savitaashture (sashture)
@@ -19,6 +18,7 @@ Other folks who are not build captains but have build captain access:
 - Priti Desai @pritidesai (for Pipelines releases)
 - Priya Wadhwa @priyawadhwa (for Chains releases)
 - Alan Greene @AlanGreene (for Dashboard releases)
+- Billy Lynch @wlynch (for Results / Chains releases)
 
 Build captain access is given with [adjustpermissions.py](../../adjustpermissions.py).
 
@@ -35,7 +35,7 @@ Here's a one-liner for generating a new rotation:
 go run ./cmd/generate-rotation-csv/main.go \
   -start-date $(date +%Y-%m-%d) \
   -days 365 \
-  -names andrea.frittoli,wlynch,dibyo,nikthoma,sashture,jerop,vdemeest \
+  -names andrea.frittoli,dibyo,nikthoma,sashture,jerop,vdemeest \
   > ./rotation.csv
 ```
 
