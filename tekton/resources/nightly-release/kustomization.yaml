@@ -18,3 +18,4 @@ resources:
 - overlays/pipeline-to-taskrun
 - overlays/cloudevents
 - overlays/chains
+- overlays/pipeline-in-pod
