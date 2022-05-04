@@ -13,3 +13,4 @@ resources:
 - pipeline-to-taskrun-nightly
 - cloudevents-nightly
 - chains-nightly
+- pipeline-in-pod-nightly
