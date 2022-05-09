@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION
+declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION CONTAINER_RUNTIME
 
 # This script deploys Tekton on a local kind cluster
 # It creates a kind cluster and deploys pipeline, triggers and dashboard
 
 # Prerequisites:
 # - go 1.14+
-# - docker (recommended 8GB memory config)
+# - podman or docker (recommended 8GB memory config)
 # - kind
 
 # Notes:
@@ -23,7 +23,7 @@ get_latest_release() {
 }
 
 # Read command line options
-while getopts ":c:p:t:d:" opt; do
+while getopts ":c:p:t:d:k" opt; do
   case ${opt} in
     c )
       CLUSTER_NAME=$OPTARG
@@ -37,10 +37,13 @@ while getopts ":c:p:t:d:" opt; do
     d )
       TEKTON_DASHBOARD_VERSION=$OPTARG
       ;;
+    k )
+      CONTAINER_RUNTIME="docker"
+      ;;
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo "Usage:  tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version]"
+      echo "Usage:  tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version [-k]"
       ;;
     : )
       echo "Invalid option: $OPTARG requires an argument" 1>&2
@@ -61,13 +64,19 @@ fi
 if [ -z "$TEKTON_DASHBOARD_VERSION" ]; then
   TEKTON_DASHBOARD_VERSION=$(get_latest_release tektoncd/dashboard)
 fi
+if [ -z "$CONTAINER_RUNTIME" ]; then
+  CONTAINER_RUNTIME="podman"
+fi
 
 # create registry container unless it already exists
 reg_name='kind-registry'
 reg_port='5000'
-running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
+running="$(${CONTAINER_RUNTIME} inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
 if [ "${running}" != 'true' ]; then
-  docker run \
+  # It may exists and not be running, so cleanup just in case
+  "$CONTAINER_RUNTIME" rm "${reg_name}" 2> /dev/null || true
+  # And start a new one
+  "$CONTAINER_RUNTIME" run \
     -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
     registry:2
 fi
@@ -96,7 +105,7 @@ fi
 
 # connect the registry to the cluster network
 # (the network may already be connected)
-docker network connect "kind" "${reg_name}" || true
+"$CONTAINER_RUNTIME" network connect "kind" "${reg_name}" || true
 
 
 # Install Tekton Pipeline, Triggers and Dashboard
