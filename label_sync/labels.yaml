@@ -353,6 +353,13 @@ repos:
         name: design-help-wanted
         target: issues
         addedBy: humans
+  tektoncd/operator:
+    labels:
+      - color: 160a72
+        description: This issue is used during working group to mark issues to be discussed
+        name: grooming
+        target: issues
+        addedBy: humans
   tektoncd/pipeline:
     labels:
       - color: e11d21
