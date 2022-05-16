@@ -360,6 +360,16 @@ repos:
         name: grooming
         target: issues
         addedBy: humans
+      - color: 0c6a89
+        description: This issue targets the OpenShift Platform
+        name: platform/openshift
+        target: issues
+        addedBy: humans
+      - color: 0c6a89
+        description: This issue targets the Kubernetes Platform
+        name: platform/kubernetes
+        target: issues
+        addedBy: humans
   tektoncd/pipeline:
     labels:
       - color: e11d21
