@@ -26,6 +26,9 @@ ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
 RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.4
 
+# Install yq for YAML parsing
+RUN apk add --no-cache yq
+
 FROM google/cloud-sdk:296.0.0-alpine
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
@@ -41,6 +44,7 @@ ARG KO_VERSION=0.11.2
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
-# Get Kubectl and Kustomize from the build image
+# Get static binaries from the build image
 COPY --from=build /usr/local/bin/kubectl /usr/local/bin/kubectl
 COPY --from=build /usr/local/go/bin/kustomize /usr/local/go/bin
+COPY --from=build /usr/bin/yq /usr/local/bin/yq
