@@ -306,7 +306,7 @@ tkn pipeline start \
   --param=version=<version> \
   --param=projectName=<tekton-project> \
   --param=namespace=tekton-pipelines \
-  --param=resources="conditions pipelineresources tasks pipelines taskruns pipelineruns" \
+  --param=resources="pipelineresources tasks pipelines taskruns pipelineruns" \
   --param=container-registry=docker-registry.default.svc:5000 \
   --param=package=github.com/tektoncd/pipeline \
   --resource=bucket=<tekton-bucket-resource> \

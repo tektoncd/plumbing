@@ -61,7 +61,7 @@ rules:
   resources: ["pods", "pods/log", "namespaces"]
   verbs: ["get", "list"]
 - apiGroups: ["tekton.dev"]
-  resources: ["pipelines", "tasks", "pipelineruns", "pipelineresources", "taskruns", "conditions"]
+  resources: ["pipelines", "tasks", "pipelineruns", "pipelineresources", "taskruns"]
   verbs: ["get"]
 ---
 apiVersion: v1

@@ -7,7 +7,7 @@ spec:
   - name: package
   - name: resources
     description: space separated list of resources to be deleted
-    default: "conditions pipelineresources tasks pipelines taskruns pipelineruns"
+    default: "pipelineresources tasks pipelines taskruns pipelineruns"
   - name: plumbing-path
     description: path in the workspace for plumbing source code
     default: src/github.com/tektoncd/plumbing
