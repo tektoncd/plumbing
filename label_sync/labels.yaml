@@ -217,6 +217,11 @@ default:
       target: prs
       prowPlugin: releasenote
       addedBy: prow or member or author
+    - color: c2e0c6
+      description: Used by dependabot - identifies all PRs created by dependabot
+      name: dependencies
+      target: prs
+      addedBy: anyone
 
     ##########################################################################
     # These labels are modified by automation and should not be added manually
