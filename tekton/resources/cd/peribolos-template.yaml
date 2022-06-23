@@ -1,0 +1,35 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: peribolos
+spec:
+  params:
+    - name: gitRepository
+      description: The git repository url
+    - name: gitRevision
+      description: The git revision
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: peribolos-run-
+      spec:
+        pipelineRef:
+          name: peribolos-sync  # Defined in the org-permissions folder
+        params:
+          - name: url
+            value: $(tt.params.gitRepository)
+          - name: revision
+            value: $(tt.params.gitRevision)
+        workspaces:
+          - name: github-oauth
+            secret:
+              secretName: bot-token-github
+          - name: shared-workspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi

@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/peribolos
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-tektoncd"

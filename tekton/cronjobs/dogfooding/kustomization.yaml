@@ -11,3 +11,4 @@ resources:
 - tekton
 - nightly-tests
 - catalog
+- peribolos
