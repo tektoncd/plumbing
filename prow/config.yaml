@@ -988,6 +988,8 @@ presubmits:
         env:
         - name: PIPELINE_FEATURE_GATE
           value: "alpha"
+        - name: EMBEDDED_STATUS_GATE
+          value: "minimal"
   - name: pull-tekton-pipeline-go-coverage
     labels:
       preset-github-token: "true"
