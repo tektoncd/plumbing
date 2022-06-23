@@ -85,7 +85,7 @@ spec:
         Obtain the attestation:
         ${BQ}${BQ}${BQ}shell
         REKOR_UUID=${REKOR_UUID}
-        rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | base64 --decode | jq
+        rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | jq .
         ${BQ}${BQ}${BQ}
 
         Verify that all container images in the attestation are in the release file:
@@ -94,7 +94,7 @@ spec:
         REKOR_UUID=${REKOR_UUID}
 
         # Obtains the list of images with sha from the attestation
-        REKOR_ATTESTATION_IMAGES=\$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | base64 --decode | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
+        REKOR_ATTESTATION_IMAGES=\$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
 
         # Download the release file
         curl "\$RELEASE_FILE" > release.yaml
