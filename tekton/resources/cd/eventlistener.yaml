@@ -110,6 +110,19 @@ spec:
           value: "$(body.params.catalog.description)"
       template:
         ref: publish-catalog
+    - name: peribolos
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'peribolos'
+      bindings:
+        - ref: deploy-source-git
+      template:
+        ref: peribolos
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener

@@ -29,3 +29,4 @@ resources:
 - serviceaccount.yaml
 - notification-triggers.yaml
 - ci-triggers.yaml
+- peribolos-template.yaml
