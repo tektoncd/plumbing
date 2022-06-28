@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: peribolos-trigger
 spec:
-  schedule: "30 * * * *"
+  schedule: "0 12 * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
