@@ -67,7 +67,7 @@ spec:
         - name: input
           workspace: sources
     - name: unit-tests
-      when: # implicit dependency on the check tasks
+      when:  # implicit dependency on the check tasks
       - input: $(tasks.check-name-matches.results.check)
         operator: in
         values: ["passed"]

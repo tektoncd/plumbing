@@ -1,4 +1,4 @@
-# Copyright 2019-2020 The Tekton Authors
+# Copyright 2019-2022 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,94 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: prowjobs.prow.k8s.io
-spec:
-  group: prow.k8s.io
-  version: v1
-  names:
-    kind: ProwJob
-    singular: prowjob
-    plural: prowjobs
-  scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          properties:
-            max_concurrency:
-              type: integer
-              minimum: 0
-            type:
-              type: string
-              enum:
-              - "presubmit"
-              - "postsubmit"
-              - "periodic"
-              - "batch"
-        status:
-          properties:
-            state:
-              type: string
-              enum:
-              - "triggered"
-              - "pending"
-              - "success"
-              - "failure"
-              - "aborted"
-              - "error"
-          anyOf:
-          - not:
-              properties:
-                state:
-                  type: string
-                  enum:
-                  - "success"
-                  - "failure"
-                  - "error"
-                  - "aborted"
-          - required:
-            - completionTime
-  additionalPrinterColumns:
-  - name: Job
-    type: string
-    description: The name of the job being run.
-    JSONPath: .spec.job
-  - name: BuildId
-    type: string
-    description: The ID of the job being run.
-    JSONPath: .status.build_id
-  - name: Type
-    type: string
-    description: The type of job being run.
-    JSONPath: .spec.type
-  - name: Org
-    type: string
-    description: The org for which the job is running.
-    JSONPath: .spec.refs.org
-  - name: Repo
-    type: string
-    description: The repo for which the job is running.
-    JSONPath: .spec.refs.repo
-  - name: Pulls
-    type: string
-    description: The pulls for which the job is running.
-    JSONPath: ".spec.refs.pulls[*].number"
-  - name: StartTime
-    type: date
-    description: When the job started running.
-    JSONPath: .status.startTime
-  - name: CompletionTime
-    type: date
-    description: When the job finished running.
-    JSONPath: .status.completionTime
-  - name: State
-    description: The state of the job.
-    type: string
-    JSONPath: .status.state
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -125,14 +37,19 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: gcr.io/k8s-prow/hook:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/hook:v20220628-aa928caf31
         imagePullPolicy: Always
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
+        - --github-token-path=/etc/github/oauth
         ports:
           - name: http
             containerPort: 8888
+          - name: metrics
+            containerPort: 9090
         volumeMounts:
         - name: hmac
           mountPath: /etc/webhook
@@ -179,55 +96,96 @@ metadata:
   name: hook
   namespace: default
 spec:
-  clusterIP: 10.55.254.214
   externalTrafficPolicy: Cluster
   ports:
-  - nodePort: 30298
+  - name: main
     port: 8888
     protocol: TCP
     targetPort: 8888
+  - name: metrics
+    port: 9090
+    protocol: TCP
   selector:
     app: hook
   sessionAffinity: None
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: default
-  name: plank
+  name: prow-controller-manager
   labels:
-    app: plank
+    app: prow-controller-manager
 spec:
-  replicas: 1 # Do not scale up.
+  # Mutually exclusive with plank. Only one of them may have more than zero replicas.
+  replicas: 1
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: prow-controller-manager
   template:
     metadata:
       labels:
-        app: plank
+        app: prow-controller-manager
     spec:
-      serviceAccountName: "plank"
+      serviceAccountName: prow-controller-manager
       containers:
-      - name: plank
-        image: gcr.io/k8s-prow/plank:v20190731-e3f7b9853
+      - name: prow-controller-manager
+        image: gcr.io/k8s-prow/prow-controller-manager:v20220628-aa928caf31
         args:
-        - --dry-run=false
         - --config-path=/etc/config/config.yaml
+        - --dry-run=false
+        - --enable-controller=plank
+        ports:
+        - name: metrics
+          containerPort: 9090
         volumeMounts:
-        - name: oauth
-          mountPath: /etc/github
-          readOnly: true
         - name: config
           mountPath: /etc/config
           readOnly: true
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        livenessProbe: # Pod is killed if this fails 3 times.
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe: # Pod is not considered ready (for rolling deploy and request routing) if this fails 3 times.
+          httpGet:
+            path: /healthz/ready
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 3
       volumes:
-      - name: oauth
-        secret:
-          secretName: oauth-token
       - name: config
         configMap:
           name: config
+      - name: oauth
+        secret:
+          secretName: oauth-token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: prow-controller-manager
+  namespace: default
+  name: prow-controller-manager
+spec:
+  ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+  selector:
+    app: prow-controller-manager
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -249,9 +207,13 @@ spec:
       serviceAccountName: "sinker"
       containers:
       - name: sinker
-        image: gcr.io/k8s-prow/sinker:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/sinker:v20220628-aa928caf31
+        ports:
+        - name: metrics
+          containerPort: 9090
         args:
         - --config-path=/etc/config/config.yaml
+        - --dry-run=false
         volumeMounts:
         - name: config
           mountPath: /etc/config
@@ -260,6 +222,20 @@ spec:
       - name: config
         configMap:
           name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sinker
+  namespace: default
+  name: sinker
+spec:
+  ports:
+    - name: metrics
+      port: 9090
+  selector:
+    app: sinker
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -287,17 +263,41 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: deck
-        image: gcr.io/k8s-prow/deck:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/deck:v20220628-aa928caf31
         args:
         - --config-path=/etc/config/config.yaml
-        - --tide-url=http://tide/
+        - --tide-url=http://tide:8888/
         - --hook-url=http://hook:8888/plugin-help
+        - --redirect-http-to=prow.tekton.dev
+        - --oauth-url=/github-login
+        - --spyglass=true
+        - --rerun-creates-job
+        - --github-token-path=/etc/github/oauth
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
+        - --github-oauth-config-file=/etc/githuboauth/secret
+        - --cookie-secret=/etc/cookie/secret
+        - --plugin-config=/etc/plugins/plugins.yaml
         ports:
-          - name: http
-            containerPort: 8080
+        - name: http
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9090
         volumeMounts:
         - name: config
           mountPath: /etc/config
+          readOnly: true
+        - name: oauth-config
+          mountPath: /etc/githuboauth
+          readOnly: true
+        - name: oauth-token
+          mountPath: /etc/github
+          readOnly: true
+        - name: cookie-secret
+          mountPath: /etc/cookie
+          readOnly: true
+        - name: plugins
+          mountPath: /etc/plugins
           readOnly: true
         livenessProbe:
           httpGet:
@@ -316,6 +316,18 @@ spec:
       - name: config
         configMap:
           name: config
+      - name: oauth-config
+        secret:
+          secretName: github-oauth-config
+      - name: oauth-token
+        secret:
+          secretName: oauth-token
+      - name: cookie-secret
+        secret:
+          secretName: cookie
+      - name: plugins
+        configMap:
+          name: plugins
 ---
 apiVersion: v1
 kind: Service
@@ -323,13 +335,15 @@ metadata:
   name: deck
   namespace: default
 spec:
-  clusterIP: 10.55.250.236
   externalTrafficPolicy: Cluster
   ports:
-  - nodePort: 31957
+  - name: main
     port: 80
     protocol: TCP
     targetPort: 8080
+  - name: metrics
+    port: 9090
+    protocol: TCP
   selector:
     app: deck
   sessionAffinity: None
@@ -358,9 +372,13 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: horologium
-        image: gcr.io/k8s-prow/horologium:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/horologium:v20220628-aa928caf31
         args:
         - --config-path=/etc/config/config.yaml
+        - --dry-run=false
+        ports:
+        - name: metrics
+          containerPort: 9090
         volumeMounts:
         - name: config
           mountPath: /etc/config
@@ -369,6 +387,21 @@ spec:
       - name: config
         configMap:
           name: config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: horologium
+  namespace: default
+  name: horologium
+spec:
+  ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+  selector:
+    app: horologium
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -392,13 +425,21 @@ spec:
       serviceAccountName: "tide"
       containers:
       - name: tide
-        image: gcr.io/k8s-prow/tide:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/tide:v20220628-aa928caf31
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
+        - --github-token-path=/etc/github/oauth
+        - --config-path=/etc/config/config.yaml
+        # - --history-uri=gs://tekton-prow/tide-history.json
+        # - --status-path=gs://tekton-prow/tide-status-checkpoint.yaml
         ports:
           - name: http
             containerPort: 8888
+          - name: metrics
+            containerPort: 9090
         volumeMounts:
         - name: oauth
           mountPath: /etc/github
@@ -420,13 +461,14 @@ metadata:
   name: tide
   namespace: default
 spec:
-  clusterIP: 10.55.243.29
   externalTrafficPolicy: Cluster
   ports:
-  - nodePort: 31878
-    port: 80
+  - name: main
+    port: 8888
     protocol: TCP
-    targetPort: 8888
+  - name: metrics
+    port: 9090
+    protocol: TCP
   selector:
     app: tide
   sessionAffinity: None
@@ -526,7 +568,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: default
-  name: "deck"
+  name: deck
 rules:
   - apiGroups:
       - "prow.k8s.io"
@@ -535,23 +577,17 @@ rules:
     verbs:
       - get
       - list
+      - watch
       # Required when deck runs with `--rerun-creates-job=true`
       # **Warning:** Only use this for non-public deck instances, this allows
       # anyone with access to your Deck instance to create new Prowjobs
       # - create
-  # Added this permission b/c we are making our pods in `default`
-  - apiGroups:
-      - ""
-    resources:
-      - pods/log
-    verbs:
-      - get
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "deck"
+  name: deck
 rules:
   - apiGroups:
       - ""
@@ -579,6 +615,7 @@ rules:
     verbs:
       - create
       - list
+      - watch
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -593,120 +630,174 @@ subjects:
 - kind: ServiceAccount
   name: "horologium"
 ---
-kind: ServiceAccount
 apiVersion: v1
+kind: ServiceAccount
 metadata:
   namespace: default
-  name: "plank"
+  name: "prow-controller-manager"
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: default
-  name: "plank"
+  name: "prow-controller-manager"
+rules:
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  resourceNames:
+  - prow-controller-manager-leader-lock
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - prow-controller-manager-leader-lock
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - prow.k8s.io
+  resources:
+  - prowjobs
+  verbs:
+  - get
+  - update
+  - list
+  - watch
+  - patch
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: test-pods
+  name: "prow-controller-manager"
+rules:
+- apiGroups:
+   - ""
+  resources:
+  - pods
+  verbs:
+  - create
+  - delete
+  - list
+  - watch
+  - get
+  - patch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: "prow-controller-manager"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "prow-controller-manager"
+subjects:
+- kind: ServiceAccount
+  name: "prow-controller-manager"
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: test-pods
+  name: "prow-controller-manager"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "prow-controller-manager"
+subjects:
+- kind: ServiceAccount
+  name: "prow-controller-manager"
+  namespace: default
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  namespace: default
+  name: "sinker"
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: "sinker"
 rules:
   - apiGroups:
-      - "prow.k8s.io"
+    - "prow.k8s.io"
     resources:
-      - prowjobs
+    - prowjobs
     verbs:
+    - delete
+    - list
+    - watch
+    - get
+  - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    resourceNames:
+    - prow-sinker-leaderlock
+    verbs:
+    - get
+    - update
+  - apiGroups:
+    - coordination.k8s.io
+    resources:
+    - leases
+    verbs:
+    - create
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    resourceNames:
+    - prow-sinker-leaderlock
+    verbs:
+    - get
+    - update
+  - apiGroups:
+    - ""
+    resources:
+    - configmaps
+    - events
+    verbs:
+    - create
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: test-pods
+  name: "sinker"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - delete
+      - list
+      - watch
       - get
-      - create
-      - list
-      - update
-  # Added this permission b/c we are making our pods in `default`
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - create
-      - delete
-      - list
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  namespace: test-pods
-  name: "plank"
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - create
-      - delete
-      - list
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  namespace: default
-  name: "plank"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: "plank"
-subjects:
-- kind: ServiceAccount
-  name: "plank"
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  namespace: test-pods
-  name: "plank"
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: "plank"
-subjects:
-- kind: ServiceAccount
-  name: "plank"
-  namespace: default
----
-kind: ServiceAccount
-apiVersion: v1
-metadata:
-  namespace: default
-  name: "sinker"
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  namespace: default
-  name: "sinker"
-rules:
-  - apiGroups:
-      - "prow.k8s.io"
-    resources:
-      - prowjobs
-    verbs:
-      - delete
-      - list
-  # Added this permission b/c we are making our pods in `default`
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - delete
-      - list
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  namespace: test-pods
-  name: "sinker"
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - delete
-      - list
+      - patch
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -795,6 +886,7 @@ rules:
     verbs:
       - create
       - list
+      - watch
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -903,11 +995,17 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: crier
-        image: gcr.io/k8s-prow/crier:v20190814-9981dc3c5
+        image: gcr.io/k8s-prow/crier:v20220628-aa928caf31
         args:
         - --github-workers=1
         - --config-path=/etc/config/config.yaml
+        - --github-endpoint=http://ghproxy
         - --github-endpoint=https://api.github.com
+        - --github-token-path=/etc/github/oauth
+        - --kubernetes-blob-storage-workers=1
+        ports:
+        - name: metrics
+          containerPort: 9090
         volumeMounts:
         - name: config
           mountPath: /etc/config
@@ -922,6 +1020,21 @@ spec:
       - name: oauth
         secret:
           secretName: oauth-token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: crier
+  namespace: default
+  name: crier
+spec:
+  ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+  selector:
+    app: crier
 ---
 kind: ServiceAccount
 apiVersion: v1
@@ -990,7 +1103,7 @@ spec:
       serviceAccountName: prow-pipeline
       containers:
       - name: pipeline
-        image: gcr.io/k8s-prow/pipeline:v20190814-9981dc3c5
+        image: gcr.io/k8s-prow/pipeline:v20220628-aa928caf31
         args:
         - --all-contexts
         - --config=/etc/prow-config/config.yaml
@@ -1023,11 +1136,14 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: needs-rebase
-        image: gcr.io/k8s-prow/needs-rebase:v20190731-e3f7b9853
+        image: gcr.io/k8s-prow/needs-rebase:v20220628-aa928caf31
         imagePullPolicy: Always
         args:
         - --dry-run=false
+        - --github-endpoint=http://ghproxy
         - --github-endpoint=https://api.github.com
+        - --github-token-path=/etc/github/oauth
+        - --update-period=6h
         ports:
           - name: http
             containerPort: 8888

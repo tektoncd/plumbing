@@ -83,11 +83,12 @@ kubectl apply -f prow/gce-ssd-retain_storageclass.yaml
 kubectl apply -f prow/ghproxy.yaml
 
 # Deploy Prow
+kubectl apply -f prow/prowjob-schemaless_customresourcedefinition.yaml
 kubectl apply -f prow/prow.yaml
 
-# Update Prow with the right configuration
-kubectl create configmap config --from-file=config.yaml=prow/config.yaml --dry-run -o yaml | kubectl replace configmap config -f -
-kubectl create configmap plugins --from-file=plugins.yaml=prow/plugins.yaml --dry-run -o yaml | kubectl replace configmap plugins -f -
+# Create Prow's configuration
+kubectl create configmap config --from-file=config.yaml=prow/config.yaml
+kubectl create configmap plugins --from-file=plugins.yaml=prow/plugins.yaml
 ```
 
 ### Ingress
@@ -129,6 +130,11 @@ For `tektoncd` this is configured at the Org level.
 
 Update the value of the webhook with `http://ingress-address/hook`
 (see [kicking the tires](#kicking-the-tires) to get the ingress IP).
+
+### OAuth Setup
+
+OAuth Setup is done following the [official guide](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/deck/github_oauth_setup.md).
+The "Prow" OAuth GitHub application is defined in the `tektoncd` GitHub org.
 
 ## Updating Prow itself
 

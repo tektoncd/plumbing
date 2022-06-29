@@ -20,36 +20,41 @@ approve:
 
 plugins:
   tektoncd:
-  - approve
-  - assign
-  - blunderbuss
-  - buildifier
-  - cat
-  - dog
-  - golint
-  - heart
-  - help
-  - hold
-  - label
-  - lgtm
-  - lifecycle
-  - milestone
-  - project
-  - retitle
-  - size
-  - skip
-  - trigger
-  - verify-owners
-  - wip
-  - yuks
+    plugins:
+      - approve
+      - assign
+      - blunderbuss
+      - buildifier
+      - cat
+      - dog
+      - golint
+      - heart
+      - help
+      - hold
+      - label
+      - lgtm
+      - lifecycle
+      - milestone
+      - project
+      - retitle
+      - size
+      - skip
+      - trigger
+      - verify-owners
+      - wip
+      - yuks
   tektoncd/pipeline:
-  - release-note
+    plugins:
+      - release-note
   tektoncd/cli:
-  - release-note
+    plugins:
+      - release-note
   tektoncd/operator:
-  - release-note
+    plugins:
+      - release-note
   tektoncd/triggers:
-  - release-note
+    plugins:
+      - release-note
 
 external_plugins:
   tektoncd:
