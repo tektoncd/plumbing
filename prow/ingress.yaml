@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: prow.tekton.dev
+    dns.gardener.cloud/ttl: "3600"
   name: ing
   namespace: default
 spec:
@@ -25,13 +27,20 @@ spec:
     hosts:
     - prow.tekton.dev
   rules:
-  - http:
+  - host: prow.tekton.dev
+    http:
       paths:
       - backend:
-          serviceName: deck
-          servicePort: 80
+          service:
+            name: deck
+            port:
+              number: 80
         path: /*
+        pathType: ImplementationSpecific
       - backend:
-          serviceName: hook
-          servicePort: 8888
+          service:
+            name: hook
+            port:
+              number: 8888
         path: /hook
+        pathType: ImplementationSpecific

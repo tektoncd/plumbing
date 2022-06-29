@@ -13,10 +13,12 @@
 # limitations under the License.
 
 # Boskos deployment for Tekton Prow instance
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: dynamicresourcelifecycles.boskos.k8s.io
+  annotations:
+    api-approved.kubernetes.io: https://github.com/kubernetes-sigs/boskos/pull/105
 spec:
   group: boskos.k8s.io
   names:
@@ -25,29 +27,74 @@ spec:
     plural: dynamicresourcelifecycles
     singular: dynamicresourcelifecycle
   scope: Namespaced
-  version: v1
   versions:
-  - name: v1
-    served: true
-    storage: true
-  additionalPrinterColumns:
-  - name: Type
-    type: string
-    description: The dynamic resource type.
-    JSONPath: .spec.config.type
-  - name: Min-Count
-    type: integer
-    description: The minimum count requested.
-    JSONPath: .spec.min-count
-  - name: Max-Count
-    type: integer
-    description: The maximum count requested.
-    JSONPath: .spec.max-count
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - name: Type
+          type: string
+          description: The dynamic resource type.
+          jsonPath: .spec.config.type
+        - name: Min-Count
+          type: integer
+          description: The minimum count requested.
+          jsonPath: .spec.min-count
+        - name: Max-Count
+          type: integer
+          description: The maximum count requested.
+          jsonPath: .spec.max-count
+      schema:
+        openAPIV3Schema:
+          description: Defines the lifecycle of a dynamic resource. All
+            Resource of a given type will be constructed using the same
+            configuration
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                state:
+                  type: string
+                max-count:
+                  description: Maxiumum number of resources expected. This
+                    maximum may be temporarily exceeded while resources are in
+                    the process of being deleted, though this is only expected
+                    when MaxCount is lowered.
+                  type: integer
+                  format: int32
+                min-count:
+                  description: Minimum number of resources to be used as a
+                    buffer. Resources in the process of being deleted and
+                    cleaned up are included in this count.
+                  type: integer
+                  format: int32
+                lifespan:
+                  description: Lifespan of a resource, time after which the
+                    resource should be reset
+                  type: integer
+                  format: int64
+                config:
+                  description: Config information about how to create the
+                    object
+                  type: object
+                  properties:
+                    type:
+                      description: The dynamic resource type
+                      type: string
+                    content:
+                      type: string
+                needs:
+                  description: Define the resource needs to create the object
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
 ---
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: resources.boskos.k8s.io
+  annotations:
+    api-approved.kubernetes.io: https://github.com/kubernetes-sigs/boskos/pull/105
 spec:
   group: boskos.k8s.io
   names:
@@ -56,27 +103,54 @@ spec:
     plural: resources
     singular: resource
   scope: Namespaced
-  version: v1
   versions:
   - name: v1
     served: true
     storage: true
-  additionalPrinterColumns:
-  - name: Type
-    type: string
-    description: The resource type.
-    JSONPath: .spec.type
-  - name: State
-    type: string
-    description: The current state of the resource.
-    JSONPath: .status.state
-  - name: Owner
-    type: string
-    description: The current owner of the resource.
-    JSONPath: .status.owner
-  - name: Last-Updated
-    type: date
-    JSONPath: .status.lastUpdate
+    additionalPrinterColumns:
+    - name: Type
+      type: string
+      description: The resource type.
+      jsonPath: .spec.type
+    - name: State
+      type: string
+      description: The current state of the resource.
+      jsonPath: .status.state
+    - name: Owner
+      type: string
+      description: The current owner of the resource.
+      jsonPath: .status.owner
+    - name: Last-Updated
+      type: date
+      jsonPath: .status.lastUpdate
+    schema:
+      openAPIV3Schema:
+        description: Abstracts any resource type that can be tracked by boskos
+        type: object
+        properties:
+          spec:
+            description: Holds information that are not likely to change
+            type: object
+            properties:
+              type:
+                type: string
+          status:
+            description: Holds information that are likely to change
+            type: object
+            properties:
+              state:
+                type: string
+              owner:
+                type: string
+              lastUpdate:
+                type: string
+                format: date-time
+              userData:
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              expirationDate:
+                type: string
+                format: date-time
 ---
 apiVersion: v1
 kind: Namespace
@@ -115,7 +189,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 # Boskos
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: boskos
@@ -135,7 +209,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos
-        image: gcr.io/k8s-staging-boskos/boskos:v20200819-984516e
+        image: gcr.io/k8s-staging-boskos/boskos:v20220628-f099c7d
         args:
         - --config=/etc/config/config
         - --namespace=test-pods
@@ -181,7 +255,7 @@ spec:
   type: NodePort
 ---
 # Janitor
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: boskos-janitor
@@ -190,6 +264,9 @@ metadata:
   namespace: test-pods
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: boskos-janitor
   template:
     metadata:
       labels:
@@ -199,8 +276,9 @@ spec:
       terminationGracePeriodSeconds: 300
       containers:
       - name: boskos-janitor
-        image: gcr.io/k8s-staging-boskos/janitor:v20200819-984516e
+        image: gcr.io/k8s-staging-boskos/janitor:v20220628-f099c7d
         args:
+        - --boskos-url=http://boskos.test-pods.svc.cluster.local.
         - --resource-type=gke-project
         - --pool-size=10
         - --
@@ -216,7 +294,7 @@ spec:
           secretName: test-account
 ---
 # Reaper
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: boskos-reaper
@@ -224,16 +302,19 @@ metadata:
     app: boskos-reaper
   namespace: test-pods
 spec:
+  selector:
+    matchLabels:
+      app: boskos-reaper
   replicas: 1  # one canonical source of resources
   template:
     metadata:
       labels:
         app: boskos-reaper
     spec:
-      serviceAccountName: "boskos"
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos-reaper
-        image: gcr.io/k8s-staging-boskos/reaper:v20200819-984516e
+        image: gcr.io/k8s-staging-boskos/reaper:v20220628-f099c7d
         args:
+        - --boskos-url=http://boskos.test-pods.svc.cluster.local.
         - --resource-type=gke-project

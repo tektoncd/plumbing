@@ -11,7 +11,7 @@ spec:
       interceptors:
         - ref:
             name: "github-simple"
-          params: # rename this to config?
+          params:  # rename this to config?
             - name: config
               value:
                 # Interceptor specific config

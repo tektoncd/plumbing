@@ -66,7 +66,7 @@ spec:
         - name: gitCloneDepth
           value: $(tt.params.gitCloneDepth)
         - name: fileFilterRegex
-          value: "**" # always run for now
+          value: "**"  # always run for now
         - name: checkName
           value: plumbing-unit-tests
         - name: gitHubCommand

@@ -57,7 +57,7 @@ spec:
         - name: input
           workspace: sources
     - name: request-pr-reviewer
-      when: # implicit dependency on the check tasks
+      when:  # implicit dependency on the check tasks
       - input: $(tasks.check-git-files-changed.results.check)
         operator: in
         values: ["passed"]

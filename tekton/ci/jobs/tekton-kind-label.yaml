@@ -91,7 +91,7 @@ spec:
         - name: checkName
           value: $(params.checkName)
     - name: kind-label
-      when: # implicit dependency on the check tasks
+      when:  # implicit dependency on the check tasks
       - input: $(tasks.check-name-matches.results.check)
         operator: in
         values: ["passed"]

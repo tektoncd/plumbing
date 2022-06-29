@@ -46,7 +46,7 @@ spec:
       - name: checkName
         value: $(params.checkName)
   - name: check-git-files-changed
-    runAfter: [git-clone] # expects source to be populated by git-clone (TEP-0063)
+    runAfter: [git-clone]  # expects source to be populated by git-clone (TEP-0063)
     taskRef:
       name: check-git-files-changed
     params:
