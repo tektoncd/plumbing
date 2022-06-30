@@ -90,6 +90,8 @@ tide:
     tektoncd/triggers: rebase
     tektoncd/website: rebase
   target_url: https://prow.tekton.dev/tide
+sinker:
+  max_pod_age: 3h
 
 presets:
 - labels:
