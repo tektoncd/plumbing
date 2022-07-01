@@ -5,7 +5,10 @@ metadata:
 spec:
   params:
   - name: buildUUID
-    description: UUID used to track a CI Pipeline Run in logs
+    description: >-
+      Tekton buildID, compatible with Prow's format (numeric)
+      Used to identify builds in a way that is compatible with Prow's
+      tooling like deck / spyglass
   - name: package
     description: org/repo
   - name: pullRequestNumber

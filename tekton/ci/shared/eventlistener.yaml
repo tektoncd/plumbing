@@ -31,6 +31,9 @@ spec:
               value:
                 - key: git_clone_depth
                   expression: "string(body.pull_request.commits + 1.0)"
+        - name: "Add a build ID into the payload"
+          ref:
+            name: "build-id"
       triggerSelector:
         namespaceSelector:
           matchNames:
@@ -62,6 +65,9 @@ spec:
                 'pull_request' in body.issue &&
                 body.issue.state == 'open' &&
                 body.comment.body.matches('^/test($| [^ ]*[ ]*$)')
+        - name: "Add a build ID into the payload"
+          ref:
+            name: "build-id"
       triggerSelector:
         namespaceSelector:
           matchNames:

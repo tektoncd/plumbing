@@ -6,7 +6,7 @@ metadata:
 spec:
   params:
   - name: buildUUID
-    value: $(header.X-GitHub-Delivery)
+    value: $(extensions.build-id.id)
   - name: package
     value: $(body.repository.full_name)
   - name: gitRepository
@@ -90,7 +90,7 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: tekton-ci-webhook-pr-body
-  namespace: tektonci
+  namespace: tekton-ci
 spec:
   params:
     - name: body
