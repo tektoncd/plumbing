@@ -151,7 +151,7 @@ spec:
         IMAGES_PATH=${IMAGES_PATH}/${SUBFOLDER}
       fi
 
-      for cmd in add-pr-body
+      for cmd in interceptor
       do
         IMAGES="${IMAGES} ${IMAGES_PATH}/cmd/${cmd}:${VERSION_TAG}"
       done
