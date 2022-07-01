@@ -52,6 +52,8 @@ spec:
           value: $(tt.params.checkName)
         - name: jobRunName
           value: $(tt.params.parentPipelineRunName)
+        - name: buildId
+          value: $(tt.params.buildUUID)
         - name: pullRequestNumber
           value: $(tt.params.pullRequestNumber)
         - name: gitRevision
@@ -124,6 +126,8 @@ spec:
           value: $(tt.params.checkName)
         - name: jobRunName
           value: $(tt.params.parentPipelineRunName)
+        - name: buildId
+          value: $(tt.params.buildUUID)
         - name: jobStatus
           value: $(tt.params.gitHubCheckStatus)
         - name: pullRequestNumber
