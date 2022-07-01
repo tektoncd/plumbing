@@ -14,7 +14,7 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.14.2-alpine
+FROM golang:1.17.11-alpine
 
 WORKDIR /kind
 
