@@ -196,4 +196,6 @@ COPY --from=kubetest /go/bin/kubetest /usr/local/bin
 # note the runner is also responsible for making docker in docker function if
 # env DOCKER_IN_DOCKER_ENABLED is set and similarly responsible for generating
 COPY ["entrypoint.sh", "runner.sh", "/usr/local/bin/"]
+COPY setup-kind.sh /usr/local/bin/kind-e2e
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
