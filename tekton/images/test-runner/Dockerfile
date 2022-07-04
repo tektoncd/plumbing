@@ -161,11 +161,12 @@ RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${K
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Extra tools through go get
+ARG KIND_VERSION=v0.11.1
 RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
     GO111MODULE="on" go get github.com/jstemmer/go-junit-report && \
     GO111MODULE="on" go get github.com/raviqqe/liche && \
     GO111MODULE="off" go get github.com/golang/dep/cmd/dep && \
-    GO111MODULE="on" go get sigs.k8s.io/kind@v0.9.0
+    GO111MODULE="on" go get sigs.k8s.io/kind@${KIND_VERSION}
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
 ARG GOLANGCI_VERSION=1.42.0

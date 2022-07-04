@@ -14,21 +14,8 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.17.11-alpine
+FROM gcr.io/tekton-releases/dogfooding/test-runner:latest
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
-
-WORKDIR /kind
-
-RUN GO111MODULE=on go get github.com/google/ko/cmd/ko@v0.6.2
-
-# common util tools
-RUN apk add --no-cache \
-  bash curl docker git jq openssl build-base
-
-# Install kubectl and make sure it's available in the PATH.
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && chmod +x ./kubectl && mv ./kubectl /bin
-
-RUN curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.11.1/kind-$(uname)-amd64" && chmod +x ./kind && mv ./kind /bin
 
 COPY setup-kind.sh /usr/local/bin/kind-e2e
 
