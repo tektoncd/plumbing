@@ -169,6 +169,8 @@ spec:
               value:
                 - key: repo
                   expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
+                - key: repoUnderscore
+                  expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1).split('/').join('_')
                 - key: shortBuildUUID
                   expression: body.taskRun.metadata.labels['prow.k8s.io/build-id'].truncate(13)
       triggerSelector:

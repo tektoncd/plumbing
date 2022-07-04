@@ -18,7 +18,7 @@ spec:
     - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
     - ref: tekton-ci-overlays
   template:
-    ref: tekton-ci-github-check-update
+    ref: tekton-ci-github-check-start
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: Trigger
@@ -40,7 +40,7 @@ spec:
     - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
     - ref: tekton-ci-overlays
   template:
-    ref: tekton-ci-github-check-update
+    ref: tekton-ci-github-check-end
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: Trigger
@@ -62,7 +62,7 @@ spec:
     - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
     - ref: tekton-ci-overlays
   template:
-    ref: tekton-ci-github-check-update
+    ref: tekton-ci-github-check-end
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: Trigger
