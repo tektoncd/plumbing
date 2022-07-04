@@ -2,7 +2,7 @@
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: tekton-ci-github-check-update
+  name: tekton-ci-github-check-start
 spec:
   params:
   - name: pullRequestNumber
@@ -57,6 +57,77 @@ spec:
           value: $(tt.params.gitRevision)
         - name: TARGET_URL
           value: https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
+        - name: DESCRIPTION
+          value: $(tt.params.gitHubCheckDescription)
+        - name: CONTEXT
+          value: $(tt.params.checkName)
+        - name: STATE
+          value: $(tt.params.gitHubCheckStatus)
+        - name: GITHUB_TOKEN_SECRET_NAME
+          value: bot-token-github
+        - name: GITHUB_TOKEN_SECRET_KEY
+          value: bot-token
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-github-check-end
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: shortBuildUUID
+    description: A truncated version of the buildUUID
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitHubRepoUnderscore
+    description: The gitHubRepoUnderscore (org_repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
+    description: A description to be displayed for the status of the check
+  - name: taskRunName
+    description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: $(tt.params.shortBuildUUID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
+      namespace: tekton-ci
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      podTemplate:
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+      taskRef:
+        name: github-set-status
+        bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
+      params:
+        - name: REPO_FULL_NAME
+          value: $(tt.params.gitHubRepo)
+        - name: SHA
+          value: $(tt.params.gitRevision)
+        - name: TARGET_URL
+          value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
         - name: DESCRIPTION
           value: $(tt.params.gitHubCheckDescription)
         - name: CONTEXT
