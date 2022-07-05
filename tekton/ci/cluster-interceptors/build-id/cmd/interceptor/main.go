@@ -50,7 +50,7 @@ func main() {
 	s := server.Server{
 		Logger: logger,
 	}
-	s.RegisterInterceptor("buildId", pkg.Interceptor{})
+	s.RegisterInterceptor("buildid", pkg.Interceptor{})
 	mux := http.NewServeMux()
 	mux.Handle("/", &s)
 	mux.HandleFunc("/ready", handler)
