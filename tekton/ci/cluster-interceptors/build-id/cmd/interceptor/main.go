@@ -34,7 +34,7 @@ import (
 
 const (
 	// Port is the port that the port that interceptor service listens on
-	Port         = 8082
+	Port         = 8443
 	readTimeout  = 5 * time.Second
 	writeTimeout = 20 * time.Second
 	idleTimeout  = 60 * time.Second

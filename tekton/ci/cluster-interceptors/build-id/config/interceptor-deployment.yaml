@@ -45,5 +45,5 @@ spec:
     app: build-id-interceptor
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 8082
+      port: 8443
+      targetPort: 8443
