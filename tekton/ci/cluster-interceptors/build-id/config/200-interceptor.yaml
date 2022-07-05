@@ -21,4 +21,4 @@ spec:
     service:
       name: build-id-interceptor
       namespace: tekton-ci
-      path: "build-id"
+      path: "buildid"
