@@ -1226,6 +1226,8 @@ presubmits:
       containers:
         - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220705-dedcc4d2eb@sha256:25e9fde4126d2f34878bcb8cc4148894763045616ac0cc407c9d79d38e4194e9 # First image with kind-e2e script included
           imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
           args:
             - "--scenario=kubernetes_execute_bazel"
             - "--clean"
