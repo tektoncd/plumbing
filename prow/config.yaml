@@ -1104,11 +1104,11 @@ presubmits:
         - "--unit-tests"
         resources:
           requests:
-            cpu: 1000m
-            memory: 2Gi
-          limits:
             cpu: 2000m
             memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-pipeline-integration-tests
     labels:
       preset-presubmit-sh: "true"
@@ -1206,11 +1206,11 @@ presubmits:
         - "--github-token=/etc/github-token/oauth"
         resources:
           requests:
-            cpu: 1000m
-            memory: 2Gi
-          limits:
             cpu: 2000m
             memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-pipeline-kind-integration-tests
     labels:
       preset-presubmit-sh: "true"
