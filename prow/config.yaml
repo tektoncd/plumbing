@@ -1104,11 +1104,11 @@ presubmits:
         - "--unit-tests"
         resources:
           requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
             cpu: 2000m
             memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
   - name: pull-tekton-pipeline-integration-tests
     labels:
       preset-presubmit-sh: "true"
@@ -1206,11 +1206,11 @@ presubmits:
         - "--github-token=/etc/github-token/oauth"
         resources:
           requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
             cpu: 2000m
             memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
   - name: pull-tekton-pipeline-kind-integration-tests
     labels:
       preset-presubmit-sh: "true"
@@ -1224,18 +1224,12 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-kind-integration-tests|optional-kind),?(\\s+|$)"
     spec:
       containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220705-dedcc4d2eb@sha256:25e9fde4126d2f34878bcb8cc4148894763045616ac0cc407c9d79d38e4194e9 # First image with kind-e2e script included
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
           imagePullPolicy: Always
           command:
             - /usr/local/bin/entrypoint.sh
           args:
-            - "--scenario=kubernetes_execute_bazel"
-            - "--clean"
-            - "--job=$(JOB_NAME)"
-            - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-            - "--root=/go/src"
             - "--service-account=/etc/test-account/service-account.json"
-            - "--upload=gs://tekton-prow/pr-logs"
             - "--" # end bootstrap args, scenario args below
             - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
             - "/usr/local/bin/kind-e2e"
@@ -1248,7 +1242,130 @@ presubmits:
             - "--e2e-script"
             - "./test/e2e-tests.sh"
             - --e2e-env
-            - "./test/e2e-tests-kind-prow-full.env"
+            - "./test/e2e-tests-kind-prow.env"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 4Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+  - name: pull-tekton-pipeline-kind-alpha-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+    agent: kubernetes
+    always_run: false
+    decorate: true
+    optional: true
+    rerun_command: "/test pull-tekton-pipeline-kind-alpha-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-kind-alpha-integration-tests|optional-kind),?(\\s+|$)"
+    spec:
+      containers:
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
+          args:
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "/usr/local/bin/kind-e2e"
+            - "--k8s-version"
+            - "v1.22.x"
+            - "--cluster-suffix"
+            - "$(PULL_NUMBER)"
+            - "--nodes"
+            - "3"
+            - "--e2e-script"
+            - "./test/e2e-tests.sh"
+            - --e2e-env
+            - "./test/e2e-tests-kind-prow-alpha.env"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 4Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+  - name: pull-tekton-pipeline-kind-yaml-tests
+    labels:
+      preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+    agent: kubernetes
+    always_run: false
+    decorate: true
+    optional: true
+    rerun_command: "/test pull-tekton-pipeline-kind-yaml-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-kind-yaml-tests|optional-kind),?(\\s+|$)"
+    spec:
+      containers:
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
+          args:
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "/usr/local/bin/kind-e2e"
+            - "--k8s-version"
+            - "v1.22.x"
+            - "--cluster-suffix"
+            - "$(PULL_NUMBER)"
+            - "--nodes"
+            - "3"
+            - "--e2e-script"
+            - "./test/e2e-tests.sh"
+            - --e2e-env
+            - "./test/e2e-tests-kind-prow-yaml.env"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 2000m
+              memory: 4Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+  - name: pull-tekton-pipeline-kind-alpha-yaml-tests
+    labels:
+      preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+    agent: kubernetes
+    always_run: false
+    decorate: true
+    optional: true
+    rerun_command: "/test pull-tekton-pipeline-kind-alpha-yaml-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-kind-alpha-yaml-tests|optional-kind),?(\\s+|$)"
+    spec:
+      containers:
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
+          args:
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "/usr/local/bin/kind-e2e"
+            - "--k8s-version"
+            - "v1.22.x"
+            - "--cluster-suffix"
+            - "$(PULL_NUMBER)"
+            - "--nodes"
+            - "3"
+            - "--e2e-script"
+            - "./test/e2e-tests.sh"
+            - --e2e-env
+            - "./test/e2e-tests-kind-prow-alpha-yaml.env"
           securityContext:
             privileged: true
           resources:
