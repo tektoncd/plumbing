@@ -845,6 +845,8 @@ rules:
     verbs:
       - create
       - get
+      - list
+      - update
   - apiGroups:
       - ""
     resources:
@@ -885,6 +887,7 @@ rules:
       - prowjobs
     verbs:
       - create
+      - get
       - list
       - watch
 ---
