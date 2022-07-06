@@ -86,6 +86,10 @@ kubectl apply -f prow/ghproxy.yaml
 kubectl apply -f prow/prowjob-schemaless_customresourcedefinition.yaml
 kubectl apply -f prow/prow.yaml
 
+# Deploy daemonset to configure fs.inotify.max_user_[watches,instances] via sysctl.
+# This is to deal with kind having issues like https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
+kubectl apply -f prow/tune-sysctls_daemonset.yaml
+
 # Create Prow's configuration
 kubectl create configmap config --from-file=config.yaml=prow/config.yaml
 kubectl create configmap plugins --from-file=plugins.yaml=prow/plugins.yaml

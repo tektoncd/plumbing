@@ -1322,7 +1322,7 @@ presubmits:
             - "--cluster-suffix"
             - "$(PULL_NUMBER)"
             - "--nodes"
-            - "2"
+            - "3"
             - "--e2e-script"
             - "./test/e2e-tests.sh"
             - --e2e-env
@@ -1363,7 +1363,7 @@ presubmits:
             - "--cluster-suffix"
             - "$(PULL_NUMBER)"
             - "--nodes"
-            - "2"
+            - "3"
             - "--e2e-script"
             - "./test/e2e-tests.sh"
             - --e2e-env
@@ -1404,7 +1404,7 @@ presubmits:
             - "--cluster-suffix"
             - "$(PULL_NUMBER)"
             - "--nodes"
-            - "2"
+            - "3"
             - "--e2e-script"
             - "./test/e2e-tests.sh"
             - --e2e-env
@@ -1445,7 +1445,7 @@ presubmits:
             - "--cluster-suffix"
             - "$(PULL_NUMBER)"
             - "--nodes"
-            - "2"
+            - "3"
             - "--e2e-script"
             - "./test/e2e-tests.sh"
             - --e2e-env
