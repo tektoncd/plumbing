@@ -71,16 +71,5 @@ spec:
     value: $(extensions.repo)
   - name: shortBuildUUID
     value: $(extensions.shortBuildUUID)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-github-repo-underscore
-spec:
-  params:
-  - name: gitHubRepo
-    value: $(extensions.repo)
   - name: gitHubRepoUnderscore
     value: $(extensions.repoUnderscore)
-  - name: shortBuildUUID
-    value: $(extensions.shortBuildUUID)
