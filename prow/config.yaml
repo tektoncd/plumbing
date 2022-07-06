@@ -644,6 +644,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-cli-build-cross-tests
     labels:
       preset-presubmit-sh: "true"
@@ -670,6 +677,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-cross-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-cli-unit-tests
     labels:
       preset-presubmit-sh: "true"
@@ -696,6 +710,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-cli-integration-tests
     labels:
       preset-presubmit-sh: "true"
@@ -722,6 +743,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   tektoncd/dashboard:
   - name: pull-tekton-dashboard-build-tests
     labels:
@@ -989,6 +1017,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--build-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
         env:
         - name: DOCKER_IN_DOCKER_ENABLED
           value: "true"
@@ -1020,6 +1055,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--unit-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-operator-integration-tests
     labels:
       preset-presubmit-sh: "true"
@@ -1046,6 +1088,13 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   - name: pull-tekton-operator-go-coverage
     labels:
       preset-github-token: "true"
@@ -1070,6 +1119,13 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   tektoncd/pipeline:
   - name: pull-tekton-pipeline-build-tests
     labels:
