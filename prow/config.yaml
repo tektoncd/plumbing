@@ -333,6 +333,25 @@ presets:
       hostPath:
         path: /sys/fs/cgroup
         type: Directory
+# Try to run on nodes without any other job with this label, and require a kind-only node.
+- labels:
+    preset-pipeline-exclusive-kind: "true"
+    affinity:
+      podAntiAffinity:
+        weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: preset-pipeline-exclusive-kind
+                operator: Exists
+          topologyKey: kubernetes.io/hostname
+    nodeSelector:
+      cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+    tolerations:
+      - key: kind-only
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 
 presubmits:
   tektoncd/plumbing:
@@ -1300,7 +1319,7 @@ presubmits:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      preset-pipeline-exclusive-kind: "true"
     agent: kubernetes
     always_run: false
     decorate: true
@@ -1308,21 +1327,6 @@ presubmits:
     rerun_command: "/test pull-tekton-pipeline-kind-integration-tests"
     trigger: "(?m)^/test (pull-tekton-pipeline-kind-integration-tests|optional-kind),?(\\s+|$)"
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
           imagePullPolicy: Always
@@ -1357,7 +1361,7 @@ presubmits:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      preset-pipeline-exclusive-kind: "true"
     agent: kubernetes
     always_run: false
     decorate: true
@@ -1365,21 +1369,6 @@ presubmits:
     rerun_command: "/test pull-tekton-pipeline-kind-alpha-integration-tests"
     trigger: "(?m)^/test (pull-tekton-pipeline-kind-alpha-integration-tests|optional-kind),?(\\s+|$)"
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
           imagePullPolicy: Always
@@ -1414,7 +1403,7 @@ presubmits:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      preset-pipeline-exclusive-kind: "true"
     agent: kubernetes
     always_run: false
     decorate: true
@@ -1422,21 +1411,6 @@ presubmits:
     rerun_command: "/test pull-tekton-pipeline-kind-yaml-tests"
     trigger: "(?m)^/test (pull-tekton-pipeline-kind-yaml-tests|optional-kind),?(\\s+|$)"
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
           imagePullPolicy: Always
@@ -1471,7 +1445,7 @@ presubmits:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      preset-pipeline-exclusive-kind: "true"
     agent: kubernetes
     always_run: false
     decorate: true
@@ -1479,21 +1453,6 @@ presubmits:
     rerun_command: "/test pull-tekton-pipeline-kind-alpha-yaml-tests"
     trigger: "(?m)^/test (pull-tekton-pipeline-kind-alpha-yaml-tests|optional-kind),?(\\s+|$)"
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
           imagePullPolicy: Always
