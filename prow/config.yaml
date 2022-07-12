@@ -1318,6 +1318,7 @@ presubmits:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
       tolerations:
         - key: kind-only
           operator: Equal
@@ -1347,10 +1348,10 @@ presubmits:
             privileged: true
           resources:
             requests:
-              cpu: 7000m
+              cpu: 3500m
               memory: 4Gi
             limits:
-              cpu: 7000m
+              cpu: 3500m
               memory: 8Gi
   - name: pull-tekton-pipeline-kind-alpha-integration-tests
     labels:
@@ -1375,6 +1376,7 @@ presubmits:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
       tolerations:
         - key: kind-only
           operator: Equal
@@ -1404,10 +1406,10 @@ presubmits:
             privileged: true
           resources:
             requests:
-              cpu: 7000m
+              cpu: 3500m
               memory: 4Gi
             limits:
-              cpu: 7000m
+              cpu: 3500m
               memory: 8Gi
   - name: pull-tekton-pipeline-kind-yaml-tests
     labels:
@@ -1432,6 +1434,7 @@ presubmits:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
       tolerations:
         - key: kind-only
           operator: Equal
@@ -1461,10 +1464,10 @@ presubmits:
             privileged: true
           resources:
             requests:
-              cpu: 7000m
+              cpu: 3500m
               memory: 4Gi
             limits:
-              cpu: 7000m
+              cpu: 3500m
               memory: 8Gi
   - name: pull-tekton-pipeline-kind-alpha-yaml-tests
     labels:
@@ -1489,6 +1492,7 @@ presubmits:
               topologyKey: kubernetes.io/hostname
       nodeSelector:
         cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
       tolerations:
         - key: kind-only
           operator: Equal
@@ -1518,10 +1522,10 @@ presubmits:
             privileged: true
           resources:
             requests:
-              cpu: 7000m
+              cpu: 3500m
               memory: 4Gi
             limits:
-              cpu: 7000m
+              cpu: 3500m
               memory: 8Gi
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
