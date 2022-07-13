@@ -1,0 +1,7 @@
+resources:
+  - community
+  - plumbing
+  - catalog
+  - website
+  - pipeline
+  - shared

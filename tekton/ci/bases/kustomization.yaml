@@ -1,0 +1,7 @@
+commonLabels:
+  app: tekton.ci
+resources:
+  - template.yaml
+  - trigger.yaml
+configurations:
+- kustomizeconfig/trigger.yaml

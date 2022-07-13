@@ -1,0 +1,22 @@
+bases:
+  - ../../../bases
+
+patches:
+  - path: template.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: TriggerTemplate
+      name: ci-pipeline
+  - path: trigger-pr.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: Trigger
+      name: pull-request
+  - path: trigger-comment.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: Trigger
+      name: issue-comment

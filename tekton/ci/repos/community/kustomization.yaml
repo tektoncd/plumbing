@@ -1,0 +1,16 @@
+namePrefix: tekton-community-
+bases:
+  - ../../bases
+
+patches:
+  - path: template.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: TriggerTemplate
+      name: ci-pipeline
+  - path: trigger.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: Trigger
