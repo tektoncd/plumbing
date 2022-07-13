@@ -6,6 +6,8 @@ spec:
   params:
   - name: buildUUID
     description: UUID used to track a CI Pipeline Run in logs
+  - name: sourceEventId
+    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
   - name: package
     description: org/repo
   - name: pullRequestNumber
@@ -37,6 +39,7 @@ spec:
       generateName: request-pr-docs-reviewer-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
         tekton.dev/gitRevision: "$(tt.params.gitRevision)"
@@ -83,6 +86,8 @@ spec:
   params:
   - name: buildUUID
     description: UUID used to track a CI Pipeline Run in logs
+  - name: sourceEventId
+    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
   - name: package
     description: org/repo
   - name: pullRequestNumber
@@ -110,6 +115,7 @@ spec:
       generateName: check-pr-labels-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: check-pr-has-kind-label
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
@@ -137,6 +143,8 @@ spec:
   params:
   - name: buildUUID
     description: UUID used to track a CI Pipeline Run in logs
+  - name: sourceEventId
+    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
   - name: package
     description: org/repo
   - name: pullRequestNumber
@@ -164,6 +172,7 @@ spec:
       generateName: check-github-tasks-completed-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: check-github-tasks-completed
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)

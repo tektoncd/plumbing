@@ -9,6 +9,8 @@ spec:
       Tekton buildID, compatible with Prow's format (numeric)
       Used to identify builds in a way that is compatible with Prow's
       tooling like deck / spyglass
+  - name: sourceEventId
+    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
   - name: package
     description: org/repo
   - name: pullRequestNumber
@@ -40,6 +42,7 @@ spec:
       generateName: plumbing-unit-tests-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: plumbing-unit-tests
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
         tekton.dev/kind: ci
@@ -90,6 +93,7 @@ spec:
       generateName: plumbing-image-build-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: plumbing-image-build
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
         tekton.dev/kind: ci
@@ -134,6 +138,7 @@ spec:
       generateName: tekton-golang-lint-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: plumbing-golang-lint
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
@@ -180,6 +185,7 @@ spec:
       generateName: tekton-yamllint-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/check-name: plumbing-yamllint
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
