@@ -9,8 +9,8 @@ spec:
     description: The pullRequestID to comment to
   - name: buildUUID
     description: The buildUUID for the logs link
-  - name: shortBuildUUID
-    description: A truncated version of the buildUUID
+  - name: shortSourceEventID
+    description: A truncated version of the sourceEventId
   - name: gitHubRepo
     description: The gitHubRepo (org/repo)
   - name: gitRevision
@@ -35,7 +35,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: $(tt.params.shortBuildUUID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
+      name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
       namespace: tekton-ci
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
@@ -78,8 +78,8 @@ spec:
     description: The pullRequestID to comment to
   - name: buildUUID
     description: The buildUUID for the logs link
-  - name: shortBuildUUID
-    description: A truncated version of the buildUUID
+  - name: shortSourceEventID
+    description: A truncated version of the sourceEventId
   - name: gitHubRepo
     description: The gitHubRepo (org/repo)
   - name: gitHubRepoUnderscore
@@ -106,7 +106,7 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      name: $(tt.params.shortBuildUUID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
+      name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
       namespace: tekton-ci
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)

@@ -7,6 +7,8 @@ spec:
   params:
   - name: buildUUID
     value: $(extensions.build-id.id)
+  - name: sourceEventId
+    value: $(header.X-GitHub-Delivery)
   - name: package
     value: $(body.repository.full_name)
   - name: gitRepository

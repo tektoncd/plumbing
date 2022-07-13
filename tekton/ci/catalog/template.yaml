@@ -6,6 +6,8 @@ spec:
   params:
     - name: buildUUID
       description: UUID used to track a CI Pipeline Run in logs
+    - name: sourceEventId
+      description: The event ID from the SCM (e.g. X-GitHub-Delivery)
     - name: pullRequestNumber
       description: The pullRequestNumber
     - name: pullRequestUrl
@@ -35,6 +37,7 @@ spec:
         generateName: pull-catalog-catlin-run-
         labels:
           prow.k8s.io/build-id: $(tt.params.buildUUID)
+          tekton.dev/source-event-id: $(tt.params.sourceEventId)
           tekton.dev/kind: ci
           tekton.dev/check-name: pull-catalog-catlin-lint
           tekton.dev/pr-number: $(tt.params.pullRequestNumber)
@@ -75,6 +78,7 @@ spec:
         generateName: pull-catalog-diff-task-run-
         labels:
           prow.k8s.io/build-id: $(tt.params.buildUUID)
+          tekton.dev/source-event-id: $(tt.params.sourceEventId)
           tekton.dev/kind: ci
           tekton.dev/pr-number: $(tt.params.pullRequestNumber)
         annotations:

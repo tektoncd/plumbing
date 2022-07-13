@@ -6,6 +6,8 @@ spec:
   params:
   - name: buildUUID
     description: UUID used to track a CI Pipeline Run in logs
+  - name: sourceEventId
+    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
   - name: package
     description: org/repo
   - name: pullRequestNumber
@@ -37,6 +39,7 @@ spec:
       generateName: pull-pipeline-kind-k8s-v1-21-e2e-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         tekton.dev/kind: ci
         tekton.dev/check-name: pull-pipeline-kind-k8s-v1-21-e2e
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
