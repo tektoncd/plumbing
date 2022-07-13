@@ -1,0 +1,5 @@
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.repository.name == 'pipeline' &&
+    body.repository.name == 'wont-match'

@@ -1,6 +1,4 @@
 resources:
-- template.yaml
-- trigger.yaml
 - bindings.yaml
 - common-tasks.yaml
 - eventlistener.yaml

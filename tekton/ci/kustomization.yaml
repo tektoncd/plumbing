@@ -6,8 +6,4 @@ resources:
 - infra
 - shared
 - jobs
-- community
-- plumbing
-- catalog
-- website
-- pipeline
+- repos

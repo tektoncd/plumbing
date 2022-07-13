@@ -1,38 +1,6 @@
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerTemplate
-metadata:
-  name: tekton-pipeline-ci-pipeline
-spec:
-  params:
-  - name: buildUUID
-    description: UUID used to track a CI Pipeline Run in logs
-  - name: sourceEventId
-    description: The event ID from the SCM (e.g. X-GitHub-Delivery)
-  - name: package
-    description: org/repo
-  - name: pullRequestNumber
-    description: The pullRequestNumber
-  - name: pullRequestUrl
-    description: The HTML URL for the pull request
-  - name: pullRequestBaseRef
-    description: |
-      The base git ref for the pull request. This is the branch the
-      pull request would merge onto once approved.
-  - name: gitRepository
-    description: The git repository that hosts context and Dockerfile
-  - name: gitRevision
-    description: The Git revision to be used.
-  - name: gitCloneDepth
-    description: Number of commits in the change + 1
-  - name: gitHubCommand
-    description: |
-      The GitHub command that was used a trigger. This is only available when
-      this template is triggered by a comment. The default value is for the
-      case of a pull_request event.
-    default: ""
-  - name: labels
-    description: List of labels currently on the Pull Request
-  resourcetemplates:
+- op: add
+  path: /spec/resourcetemplates
+  value:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:

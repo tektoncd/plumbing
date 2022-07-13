@@ -1,0 +1,64 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: pull-request
+  labels:
+    ci.tekton.dev/trigger-type: github.pull-request
+spec:
+  interceptors:
+    - name: "Filter by repo"
+      ref:
+        name: cel
+      params:
+        - name: filter
+          value: >-
+            body.repository.name == 'repo'
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-pull-request
+    - ref: tekton-ci-webhook-pr-labels
+    - ref: tekton-ci-clone-depth
+  template:
+    ref: ci-pipeline
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: issue-comment
+  labels:
+    ci.tekton.dev/trigger-type: github.issue-comment
+spec:
+  interceptors:
+    - name: "Filter by repo"
+      ref:
+        name: cel
+      params:
+        - name: filter
+          value: >-
+            body.repository.name == 'repo'
+        - name: overlays
+          value:
+          - key: add_pr_body.pull_request_url
+            expression: "body.issue.pull_request.url"
+    - webhook:
+        objectRef:
+          kind: Service
+          name: add-pr-body
+          apiVersion: v1
+          namespace: tekton-ci
+    - name: "Add git clone depth"
+      ref:
+        name: cel
+      params:
+        - name: overlays
+          value:
+          - key: git_clone_depth
+            expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-comment
+    - ref: tekton-ci-clone-depth
+    - ref: tekton-ci-webhook-issue-labels
+  template:
+    ref: ci-pipeline

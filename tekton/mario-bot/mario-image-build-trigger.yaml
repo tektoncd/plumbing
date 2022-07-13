@@ -103,12 +103,16 @@ spec:
   triggers:
     - name: trigger
       interceptors:
-        - github:
-            secretRef:
-              secretName: mario-github-secret
-              secretKey: secret-token
-            eventTypes:
-              - issue_comment
+        - ref:
+            name: github
+          params:
+            - name: secretRef
+              value:
+                secretName: mario-github-secret
+                secretKey: secret-token
+            - name: eventTypes
+              value:
+                - "issue_comment"
         - webhook:
             objectRef:
               kind: Service

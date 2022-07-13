@@ -39,6 +39,8 @@ spec:
     value: $(body.pull_request.html_url)
   - name: pullRequestBaseRef
     value: $(body.pull_request.base.ref)
+  - name: body
+    value: $(body.pull_request.body)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -57,16 +59,8 @@ spec:
     value: $(body.extensions.add_pr_body.pull_request_body.base.ref)
   - name: gitHubCommand
     value: $(body.comment.body)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-webhook-tektoncd-comment
-  namespace: tekton-ci
-spec:
-  params:
-  - name: gitHubCommand
-    value: $(body.comment.body)
+  - name: body
+    value: $(body.extensions.add_pr_body.pull_request_body.body)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -87,13 +81,3 @@ spec:
   params:
   - name: labels
     value: $(body.issue.labels)
----
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: TriggerBinding
-metadata:
-  name: tekton-ci-webhook-pr-body
-  namespace: tekton-ci
-spec:
-  params:
-    - name: body
-      value: $(body.pull_request.body)

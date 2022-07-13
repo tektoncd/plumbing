@@ -81,10 +81,6 @@ When a start, failed or succeeded event is received for a CI job, the
 [`github-template.yaml`](../resources/ci/github-template.yaml) is triggered,
 which takes care of updating the check status on GitHub side accordingly.
 
-Conditions must trigger github updates - because of have tasks that implement
-conditions must be named `check-*`, which is used in the trigger CEL filter
-to skip the associated events.
-
 The `github-template` adds labels to the task runs it triggers to make it
 easier to associate them back with the source task run:
 
@@ -103,7 +99,8 @@ trigger templates:
 
 Parameter Name    | Description                | Source                     | Notes
 ------------------|----------------------------|----------------------------|--------------------------------------------
-buildUUID         | Unique GitHub Event ID     | `X-GitHub-Delivery` header | base binding
+buildUUID         | Prow style build ID        | build-id custom interceptor | base binding
+sourceEventId     | Unique GitHub Event ID     | `X-GitHub-Delivery` header | base binding
 package           | GitHub org/repo            | repository.full_name       | base binding
 gitRepository     | GitHub repo HTML URL       | repository.html_url        | base binding
 gitRevision       | Git rev of the HEAD commit | pull_request.head.sha      | Added by add_pr_body for comments
@@ -111,8 +108,9 @@ gitCloneDepth     | Number of commits + 1      | extensions.git_clone_depth | Ad
 pullRequestNumber | Pull request number        | pull_request.number        | Added by add_pr_body or overlay for comments
 pullRequestURL    | Pull request HTML URL      | pull_request.html_url      | Added by add_pr_body for comments
 pullRequestBaseRef| Pull request Base Branch   | pull_request.base.ref      | Added by add_pr_body for comments
-gitHubCommand     | GitHub comment body        | comment.body               | Only available for comments, default for PR
-labels            | GitHub labels for PR       | pull_request.labels        | Only available for PRs, missing for comment
+gitHubCommand     | GitHub comment body        | comment.body               | Only available for comments, default "" for PR
+labels            | GitHub labels for PR       | pull_request.labels        | Added by add_pr_body for comments
+body              | GitHub PR body             | pull_request.body          | Added by add_pr_body for comments
 
 ## Define new CI Jobs
 
@@ -259,10 +257,26 @@ the CI job when relevant files have been modified.
 ### PipelineRun
 
 `PipelineRuns` are added to the relevant `TriggerTemplate` in the
-`tektoncd/plumbing` repo under `tekton/ci/<project>/template.yaml`.
+`tektoncd/plumbing` repo under `tekton/ci/repos/<project>/template.yaml`.
 The `shared` folder is used for jobs that are shared across repos.
 Unless `PipelineRuns` *require* a different `Trigger`, they should all be
 added to a single `TriggerTemplate`.
+
+Most of the `TriggerTemplate` spec is boiler-plate YAML, and it's factored up
+under [`ci/bases/template.yaml`](./ci/bases/template.yaml), so that the project
+specific template only includes the list of `PipelineRuns`:
+
+```yaml
+- op: add
+  path: /spec/resourcetemplates
+  value:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    (...)
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    (...)
+```
 
 The event listener will trigger the correct template based on the event.
 The `PipelineRun` must define specific metadata for the conditions and the
@@ -277,6 +291,7 @@ downstream CEL filters to work correctly.
         tekton.dev/kind: ci
         tekton.dev/check-name: CHECK-NAME # *MUST* be the GitHub check name
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
         prow.k8s.io/build-id: $(tt.params.buildUUID)
       annotations:
         tekton.dev/gitRevision: "$(tt.params.gitRevision)"
@@ -317,59 +332,61 @@ as the `tekton.dev` namespace has been reserved for Tekton itself only.
 ### New Trigger Template
 
 If a `TriggerTemplate` for a specific repository does not exists yet, it must be
-created under `tekton/ci/templates` and named `REPO-template.yaml`.
+created under `tekton/ci/repos/<name>/` and it's usually named `template.yaml`.
 When a new trigger template is added, corresponding `Trigger` resources need to
 be added to use the new template when events are received.
 
-A good starting point is to look at the two triggers already defined for the
-`plumbing` repo and replicate them for the new repo.
+Every new file and folder must added to the list in the `kustomization.yaml`
+file in the containing folder.
 
-To react to pull requests:
+Most of the `TriggerTemplate` and `Trigger` resources code can be reused from
+[`ci/bases/template.yaml`](./ci/bases/template.yaml) and
+[`ci/bases/trigger.yaml`](./ci/bases/trigger.yaml). The content of any
+`tekton/ci/repos/<name>/` folder is then comprised of three files:
+
+- `template.yaml` which includes the list of pipelines:
 
 ```yaml
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: plumbing-pull-request
-  labels:
-    ci.tekton.dev/trigger-type: github.pull-request
-spec:
-  interceptors:
-    - cel:
-        filter: >-
-          body.repository.name == 'plumbing'
-  bindings:
-    - ref: tekton-ci-github-base
-    - ref: tekton-ci-webhook-pull-request
-    - ref: tekton-ci-webhook-pr-labels
-    - ref: tekton-ci-clone-depth
-    - ref: tekton-ci-webhook-pr-body
-  template:
-    ref: tekton-plumbing-ci-pipeline
+- op: add
+  path: /spec/resourcetemplates
+  value:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    (...)
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    (...)
 ```
 
-To react to issue comments:
+- `trigger.yaml` which includes the CEL filter that matches the repo:
 
 ```yaml
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: plumbing-issue-comment
-  labels:
-    ci.tekton.dev/trigger-type: github.issue-comment
-spec:
-  interceptors:
-    - cel:
-        filter: >-
-          body.repository.name == 'plumbing'
-  bindings:
-    - ref: tekton-ci-github-base
-    - ref: tekton-ci-webhook-comment
-    - ref: tekton-ci-clone-depth
-    - ref: tekton-ci-webhook-issue-labels
-    - ref: tekton-ci-webhook-pr-body
-  template:
-    ref: tekton-plumbing-ci-pipeline
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.repository.name == 'pipeline'
+```
+
+- `kustomization.yaml` which includes the configuration of the resources. The
+  `namePrefix` is the only part that needs to be changed:
+
+```yaml
+namePrefix: tekton-pipeline-
+bases:
+  - ../../bases
+
+patches:
+  - path: template.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: TriggerTemplate
+      name: ci-pipeline
+  - path: trigger.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: Trigger
 ```
 
 ### Integration Test Jobs with KinD
