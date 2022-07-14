@@ -1155,10 +1155,10 @@ presubmits:
         - "--build-tests"
         resources:
           requests:
-            cpu: 4000m
+            cpu: 8000m
             memory: 4Gi
           limits:
-            cpu: 4000m
+            cpu: 8000m
             memory: 8Gi
   - name: pull-tekton-pipeline-unit-tests
     labels:
@@ -1193,77 +1193,6 @@ presubmits:
           limits:
             cpu: 4000m
             memory: 8Gi
-  - name: pull-tekton-pipeline-integration-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-pipeline-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220328-f43f43b3b2@sha256:0defd8e6bd59591a0a43fc1843ccc7cc6e67471821ec48b84e10818e0a0df464 # golang 1.17.8
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--integration-tests"
-        resources:
-          requests:
-            cpu: 4000m
-            memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
-  - name: pull-tekton-pipeline-alpha-integration-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-pipeline-alpha-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-pipeline-alpha-integration-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220328-f43f43b3b2@sha256:0defd8e6bd59591a0a43fc1843ccc7cc6e67471821ec48b84e10818e0a0df464 # golang 1.17.8
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--integration-tests"
-        resources:
-          requests:
-            cpu: 4000m
-            memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
-        env:
-        - name: PIPELINE_FEATURE_GATE
-          value: "alpha"
-        - name: EMBEDDED_STATUS_GATE
-          value: "minimal"
   - name: pull-tekton-pipeline-go-coverage
     labels:
       preset-github-token: "true"
@@ -1295,25 +1224,24 @@ presubmits:
           limits:
             cpu: 4000m
             memory: 8Gi
-  - name: pull-tekton-pipeline-kind-integration-tests
+  - name: pull-tekton-pipeline-integration-tests
     labels:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      pipeline-kind-e2e: "true"
     agent: kubernetes
-    always_run: false
+    always_run: true
     decorate: true
-    optional: true
-    rerun_command: "/test pull-tekton-pipeline-kind-integration-tests"
-    trigger: "(?m)^/test (pull-tekton-pipeline-kind-integration-tests|optional-kind),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-pipeline-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-integration-tests),?(\\s+|$)"
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
-                  - key: pipeline-kind-experiment
+                  - key: pipeline-kind-e2e
                     operator: Exists
               topologyKey: kubernetes.io/hostname
       nodeSelector:
@@ -1353,25 +1281,24 @@ presubmits:
             limits:
               cpu: 3500m
               memory: 8Gi
-  - name: pull-tekton-pipeline-kind-alpha-integration-tests
+  - name: pull-tekton-pipeline-alpha-integration-tests
     labels:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
+      pipeline-kind-e2e: "true"
     agent: kubernetes
-    always_run: false
+    always_run: true
     decorate: true
-    optional: true
-    rerun_command: "/test pull-tekton-pipeline-kind-alpha-integration-tests"
-    trigger: "(?m)^/test (pull-tekton-pipeline-kind-alpha-integration-tests|optional-kind),?(\\s+|$)"
+    rerun_command: "/test pull-tekton-pipeline-alpha-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-alpha-integration-tests),?(\\s+|$)"
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
-                  - key: pipeline-kind-experiment
+                  - key: pipeline-kind-e2e
                     operator: Exists
               topologyKey: kubernetes.io/hostname
       nodeSelector:
@@ -1402,122 +1329,6 @@ presubmits:
             - "./test/e2e-tests.sh"
             - --e2e-env
             - "./test/e2e-tests-kind-prow-alpha.env"
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: 3500m
-              memory: 4Gi
-            limits:
-              cpu: 3500m
-              memory: 8Gi
-  - name: pull-tekton-pipeline-kind-yaml-tests
-    labels:
-      preset-presubmit-sh: "true"
-      preset-dind-enabled: "true"
-      preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
-    agent: kubernetes
-    always_run: false
-    decorate: true
-    optional: true
-    rerun_command: "/test pull-tekton-pipeline-kind-yaml-tests"
-    trigger: "(?m)^/test (pull-tekton-pipeline-kind-yaml-tests|optional-kind),?(\\s+|$)"
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-        cloud.google.com/gke-nodepool: n2-standard-4-kind
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-      containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
-          imagePullPolicy: Always
-          command:
-            - /usr/local/bin/entrypoint.sh
-          args:
-            - "--service-account=/etc/test-account/service-account.json"
-            - "--" # end bootstrap args, scenario args below
-            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-            - "/usr/local/bin/kind-e2e"
-            - "--k8s-version"
-            - "v1.22.x"
-            - "--cluster-suffix"
-            - "$(PULL_NUMBER)"
-            - "--nodes"
-            - "3"
-            - "--e2e-script"
-            - "./test/e2e-tests.sh"
-            - --e2e-env
-            - "./test/e2e-tests-kind-prow-yaml.env"
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: 3500m
-              memory: 4Gi
-            limits:
-              cpu: 3500m
-              memory: 8Gi
-  - name: pull-tekton-pipeline-kind-alpha-yaml-tests
-    labels:
-      preset-presubmit-sh: "true"
-      preset-dind-enabled: "true"
-      preset-kind-volume-mounts: "true"
-      pipeline-kind-experiment: "true"
-    agent: kubernetes
-    always_run: false
-    decorate: true
-    optional: true
-    rerun_command: "/test pull-tekton-pipeline-kind-alpha-yaml-tests"
-    trigger: "(?m)^/test (pull-tekton-pipeline-kind-alpha-yaml-tests|optional-kind),?(\\s+|$)"
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-experiment
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-        cloud.google.com/gke-nodepool: n2-standard-4-kind
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-      containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Probably should change this to a specific tag once the job is stable.
-          imagePullPolicy: Always
-          command:
-            - /usr/local/bin/entrypoint.sh
-          args:
-            - "--service-account=/etc/test-account/service-account.json"
-            - "--" # end bootstrap args, scenario args below
-            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-            - "/usr/local/bin/kind-e2e"
-            - "--k8s-version"
-            - "v1.22.x"
-            - "--cluster-suffix"
-            - "$(PULL_NUMBER)"
-            - "--nodes"
-            - "3"
-            - "--e2e-script"
-            - "./test/e2e-tests.sh"
-            - --e2e-env
-            - "./test/e2e-tests-kind-prow-alpha-yaml.env"
           securityContext:
             privileged: true
           resources:
