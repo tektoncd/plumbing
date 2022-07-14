@@ -7,144 +7,180 @@ spec:
   triggers:
   - name: pipeline-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'pipeline' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'pipeline' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-pipeline-nightly-test-s390x
   - name: triggers-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'triggers' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'triggers' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-triggers-nightly-test-s390x
   - name: cli-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'cli' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'cli' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-cli-nightly-test-s390x
   - name: operator-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'operator' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'operator' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-operator-nightly-test-s390x
   - name: dashboard-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'dashboard' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'dashboard' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-dashboard-nightly-test-s390x
   - name: catalog-nightly-test-trigger-s390x
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'catalog' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 's390x'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'catalog' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 's390x'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-catalog-nightly-test-s390x
   - name: pipeline-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'pipeline' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'pipeline' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-pipeline-nightly-test-ppc64le
   - name: triggers-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'triggers' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'triggers' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-triggers-nightly-test-ppc64le
   - name: cli-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'cli' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'cli' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-cli-nightly-test-ppc64le
   - name: operator-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'operator' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'operator' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-operator-nightly-test-ppc64le
   - name: dashboard-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'dashboard' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'dashboard' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
       ref: tekton-dashboard-nightly-test-ppc64le
   - name: catalog-nightly-test-trigger-ppc64le
     interceptors:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-           body['trigger-template'] == 'catalog' &&
-           'arch' in body.params.target &&
-           body.params.target.arch == 'ppc64le'
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            'trigger-template' in body &&
+             body['trigger-template'] == 'catalog' &&
+             'arch' in body.params.target &&
+             body.params.target.arch == 'ppc64le'
     bindings:
     - ref: trigger-to-deploy-test-tekton-project
     template:
