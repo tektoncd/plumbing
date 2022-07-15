@@ -60,7 +60,9 @@ spec:
         - name: dockerfile
       params:
         - name: serviceAccountFilename
+          type: string
         - name: registry
+          type: string
       steps:
         - name: gke-serviceaccount-to-dockerfile
           image: debian:bullseye-slim

@@ -6,18 +6,25 @@ spec:
   params:
     - name: gitRepository
       description: The git repository that hosts context and Dockerfile
+      type: string
     - name: gitRevision
       description: The Git revision to be used.
+      type: string
     - name: gitCloneDepth
       description: Number of commits in the change + 1
+      type: string
     - name: imageUrl
       description: The url to push the built image to
+      type: string
     - name: tags
       description: Comma separated list of tags
+      type: string
     - name: contextPath
       description: Path to the context in the repo to use when building the image
+      type: string
     - name: platforms
       description: Comma separated list of platforms
+      type: string
   workspaces:
     - name: source
     - name: secret
@@ -54,9 +61,13 @@ spec:
       taskSpec:
         params:
           - name: contextPath
+            type: string
           - name: imageUrl
+            type: string
           - name: tags
+            type: string
           - name: platforms
+            type: string
         workspaces:
           - name: source
           - name: secret

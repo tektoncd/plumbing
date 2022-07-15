@@ -20,19 +20,26 @@ spec:
   - name: projectName
     description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
     default: pipeline
+    type: string
   - name: package
     description: Name of the Tekton package
     default: github.com/tektoncd/pipeline
+    type: string
   - name: version
     description: The vX.Y.Z version that we want to install (including `v`)
+    type: string
   - name: namespace
     description: Namespace where the Tekton project is installed by the release
+    type: string
   - name: resources
     description: space separated list of resources to be deleted
+    type: string
   - name: container-registry
     description: Container registry where to upload images during tests
+    type: string
   - name: default-service-account
     description: Service account to be setup as default in Tekton configmap
+    type: string
   resources:
   - name: bucket
     type: storage

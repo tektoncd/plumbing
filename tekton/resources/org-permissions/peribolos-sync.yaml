@@ -9,8 +9,10 @@ spec:
   params:
   - name: url
     default: https://github.com/tektoncd/community.git
+    type: string
   - name: revision
     default: main
+    type: string
   tasks:
   - name: clone-repo
     taskRef:
