@@ -1338,6 +1338,11 @@ presubmits:
             limits:
               cpu: 3500m
               memory: 8Gi
+          env:
+            - name: PIPELINE_FEATURE_GATE
+              value: "alpha"
+            - name: EMBEDDED_STATUS_GATE
+              value: "minimal"
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
     labels:
