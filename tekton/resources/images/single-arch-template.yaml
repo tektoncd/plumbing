@@ -57,7 +57,7 @@ spec:
           - name: secret
         steps:
           - name: build-and-push
-            workingdir: $(workspaces.source.path)
+            workingDir: $(workspaces.source.path)
             image: gcr.io/kaniko-project/executor:v1.8.0-debug
             env:
               - name: GOOGLE_APPLICATION_CREDENTIALS

@@ -110,7 +110,7 @@ spec:
             steps:
             - name: run-e2e-tests
               image: gcr.io/tekton-releases/dogfooding/test-runner:latest
-              workingdir: $(workspaces.source-code.path)/src/github.com/tektoncd/operator
+              workingDir: $(workspaces.source-code.path)/src/github.com/tektoncd/operator
               env:
               - name: GOPATH
                 value: /workspace
