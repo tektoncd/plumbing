@@ -113,7 +113,7 @@ spec:
         EOF
     - name: filter-data
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(workspaces.shared.path)/repo
+      workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -238,7 +238,7 @@ spec:
 
     - name: authors
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(workspaces.shared.path)/repo
+      workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -253,7 +253,7 @@ spec:
         EOF
     - name: pr-data
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(workspaces.shared.path)/repo
+      workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -269,7 +269,7 @@ spec:
         EOF
     - name: create-draft
       image: gcr.io/tekton-releases/dogfooding/hub
-      workingdir: $(workspaces.shared.path)/repo
+      workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
         set -ex

@@ -274,7 +274,7 @@ spec:
       - name: gcp-secret
       steps:
       - name: build-and-push
-        workingdir: $(workspaces.source-code.path)
+        workingDir: $(workspaces.source-code.path)
         image: gcr.io/kaniko-project/executor:v0.13.0
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
