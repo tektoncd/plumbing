@@ -1,0 +1,23 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: all-issue-comment
+  labels:
+    ci.tekton.dev/trigger-type: github.labels
+spec:
+  interceptors:
+    - name: "Filter by repo"
+      ref:
+        name: cel
+      params:
+        - name: filter
+          value: >-
+            body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'hub']
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-pull-request
+    - ref: tekton-ci-webhook-pr-labels
+    - ref: tekton-ci-clone-depth
+  template:
+    ref: all-ci-pipeline

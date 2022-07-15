@@ -26,7 +26,7 @@ spec:
             - name: "filter"
               value: >-
                 body.repository.full_name.startsWith('tektoncd/') &&
-                body.action in ['opened', 'synchronize', 'labeled', 'unlabeled', 'reopened']
+                body.action in ['opened', 'synchronize', 'reopened']
             - name: "overlays"
               value:
                 - key: git_clone_depth
@@ -75,3 +75,38 @@ spec:
         labelSelector:
           matchLabels:
             ci.tekton.dev/trigger-type: github.issue-comment
+    - name: github-tektoncd-labels-group
+      interceptors:
+        - name: "Validate GitHub payload and filter on eventType"
+          ref:
+            name: "github"
+          params:
+            - name: "secretRef"
+              value:
+                secretName: ci-webhook
+                secretKey: secret
+            - name: "eventTypes"
+              value:
+                - "pull_request"
+        - name: "Filter the GitHub org and actions and add git_clone_depth"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                body.repository.full_name.startsWith('tektoncd/') &&
+                body.action in ['labeled', 'unlabeled']
+            - name: "overlays"
+              value:
+                - key: git_clone_depth
+                  expression: "string(body.pull_request.commits + 1.0)"
+        - name: "Add a build ID into the payload"
+          ref:
+            name: "build-id"
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - tekton-ci
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: github.labels
