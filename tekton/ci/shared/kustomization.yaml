@@ -3,3 +3,4 @@ resources:
 - common-tasks.yaml
 - eventlistener.yaml
 - gubernator-metadata.yaml
+- labels.yaml
