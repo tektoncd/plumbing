@@ -14,7 +14,7 @@ spec:
         - name: filter
           value: >-
             body.repository.name in ['plumbing', 'pipeline', 'triggers', 'cli', 'dashboard', 'hub'] &&
-            body.label.startsWith('kind/')
+            body.label.name.startsWith('kind/')
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-pull-request
