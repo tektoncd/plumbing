@@ -153,6 +153,8 @@ spec:
     value: $(body.taskRun.metadata.namespace)
   - name: runKind
     value: taskrun
+  - name: nameAndNamespace
+    value: $(extensions.nameAndNamespace)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
