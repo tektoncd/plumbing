@@ -27,11 +27,13 @@ spec:
     description: The base URL of the Tekton dashboard
   - name: cdPipelineType
     description: The type of CD pipeline
+  - name: nameAndNamespace
+    description: runName + runNamespace truncated to 57 chars
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: TaskRun
     metadata:
-      generateName: send-to-webhook-slack-
+      name: $(tt.params.nameAndNamespace)-slack
     spec:
       taskRef:
         name: send-to-webhook-slack

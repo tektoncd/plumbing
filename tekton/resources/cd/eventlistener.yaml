@@ -143,6 +143,12 @@ spec:
             - name: "filter"
               value: >-
                 header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
+            - name: "overlay"
+              value:
+              - key: nameAndNamespace
+                expression: >-
+                  (body.taskRun.metadata.name + "-" +
+                   body.taskRun.metadata.namespace).truncate(57)
       triggerSelector:
         namespaceSelector:
           matchNames:
