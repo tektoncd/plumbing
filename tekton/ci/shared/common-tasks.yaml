@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: check-git-files-changed
@@ -46,7 +46,7 @@ spec:
             grep -E "${REGEX}" && CHECK="passed"
         printf $CHECK > $(results.check.path)
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: check-name-matches
