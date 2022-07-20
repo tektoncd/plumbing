@@ -14,11 +14,11 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.17.11-alpine
+FROM golang:1.18.3-alpine
 
 WORKDIR /kind
 
-RUN GO111MODULE=on go get github.com/google/ko/cmd/ko@v0.6.2
+RUN GO111MODULE=on go install github.com/google/ko@v0.11.2
 
 RUN apk add --no-cache \
   bash curl docker git jq openssl

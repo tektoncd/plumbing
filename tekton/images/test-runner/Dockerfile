@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build kubetest independently of the rest
-FROM docker.io/library/golang:1.17.11 as kubetest
+FROM docker.io/library/golang:1.18.3 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
@@ -148,8 +148,8 @@ RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 
 # END: test-infra import
 
-# Install Go 1.17.11
-ARG GO_VERSION=1.17.11
+# Install Go 1.18.3
+ARG GO_VERSION=1.18.3
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
@@ -164,13 +164,13 @@ ARG KO_VERSION=0.8.3
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
-# Extra tools through go get
+# Extra tools through go install
 ARG KIND_VERSION="v0.14.0"
 RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
-    GO111MODULE="on" go get github.com/jstemmer/go-junit-report && \
-    GO111MODULE="on" go get github.com/raviqqe/liche && \
+    GO111MODULE="on" go install github.com/jstemmer/go-junit-report@latest && \
+    GO111MODULE="on" go install github.com/raviqqe/liche@latest && \
     GO111MODULE="off" go get github.com/golang/dep/cmd/dep && \
-    GO111MODULE="on" go get sigs.k8s.io/kind@${KIND_VERSION}
+    GO111MODULE="on" go install sigs.k8s.io/kind@${KIND_VERSION}
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
 ARG GOLANGCI_VERSION=1.42.0
