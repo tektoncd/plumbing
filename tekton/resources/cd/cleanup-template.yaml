@@ -51,7 +51,7 @@ spec:
       # Keep double the amount of tr, for standalone trs
       tkn tr delete -n ${NAMESPACE} --keep $(( ${KEEP} * 2 ))
 ---
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: cleanup-runs

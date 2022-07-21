@@ -11,8 +11,132 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-configmap
+spec:
+  params:
+    - name: configPath
+      description: Path in the git repo that holds configs
+    - name: namespace
+      description: target namespace
+    - name: configMapName
+      description: Name of the configmap resource
+    - name: configMapKey
+      description: Name of the configmap key where the data is stored
+  workspaces:
+    - name: resources
+      description: resources to deploy
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: $(workspaces.targetCluster.path)/kubeconfig
+    - name: RESOURCES_PATH
+      value: $(workspaces.resources.path)
+    - name: CONFIG_PATH
+      value: $(params.configPath)
+    - name: NAMESPACE
+      value: $(params.namespace)
+    - name: CONFIG_MAP_NAME
+      value: $(params.configMapName)
+    - name: CONFIG_MAP_KEY
+      value: $(params.configMapKey)
+  steps:
+  - name: fetch-current-config
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+      kubectl get configmap -n ${NAMESPACE} \
+        ${CONFIG_MAP_NAME} -o template \
+        --template='{{ index .data "${CONFIG_MAP_KEY}" }}' > \
+          /workspace/${CONFIG_MAP_KEY} || \
+          rm /workspace/${CONFIG_MAP_KEY}
+  - name: deploy
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+      if [ ! -f /workspace/${CONFIG_MAP_KEY} ]; then
+        echo "First time deployment"
+        kubectl create configmap ${CONFIG_MAP_NAME} \
+          --from-file=${CONFIG_MAP_KEY}=${RESOURCES_PATH}}/${CONFIG_PATH} \
+          -n ${NAMESPACE}
+          exit 0
+      fi
+      echo "diff [current-config] [new config]"
+      has_diff=0
+      diff /workspace/${CONFIG_MAP_KEY} \
+        ${RESOURCES_PATH}/${CONFIG_PATH} || has_diff=1
+      if [ $has_diff -eq 0 ]; then
+        echo "No change in config detected. Nothing to be done."
+        exit 0
+      fi
+      # Apply configuration changes
+      kubectl create configmap ${CONFIG_MAP_NAME} \
+        --from-file=${CONFIG_MAP_KEY}=${RESOURCES_PATH}/${CONFIG_PATH} \
+        --dry-run -o yaml | \
+        kubectl replace configmap ${CONFIG_MAP_NAME} -n ${NAMESPACE} -f -
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: deploy-configmap
+spec:
+  params:
+    - name: gitRepository
+      description: URL of the repository that holds the folder
+    - name: gitRevision
+      description: Git revision
+    - name: configPath
+      description: Path in the git repo that holds configs
+    - name: namespace
+      description: target namespace
+    - name: configMapName
+      description: Name of the configmap resource
+    - name: configMapKey
+      description: Name of the configmap key where the data is stored
+  workspaces:
+    - name: resources
+      description: resources to deploy
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: revision
+          value: $(params.gitRevision)
+      workspaces:
+        - name: output
+          workspace: resources
+    - name: deploy
+      runAfter: ["git-clone"]
+      taskRef:
+        name: deploy-configmap
+      params:
+        - name: configPath
+          value: $(params.configPath)
+        - name: namespace
+          value: $(params.namespace)
+        - name: configMapName
+          value: $(params.configMapName)
+        - name: configMapKey
+          value: $(params.configMapKey)
+      workspaces:
+        - name: resources
+          workspace: resources
+        - name: targetCluster
+          workspace: targetCluster
+---
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: deploy-configmap
@@ -36,89 +160,34 @@ spec:
     description: Used for a descriptive TaskRun name
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
       generateName: deploy-configmap-$(tt.params.configMapDescription)-
     spec:
-      taskSpec:
-        params:
-          - name: configPath
-          - name: namespace
-          - name: configMapName
-          - name: configMapKey
-        resources:
-          inputs:
-            - name: source
-              type: git
-            - name: targetCluster
-              type: cluster
-        stepTemplate:
-          env:
-          - name: KUBECONFIG
-            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
-          - name: CONFIG_PATH
-            value: $(params.configPath)
-          - name: NAMESPACE
-            value: $(params.namespace)
-          - name: CONFIG_MAP_NAME
-            value: $(params.configMapName)
-          - name: CONFIG_MAP_KEY
-            value: $(params.configMapKey)
-        steps:
-        - name: fetch-current-config
-          image: gcr.io/tekton-releases/dogfooding/kubectl
-          script: |
-            #!/bin/sh
-            set -ex
-            kubectl get configmap -n ${NAMESPACE} \
-              ${CONFIG_MAP_NAME} -o template \
-              --template='{{ index .data "${CONFIG_MAP_KEY}" }}' > \
-               /workspace/${CONFIG_MAP_KEY} || \
-               rm /workspace/${CONFIG_MAP_KEY}
-        - name: deploy
-          image: gcr.io/tekton-releases/dogfooding/kubectl
-          script: |
-            #!/bin/sh
-            set -ex
-            if [ ! -f /workspace/${CONFIG_MAP_KEY} ]; then
-              echo "First time deployment"
-              kubectl create configmap ${CONFIG_MAP_NAME} \
-                --from-file=${CONFIG_MAP_KEY}=$(resources.inputs.source.path)/${CONFIG_PATH} \
-                -n ${NAMESPACE}
-                exit 0
-            fi
-            echo "diff [current-config] [new config]"
-            has_diff=0
-            diff /workspace/${CONFIG_MAP_KEY} \
-              $(resources.inputs.source.path)/${CONFIG_PATH} || has_diff=1
-            if [ $has_diff -eq 0 ]; then
-              echo "No change in config detected. Nothing to be done."
-              exit 0
-            fi
-            # Apply configuration changes
-            kubectl create configmap ${CONFIG_MAP_NAME} \
-              --from-file=${CONFIG_MAP_KEY}=$(resources.inputs.source.path)/${CONFIG_PATH} \
-              --dry-run -o yaml | \
-              kubectl replace configmap ${CONFIG_MAP_NAME} -n ${NAMESPACE} -f -
+      pipelineRef:
+        name: deploy-configmap
       params:
-      - name: configPath
-        value: $(tt.params.configPath)
-      - name: namespace
-        value: $(tt.params.namespace)
-      - name: configMapName
-        value: $(tt.params.configMapName)
-      - name: configMapKey
-        value: $(tt.params.configMapKey)
-      resources:
-        inputs:
-          - name: source
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.gitRevision)
-              - name: url
-                value: https://$(tt.params.gitRepository)
-          - name: targetCluster
-            resourceRef:
-              name: $(tt.params.clusterResource)
+        - name: gitRepository
+          value: https://$(tt.params.gitRepository)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: configPath
+          value: $(tt.params.configPath)
+        - name: namespace
+          value: $(tt.params.namespace)
+        - name: configMapName
+          value: $(tt.params.configMapName)
+        - name: configMapKey
+          value: $(tt.params.configMapKey)
+      workspaces:
+        - name: resources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
