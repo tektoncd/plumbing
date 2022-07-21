@@ -1,0 +1,121 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: publish-images-taskrun-logs
+spec:
+  params:
+  - name: pipelineRun
+    value: $(body.pipelineRun.metadata.name)
+  - name: namespace
+    value: $(body.pipelineRun.metadata.namespace)
+  - name: logFilePath
+    value: $(extensions.bucketBasePath)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: publish-images-taskrun-logs-credentials
+spec:
+  params:
+  - name: credentialsSecretName
+    value: release-secret
+  - name: serviceAccountKey
+    value: release.json
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: publish-images-taskrun-logs-credentials-nightly
+spec:
+  params:
+  - name: credentialsSecretName
+    value: nightly-account
+  - name: serviceAccountKey
+    value: service-account.json
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: release-nightly-collect-logs
+  labels:
+    ci.tekton.dev/trigger-type: release.triggered
+spec:
+  interceptors:
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            body.pipelineRun.metadata.namespace == "tekton-nightly"
+  bindings:
+    - ref: publish-images-taskrun-logs
+    - ref: publish-images-taskrun-logs-credentials-nightly
+  template:
+    ref: release-logs
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: release-collect-logs
+  labels:
+    ci.tekton.dev/trigger-type: release.triggered
+spec:
+  interceptors:
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: >-
+            body.pipelineRun.metadata.namespace == "default"
+  bindings:
+    - ref: publish-images-taskrun-logs
+    - ref: publish-images-taskrun-logs-credentials
+  template:
+    ref: release-logs
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: release-logs
+spec:
+  params:
+    - name: pipelineRun
+      description: The name of the pipelineRun whose log we need to save
+    - name: namespace
+      description: The namespace of the pipelineRun
+    - name: logFilePath
+      description: The object storage bucket
+    - name: credentialsSecretName
+      description: Name of the secret that holds credentials for the bucket
+    - name: serviceAccountKey
+      description: Key to the service account in the secret
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: save-release-logs-
+    spec:
+      serviceAccountName: tekton-logs
+      pipelineRef:
+        name: save-release-logs
+      params:
+        - name: pipelineRun
+          value: $(tt.params.pipelineRun)
+        - name: namespace
+          value: $(tt.params.namespace)
+        - name: logFilePath
+          value: $(tt.params.logFilePath)
+        - name: serviceAccountPath
+          value: $(tt.params.serviceAccountKey)
+      workspaces:
+        - name: shared
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: $(tt.params.credentialsSecretName)

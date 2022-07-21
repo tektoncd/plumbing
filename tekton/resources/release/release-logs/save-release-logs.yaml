@@ -1,0 +1,96 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: collect-release-logs
+spec:
+  params:
+  - name: pipelineRun
+    description: The name of the PipelineRun whose log we need to save
+  - name: namespace
+    description: The namespace of the PipelineRun
+  workspaces:
+    - name: shared
+      description: Workspace where the data is written
+  stepTemplate:
+    env:
+      - name: LOG_FILE
+        value: $(workspaces.shared.path)/logs.txt
+      - name: PIPELINE_RUN
+        value: $(params.pipelineRun)
+      - name: NAMESPACE
+        value: $(params.namespace)
+  steps:
+  - name: write-data
+    image: gcr.io/tekton-releases/dogfooding/tkn:v20220331-17fc70470d@sha256:d17fec04f655551464a47dd59553c9b44cf660cc72dbcdbd52c0b8e8668c0579
+    workingDir: $(workspaces.shared.path)
+    script: |
+      #!/usr/bin/env sh
+      set -e
+
+      # This works with in cluster config. The service account used in the run must
+      # have read access to the pipelinerun, taskrun and pod logs APIs
+      tkn pr logs -n "${NAMESPACE}" "${PIPELINE_RUN}" --all > "${LOG_FILE}"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: save-release-logs
+spec:
+  workspaces:
+    - name: shared
+      description: Workspace to host the new bucket files
+    - name: credentials
+      description: Credentials to upload to the bucket
+  params:
+    - name: pipelineRun
+      description: The name of the PipelineRun whose log we need to save
+    - name: namespace
+      description: The namespace of the PipelineRun
+    - name: logFilePath
+      description: >-
+        Path used by the project in the bucket:
+          gs://<bucket>/<project-specific>/previous/<tag>/
+    - name: serviceAccountPath
+      description: Path to the service account on the credentials workspace
+  tasks:
+    - name: collect-logs
+      taskRef:
+        name: collect-release-logs
+      workspaces:
+        - name: shared
+          workspace: shared
+      params:
+        - name: pipelineRun
+          value: $(params.pipelineRun)
+        - name: namespace
+          value: $(params.namespace)
+    - name: upload-data
+      runAfter: ["collect-logs"]
+      taskRef:
+        name: gcs-upload
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+      params:
+        - name: path
+          value: "logs.txt"
+        - name: location
+          value: "$(params.logFilePath)/logs.txt"
+        - name: serviceAccountPath
+          value: "$(params.serviceAccountPath)"
+      workspaces:
+        - name: credentials
+          workspace: credentials
+        - name: source
+          workspace: shared

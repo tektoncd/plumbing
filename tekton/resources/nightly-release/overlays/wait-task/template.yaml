@@ -5,6 +5,8 @@
       kind: PipelineRun
       metadata:
         generateName: wait-task-release-nightly-
+        labels:
+          tekton.dev/kind: release
       spec:
         pipelineRef:
           name: release
