@@ -1,3 +1,4 @@
 resources:
+- release-logs
 - overlays/default
 - overlays/tekton-nightly

@@ -5,6 +5,8 @@
       kind: PipelineRun
       metadata:
         generateName: dashboard-release-nightly-
+        labels:
+          tekton.dev/kind: release
       spec:
         timeout: "1h30m"
         pipelineRef:

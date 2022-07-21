@@ -1,0 +1,4 @@
+resources:
+- rbac.yaml
+- release-logs-triggers.yaml
+- save-release-logs.yaml

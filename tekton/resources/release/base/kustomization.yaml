@@ -1,8 +1,4 @@
 resources:
-- install_and_test_tekton_release.yaml
 - install_tekton_release.yaml
-- nightly-release-logs-trigger.yaml
 - prerelease_checks.yaml
-- save-release-logs.yaml
-- test_tekton_release.yaml
 - github_release.yaml

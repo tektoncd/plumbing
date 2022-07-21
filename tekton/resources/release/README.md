@@ -13,6 +13,7 @@ The task `verify-tekton-release-github` compares the YAML of the release
 stored in the GitHub release assets, with the YAML of the release stored in the bucket.
 
 Inputs are:
+
 - Param `projectName`: the name of the project (pipeline, trigger,
 dashboard, experimental)
 - Param `version`: the version to be installed, e.g. "v0.7.0"
@@ -25,6 +26,7 @@ The task `install-tekton-release` installs a release of a Tekton project from th
 release bucket.
 
 Inputs are:
+
 - Param `projectName`: the name of the project (pipeline, trigger,
 dashboard, experimental)
 - Param `version`: the version to be installed, e.g. "v0.7.0"
@@ -49,12 +51,12 @@ tkn task start \
 ```
 
 The release task can use a `kustomize` overlay if available. The name of the
-ovelay folder is specified via the `environment` parameter.
+overlay folder is specified via the `environment` parameter.
 The overlay folder must contain a `kustomize.yaml` configuration file. It may
 also contain a `pre` folder. Any `*.sh` script found in the folder will be
 executed before the release is installed.
 
-```
+```shell
 export TEKTON_BUCKET_RESOURCE=tekton-bucket
 export TEKTON_CLUSTER_RESOURCE=k8s-cluster
 export TEKTON_PROJECT=pipeline
@@ -71,53 +73,13 @@ tkn task start \
 
 ## Save Release Logs
 
-The task `save-release-logs` fetches the logs from a release pipelines and stores
-them in the release bucket along with the release YAML.
-This task is triggered automatically by the `pipeline-release-post-processing`
-event listener, which can be triggered by sending a Cloud Event to it at the
-end of the release task, like
-[pipeline](https://github.com/tektoncd/pipeline/blob/883dd4d5df5e80f051d8f6b3b357ce5fa0354a70/tekton/publish.yaml#L44-L45)
-does.
-
-Parameters are `pipelinerun`, `namespace` and `versionTag`.
-A resource that points to the project folder within the release bucket is
-needed both as input and output of the task.
-
-An example using `tkn`:
-
-```
-export TEKTON_BUCKET_RESOURCE=tekton-bucket-nightly-4csms
-export TEKTON_PIPELINERUN=pipeline-release-nightly-zrgdp-6n44c
-export TEKTON_VERSION=v20191203-883dd4d5df
-export TEKTON_NAMESPACE=default
-
-tkn task start \
-  -i release-bucket=$TEKTON_BUCKET_RESOURCE \
-  -o release-bucket=$TEKTON_BUCKET_RESOURCE \
-  -p pipelinerun=$TEKTON_PIPELINERUN \
-  -p namespace=$TEKTON_NAMESPACE \
-  -p versionTag=$TEKTON_VERSION \
-  -s tekton-logs \
-  save-release-logs
-```
-
-The bucket resource:
-```
-$ tkn resource describe tekton-bucket-nightly-4csms
-Name:                    tekton-bucket-nightly-4csms
-Namespace:               default
-PipelineResource Type:   storage
-
-Params
-NAME       VALUE
-type       gcs
-location   gs://tekton-release-nightly/pipeline/
-dir        y
-
-Secret Params
-FIELDNAME                        SECRETNAME
-GOOGLE_APPLICATION_CREDENTIALS   xyz
-```
+The pipeline `save-release-logs` fetches the logs from a release pipelines
+and stores them in the release bucket along with the release YAML.
+This pipeline is triggered automatically when a release pipeline is executed,
+specifically when the "publish" task of the release is executed successfully.
+The `tekton-events` event listener receives the CloudEvent, and triggers
+the `save-release-logs` with the correct credentials to store the logs
+in the release bucket, either the main one or the nightly one.
 
 ## Create Draft Release
 
@@ -163,156 +125,4 @@ tkn pipeline start \
   -p bucket="gs://tekton-releases/pipeline" \
   -p rekor-uuid="$REKOR_UUID" \
   release-draft
-```
-
-## Pipelines
-
-### Verify Release
-
-The `verify-deploy-test-tekton-release` is a pipeline to verify the release
-assets for a Tekton project.
-
-This pipeline performs the following steps:
-* validate the release YAML from the bucket against that in GitHub
-* deploy the release against a test k8s cluster
-* wait for all the deployments and pods to be up and running
-* log the version of tools in the test running image
-* run the e2e tests
-* cleanup resources
-* repeat deploy-to-log
-* run the YAML tests (if available)
-* check the overall results and log success or failure
-
-Params are:
-- Param `projectName`: the name of the project (pipeline, trigger,
-dashboard, experimental)
-- Param `version`: the version to be installed, e.g. "v0.7.0"
-
-Resources are:
-- A ro storage resource, that should point to the release bucket. The release file
-is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
-- A cluster resource, that points to the credentials for the target cluster
-- A git resource for the plumbing repo
-- A git resource for the repo that holds the tests
-- A rw storage resource where the test results and logs are written
-
-The cluster resource pulls the token and cadata from a kubernetes secret like the
-following:
-
-```
-export CLUSTER_SECRET_NAME=<cluster-name>-secrets
-export SERVICE_ACCOUNT_SECRET=<service-account-secret>
-
-cat <<EOF > secret-for-the-cluster-resource.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: $CLUSTER_SECRET_NAME
-type: Opaque
-data:
-  cadataKey: $(kubectl get secret/$SERVICE_ACCOUNT_SECRET -o jsonpath="{.data.ca\.crt}")
-  tokenKey: $(kubectl get secret/$SERVICE_ACCOUNT_SECRET -o jsonpath="{.data.token}")
-EOF
-```
-
-The cluster resource itself:
-```
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: k8s-cluster
-spec:
-  type: cluster
-    - name: url
-      value: <master-username>
-    - name: username
-      value: <service-account-name>
-  secrets:
-    - fieldName: token
-      secretKey: tokenKey
-      secretName: $CLUSTER_SECRET_NAME
-    - fieldName: cadata
-      secretKey: cadataKey
-      secretName: $CLUSTER_SECRET_NAME
-```
-
-The read-only release bucket resource:
-```
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: tekton-bucket
-spec:
-  type: storage
-  params:
-   - name: type
-     value: gcs
-   - name: location
-     value: gs://tekton-releases
-   - name: dir
-     value: "y"
-```
-
-The plumbing git resource:
-```
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: plumbing-git-main
-spec:
-  type: git
-  params:
-    - name: revision
-      value: main
-    - name: url
-      value: https://github.com/tektoncd/plumbing
-```
-
-The test git resource:
-```
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: pipeline-git-v0-7-0
-spec:
-  type: git
-  params:
-    - name: revision
-      value: v0.7.0
-    - name: url
-      value: https://github.com/tektoncd/pipeline
-```
-
-The read-write results bucket resource:
-```
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: tekton-results-bucket
-spec:
-  type: storage
-  params:
-   - name: type
-     value: gcs
-   - name: location
-     value: gs://tekton-test-results
-   - name: dir
-     value: "y"
-```
-
-The pipeline can be executed using the `tkn` client:
-```
-tkn pipeline start \
-  --param=version=<version> \
-  --param=projectName=<tekton-project> \
-  --param=namespace=tekton-pipelines \
-  --param=resources="pipelineresources tasks pipelines taskruns pipelineruns" \
-  --param=container-registry=docker-registry.default.svc:5000 \
-  --param=package=github.com/tektoncd/pipeline \
-  --resource=bucket=<tekton-bucket-resource> \
-  --resource=test-cluster=<test-cluster> \
-  --resource=plumbing=plumbing-git-main \
-  --resource=tests=pipeline-git-v0-7-0 \
-  --resource=results-bucket=tekton-results-bucket \
-  verify-deploy-test-tekton-release
 ```

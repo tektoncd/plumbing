@@ -142,7 +142,7 @@ spec:
           params:
             - name: "filter"
               value: >-
-                header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
+                header.match('ce_type', 'dev.tekton.event.taskrun.failed.v1')
             - name: "overlay"
               value:
               - key: nameAndNamespace
@@ -186,3 +186,26 @@ spec:
         labelSelector:
           matchLabels:
             ci.tekton.dev/trigger-type: ci-job.triggered
+    - name: release-job-triggers
+      interceptors:
+        - name: "Release Job Triggers"
+          ref:
+            name: "cel"
+          params:
+            - name: "filter"
+              value: >-
+                header.match('ce_type', 'dev.tekton.event.pipelinerun.successful.v1') &&
+                (body.pipelineRun.metadata.labels['tekton.dev/kind'] == 'release' ||
+                 body.pipelineRun.metadata.labels['tekton.dev/pipeline'].endsWith('-release'))
+            - name: "overlays"
+              value:
+                - key: bucketBasePath
+                  expression: |-
+                    body.pipelineRun.status.pipelineResults.filter(x, x.name == 'release-file')[0].value.replace('https://storage.googleapis.com/', 'gs://').replace('/release.yaml\n', '')
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: release.triggered

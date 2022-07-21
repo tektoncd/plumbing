@@ -5,6 +5,8 @@
       kind: PipelineRun
       metadata:
         generateName: operator-release-nightly-
+        labels:
+          tekton.dev/kind: release
       spec:
         pipelineRef:
           name: operator-release
