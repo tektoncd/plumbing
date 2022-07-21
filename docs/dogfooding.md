@@ -41,6 +41,23 @@ Secrets which have been applied to the `dogfooding` cluster but are not committe
   - dogfooding-tektonci-default-token
   - robocat-tekton-deployer-token
   - robocat-tektoncd-cadmin-token
+- K8s configuration secrets. These secrets are used in Tekton CD services to deploy
+  resources to a cluster using the embedded k8s client configuration:
+
+  ```
+  $ kubectl get secret -l app=tekton.cd
+  NAME                                    TYPE         DATA   AGE
+  tektoncd-dogfooding                     kubeconfig   1      18s
+  tektoncd-dogfooding-tekton-cd           kubeconfig   1      18s
+  tektoncd-dogfooding-tekton-ci-default   kubeconfig   1      15s
+  tektoncd-dogfooding-tektoncd-cleaner    kubeconfig   1      15s
+  tektoncd-dogfooding-tektonci-default    kubeconfig   1      11s
+  tektoncd-prow-cluster-config-bot        kubeconfig   1      13s
+  tektoncd-prow-github-admin-default      kubeconfig   1      11s
+  tektoncd-robocat-cadmin                 kubeconfig   1      9s
+  tektoncd-robocat-tekton-deployer        kubeconfig   1      8s
+  ```
+
 - Netlify API Token, in the `dns-manager` namespace, named `netlify-credentials`
 - Lots of other secrets, hopefully we can add more documentation on them
   here as we go.

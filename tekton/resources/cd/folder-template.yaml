@@ -11,6 +11,138 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-from-folder
+spec:
+  params:
+    - name: folderPath
+      description: folder within the workspace to deploy from
+    - name: namespace
+      description: target namespace
+    - name: deployMethod
+      description: One of "apply", "create" or "replace"
+    - name: isOverlay
+      description: Whether the folder is a kustomize overlay "true" or "false"
+  workspaces:
+    - name: resources
+      description: resources to deploy
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: $(workspaces.targetCluster.path)/kubeconfig
+    - name: RESOURCES_PATH
+      value: $(workspaces.resources.path)
+    - name: FOLDER_PATH
+      value: $(params.folderPath)
+    - name: NAMESPACE
+      value: $(params.namespace)
+    - name: DEPLOY_METHOD
+      value: $(params.deployMethod)
+    - name: IS_OVERLAY
+      value: $(params.isOverlay)
+  steps:
+  - name: deploy-from-folder
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+
+      # Determine whether to enforce namespace across resources
+      NAMESPACE_PARAM="-n ${NAMESPACE}"
+      [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
+
+      # Handle overlays
+      TARGET=${RESOURCES_PATH}/${FOLDER_PATH}
+      if [[ "${IS_OVERLAY}" == "true" ]]; then
+        TARGET=target.yaml
+        kustomize build \
+          ${RESOURCES_PATH}/${FOLDER_PATH} > $TARGET
+      fi
+
+      # Check if there is any diff
+      DIFF=diff.txt
+      kubectl diff $NAMESPACE_PARAM -f $TARGET | tee $DIFF
+
+      # If there is no diff, we don't need to update
+      if [ ! -s ${DIFF?} ]; then
+        echo "No change detected, nothing to be done."
+        exit 0
+      fi
+
+      # When deploying with replace, we need to do a create first,
+      # to ensure new resources are created
+      CREATE_OUTPUT=create.txt
+      if [[ "${DEPLOY_METHOD}" == "replace" ]]; then
+        kubectl create $NAMESPACE_PARAM -f $TARGET  2> $CREATE_OUTPUT || true
+        # If there was some unexpected message in the error log, fail
+        if egrep -v '(already exists|^Warning)' $CREATE_OUTPUT; then
+            echo "Something went wrong when creating resources"
+            exit 1
+        fi
+      fi
+
+      # Run the actual deployment. If it fails, it will fail the step.
+      kubectl "${DEPLOY_METHOD}" $NAMESPACE_PARAM -f $TARGET
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: deploy-from-folder
+spec:
+  params:
+    - name: gitRepository
+      description: URL of the repository that holds the folder
+    - name: gitRevision
+      description: Git revision
+    - name: folderPath
+      description: folder within the workspace to deploy from
+    - name: namespace
+      description: target namespace
+    - name: deployMethod
+      description: One of "apply", "create" or "replace"
+    - name: isOverlay
+      description: Whether the folder is a kustomize overlay "true" or "false"
+  workspaces:
+    - name: resources
+      description: resources to deploy
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+      params:
+        - name: url
+          value: $(params.gitRepository)
+        - name: revision
+          value: $(params.gitRevision)
+      workspaces:
+        - name: output
+          workspace: resources
+    - name: deploy
+      runAfter: ["git-clone"]
+      taskRef:
+        name: deploy-from-folder
+      params:
+        - name: folderPath
+          value: $(params.folderPath)
+        - name: namespace
+          value: $(params.namespace)
+        - name: deployMethod
+          value: $(params.deployMethod)
+        - name: isOverlay
+          value: $(params.isOverlay)
+      workspaces:
+        - name: resources
+          workspace: resources
+        - name: targetCluster
+          workspace: targetCluster
+---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
@@ -37,96 +169,34 @@ spec:
     default: "false"
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
       generateName: deploy-resources-$(tt.params.folderDescription)-
     spec:
-      taskSpec:
-        params:
-        - name: folderPath
-        - name: namespace
-        - name: deployMethod
-        - name: isOverlay
-        resources:
-          inputs:
-            - name: source
-              type: git
-            - name: targetCluster
-              type: cluster
-        stepTemplate:
-          env:
-          - name: KUBECONFIG
-            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
-          - name: FOLDER_PATH
-            value: $(params.folderPath)
-          - name: NAMESPACE
-            value: $(params.namespace)
-          - name: DEPLOY_METHOD
-            value: $(params.deployMethod)
-          - name: IS_OVERLAY
-            value: $(params.isOverlay)
-        steps:
-        - name: deploy-from-folder
-          image: gcr.io/tekton-releases/dogfooding/kubectl
-          script: |
-            #!/bin/sh
-            set -ex
-
-            # Determine whether to enforce namespace across resources
-            NAMESPACE_PARAM="-n ${NAMESPACE}"
-            [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
-
-            # Handle overlays
-            TARGET=$(resources.inputs.source.path)/${FOLDER_PATH}
-            if [[ "${IS_OVERLAY}" == "true" ]]; then
-              TARGET=target.yaml
-              kustomize build \
-                $(resources.inputs.source.path)/${FOLDER_PATH} > $TARGET
-            fi
-
-            # Check if there is any diff
-            DIFF=diff.txt
-            kubectl diff $NAMESPACE_PARAM -f $TARGET | tee $DIFF
-
-            # If there is no diff, we don't need to update
-            if [ ! -s ${DIFF?} ]; then
-              echo "No change detected, nothing to be done."
-              exit 0
-            fi
-
-            # When deploying with replace, we need to do a create first,
-            # to ensure new resources are created
-            CREATE_OUTPUT=create.txt
-            if [[ "${DEPLOY_METHOD}" == "replace" ]]; then
-              kubectl create $NAMESPACE_PARAM -f $TARGET  2> $CREATE_OUTPUT || true
-              # If there was some unexpected message in the error log, fail
-              if egrep -v '(already exists|^Warning)' $CREATE_OUTPUT; then
-                  echo "Something went wrong when creating resources"
-                  exit 1
-              fi
-            fi
-
-            # Run the actual deployment. If it fails, it will fail the step.
-            kubectl "${DEPLOY_METHOD}" $NAMESPACE_PARAM -f $TARGET
+      pipelineRef:
+        name: deploy-from-folder
       params:
-      - name: folderPath
-        value: $(tt.params.folderPath)
-      - name: namespace
-        value: $(tt.params.namespace)
-      - name: deployMethod
-        value: $(tt.params.deployMethod)
-      - name: isOverlay
-        value: $(tt.params.isOverlay)
-      resources:
-        inputs:
-          - name: source
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.gitRevision)
-              - name: url
-                value: https://$(tt.params.gitRepository)
-          - name: targetCluster
-            resourceRef:
-              name: $(tt.params.clusterResource)
+        - name: gitRepository
+          value: https://$(tt.params.gitRepository)
+        - name: gitRevision
+          value: $(tt.params.gitRevision)
+        - name: folderPath
+          value: $(tt.params.folderPath)
+        - name: namespace
+          value: $(tt.params.namespace)
+        - name: deployMethod
+          value: $(tt.params.deployMethod)
+        - name: isOverlay
+          value: $(tt.params.isOverlay)
+      workspaces:
+        - name: resources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
