@@ -11,6 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cleanup-runs
+spec:
+  params:
+    - name: keep
+      description: Amount of old resources to keep
+    - name: namespace
+      description: Namespace to cleanup in the target cluster
+  workspaces:
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: $(workspaces.targetCluster.path)/kubeconfig
+    - name: KEEP
+      value: $(params.keep)
+    - name: NAMESPACE
+      value: $(params.namespace)
+  steps:
+  - name: cleanup-pr-tr
+    image: gcr.io/tekton-releases/dogfooding/tkn
+    script: |
+      #!/bin/sh
+      set -ex
+
+      # A safety check, to avoid deleting too much!
+      if [[ ${KEEP} -eq 0 || ${KEEP} == "" ]]; then
+        echo "This task cannot be used to delete *all* resources from a cluster" >&2
+        echo "Please specify a value for keep > 0"
+        exit 1
+      fi
+
+      # Cleanup pipelineruns first, as this will delete tasksruns too
+      tkn pr delete -n ${NAMESPACE} --keep ${KEEP}
+      # Keep double the amount of tr, for standalone trs
+      tkn tr delete -n ${NAMESPACE} --keep $(( ${KEEP} * 2 ))
+---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
@@ -30,43 +70,14 @@ spec:
     metadata:
       generateName: cleanup-runs-$(tt.params.clusterResource)-$(tt.params.namespace)-
     spec:
-      taskSpec:
-        params:
-        - name: keep
-        - name: namespace
-        resources:
-          inputs:
-            - name: targetCluster
-              type: cluster
-        stepTemplate:
-          env:
-          - name: KUBECONFIG
-            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
-        steps:
-        - name: cleanup-pr-tr
-          image: gcr.io/tekton-releases/dogfooding/tkn
-          script: |
-            #!/bin/sh
-            set -ex
-
-            # A safety check, to avoid deleting too much!
-            if [[ $(params.keep) -eq 0 || $(params.keep) == "" ]]; then
-              echo "This task cannot be used to delete *all* resources from a cluster" >&2
-              echo "Please specifcy a value for keep > 0"
-              exit 1
-            fi
-
-            # Cleanup pipelineruns first, as this will delete tasksruns too
-            tkn pr delete -n $(params.namespace) --keep $(params.keep)
-            # Keep double the amount of tr, for standalone trs
-            tkn tr delete -n $(params.namespace) --keep $(( $(params.keep) * 2 ))
+      taskRef:
+        name: cleanup-runs
       params:
       - name: keep
         value: $(tt.params.keep)
       - name: namespace
         value: $(tt.params.namespace)
-      resources:
-        inputs:
-          - name: targetCluster
-            resourceRef:
-              name: $(tt.params.clusterResource)
+      workspaces:
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
