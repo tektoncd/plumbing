@@ -148,7 +148,7 @@ been created in the `dogfooding` cluster as well. Once that is in place, create
 the secret in the `robocat` cluster that holds the service account credentials
 need to use `tekton-deployer` on `dogfooding`:
 
-```
+```shell
 # Fetch the secret data from robocat
 TD_SECRET=$(kubectl --cluster gke_tekton-releases_us-central1-a_dogfooding \
   get -n tekton-pipelines sa/tekton-deployer -o jsonpath='{.secrets[0].name}')
@@ -170,5 +170,5 @@ data:
 EOF
 ```
 
-The `cluster` type `PipelineResource` is already deployed on `robocat` and it
-uses the secret `dogfooding-tekton-deployer-token`.
+The secret `tektoncd-dogfooding-tekton-deployer` holds a Kubernetes
+configuration file for the `tekton-deployer` service account on `dogfooding`.

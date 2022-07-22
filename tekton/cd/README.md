@@ -8,24 +8,31 @@ Tekton services can be deployed on-demand using a Tekton task called
 follows using the `tkn` client:
 
 ```
-# The RELEASE_BUCKET_RESOURCE is a storage PipelineResource that points to the
+# The releaseBucket is a parameter that points to where the 
 # bucket where the release files are stored e.g. gs://tekton-releases/pipeline
-export RELEASE_BUCKET_RESOURCE=<release-bucket>
+export RELEASE_BUCKET=<release-bucket>
 
-# The K8S_CLUSTER_RESOURCE is a cluster PipelineResource that points to the
-# k8s cluster where the Tekton service is being deployed to
-export K8S_CLUSTER_RESOURCE=<k8s-cluster>
+# The K8S_CLUSTER is a the name of a secret that contains the k8s configuration
+# for k8s cluster where the Tekton service is being deployed to
+export K8S_CLUSTER=<k8s-cluster>
 
-# The PLUMBING_GIT_RESOURCE is a git PipelineResource that points to the git
-# repo where shared plumbing scripts are (usually tektoncd/plumbing)
-export PLUMBING_GIT_RESOURCE=<plumbing-git>
+# Create a workspace template file with the following content
+cat <<EOF > workspace-template.yaml
+spec:
+ accessModes:
+   - ReadWriteOnce
+ resources:
+   requests:
+     storage: 1Gi
+EOF
 
-tkn task start \
-  -i release-bucket=$RELEASE_BUCKET_RESOURCE \
-  -i k8s-cluster=$K8S_CLUSTER_RESOURCE \
-  -i plumbing-library=$PLUMBING_GIT_RESOURCE \
+tkn pipeline start \
+  -p releaseBucket=$RELEASE_BUCKET \
   -p projectName=pipeline \
   -p version=v0.9.2 \
   -p environment=dogfooding \
+  -w name=targetCluster,secret=$K8S_CLUSTER \
+  -w name=resources,volumeClaimTemplateFile=workspace-template.yaml
+  -w name=credentials,emptyDir=
   install-tekton-release
 ```

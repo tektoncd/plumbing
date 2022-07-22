@@ -5,20 +5,7 @@ release management. These components are written so that they can be used by
 all the projects in the `tektoncd` GitHub org.
 The core release pipelines are still owned by the specific project.
 
-## Tasks
-
-### Verify Tekton Release
-
-The task `verify-tekton-release-github` compares the YAML of the release
-stored in the GitHub release assets, with the YAML of the release stored in the bucket.
-
-Inputs are:
-
-- Param `projectName`: the name of the project (pipeline, trigger,
-dashboard, experimental)
-- Param `version`: the version to be installed, e.g. "v0.7.0"
-- A storage resource, that should point to the release bucket. The release file
-is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
+## Tasks and Pipelines
 
 ### Install Tekton Release
 
@@ -30,25 +17,9 @@ Inputs are:
 - Param `projectName`: the name of the project (pipeline, trigger,
 dashboard, experimental)
 - Param `version`: the version to be installed, e.g. "v0.7.0"
-- A storage resource, that should point to the release bucket. The release file
-is expected to be at `<bucket>/<projectName>/previous/<version>/release.yaml`
-- A cluster resource, that points to the credentials for the target cluster
-
-An example using `tkn`:
-
-```
-export TEKTON_BUCKET_RESOURCE=tekton-bucket
-export TEKTON_CLUSTER_RESOURCE=k8s-cluster
-export TEKTON_PROJECT=pipeline
-export TEKTON_VERSION=v0.9.0
-
-tkn task start \
-  -i release-bucket=$TEKTON_BUCKET_RESOURCE \
-  -i k8s-cluser=$TEKTON_CLUSTER_RESOURCE \
-  -p projectName=$TEKTON_PROJECT \
-  -p version=$TEKTON_VERSION \
-  install-tekton-release
-```
+- Param `releaseBucket`. The release file
+is expected to be at `<releaseBucket>/<projectName>/previous/<version>/release.yaml`
+- Workspace `targetCluster` to be bound to a secret that holds the kubeconfig of the target cluster
 
 The release task can use a `kustomize` overlay if available. The name of the
 overlay folder is specified via the `environment` parameter.
@@ -56,22 +27,7 @@ The overlay folder must contain a `kustomize.yaml` configuration file. It may
 also contain a `pre` folder. Any `*.sh` script found in the folder will be
 executed before the release is installed.
 
-```shell
-export TEKTON_BUCKET_RESOURCE=tekton-bucket
-export TEKTON_CLUSTER_RESOURCE=k8s-cluster
-export TEKTON_PROJECT=pipeline
-export TEKTON_VERSION=v0.9.0
-
-tkn task start \
-  -i release-bucket=$TEKTON_BUCKET_RESOURCE \
-  -i k8s-cluser=$TEKTON_CLUSTER_RESOURCE \
-  -p projectName=$TEKTON_PROJECT \
-  -p version=$TEKTON_VERSION \
-  -p environment=robocat \
-  install-tekton-release
-```
-
-## Save Release Logs
+### Save Release Logs
 
 The pipeline `save-release-logs` fetches the logs from a release pipelines
 and stores them in the release bucket along with the release YAML.
@@ -81,7 +37,7 @@ The `tekton-events` event listener receives the CloudEvent, and triggers
 the `save-release-logs` with the correct credentials to store the logs
 in the release bucket, either the main one or the nightly one.
 
-## Create Draft Release
+### Create Draft Release
 
 The pipeline `release-draft` calculates the list of PRs merged between the
 previous release and a specified revision. It also builds a list of authors and

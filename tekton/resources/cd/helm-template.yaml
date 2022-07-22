@@ -116,7 +116,7 @@ spec:
     default: ""
   - name: preDeployResources
     description: >-
-      Some charts require resources to be deployed firt, usually CRDs.
+      Some charts require resources to be deployed first, usually CRDs.
       When provided this should be the URL to a YAML file with resources.
     default: ""
   resourcetemplates:

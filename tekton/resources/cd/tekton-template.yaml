@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: deploy-tekton-release
@@ -45,45 +45,42 @@ spec:
     description: Git revision of the repository that holds plumbing scripts
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: TaskRun
+    kind: PipelineRun
     metadata:
       generateName: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-
     spec:
-      taskRef:
+      pipelineRef:
         name: install-tekton-release
       params:
-      - name: projectName
-        value: $(tt.params.tektonProject)
-      - name: namespace
-        value: $(tt.params.namespace)
-      - name: version
-        value: $(tt.params.tektonVersion)
-      - name: environment
-        value: $(tt.params.targetCluster)
-      - name: release-file
-        value: $(tt.params.releaseFile)
-      - name: post-release-file
-        value: $(tt.params.postReleaseFile)
-      resources:
-        inputs:
-          - name: release-bucket
-            resourceSpec:
-              type: storage
-              params:
-              - name: type
-                value: gcs
-              - name: location
-                value: $(tt.params.releaseBucket)/$(tt.params.tektonProject)$(tt.params.releaseExtraPath)
-              - name: dir
-                value: "y"
-          - name: k8s-cluster
-            resourceRef:
-              name: $(tt.params.clusterResource)
-          - name: plumbing-library
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(tt.params.plumbingRevision)
-              - name: url
-                value: https://$(tt.params.plumbingRepository)
+        - name: gitRepository
+          value: $(tt.params.plumbingRepository)
+        - name: gitRevision
+          value: $(tt.params.plumbingRevision)
+        - name: projectName
+          value: $(tt.params.tektonProject)
+        - name: namespace
+          value: $(tt.params.namespace)
+        - name: version
+          value: $(tt.params.tektonVersion)
+        - name: environment
+          value: $(tt.params.targetCluster)
+        - name: releaseFile
+          value: $(tt.params.releaseFile)
+        - name: postReleaseFile
+          value: $(tt.params.postReleaseFile)
+        - name: releaseBucket
+          value: $(tt.params.releaseBucket)/$(tt.params.tektonProject)$(tt.params.releaseExtraPath)
+      workspaces:
+        - name: resources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
+        - name: credentials
+          emptyDir: {}

@@ -1,4 +1,3 @@
 resources:
-- install_tekton_release.yaml
 - prerelease_checks.yaml
 - github_release.yaml
