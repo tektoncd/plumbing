@@ -3,7 +3,7 @@ commonAnnotations:
 
 patches:
 - target:
-    kind: ServiceAccount|Deployment|PipelineResource|EventListener|TriggerBinding|TriggerTemplate
+    kind: ServiceAccount|Deployment|EventListener|TriggerBinding|TriggerTemplate
   patch: |-
     - op: replace
       path: /metadata/namespace
@@ -30,3 +30,4 @@ resources:
 - notification-triggers.yaml
 - ci-triggers.yaml
 - peribolos-template.yaml
+- install-tekton-release.yaml
