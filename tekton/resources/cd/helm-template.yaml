@@ -11,7 +11,87 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: triggers.tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-helm-chart
+spec:
+  params:
+    - name: namespace
+      description: Namespace to deploy to in the target cluster
+    - name: chartName
+      description: The name of the chart to be deployed
+    - name: chartVersion
+      description: The version of the chart to be deployed
+      default: latest
+    - name: chartRepo
+      description: The repo from where to install the chart
+      default: https://kubernetes-charts.storage.googleapis.com/
+    - name: chartParams
+      description: A comma separated list of key/values
+      default: ""
+    - name: preDeployResources
+      description: >-
+        Some charts require resources to be deployed firt, usually CRDs.
+        When provided this should be the URL to a YAML file with resources.
+      default: ""
+  workspaces:
+    - name: targetCluster
+      description: kubeconfig of the target Cluster/ServiceAccount
+  stepTemplate:
+    env:
+    - name: KUBECONFIG
+      value: $(workspaces.targetCluster.path)/kubeconfig
+    - name: CHART_NAME
+      value: $(params.chartName)
+    - name: CHART_VERSION
+      value: $(params.chartVersion)
+    - name: CHART_REPO
+      value: $(params.chartRepo)
+    - name: CHART_PARAMS
+      value: $(params.chartParams)
+    - name: NAMESPACE
+      value: $(params.namespace)
+    - name: PRE_DEPLOY_RESOURCES
+      value: $(params.preDeployResources)
+  steps:
+    - name: pre-deploy-from-url
+      image: gcr.io/tekton-releases/dogfooding/kubectl
+      script: |
+        #!/bin/sh
+        set -ex
+
+        # Check if we have something to be done
+        if [ "${PRE_DEPLOY_RESOURCES}" == "" ]; then
+          echo "No pre-deploy resources to deploy, continue"
+          exit 0
+        fi
+
+        # Apply the resources to the same namespace
+        kubectl apply \
+          --validate=false \
+          -n ${NAMESPACE} \
+          -f ${PRE_DEPLOY_RESOURCES}
+
+    - name: helm-deploy
+      image: alpine/helm:3.1.2
+      script: |
+        #!/bin/sh
+        set -ex
+        echo "Running install/upgrade"
+        echo "with ${CHART_PARAMS}"
+        helm upgrade \
+          --debug \
+          ${CHART_NAME}-tektoncd-maintained \
+          ${CHART_NAME} \
+          --install \
+          --version ${CHART_VERSION} \
+          --repo ${CHART_REPO} \
+          --namespace=${NAMESPACE} \
+          --set "${CHART_PARAMS}" \
+          --wait --timeout 5m
+---
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: deploy-helm-chart
@@ -45,70 +125,8 @@ spec:
     metadata:
       generateName: deploy-helm-$(tt.params.chartDescription)-
     spec:
-      taskSpec:
-        params:
-        - name: chartName
-        - name: chartVersion
-        - name: chartRepo
-        - name: chartParams
-        - name: namespace
-        - name: preDeployResources
-        resources:
-          inputs:
-            - name: targetCluster
-              type: cluster
-        stepTemplate:
-          env:
-          - name: KUBECONFIG
-            value: /workspace/$(resources.inputs.targetCluster.name)/kubeconfig
-          - name: CHART_NAME
-            value: $(params.chartName)
-          - name: CHART_VERSION
-            value: $(params.chartVersion)
-          - name: CHART_REPO
-            value: $(params.chartRepo)
-          - name: CHART_PARAMS
-            value: $(params.chartParams)
-          - name: NAMESPACE
-            value: $(params.namespace)
-          - name: PRE_DEPLOY_RESOURCES
-            value: $(params.preDeployResources)
-        steps:
-        - name: pre-deploy-from-url
-          image: gcr.io/tekton-releases/dogfooding/kubectl
-          script: |
-            #!/bin/sh
-            set -ex
-
-            # Check if we have something to be done
-            if [ "${PRE_DEPLOY_RESOURCES}" == "" ]; then
-              echo "No pre-deploy resources to deploy, continue"
-              exit 0
-            fi
-
-            # Apply the resources to the same namespace
-            kubectl apply \
-              --validate=false \
-              -n ${NAMESPACE} \
-              -f ${PRE_DEPLOY_RESOURCES}
-
-        - name: helm-deploy
-          image: alpine/helm:3.1.2
-          script: |
-            #!/bin/sh
-            set -ex
-            echo "Running install/upgrade"
-            echo "with ${CHART_PARAMS}"
-            helm upgrade \
-              --debug \
-              ${CHART_NAME}-tektoncd-maintained \
-              ${CHART_NAME} \
-              --install \
-              --version ${CHART_VERSION} \
-              --repo ${CHART_REPO} \
-              --namespace=${NAMESPACE} \
-              --set "${CHART_PARAMS}" \
-              --wait --timeout 5m
+      taskRef:
+        name: deploy-helm-chart
       params:
       - name: chartName
         value: $(tt.params.chartName)
@@ -122,8 +140,7 @@ spec:
         value: $(tt.params.namespace)
       - name: preDeployResources
         value: $(tt.params.preDeployResources)
-      resources:
-        inputs:
-          - name: targetCluster
-            resourceRef:
-              name: $(tt.params.clusterResource)
+      workspaces:
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
