@@ -1253,7 +1253,7 @@ presubmits:
           value: "true"
           effect: NoSchedule
       containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220721-5c0e8e0e7a@sha256:8680f99c4d068ef3eb2512d9d3a153049b40f719454e21dfa4aaf691d7de4db5 # golang 1.18.3
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Use specific version when https://github.com/tektoncd/plumbing/pull/1167 has merged
           imagePullPolicy: Always
           command:
             - /usr/local/bin/entrypoint.sh
@@ -1264,8 +1264,6 @@ presubmits:
             - "/usr/local/bin/kind-e2e"
             - "--k8s-version"
             - "v1.22.x"
-            - "--cluster-suffix"
-            - "$(PULL_NUMBER)"
             - "--nodes"
             - "3"
             - "--e2e-script"
@@ -1310,7 +1308,7 @@ presubmits:
           value: "true"
           effect: NoSchedule
       containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220721-5c0e8e0e7a@sha256:8680f99c4d068ef3eb2512d9d3a153049b40f719454e21dfa4aaf691d7de4db5 # golang 1.18.3
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Use specific version when https://github.com/tektoncd/plumbing/pull/1167 has merged
           imagePullPolicy: Always
           command:
             - /usr/local/bin/entrypoint.sh
@@ -1321,8 +1319,6 @@ presubmits:
             - "/usr/local/bin/kind-e2e"
             - "--k8s-version"
             - "v1.22.x"
-            - "--cluster-suffix"
-            - "$(PULL_NUMBER)"
             - "--nodes"
             - "3"
             - "--e2e-script"
