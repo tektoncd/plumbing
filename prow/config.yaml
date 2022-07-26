@@ -1776,6 +1776,13 @@ postsubmits:
         args:
         - "--artifacts=$(ARTIFACTS)"
         - "--cov-threshold-percentage=0"
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
   tektoncd/triggers:
   - name: post-tekton-triggers-go-coverage
     branches:
