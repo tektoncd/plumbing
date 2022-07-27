@@ -27,6 +27,8 @@ apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: all-labels
+  annotations:
+    triggers.tekton.dev/old-escape-quotes: 'true'
 spec:
   params:
   - name: buildUUID
@@ -66,11 +68,11 @@ spec:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: check-github-tasks-completed-
+      generateName: check-pr-labels-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/source-event-id: $(tt.params.sourceEventId)
-        tekton.dev/check-name: check-github-tasks-completed
+        tekton.dev/check-name: check-pr-has-kind-label
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
@@ -78,11 +80,11 @@ spec:
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
     spec:
       pipelineRef:
-        name: tekton-github-tasks-completed
+        name: tekton-kind-label
       params:
-        - name: body
-          value: $(tt.params.body)
+        - name: labels
+          value: $(tt.params.labels)
         - name: checkName
-          value: check-github-tasks-completed
+          value: check-pr-has-kind-label
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
