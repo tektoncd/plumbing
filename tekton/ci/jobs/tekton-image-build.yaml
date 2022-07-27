@@ -43,6 +43,14 @@ spec:
       #!/busybox/sh
       # Setup the image name
       CONTEXT=$(dirname ${FQ_DOCKER_FILE}) # This works with a Dockerfile in the root of the context
+      # Loop until we find a directory with a Dockerfile in it
+      while [ ! -f "${CONTEXT}/Dockerfile" ]; do
+        if [ "${CONTEXT}" == "/" ]; then
+          echo "No Dockerfile found in ${FQ_DOCKER_FILE}'s directory or any of its parents"
+          exit 1
+        fi
+        CONTEXT=$(dirname ${CONTEXT})
+      done
       IMAGE_NAME=$(basename "${CONTEXT}"):pr-${PR_NUMBER}
       # Run the build
       /kaniko/executor \
