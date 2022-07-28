@@ -17,7 +17,6 @@ patches:
 
 resources:
 - bindings.yaml
-- clusters.yaml
 - configmap-template.yaml
 - eventlistener.yaml
 - folder-template.yaml
