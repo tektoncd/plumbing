@@ -168,6 +168,10 @@ spec:
           workspace: resources
     - name: fetch-release
       runAfter: ['git-clone']
+      when:
+        - input: "$(params.version)"
+          operator: notin
+          values: ["latest"]
       taskRef:
         name: gcs-download
         bundle: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
@@ -183,8 +187,29 @@ spec:
           workspace: resources
         - name: credentials
           workspace: credentials
+    - name: fetch-release-latest
+      runAfter: ['git-clone']
+      when:
+        - input: "$(params.version)"
+          operator: in
+          values: ["latest"]
+      taskRef:
+        name: gcs-download
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+      params:
+        - name: path
+          value: release
+        - name: location
+          value: $(params.releaseBucket)/$(params.version)
+        - name: typeDir
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: resources
+        - name: credentials
+          workspace: credentials
     - name: install-tekton-release
-      runAfter: ['fetch-release']
+      runAfter: ['fetch-release', 'fetch-release-latest']
       taskRef:
         name: install-tekton-release
       params:
