@@ -17,8 +17,14 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-# Workaround for https://github.com/google/licenseclassifier/issues/20
-git clone https://github.com/google/licenseclassifier ${GOPATH}/src/github.com/google/licenseclassifier
+DIR="${GOPATH}/src/github.com/google/licenseclassifier"
+
+if [ -d "$DIR" ]; then
+    echo "$DIR is not Empty. Skip clone..."
+else
+    # Workaround for https://github.com/google/licenseclassifier/issues/20
+    git clone https://github.com/google/licenseclassifier $DIR
+fi
 
 # actually start bootstrap and the job, under the runner (which handles dind etc.)
 /usr/local/bin/runner.sh "$@"
