@@ -61,5 +61,5 @@ python3 -m adjustpermissions --users "user1@example.com,user2@example.com"
 ## DNS
 
 DNS Names are managed via [Netlify](https://www.netlify.com/).
-Gardener External DNS Manager is deployed on the dogfooding and robocat clusters, and manages names
+[Gardener External DNS Manager](https://github.com/gardener/external-dns-management) is deployed on the [dogfooding](./dogfooding.md#dns-names) and robocat clusters, and manages names
 via annotations on ingresses and services. Some of the names are defined manually in Netlify.
