@@ -32,7 +32,7 @@ Secrets which have been applied to the `dogfooding` cluster but are not committe
   to the nightly bucket. It's a token for service account
   `release-right-meow@tekton-releases.iam.gserviceaccount.com`.
   - `release-secret` is used by Tekton Pipeline to push pipeline artifacts to a
-    GCS bucket. It's also used to push images built by cron trigger (or [Mario](../mariobot])
+    GCS bucket. It's also used to push images built by cron trigger (or [Mario](../bots/mariobot)
     to the image registry on GCP.
 - K8s service account secrets. These secrets are used in pipeline resources of type cluster, to
   give enabled Tekton pipelines to deploy to target clusters with specific service accounts:
@@ -281,7 +281,7 @@ helm install kafka-ui kafka-ui/kafka-ui --set envs.config.KAFKA_CLUSTERS_0_NAME=
 
 ### CloudEvents Producer
 
-Tekton Pipelines is the only `CloudEvents` producer in the cluster. It's [configured](../)tekton/cd/pipeline/overlays/dogfooding/config-defaults.yaml) to send all events to the broker:
+Tekton Pipelines is the only `CloudEvents` producer in the cluster. It's [configured](../tekton/cd/pipeline/overlays/dogfooding/config-defaults.yaml) to send all events to the broker:
 
 ```yaml
 data:
