@@ -141,6 +141,12 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
+    - color: "d6efe7"
+      description: Categorizes issue or PR as related to a security issue
+      name: kind/security
+      target: both
+      prowPlugin: label
+      addedBy: anyone
     - color: "bfd4f2"
       description: Categorizes issue or PR as related to documentation.
       name: kind/documentation
