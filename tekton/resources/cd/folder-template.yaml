@@ -86,7 +86,33 @@ spec:
       fi
 
       # Run the actual deployment. If it fails, it will fail the step.
-      kubectl "${DEPLOY_METHOD}" $NAMESPACE_PARAM -f $TARGET
+      kubectl create ${NAMESPACE_PARAM} -f $TARGET --dry-run=client \
+        -o yaml > ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
+
+  - name: split-yaml-file
+    image: mikefarah/yq
+    script: |
+      #!/bin/sh
+      set -ex
+
+      yq 'select(.kind == "ServiceAccount")' \
+        ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
+      yq 'select(.kind != "ServiceAccount")' \
+        ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
+
+  - name: deploy-resources
+    image: gcr.io/tekton-releases/dogfooding/kubectl
+    script: |
+      #!/bin/sh
+      set -ex
+
+      # Determine whether to enforce namespace across resources
+      NAMESPACE_PARAM="-n ${NAMESPACE}"
+      [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
+
+      # ServiceAccounts are always applied to avoid the creation of a new token
+      kubectl apply ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
+      kubectl "${DEPLOY_METHOD}" ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
