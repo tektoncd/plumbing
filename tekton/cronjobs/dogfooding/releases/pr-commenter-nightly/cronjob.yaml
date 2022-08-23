@@ -1,0 +1,21 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: nightly-cron-trigger
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: PROJECT_NAME
+                value: pr-commenter
+          initContainers:
+          - name: git
+            env:
+              - name: GIT_REPO
+                value: github.com/tektoncd/plumbing

@@ -1,0 +1,89 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pr-commenter-controller
+  namespace: tekton-pipelines
+  labels:
+    app.kubernetes.io/name: controller
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/version: "devel"
+    app.kubernetes.io/part-of: pr-commenter
+    # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
+    pipeline.tekton.dev/release: "devel"
+    # labels below are related to istio and should not be used for resource lookup
+    version: "devel"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: controller
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: default
+      app.kubernetes.io/part-of: pr-commenter
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+      labels:
+        app.kubernetes.io/name: controller
+        app.kubernetes.io/component: controller
+        app.kubernetes.io/instance: default
+        app.kubernetes.io/version: "devel"
+        app.kubernetes.io/part-of: pr-commenter
+        # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
+        pipeline.tekton.dev/release: "devel"
+        # labels below are related to istio and should not be used for resource lookup
+        app: pr-commenter-controller
+        version: "devel"
+    spec:
+      serviceAccountName: pr-commenter-controller
+      containers:
+        - name: pr-commenter-custom-task
+          image: ko://github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-commenter/cmd/pr-commenter
+          securityContext:
+            allowPrivilegeEscalation: false
+            # User 65532 is the distroless nonroot user ID
+            runAsUser: 65532
+          env:
+            - name: SYSTEM_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CONFIG_LEADERELECTION_NAME
+              value: config-leader-election
+            - name: CONFIG_LOGGING_NAME
+              value: config-logging
+            - name: CONFIG_OBSERVABILITY_NAME
+              value: config-observability
+            - name: METRICS_DOMAIN
+              value: custom.tekton.dev/pr-commenter
+            - name: RETEST_PREFIX
+              value: "test"
+            - name: GIT_KIND
+              value: github
+            - name: GIT_SERVER
+              value: https://github.com
+            - name: GIT_OWNER
+              value: tektoncd
+            - name: GIT_USER
+              value: tekton-robot
+            - name: "GIT_TOKEN"
+              valueFrom:
+                secretKeyRef:
+                  name: bot-token-github
+                  key: bot-token

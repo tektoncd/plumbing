@@ -10,3 +10,5 @@
 
 # Virtualenv files
 .venv
+
+tekton/ci/custom-tasks/pr-commenter/.bin
