@@ -1,0 +1,5 @@
+bases:
+- ../../../bases/release
+patchesStrategicMerge:
+- cronjob.yaml
+nameSuffix: "-pr-commenter-nightly-release"

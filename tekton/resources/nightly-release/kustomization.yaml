@@ -19,3 +19,4 @@ resources:
 - overlays/cloudevents
 - overlays/chains
 - overlays/pipeline-in-pod
+- overlays/pr-commenter

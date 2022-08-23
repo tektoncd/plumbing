@@ -1,0 +1,7 @@
+- op: add
+  path: /spec/interceptors
+  value:
+    - cel:
+        filter: >-
+          'trigger-template' in body &&
+          body.params.release.projectName == 'pr-commenter'
