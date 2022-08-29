@@ -11,20 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG GO_VERSION=1.18.3
+ARG GO_VERSION=1.18.5
 FROM golang:${GO_VERSION}-alpine3.15 as build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
 RUN update-ca-certificates
 
-ARG KUBECTL_VERSION=1.21.10
+ARG KUBECTL_VERSION=1.22.13
 RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
 
 # Install Kustomize
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.4
+RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
 
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
@@ -40,7 +40,7 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 ENV GOROOT /usr/local/go
 
 # Install ko
-ARG KO_VERSION=0.11.2
+ARG KO_VERSION=0.12.0
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 

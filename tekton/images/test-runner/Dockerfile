@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build kubetest independently of the rest
-FROM docker.io/library/golang:1.18.3 as kubetest
+FROM docker.io/library/golang:1.18.5 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
@@ -149,7 +149,7 @@ RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 # END: test-infra import
 
 # Install Go 1.18.3
-ARG GO_VERSION=1.18.3
+ARG GO_VERSION=1.18.5
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz
@@ -160,7 +160,7 @@ RUN apt update && apt install -y uuid-runtime  # for uuidgen
 RUN apt update && apt install -y rubygems  # for mdl
 
 # Install ko
-ARG KO_VERSION=0.8.3
+ARG KO_VERSION=0.12.0
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
@@ -177,7 +177,7 @@ ARG GOLANGCI_VERSION=1.47.2
 RUN curl -sL https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "*/golangci-lint"
 
 # Install Kustomize:
-ARG KUSTOMIZE_VERSION=3.8.1
+ARG KUSTOMIZE_VERSION=4.5.7
 RUN curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "kustomize"
 
 # Install the TektonCD CLI: https://github.com/tektoncd/cli/
