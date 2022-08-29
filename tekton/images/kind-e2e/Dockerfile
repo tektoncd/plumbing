@@ -14,12 +14,12 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.18.3-alpine
+FROM golang:1.18.5-alpine
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 WORKDIR /kind
 
-RUN GO111MODULE=on go install github.com/google/ko@v0.11.2
+RUN GO111MODULE=on go install github.com/google/ko@v0.12.0
 
 # common util tools
 RUN apk add --no-cache \
