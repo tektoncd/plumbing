@@ -808,29 +808,47 @@ presubmits:
   - name: pull-tekton-dashboard-integration-tests
     labels:
       preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
     agent: kubernetes
     always_run: true
     decorate: true
     rerun_command: "/test pull-tekton-dashboard-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
     spec:
+      nodeSelector:
+        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
+      tolerations:
+        - key: kind-only
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
         args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
         - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--integration-tests"
+        - "/usr/local/bin/kind-e2e"
+        - "--k8s-version"
+        - "v1.23.x"
+        - "--nodes"
+        - "3"
+        - "--e2e-script"
+        - "./test/e2e-tests-prow.sh"
+        - "--e2e-env"
+        - "./test/e2e-tests-kind-prow.env"
+        resources:
+          requests:
+            cpu: 3500m
+            memory: 4Gi
+          limits:
+            cpu: 3500m
+            memory: 8Gi
   tektoncd/experimental:
   - name: pull-tekton-experimental-build-tests
     labels:
