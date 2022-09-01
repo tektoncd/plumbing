@@ -120,6 +120,13 @@ The specific values you will need to pay attention to are:
 * `--e2e-env`: The path in your repo to a file containing `FOO=bar` environment variable
     definitions to use when running `--e2e-script`. This should be the path to [the env file described above](#in-the-env-file).
 
+Privileged mode is required to run Docker-in-Docker, add the following to your job's container:
+
+```yaml
+  securityContext:
+    privileged: true
+```
+
 Finally, set the `resources` for the job's container to:
 ```yaml
   resources:
