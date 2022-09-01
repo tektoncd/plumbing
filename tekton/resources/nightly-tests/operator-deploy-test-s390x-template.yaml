@@ -86,6 +86,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
@@ -105,6 +108,9 @@ spec:
             - name: k8s-shared
               description: workspace for k8s config, configuration file is expected to have `config` name
               mountPath: /root/.kube
+            - name: registry-shared
+              description: workspace for registry credentials & certificate, files are expected to have `config.json` & `cert.pem` name respectively
+              mountPath: /root/.docker
             - name: source-code
               description: workspace with source code for tekton component
             steps:
@@ -116,6 +122,8 @@ spec:
                 value: /workspace
               - name: KUBECONFIG
                 value: $(workspaces.k8s-shared.path)/config
+              - name: SSL_CERT_FILE
+                value: $(workspaces.registry-shared.path)/cert.pem
               - name: PLATFORM
                 value: linux/$(params.target-arch)
               - name: KO_DOCKER_REPO
@@ -137,6 +145,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
@@ -149,6 +160,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:

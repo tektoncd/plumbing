@@ -8,6 +8,10 @@ spec:
   - name: k8s-shared
     description: workspace to store k8s config file after cluster setup
     mountPath: /root/.kube
+  - name: registry-shared
+    description: workspace to store registry credentials & certificate file after cluster setup
+    mountPath: /root/.docker
+    optional: true
   - name: ssh-secret
     description: workspace to get ssh key
     mountPath: /root/.ssh
@@ -15,11 +19,11 @@ spec:
     - name: remote-host
       type: string
       description: Remote host to connect
-      default: sshd.bastion-z.svc.cluster.local
+      default: "s390x-cluster.bastion-z.svc.cluster.local"
     - name: remote-user
       type: string
       description: SSH username
-      default: k8smanager
+      default: root
     - name: remote-port
       type: string
       description: SSH port
@@ -43,5 +47,7 @@ spec:
       script: |
         ssh -p ${REMOTE_PORT} -o StrictHostKeyChecking=no -o LogLevel=ERROR ${REMOTE_USER}@${REMOTE_HOST} k8smanager ${ACTION}
         if [ "${ACTION}" == "create" ]; then
-          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/kubeconfig/kubeconfig.conf $(workspaces.k8s-shared.path)/config
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/share/config $(workspaces.k8s-shared.path)/config
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/share/cert.pem $(workspaces.registry-shared.path)/cert.pem
+          scp -o StrictHostKeyChecking=no -o LogLevel=ERROR -P ${REMOTE_PORT} ${REMOTE_USER}@${REMOTE_HOST}:/home/k8smanager/share/config.json $(workspaces.registry-shared.path)/config.json
         fi

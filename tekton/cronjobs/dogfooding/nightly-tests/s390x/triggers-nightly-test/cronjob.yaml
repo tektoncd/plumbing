@@ -19,14 +19,14 @@ spec:
             - name: NAMESPACE
               value: "bastion-z"
             - name: REGISTRY
-              value: "sshd.bastion-z.svc.cluster.local:4000"
+              value: "s390x-cluster.bastion-z.svc.cluster.local:443"
             - name: TARGET_ARCH
               value: "s390x"
             - name: REMOTE_SECRET_NAME
               value: "s390x-k8s-ssh"
             - name: REMOTE_HOST
-              value: "sshd.bastion-z.svc.cluster.local"
+              value: "s390x-cluster.bastion-z.svc.cluster.local"
             - name: REMOTE_PORT
-              value: "1122"
+              value: "22"
             - name: REMOTE_USER
-              value: "k8smanager"
+              value: "root"

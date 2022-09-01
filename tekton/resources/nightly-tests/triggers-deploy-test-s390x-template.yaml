@@ -102,6 +102,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
@@ -162,6 +165,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
