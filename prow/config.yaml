@@ -115,7 +115,7 @@ tide:
     tektoncd/ahmetb-gen-crd-api-reference-docs: rebase
     tektoncd/catalog: rebase
     tektoncd/catlin: rebase
-    tektoncd/chains: rebase
+    tektoncd/chains: squash
     tektoncd/cli: rebase
     tektoncd/community: rebase
     tektoncd/dashboard: rebase
