@@ -842,6 +842,8 @@ presubmits:
         - "./test/e2e-tests-prow.sh"
         - "--e2e-env"
         - "./test/e2e-tests-kind-prow.env"
+        securityContext:
+          privileged: true
         resources:
           requests:
             cpu: 3500m
