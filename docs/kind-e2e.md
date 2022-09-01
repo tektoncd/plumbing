@@ -120,7 +120,7 @@ The specific values you will need to pay attention to are:
 * `--e2e-env`: The path in your repo to a file containing `FOO=bar` environment variable
     definitions to use when running `--e2e-script`. This should be the path to [the env file described above](#in-the-env-file).
 
-Finally, set the `resources` for the job's container to:
+Next, set the `resources` for the job's container to:
 ```yaml
   resources:
     requests:
@@ -129,6 +129,12 @@ Finally, set the `resources` for the job's container to:
     limits:
       cpu: 3500m
       memory: 8Gi
+```
+
+Finally, add this `securityContext` to the job's container:
+```yaml
+  securityContext:
+    privileged: true
 ```
 
 Please use these specific values. We want to ensure that no more than one `kind` job runs
