@@ -247,7 +247,7 @@ kubectl apply -f https://storage.googleapis.com/knative-nightly/eventing-kafka/l
 kubectl edit cm/config-kafka -n knative-eventing
 ```
 
-Install the [Knative Kafka Broken](https://knative.dev/docs/install/eventing/install-eventing-with-yaml/#optional-install-a-broker-layer)
+Install the [Knative Kafka Broker](https://knative.dev/docs/install/eventing/install-eventing-with-yaml/#optional-install-a-broker-layer)
 following the official guide:
 
 ```shell
@@ -257,6 +257,29 @@ kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releas
 # Kafka Broken Data plane
 kubectl apply -f https://github.com/knative-sandbox/eventing-kafka-broker/releases/download/knative-v1.0.0/eventing-kafka-broker.yaml
 ```
+
+Create a broker resource:
+
+```yaml
+kind: Broker
+metadata:
+  name: default
+  namespace: default
+spec:
+  config:
+    apiVersion: v1
+    kind: ConfigMap
+    name: kafka-broker-config
+    namespace: knative-eventing
+  delivery:
+    retry: 0
+```
+
+The `retry: 0` part means that event delivery won't be retried on failure.
+This is required because Tekton Triggers replies to CloudEvents with a JSON body
+but no CloudEvents headers, which is interpreted by the message dispatcher as
+a failure - see the [feature proposal](https://github.com/tektoncd/triggers/issues/1439)
+on Triggers for more details.
 
 ### Kafka UI
 
