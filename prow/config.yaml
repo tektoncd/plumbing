@@ -498,7 +498,7 @@ presubmits:
       trigger: "(?m)^/test (all|pull-tekton-chains-build-tests),?(\\s+|$)"
       spec:
         containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
           imagePullPolicy: Always
           command:
           - /usr/local/bin/entrypoint.sh
@@ -531,7 +531,7 @@ presubmits:
       trigger: "(?m)^/test (all|pull-tekton-chains-unit-tests),?(\\s+|$)"
       spec:
         containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
           imagePullPolicy: Always
           command:
           - /usr/local/bin/entrypoint.sh
@@ -564,7 +564,7 @@ presubmits:
       trigger: "(?m)^/test (all|pull-tekton-chains-integration-tests),?(\\s+|$)"
       spec:
         containers:
-        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
           imagePullPolicy: Always
           command:
           - /usr/local/bin/entrypoint.sh
@@ -630,7 +630,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -663,7 +663,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-cross-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -696,7 +696,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -729,7 +729,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -763,7 +763,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-dashboard-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -789,7 +789,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-dashboard-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -825,7 +825,7 @@ presubmits:
           value: "true"
           effect: NoSchedule
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -944,7 +944,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -970,7 +970,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -996,7 +996,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-hub-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1023,7 +1023,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1061,7 +1061,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1094,7 +1094,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-operator-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1159,7 +1159,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1192,7 +1192,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-pipeline-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1451,7 +1451,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-resolution-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1477,7 +1477,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-resolution-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1505,7 +1505,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-resolution-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1534,7 +1534,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-results-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1560,7 +1560,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-results-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1588,7 +1588,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-results-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1617,7 +1617,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1643,7 +1643,7 @@ presubmits:
     trigger: "(?m)^/test (all|tekton-triggers-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1669,7 +1669,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+      - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -1861,7 +1861,7 @@ periodics:
     path_alias: github.com/tektoncd/pipeline
   spec:
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08 # golang 1.18.3
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:v20220906-be7a263025@sha256:0874aa8bb9cb1e76b7c95efd5ff50928130ed103d47b011745bd6ab691fb9abc # golang 1.18.5
       imagePullPolicy: Always
       command:
         - /usr/local/bin/entrypoint.sh
