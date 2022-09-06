@@ -85,6 +85,8 @@ kubectl apply -f prow/ghproxy.yaml
 # Deploy Prow
 kubectl apply -f prow/prowjob-schemaless_customresourcedefinition.yaml
 kubectl apply -f prow/prow.yaml
+kubectl apply -f prow/cherrypicker_deployment.yaml
+kubectl apply -f prow/cherrypicker_service.yaml
 
 # Deploy daemonset to configure fs.inotify.max_user_[watches,instances] via sysctl.
 # This is to deal with kind having issues like https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
