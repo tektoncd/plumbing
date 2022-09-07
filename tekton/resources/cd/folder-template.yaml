@@ -85,9 +85,11 @@ spec:
         fi
       fi
 
-      # Run the actual deployment. If it fails, it will fail the step.
+      # Produce the temporary deployment file
+      chmod a+rwx ${RESOURCES_PATH}
       kubectl create ${NAMESPACE_PARAM} -f $TARGET --dry-run=client \
         -o yaml > ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
+      chmod a+r ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
 
   - name: split-yaml-file
     image: mikefarah/yq
@@ -111,8 +113,9 @@ spec:
       [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
 
       # ServiceAccounts are always applied to avoid the creation of a new token
-      kubectl apply ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
-      kubectl "${DEPLOY_METHOD}" ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
+      # Only apply non-empty files
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml ] && kubectl apply ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml ] && kubectl "${DEPLOY_METHOD}" ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
