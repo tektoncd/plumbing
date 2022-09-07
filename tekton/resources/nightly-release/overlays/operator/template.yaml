@@ -23,6 +23,8 @@
           value: $(tt.params.versionTag)
         - name: serviceAccountPath
           value: release.json
+        - name: components
+          value: components.nightly.yaml
         workspaces:
           - name: workarea
             volumeClaimTemplate:
