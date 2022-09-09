@@ -99,9 +99,9 @@ spec:
       #!/bin/sh
       set -ex
 
-      yq 'select(.kind == "ServiceAccount")' \
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] && yq 'select(.kind == "ServiceAccount")' \
         ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
-      yq 'select(.kind != "ServiceAccount")' \
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] && yq 'select(.kind != "ServiceAccount")' \
         ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 
   - name: deploy-resources
