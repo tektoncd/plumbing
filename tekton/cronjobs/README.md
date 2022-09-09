@@ -96,7 +96,7 @@ It allows cron jobs to override relevant parts of the template trigger, like
 schedule or the value of environment variables.
 
 ```yaml
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: cleanup-trigger
@@ -187,7 +187,7 @@ cronjobs
 3. Edit `cronjob.yaml`. Configure at least CONTEXT_PATH and TARGET_IMAGE.
 
 ```yaml
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: image-build-cron-trigger
