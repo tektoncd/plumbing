@@ -51,6 +51,9 @@ spec:
       #!/bin/sh
       set -ex
 
+      # This directory needs to be writeable, and we need to make it writeable before we could exit early due to no changes.
+      chmod a+rwx ${RESOURCES_PATH}
+
       # Determine whether to enforce namespace across resources
       NAMESPACE_PARAM="-n ${NAMESPACE}"
       [[ "${NAMESPACE}" == "" ]] && NAMESPACE_PARAM=""
@@ -86,7 +89,6 @@ spec:
       fi
 
       # Produce the temporary deployment file
-      chmod a+rwx ${RESOURCES_PATH}
       kubectl create ${NAMESPACE_PARAM} -f $TARGET --dry-run=client \
         -o yaml > ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
       chmod a+r ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
