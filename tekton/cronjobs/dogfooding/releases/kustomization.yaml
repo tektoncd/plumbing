@@ -14,3 +14,4 @@ resources:
 - cloudevents-nightly
 - chains-nightly
 - pipeline-in-pod-nightly
+- pr-commenter-nightly
