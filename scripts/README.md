@@ -249,6 +249,6 @@ Where:
 
 - `file` is the name of the release file, `release.yaml` by default
 
-- `post-file` is the name of the 2nd release file, none by default, `interceptors.yaml` by default for triggers
+- `post-file` is the name of the 2nd release file, none by default, `resolvers.yaml` for Pipeline, and `interceptors.yaml` by default for triggers
 
 To summarize, the deployment job will look for the release file into `<bucket>/<extra-path>/<project>/previous/<version>/<file>`

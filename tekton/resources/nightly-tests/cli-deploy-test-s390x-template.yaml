@@ -125,6 +125,8 @@ spec:
           params:
           - name: package
             value: pipeline
+          - name: extra-file
+            value: resolvers.yaml
         - name: deploy-triggers
           runAfter: [deploy-pipeline]
           taskRef:

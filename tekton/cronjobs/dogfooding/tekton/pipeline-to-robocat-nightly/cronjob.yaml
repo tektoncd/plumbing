@@ -22,3 +22,5 @@ spec:
                 value: "robocat"
               - name: RELEASE_BUCKET
                 value: "gs://tekton-releases-nightly"
+              - name: POST_RELEASE_FILE
+                value: "resolvers.yaml"

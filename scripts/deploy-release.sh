@@ -72,7 +72,9 @@ if [ -z "$RELEASE_FILE" ]; then
     fi
 fi
 if [ -z "$POST_RELEASE_FILE" ]; then
-    if [ "$TEKTON_PROJECT" == "triggers" ]; then
+    if [ "$TEKTON_PROJECT" == "pipeline" ]; then
+      POST_RELEASE_FILE="resolvers.yaml"
+    elif [ "$TEKTON_PROJECT" == "triggers" ]; then
         POST_RELEASE_FILE="interceptors.yaml"
     fi
 fi
