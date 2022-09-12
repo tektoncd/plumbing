@@ -907,6 +907,7 @@ presubmits:
   - name: pull-tekton-experimental-integration-tests
     labels:
       preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
     agent: kubernetes
     always_run: true
     decorate: true
@@ -930,9 +931,6 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
-        env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
   tektoncd/hub:
   - name: pull-tekton-hub-build-tests
     labels:
@@ -1046,11 +1044,6 @@ presubmits:
           limits:
             cpu: 4000m
             memory: 8Gi
-        env:
-        - name: DOCKER_IN_DOCKER_ENABLED
-          value: "true"
-        securityContext:
-          privileged: true
   - name: pull-tekton-operator-unit-tests
     labels:
       preset-presubmit-sh: "true"
