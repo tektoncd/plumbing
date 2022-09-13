@@ -18,20 +18,15 @@ metadata:
   name: pr-commenter-controller
   namespace: tekton-pipelines
   labels:
-    app.kubernetes.io/name: controller
+    app.kubernetes.io/name: pr-commenter-controller
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
-    app.kubernetes.io/version: "devel"
     app.kubernetes.io/part-of: pr-commenter
-    # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-    pipeline.tekton.dev/release: "devel"
-    # labels below are related to istio and should not be used for resource lookup
-    version: "devel"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: controller
+      app.kubernetes.io/name: pr-commenter-controller
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: default
       app.kubernetes.io/part-of: pr-commenter
@@ -40,16 +35,11 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
       labels:
-        app.kubernetes.io/name: controller
+        app.kubernetes.io/name: pr-commenter-controller
         app.kubernetes.io/component: controller
         app.kubernetes.io/instance: default
-        app.kubernetes.io/version: "devel"
         app.kubernetes.io/part-of: pr-commenter
-        # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
-        pipeline.tekton.dev/release: "devel"
-        # labels below are related to istio and should not be used for resource lookup
         app: pr-commenter-controller
-        version: "devel"
     spec:
       serviceAccountName: pr-commenter-controller
       containers:
