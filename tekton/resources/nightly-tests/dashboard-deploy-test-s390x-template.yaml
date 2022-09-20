@@ -143,7 +143,7 @@ spec:
               - name: SKIP_BUILD_TEST
                 value: "true"
               - name: SSL_CERT_FILE
-                value: $(workspaces.registry-shared.path)/cert.pem  
+                value: $(workspaces.registry-shared.path)/cert.pem
               command:
               - /bin/bash
               args:
@@ -174,7 +174,7 @@ spec:
                   command: ['ls', '/certs/client/ca.pem']
             volumes:
             - name: dind-certs
-              emptyDir: {}  
+              emptyDir: {}
           params:
           - name: container-registry
             value: $(params.container-registry)
