@@ -373,3 +373,14 @@ spec:
   subscriber:
     uri: http://el-tekton-events.default.svc.cluster.local:8080
 ```
+
+### Troubleshooting Kafka
+
+Occasionally, the Kafka cluster may stop working. Connecting via the Kafka UI
+shows the cluster as down. The `el-tekton-events` deployment logs don't get
+any new entry.
+
+The kafka cluster logs show an error related to TLS certificates.
+The solution in this case is to kill all `Pods` in the `kafka` namespace and
+wait for things to start working again.
+
