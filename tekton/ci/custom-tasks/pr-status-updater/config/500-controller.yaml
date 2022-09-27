@@ -1,4 +1,4 @@
-# Copyright 2022 The Tekton Authors
+# Copyright 2019 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pr-commenter-controller
+  name: pr-status-updater-controller
   namespace: tekton-pipelines
   labels:
     app.kubernetes.io/name: controller
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
     app.kubernetes.io/version: "devel"
-    app.kubernetes.io/part-of: pr-commenter
+    app.kubernetes.io/part-of: pr-status-updater
     # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
     pipeline.tekton.dev/release: "devel"
     # labels below are related to istio and should not be used for resource lookup
@@ -34,7 +34,7 @@ spec:
       app.kubernetes.io/name: controller
       app.kubernetes.io/component: controller
       app.kubernetes.io/instance: default
-      app.kubernetes.io/part-of: pr-commenter
+      app.kubernetes.io/part-of: pr-status-updater
   template:
     metadata:
       annotations:
@@ -44,17 +44,17 @@ spec:
         app.kubernetes.io/component: controller
         app.kubernetes.io/instance: default
         app.kubernetes.io/version: "devel"
-        app.kubernetes.io/part-of: pr-commenter
+        app.kubernetes.io/part-of: pr-status-updater
         # tekton.dev/release value replaced with inputs.params.versionTag in pipeline/tekton/publish.yaml
         pipeline.tekton.dev/release: "devel"
         # labels below are related to istio and should not be used for resource lookup
-        app: pr-commenter-controller
+        app: pr-status-updater-controller
         version: "devel"
     spec:
-      serviceAccountName: pr-commenter-controller
+      serviceAccountName: pr-status-updater-controller
       containers:
-        - name: pr-commenter-custom-task
-          image: ko://github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-commenter/cmd/pr-commenter
+        - name: pr-status-updater-custom-task
+          image: ko://github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-status-updater/cmd/pr-status-updater
           securityContext:
             allowPrivilegeEscalation: false
             # User 65532 is the distroless nonroot user ID
@@ -71,9 +71,7 @@ spec:
             - name: CONFIG_OBSERVABILITY_NAME
               value: config-observability
             - name: METRICS_DOMAIN
-              value: custom.tekton.dev/pr-commenter
-            - name: RETEST_PREFIX
-              value: "test"
+              value: custom.tekton.dev/pr-status-updater
             - name: GIT_KIND
               value: github
             - name: GIT_SERVER
