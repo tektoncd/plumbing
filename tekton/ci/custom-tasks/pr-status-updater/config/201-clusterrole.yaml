@@ -1,4 +1,4 @@
-# Copyright 2022 The Tekton Authors
+# Copyright 2020 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pr-commenter-controller-cluster-access
+  name: pr-status-updater-controller-cluster-access
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: pr-commenter
+    app.kubernetes.io/part-of: pr-status-updater
 rules:
   # Controller needs cluster access to all of the CRDs that it is responsible for managing.
   - apiGroups: ["tekton.dev"]
@@ -36,11 +36,11 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   # This is the access that the controller needs on a per-namespace basis.
-  name: pr-commenter-controller-tenant-access
+  name: pr-status-updater-controller-tenant-access
   labels:
     app.kubernetes.io/component: controller
     app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: pr-commenter
+    app.kubernetes.io/part-of: pr-status-updater
 rules:
   - apiGroups: [""]
     resources: ["events"]
@@ -49,10 +49,10 @@ rules:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: pr-commenter-leader-election
+  name: pr-status-updater-leader-election
   labels:
     app.kubernetes.io/instance: default
-    app.kubernetes.io/part-of: pr-commenter
+    app.kubernetes.io/part-of: pr-status-updater
 rules:
   # We uses leases for leaderelection
   - apiGroups: ["coordination.k8s.io"]

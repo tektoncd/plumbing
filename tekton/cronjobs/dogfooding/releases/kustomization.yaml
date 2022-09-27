@@ -15,3 +15,4 @@ resources:
 - chains-nightly
 - pipeline-in-pod-nightly
 - pr-commenter-nightly
+- pr-status-updater-nightly
