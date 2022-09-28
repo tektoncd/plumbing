@@ -21,3 +21,4 @@ resources:
 - overlays/pipeline-in-pod
 - overlays/pr-commenter
 - overlays/pr-status-updater
+- overlays/concurrency

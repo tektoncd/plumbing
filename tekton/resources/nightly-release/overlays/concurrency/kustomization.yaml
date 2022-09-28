@@ -1,0 +1,18 @@
+namePrefix: concurrency-
+bases:
+  - ../../base
+patchesJson6902:
+  - target:
+      group: triggers.tekton.dev
+      version: v1alpha1
+      kind: TriggerTemplate
+      name: template
+    path: template.yaml
+  - target:
+      group: triggers.tekton.dev
+      version: v1alpha1
+      kind: Trigger
+      name: nightly
+    path: trigger.yaml
+resources:
+  - github.com/tektoncd/experimental/tekton/?ref=main

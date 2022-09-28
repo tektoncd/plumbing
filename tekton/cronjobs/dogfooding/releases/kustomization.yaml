@@ -16,3 +16,4 @@ resources:
 - pipeline-in-pod-nightly
 - pr-commenter-nightly
 - pr-status-updater-nightly
+- concurrency-nightly
