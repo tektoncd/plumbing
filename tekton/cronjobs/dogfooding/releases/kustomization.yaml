@@ -17,3 +17,4 @@ resources:
 - pr-commenter-nightly
 - pr-status-updater-nightly
 - concurrency-nightly
+- workflows-nightly
