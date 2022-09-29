@@ -179,6 +179,8 @@ spec:
                   expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1).split('/').join('_')
                 - key: shortSourceEventID
                   expression: body.taskRun.metadata.labels['tekton.dev/source-event-id'].truncate(13)
+                - key: repoName
+                  expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1).split('/')[1]
       triggerSelector:
         namespaceSelector:
           matchNames:
