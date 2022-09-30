@@ -20,3 +20,4 @@ resources:
 - overlays/chains
 - overlays/pipeline-in-pod
 - overlays/pr-commenter
+- overlays/pr-status-updater
