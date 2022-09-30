@@ -83,8 +83,6 @@ spec:
     description: A truncated version of the sourceEventId
   - name: gitHubRepo
     description: The gitHubRepo (org/repo)
-  - name: gitHubRepoName
-    description: The gitHubRepo's name (repo)
   - name: gitHubRepoUnderscore
     description: The gitHubRepoUnderscore (org_repo)
   - name: gitRevision
@@ -93,8 +91,6 @@ spec:
     description: Name of the CI Job (GitHub Check)
   - name: gitHubCheckStatus
     description: Can be 'pending', 'success' or 'failure'
-  - name: gitHubCheckIsSuccess
-    description: Can be 'true' or 'false'
   - name: gitHubCheckDescription
     description: A description to be displayed for the status of the check
   - name: taskRunName
@@ -109,7 +105,7 @@ spec:
     default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
       namespace: tekton-ci
@@ -119,17 +115,15 @@ spec:
         ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
     spec:
-      tasks:
-      - name: set-status
-        serviceAccountName: tekton-ci-jobs
-        podTemplate:
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1001
-        taskRef:
-          name: github-set-status
-          bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
-        params:
+      serviceAccountName: tekton-ci-jobs
+      podTemplate:
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+      taskRef:
+        name: github-set-status
+        bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
+      params:
         - name: REPO_FULL_NAME
           value: $(tt.params.gitHubRepo)
         - name: SHA
@@ -146,22 +140,3 @@ spec:
           value: bot-token-github
         - name: GITHUB_TOKEN_SECRET_KEY
           value: bot-token
-      - name: comment-on-pr
-        taskRef:
-          apiVersion: custom.tekton.dev/v0
-          kind: PRCommenter
-        params:
-        - name: repo
-          value: $(tt.params.gitHubRepoName)
-        - name: prNumber
-          value: $(tt.params.pullRequestNumber)
-        - name: sha
-          value: $(tt.params.gitRevision)
-        - name: jobName
-          value: $(tt.params.checkName)
-        - name: isSuccess
-          value: $(tt.params.gitHubCheckIsSuccess)
-        - name: isOptional
-          value: "false"
-        - name: logURL
-          value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
