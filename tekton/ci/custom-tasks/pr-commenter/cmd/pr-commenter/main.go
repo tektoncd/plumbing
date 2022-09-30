@@ -14,14 +14,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	owner := os.Getenv("GIT_OWNER")
-	if owner == "" {
-		log.Fatal("GIT_OWNER env var required")
-	}
 	botUser := os.Getenv("GIT_USER")
 	if botUser == "" {
 		botUser = "tekton-robot"
 	}
 
-	sharedmain.Main(reconciler.ControllerName, reconciler.NewController(scmClient, botUser, owner))
+	sharedmain.Main(reconciler.ControllerName, reconciler.NewController(scmClient, botUser))
 }

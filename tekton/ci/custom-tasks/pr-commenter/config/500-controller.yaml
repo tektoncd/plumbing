@@ -78,8 +78,6 @@ spec:
               value: github
             - name: GIT_SERVER
               value: https://github.com
-            - name: GIT_OWNER
-              value: tektoncd
             - name: GIT_USER
               value: tekton-robot
             - name: "GIT_TOKEN"

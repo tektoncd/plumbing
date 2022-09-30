@@ -14,7 +14,6 @@ import (
 )
 
 func TestReconcile(t *testing.T) {
-	owner := "some-org"
 	sha := "abcd1234"
 	botUser := "k8s-ci-robot"
 
@@ -27,7 +26,7 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "first status update",
 			info: &StatusInfo{
-				Repo:        "some-repo",
+				Repo:        "some-org/some-repo",
 				SHA:         sha,
 				JobName:     "some-job",
 				State:       "success",
@@ -43,7 +42,7 @@ func TestReconcile(t *testing.T) {
 		}, {
 			name: "replace job",
 			info: &StatusInfo{
-				Repo:      "some-repo",
+				Repo:      "some-org/some-repo",
 				SHA:       sha,
 				JobName:   "some-job",
 				State:     "success",
@@ -62,7 +61,7 @@ func TestReconcile(t *testing.T) {
 		}, {
 			name: "replace job retaining existing other job",
 			info: &StatusInfo{
-				Repo:      "some-repo",
+				Repo:      "some-org/some-repo",
 				SHA:       sha,
 				JobName:   "some-job",
 				State:     "success",
@@ -93,7 +92,6 @@ func TestReconcile(t *testing.T) {
 
 			r := &Reconciler{
 				SCMClient: fakeScmClient,
-				Owner:     owner,
 				BotUser:   botUser,
 			}
 
