@@ -93,6 +93,8 @@ spec:
     description: Name of the CI Job (GitHub Check)
   - name: gitHubCheckStatus
     description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckIsSuccess
+    description: Can be 'true' or 'false'
   - name: gitHubCheckDescription
     description: A description to be displayed for the status of the check
   - name: taskRunName
