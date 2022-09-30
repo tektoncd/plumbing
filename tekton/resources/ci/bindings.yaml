@@ -38,8 +38,6 @@ spec:
     value: success
   - name: gitHubCheckDescription
     value: "Job Successful."
-  - name: gitHubCheckIsSuccess
-    value: "true"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -51,8 +49,6 @@ spec:
     value: failure
   - name: gitHubCheckDescription
     value: "Job Failed."
-  - name: gitHubCheckIsSuccess
-    value: "false"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
@@ -77,5 +73,3 @@ spec:
     value: $(extensions.shortSourceEventID)
   - name: gitHubRepoUnderscore
     value: $(extensions.repoUnderscore)
-  - name: gitHubRepoName
-    value: $(extensions.repoName)
