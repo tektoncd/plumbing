@@ -2,4 +2,4 @@ bases:
 - ../../../bases/release
 patchesStrategicMerge:
 - cronjob.yaml
-nameSuffix: "-pr-status-updater-nightly-release"
+nameSuffix: "-pr-status-nightly-release"
