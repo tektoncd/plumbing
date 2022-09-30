@@ -30,7 +30,7 @@ const (
 	prNumberKey = "prNumber"
 	shaKey      = "sha"
 	jobNameKey  = "jobName"
-	successKey  = "isSuccess"
+	resultKey   = "result"
 	optionalKey = "isOptional"
 	logURLKey   = "logURL"
 
@@ -51,8 +51,8 @@ type ReportInfo struct {
 	// JobName is the name of the job whose result we're receiving.
 	JobName string `json:"jobName"`
 
-	// IsSuccess is whether the job whose result we're receiving failed or succeeded.
-	IsSuccess bool `json:"isSuccess"`
+	// Result is the GitHub check status result for the job - `pending` (which is ignored), `success`, or `failure`
+	Result string `json:"result"`
 
 	// LogURL is the URL for the job's logs.
 	// +optional
@@ -120,16 +120,19 @@ func ReportInfoFromRun(r *v1alpha1.Run) (*ReportInfo, *apis.FieldError) {
 		errs = errs.Also(apis.ErrMissingField(logURLKey))
 	}
 
-	if successVal := r.Spec.GetParam(successKey); successVal != nil {
-		if successVal.Value.Type != v1beta1.ParamTypeString {
-			errs = errs.Also(apis.ErrInvalidValue(fmt.Sprintf("should be a bool, is %s", successVal.Value.Type), successKey))
-		} else if boolVal, err := strconv.ParseBool(successVal.Value.StringVal); err != nil {
-			errs = errs.Also(apis.ErrInvalidValue(fmt.Sprintf("%s should be a bool", successVal.Value.StringVal), successKey))
+	if resultVal := r.Spec.GetParam(resultKey); resultVal != nil {
+		if resultVal.Value.Type != v1beta1.ParamTypeString {
+			errs = errs.Also(apis.ErrInvalidValue(fmt.Sprintf("should be a string, is %s", resultVal.Value.Type), resultKey))
 		} else {
-			report.IsSuccess = boolVal
+			switch resultVal.Value.StringVal {
+			case "pending", "success", "failure":
+				report.Result = resultVal.Value.StringVal
+			default:
+				errs = errs.Also(apis.ErrInvalidValue(fmt.Sprintf("should be one of 'pending', 'success', or 'failure', but is '%s'", resultVal.Value.StringVal), resultKey))
+			}
 		}
 	} else {
-		errs = errs.Also(apis.ErrMissingField(successKey))
+		errs = errs.Also(apis.ErrMissingField(resultKey))
 	}
 
 	if optionalVal := r.Spec.GetParam(optionalKey); optionalVal != nil {

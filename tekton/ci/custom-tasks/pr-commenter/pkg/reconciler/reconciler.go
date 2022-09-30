@@ -21,7 +21,6 @@ const (
 // Reconciler is the core of the implementation of the PR commenter, adding, updating, or deleting comments as needed.
 type Reconciler struct {
 	SCMClient *scm.Client
-	Owner     string
 	BotUser   string
 }
 
@@ -52,10 +51,13 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 		return err
 	}
 
-	fieldErr := c.reportComment(ctx, spec, logger)
-	if fieldErr != nil {
-		r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", fieldErr.Error())
-		return fieldErr
+	// Don't do anything unless the result is failure or success
+	if spec.Result != "pending" {
+		fieldErr := c.reportComment(ctx, spec, logger)
+		if fieldErr != nil {
+			r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", fieldErr.Error())
+			return fieldErr
+		}
 	}
 
 	r.Status.MarkRunSucceeded("Commented", "PR comment successfully added/updated/deleted")
@@ -140,7 +142,7 @@ func parseIssueComments(report *ReportInfo, botUser string, ics []*scm.Comment) 
 }
 
 func createEntry(report *ReportInfo) string {
-	if report.IsSuccess {
+	if report.Result == "success" {
 		return ""
 	}
 
@@ -161,14 +163,14 @@ func createEntry(report *ReportInfo) string {
 }
 
 func (c *Reconciler) reportComment(ctx context.Context, report *ReportInfo, logger *zap.SugaredLogger) error {
-	ics, err := c.listPullRequestComments(ctx, c.Owner, report.Repo, report.PRNumber)
+	ics, err := c.listPullRequestComments(ctx, report.Repo, report.PRNumber)
 	if err != nil {
 		return fmt.Errorf("error listing comments: %w", err)
 	}
 	deletes, entries, updateID := parseIssueComments(report, c.BotUser, ics)
 	for _, deleteCmt := range deletes {
-		logger.Infof("Deleting stale comment %d for %s/%s #%d", deleteCmt, c.Owner, report.Repo, report.PRNumber)
-		if _, err := c.SCMClient.PullRequests.DeleteComment(ctx, fmt.Sprintf("%s/%s", c.Owner, report.Repo), report.PRNumber, deleteCmt); err != nil {
+		logger.Infof("Deleting stale comment %d for %s #%d", deleteCmt, report.Repo, report.PRNumber)
+		if _, err := c.SCMClient.PullRequests.DeleteComment(ctx, report.Repo, report.PRNumber, deleteCmt); err != nil {
 			return fmt.Errorf("error deleting comment: %w", err)
 		}
 	}
@@ -178,23 +180,23 @@ func (c *Reconciler) reportComment(ctx context.Context, report *ReportInfo, logg
 			return fmt.Errorf("generating comment: %w", err)
 		}
 		if comment == "" {
-			logger.Infof("No failures for %s/%s #%d, skipping creation", c.Owner, report.Repo, report.PRNumber)
+			logger.Infof("No failures for %s #%d, skipping creation", report.Repo, report.PRNumber)
 			return nil
 		}
 		if updateID == 0 {
-			logger.Infof("Creating new comment for %s/%s #%d", c.Owner, report.Repo, report.PRNumber)
-			if _, _, err := c.SCMClient.PullRequests.CreateComment(ctx, fmt.Sprintf("%s/%s", c.Owner, report.Repo), report.PRNumber, &scm.CommentInput{Body: comment}); err != nil {
+			logger.Infof("Creating new comment for %s #%d", report.Repo, report.PRNumber)
+			if _, _, err := c.SCMClient.PullRequests.CreateComment(ctx, report.Repo, report.PRNumber, &scm.CommentInput{Body: comment}); err != nil {
 				return fmt.Errorf("error creating comment: %w", err)
 			}
 		} else {
-			logger.Infof("Updating existing comment %d for %s/%s #%d", updateID, c.Owner, report.Repo, report.PRNumber)
-			if _, _, err := c.SCMClient.PullRequests.EditComment(ctx, fmt.Sprintf("%s/%s", c.Owner, report.Repo), report.PRNumber, updateID, &scm.CommentInput{Body: comment}); err != nil {
+			logger.Infof("Updating existing comment %d for %s #%d", updateID, report.Repo, report.PRNumber)
+			if _, _, err := c.SCMClient.PullRequests.EditComment(ctx, report.Repo, report.PRNumber, updateID, &scm.CommentInput{Body: comment}); err != nil {
 				if err == scm.ErrNotSupported {
 					logger.Infof("updating comments not supported, falling back on delete/create")
-					if _, err = c.SCMClient.PullRequests.DeleteComment(ctx, fmt.Sprintf("%s/%s", c.Owner, report.Repo), report.PRNumber, updateID); err != nil {
+					if _, err = c.SCMClient.PullRequests.DeleteComment(ctx, report.Repo, report.PRNumber, updateID); err != nil {
 						return fmt.Errorf("error deleting comment: %w", err)
 					}
-					if _, _, err = c.SCMClient.PullRequests.CreateComment(ctx, fmt.Sprintf("%s/%s", c.Owner, report.Repo), report.PRNumber, &scm.CommentInput{Body: comment}); err != nil {
+					if _, _, err = c.SCMClient.PullRequests.CreateComment(ctx, report.Repo, report.PRNumber, &scm.CommentInput{Body: comment}); err != nil {
 						return fmt.Errorf("error creating comment: %w", err)
 					}
 				} else {
@@ -206,8 +208,7 @@ func (c *Reconciler) reportComment(ctx context.Context, report *ReportInfo, logg
 	return nil
 }
 
-func (c *Reconciler) listPullRequestComments(ctx context.Context, owner, repo string, number int) ([]*scm.Comment, error) {
-	fullName := fmt.Sprintf("%s/%s", owner, repo)
+func (c *Reconciler) listPullRequestComments(ctx context.Context, repo string, number int) ([]*scm.Comment, error) {
 	var allComments []*scm.Comment
 	var resp *scm.Response
 	var comments []*scm.Comment
@@ -217,7 +218,7 @@ func (c *Reconciler) listPullRequestComments(ctx context.Context, owner, repo st
 		Page: 1,
 	}
 	for !firstRun || (resp != nil && opts.Page <= resp.Page.Last) {
-		comments, resp, err = c.SCMClient.PullRequests.ListComments(ctx, fullName, number, &opts)
+		comments, resp, err = c.SCMClient.PullRequests.ListComments(ctx, repo, number, &opts)
 		if err != nil {
 			return nil, err
 		}

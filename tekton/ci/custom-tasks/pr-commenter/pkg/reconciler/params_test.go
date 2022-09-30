@@ -23,7 +23,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  prNumberKey,
 							Value: *v1beta1.NewStructuredValues("5"),
@@ -34,8 +34,8 @@ func TestReportInfoFromRun(t *testing.T) {
 							Name:  jobNameKey,
 							Value: *v1beta1.NewStructuredValues("some-job"),
 						}, {
-							Name:  successKey,
-							Value: *v1beta1.NewStructuredValues("true"),
+							Name:  resultKey,
+							Value: *v1beta1.NewStructuredValues("success"),
 						}, {
 							Name:  optionalKey,
 							Value: *v1beta1.NewStructuredValues("false"),
@@ -47,11 +47,11 @@ func TestReportInfoFromRun(t *testing.T) {
 				},
 			},
 			info: &ReportInfo{
-				Repo:       "some-repo",
+				Repo:       "some-org/some-repo",
 				PRNumber:   5,
 				SHA:        "abcd1234",
 				JobName:    "some-job",
-				IsSuccess:  true,
+				Result:     "success",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -70,8 +70,8 @@ func TestReportInfoFromRun(t *testing.T) {
 							Name:  jobNameKey,
 							Value: *v1beta1.NewStructuredValues("some-job"),
 						}, {
-							Name:  successKey,
-							Value: *v1beta1.NewStructuredValues("true"),
+							Name:  resultKey,
+							Value: *v1beta1.NewStructuredValues("success"),
 						}, {
 							Name:  optionalKey,
 							Value: *v1beta1.NewStructuredValues("false"),
@@ -90,7 +90,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  shaKey,
 							Value: *v1beta1.NewStructuredValues("abcd1234"),
@@ -98,8 +98,8 @@ func TestReportInfoFromRun(t *testing.T) {
 							Name:  jobNameKey,
 							Value: *v1beta1.NewStructuredValues("some-job"),
 						}, {
-							Name:  successKey,
-							Value: *v1beta1.NewStructuredValues("true"),
+							Name:  resultKey,
+							Value: *v1beta1.NewStructuredValues("success"),
 						}, {
 							Name:  optionalKey,
 							Value: *v1beta1.NewStructuredValues("false"),
@@ -118,7 +118,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  prNumberKey,
 							Value: *v1beta1.NewStructuredValues("5"),
@@ -126,8 +126,8 @@ func TestReportInfoFromRun(t *testing.T) {
 							Name:  jobNameKey,
 							Value: *v1beta1.NewStructuredValues("some-job"),
 						}, {
-							Name:  successKey,
-							Value: *v1beta1.NewStructuredValues("true"),
+							Name:  resultKey,
+							Value: *v1beta1.NewStructuredValues("success"),
 						}, {
 							Name:  optionalKey,
 							Value: *v1beta1.NewStructuredValues("false"),
@@ -146,7 +146,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  prNumberKey,
 							Value: *v1beta1.NewStructuredValues("5"),
@@ -154,8 +154,8 @@ func TestReportInfoFromRun(t *testing.T) {
 							Name:  shaKey,
 							Value: *v1beta1.NewStructuredValues("abcd1234"),
 						}, {
-							Name:  successKey,
-							Value: *v1beta1.NewStructuredValues("true"),
+							Name:  resultKey,
+							Value: *v1beta1.NewStructuredValues("success"),
 						}, {
 							Name:  optionalKey,
 							Value: *v1beta1.NewStructuredValues("false"),
@@ -168,13 +168,13 @@ func TestReportInfoFromRun(t *testing.T) {
 			},
 			err: "missing field(s): jobName",
 		}, {
-			name: "missing isSuccess",
+			name: "missing result",
 			run: &v1alpha1.Run{
 				Spec: v1alpha1.RunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  prNumberKey,
 							Value: *v1beta1.NewStructuredValues("5"),
@@ -194,7 +194,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					},
 				},
 			},
-			err: "missing field(s): isSuccess",
+			err: "missing field(s): result",
 		}, {
 			name: "non-string value",
 			run: &v1alpha1.Run{
@@ -212,8 +212,8 @@ func TestReportInfoFromRun(t *testing.T) {
 						Name:  jobNameKey,
 						Value: *v1beta1.NewStructuredValues("some-job"),
 					}, {
-						Name:  successKey,
-						Value: *v1beta1.NewStructuredValues("true"),
+						Name:  resultKey,
+						Value: *v1beta1.NewStructuredValues("success"),
 					}, {
 						Name:  optionalKey,
 						Value: *v1beta1.NewStructuredValues("false"),
@@ -230,7 +230,7 @@ func TestReportInfoFromRun(t *testing.T) {
 				Spec: v1alpha1.RunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
-						Value: *v1beta1.NewStructuredValues("some-repo"),
+						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 					}, {
 						Name:  prNumberKey,
 						Value: *v1beta1.NewStructuredValues("five"),
@@ -241,8 +241,8 @@ func TestReportInfoFromRun(t *testing.T) {
 						Name:  jobNameKey,
 						Value: *v1beta1.NewStructuredValues("some-job"),
 					}, {
-						Name:  successKey,
-						Value: *v1beta1.NewStructuredValues("true"),
+						Name:  resultKey,
+						Value: *v1beta1.NewStructuredValues("success"),
 					}, {
 						Name:  optionalKey,
 						Value: *v1beta1.NewStructuredValues("false"),
@@ -259,7 +259,7 @@ func TestReportInfoFromRun(t *testing.T) {
 				Spec: v1alpha1.RunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
-						Value: *v1beta1.NewStructuredValues("some-repo"),
+						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 					}, {
 						Name:  prNumberKey,
 						Value: *v1beta1.NewStructuredValues("5"),
@@ -270,7 +270,36 @@ func TestReportInfoFromRun(t *testing.T) {
 						Name:  jobNameKey,
 						Value: *v1beta1.NewStructuredValues("some-job"),
 					}, {
-						Name:  successKey,
+						Name:  resultKey,
+						Value: *v1beta1.NewStructuredValues("success"),
+					}, {
+						Name:  optionalKey,
+						Value: *v1beta1.NewStructuredValues("banana"),
+					}, {
+						Name:  logURLKey,
+						Value: *v1beta1.NewStructuredValues("http://some/where"),
+					}},
+				},
+			},
+			err: "invalid value: banana should be a bool: isOptional",
+		}, {
+			name: "invalid result value",
+			run: &v1alpha1.Run{
+				Spec: v1alpha1.RunSpec{
+					Params: []v1beta1.Param{{
+						Name:  repoKey,
+						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
+					}, {
+						Name:  prNumberKey,
+						Value: *v1beta1.NewStructuredValues("5"),
+					}, {
+						Name:  shaKey,
+						Value: *v1beta1.NewStructuredValues("abcd1234"),
+					}, {
+						Name:  jobNameKey,
+						Value: *v1beta1.NewStructuredValues("some-job"),
+					}, {
+						Name:  resultKey,
 						Value: *v1beta1.NewStructuredValues("banana"),
 					}, {
 						Name:  optionalKey,
@@ -281,7 +310,7 @@ func TestReportInfoFromRun(t *testing.T) {
 					}},
 				},
 			},
-			err: "invalid value: banana should be a bool: isSuccess",
+			err: "invalid value: should be one of 'pending', 'success', or 'failure', but is 'banana': result",
 		},
 	}
 

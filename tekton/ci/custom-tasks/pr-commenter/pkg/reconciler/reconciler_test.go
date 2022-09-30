@@ -15,7 +15,6 @@ import (
 )
 
 func TestReconcile(t *testing.T) {
-	owner := "some-org"
 	botUser := "k8s-ci-robot"
 
 	testCases := []struct {
@@ -27,11 +26,11 @@ func TestReconcile(t *testing.T) {
 		{
 			name: "first comment",
 			info: &ReportInfo{
-				Repo:       "some-repo",
+				Repo:       "some-org/some-repo",
 				PRNumber:   5,
 				SHA:        "abcd1234",
 				JobName:    "some-job",
-				IsSuccess:  false,
+				Result:     "failure",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -48,11 +47,11 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 		}, {
 			name: "replace comment retaining existing failure",
 			info: &ReportInfo{
-				Repo:       "some-repo",
+				Repo:       "some-org/some-repo",
 				PRNumber:   5,
 				SHA:        "abcd1234",
 				JobName:    "some-job",
-				IsSuccess:  false,
+				Result:     "failure",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -82,11 +81,11 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 		}, {
 			name: "replace comment removing obsolete",
 			info: &ReportInfo{
-				Repo:       "some-repo",
+				Repo:       "some-org/some-repo",
 				PRNumber:   5,
 				SHA:        "abcd1234",
 				JobName:    "some-job",
-				IsSuccess:  true,
+				Result:     "success",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -115,11 +114,11 @@ some-other-job | 12345678 | [link](http://some/where/else) | true | ` + "`/test 
 		}, {
 			name: "delete comment",
 			info: &ReportInfo{
-				Repo:       "some-repo",
+				Repo:       "some-org/some-repo",
 				PRNumber:   5,
 				SHA:        "abcd1234",
 				JobName:    "some-job",
-				IsSuccess:  true,
+				Result:     "success",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -135,6 +134,39 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 				Author: scm.User{Login: botUser},
 			}},
 			expectedComments: []*scm.Comment{},
+		}, {
+			name: "do nothing for result == pending",
+			info: &ReportInfo{
+				Repo:       "some-org/some-repo",
+				PRNumber:   5,
+				SHA:        "abcd1234",
+				JobName:    "some-job",
+				Result:     "pending",
+				LogURL:     "http://some/where",
+				IsOptional: false,
+			},
+			existingComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
+			expectedComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
 		},
 	}
 
@@ -146,7 +178,6 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 
 			r := &Reconciler{
 				SCMClient: fakeScmClient,
-				Owner:     owner,
 				BotUser:   botUser,
 			}
 
@@ -187,8 +218,8 @@ func reportInfoToRun(info *ReportInfo) *v1alpha1.Run {
 				Name:  jobNameKey,
 				Value: *v1beta1.NewStructuredValues(info.JobName),
 			}, {
-				Name:  successKey,
-				Value: *v1beta1.NewStructuredValues(fmt.Sprintf("%t", info.IsSuccess)),
+				Name:  resultKey,
+				Value: *v1beta1.NewStructuredValues(info.Result),
 			}, {
 				Name:  optionalKey,
 				Value: *v1beta1.NewStructuredValues(fmt.Sprintf("%t", info.IsOptional)),

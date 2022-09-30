@@ -10,14 +10,9 @@ import (
 	kreconciler "knative.dev/pkg/reconciler"
 )
 
-const (
-	commentTag = "<!-- Tekton test report -->"
-)
-
 // Reconciler is the core of the implementation of the PR commenter, adding, updating, or deleting comments as needed.
 type Reconciler struct {
 	SCMClient *scm.Client
-	Owner     string
 	BotUser   string
 }
 
@@ -55,7 +50,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 		Target: spec.TargetURL,
 	}
 
-	_, _, err := c.SCMClient.Repositories.CreateStatus(ctx, fmt.Sprintf("%s/%s", c.Owner, spec.Repo), spec.SHA, gitRepoStatus)
+	_, _, err := c.SCMClient.Repositories.CreateStatus(ctx, spec.Repo, spec.SHA, gitRepoStatus)
 	if err != nil {
 		r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", err.Error())
 		return err

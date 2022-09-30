@@ -23,7 +23,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  shaKey,
 							Value: *v1beta1.NewStructuredValues("abcd1234"),
@@ -44,7 +44,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 				},
 			},
 			info: &StatusInfo{
-				Repo:        "some-repo",
+				Repo:        "some-org/some-repo",
 				SHA:         "abcd1234",
 				JobName:     "some-job",
 				State:       "success",
@@ -83,7 +83,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  jobNameKey,
 							Value: *v1beta1.NewStructuredValues("some-job"),
@@ -108,7 +108,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  shaKey,
 							Value: *v1beta1.NewStructuredValues("abcd1234"),
@@ -133,7 +133,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
-							Value: *v1beta1.NewStructuredValues("some-repo"),
+							Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 						}, {
 							Name:  shaKey,
 							Value: *v1beta1.NewStructuredValues("abcd1234"),
@@ -183,7 +183,7 @@ func TestStatusInfoFromRun(t *testing.T) {
 				Spec: v1alpha1.RunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
-						Value: *v1beta1.NewStructuredValues("some-repo"),
+						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
 					}, {
 						Name:  shaKey,
 						Value: *v1beta1.NewStructuredValues("abcd1234"),
