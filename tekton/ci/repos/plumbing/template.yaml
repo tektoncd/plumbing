@@ -53,6 +53,7 @@
             - tekton/ci/interceptors/add-team-members
             - tekton/ci/interceptors/add-pr-body
             - tekton/ci/custom-tasks/pr-commenter
+            - tekton/ci/custom-tasks/pr-status-updater
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
