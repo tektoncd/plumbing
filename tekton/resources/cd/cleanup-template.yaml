@@ -47,9 +47,9 @@ spec:
       fi
 
       # Cleanup pipelineruns first, as this will delete tasksruns too
-      tkn pr delete -n ${NAMESPACE} --keep ${KEEP}
+      tkn pr delete -f -n ${NAMESPACE} --keep ${KEEP}
       # Keep double the amount of tr, for standalone trs
-      tkn tr delete -n ${NAMESPACE} --keep $(( ${KEEP} * 2 ))
+      tkn tr delete -f -n ${NAMESPACE} --keep $(( ${KEEP} * 2 ))
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
