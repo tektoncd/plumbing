@@ -43,31 +43,22 @@ spec:
         ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
     spec:
-      serviceAccountName: tekton-ci-jobs
-      podTemplate:
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 1001
       taskRef:
-        name: github-set-status
-        bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
+        apiVersion: custom.tekton.dev/v0
+        kind: PRStatusUpdater
       params:
-        - name: REPO_FULL_NAME
-          value: $(tt.params.gitHubRepo)
-        - name: SHA
-          value: $(tt.params.gitRevision)
-        - name: TARGET_URL
-          value: https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
-        - name: DESCRIPTION
-          value: $(tt.params.gitHubCheckDescription)
-        - name: CONTEXT
-          value: $(tt.params.checkName)
-        - name: STATE
-          value: $(tt.params.gitHubCheckStatus)
-        - name: GITHUB_TOKEN_SECRET_NAME
-          value: bot-token-github
-        - name: GITHUB_TOKEN_SECRET_KEY
-          value: bot-token
+      - name: repo
+        value: $(tt.params.gitHubRepo)
+      - name: sha
+        value: $(tt.params.gitRevision)
+      - name: jobName
+        value: $(tt.params.checkName)
+      - name: state
+        value: $(tt.params.gitHubCheckStatus)
+      - name: description
+        value: $(tt.params.gitHubCheckDescription)
+      - name: targetURL
+        value: https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -119,25 +110,21 @@ spec:
         tasks:
         - name: set-status
           taskRef:
-            name: github-set-status
-            bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
+            apiVersion: custom.tekton.dev/v0
+            kind: PRStatusUpdater
           params:
-          - name: REPO_FULL_NAME
+          - name: repo
             value: $(tt.params.gitHubRepo)
-          - name: SHA
+          - name: sha
             value: $(tt.params.gitRevision)
-          - name: TARGET_URL
-            value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
-          - name: DESCRIPTION
-            value: $(tt.params.gitHubCheckDescription)
-          - name: CONTEXT
+          - name: jobName
             value: $(tt.params.checkName)
-          - name: STATE
+          - name: state
             value: $(tt.params.gitHubCheckStatus)
-          - name: GITHUB_TOKEN_SECRET_NAME
-            value: bot-token-github
-          - name: GITHUB_TOKEN_SECRET_KEY
-            value: bot-token
+          - name: description
+            value: $(tt.params.gitHubCheckDescription)
+          - name: targetURL
+            value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
         - name: comment-on-pr
           taskRef:
             apiVersion: custom.tekton.dev/v0
@@ -157,10 +144,3 @@ spec:
             value: "false"
           - name: logURL
             value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
-      taskRunSpecs:
-      - pipelineTaskName: set-status
-        taskPodTemplate:
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1001
-        taskServiceAccountName: tekton-ci-jobs
