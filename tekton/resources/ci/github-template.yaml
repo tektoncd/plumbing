@@ -118,11 +118,6 @@ spec:
       pipelineSpec:
         tasks:
         - name: set-status
-          serviceAccountName: tekton-ci-jobs
-          podTemplate:
-            securityContext:
-              runAsNonRoot: true
-              runAsUser: 1001
           taskRef:
             name: github-set-status
             bundle: gcr.io/tekton-releases/catalog/upstream/github-set-status:0.2
@@ -162,3 +157,10 @@ spec:
             value: "false"
           - name: logURL
             value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
+      taskRunSpecs:
+      - pipelineTaskName: set-status
+        taskPodTemplate:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+        taskServiceAccountName: tekton-ci-jobs
