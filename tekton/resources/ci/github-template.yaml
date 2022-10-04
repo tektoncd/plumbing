@@ -93,16 +93,10 @@ spec:
     description: Can be 'pending', 'success' or 'failure'
   - name: gitHubCheckDescription
     description: A description to be displayed for the status of the check
-  - name: taskRunName
-    description: The name of the task run that triggered this
-  - name: taskRunNamespace
+  - name: pipelineRunName
+    description: The name of the pipeline run that triggered this
+  - name: pipelineRunNamespace
     description: The namespace where the CI job was executed
-  - name: parentPipelineRunName
-    description: The name of the parent pipeline run - if any
-    default: ""
-  - name: parentPipelineRunTaskName
-    description: The name of the task in the parent pipeline run - if any
-    default: ""
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
@@ -111,8 +105,8 @@ spec:
       namespace: tekton-ci
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
-        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
-        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+        ci.tekton.dev/source-pipelinerun-namespace: $(tt.params.pipelineRunNamespace)
+        ci.tekton.dev/source-pipelinerun-name: $(tt.params.pipelineRunName)
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
     spec:
       pipelineSpec:

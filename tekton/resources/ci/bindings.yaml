@@ -20,6 +20,25 @@ spec:
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
+  name: tekton-ci-pipelinerun-cloudevent
+spec:
+  params:
+    - name: pullRequestNumber
+      value: $(body.pipelineRun.metadata.labels.tekton\.dev/pr-number)
+    - name: gitRevision
+      value: $(body.pipelineRun.metadata.annotations.tekton\.dev/gitRevision)
+    - name: buildUUID
+      value: $(body.pipelineRun.metadata.labels.prow\.k8s\.io/build-id)
+    - name: checkName
+      value: $(body.pipelineRun.metadata.labels.tekton\.dev/check-name)
+    - name: pipelineRunName
+      value: $(body.pipelineRun.metadata.name)
+    - name: pipelineRunNamespace
+      value: $(body.pipelineRun.metadata.namespace)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
   name: tekton-ci-check-pending
 spec:
   params:

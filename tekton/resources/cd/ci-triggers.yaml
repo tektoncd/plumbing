@@ -57,9 +57,8 @@ spec:
           value: >-
             header.match('ce-type', 'dev.tekton.event.taskrun.failed.v1')
   bindings:
-    - ref: tekton-ci-taskrun-cloudevent
+    - ref: tekton-ci-pipelinerun-cloudevent
     - ref: tekton-ci-check-failure
-    - ref: tekton-ci-taskrun-from-pipelinerun-cloudevent
     - ref: tekton-ci-overlays
   template:
     ref: tekton-ci-github-check-end
