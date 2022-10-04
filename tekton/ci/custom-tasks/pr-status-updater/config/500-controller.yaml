@@ -76,6 +76,8 @@ spec:
               value: github
             - name: GIT_SERVER
               value: https://github.com
+            - name: GIT_USER
+              value: tekton-robot
             - name: "GIT_TOKEN"
               valueFrom:
                 secretKeyRef:

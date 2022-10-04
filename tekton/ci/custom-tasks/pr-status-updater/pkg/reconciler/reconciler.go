@@ -50,8 +50,10 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 		Target: spec.TargetURL,
 	}
 
-	_, _, err := c.SCMClient.Repositories.CreateStatus(ctx, spec.Repo, spec.SHA, gitRepoStatus)
+	logger.Infof("creating status on repo %s for sha %s: %+v", spec.Repo, spec.SHA, gitRepoStatus)
+	_, resp, err := c.SCMClient.Repositories.CreateStatus(ctx, spec.Repo, spec.SHA, gitRepoStatus)
 	if err != nil {
+		logger.Errorf("failure in SCM client: error: %v, headers: %+v", err, resp.Header)
 		r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", err.Error())
 		return err
 	}
