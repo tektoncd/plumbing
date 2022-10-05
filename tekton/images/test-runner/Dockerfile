@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Build kubetest independently of the rest
-FROM docker.io/library/golang:1.18.5 as kubetest
+FROM docker.io/library/golang:1.18.7 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
@@ -148,8 +148,8 @@ RUN ["/bin/chmod", "+x", "/workspace/get-kube.sh"]
 
 # END: test-infra import
 
-# Install Go 1.18.3
-ARG GO_VERSION=1.18.5
+# Install Go 1.18.7
+ARG GO_VERSION=1.18.7
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz && \
     tar -C /usr/local -xzf go${GO_VERSION}.tar.gz && \
     rm go${GO_VERSION}.tar.gz

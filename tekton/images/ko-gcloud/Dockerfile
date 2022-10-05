@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG GO_VERSION=1.18.5
+ARG GO_VERSION=1.18.7
 FROM golang:${GO_VERSION}-alpine3.15 as build
 LABEL description="Build container"
 
