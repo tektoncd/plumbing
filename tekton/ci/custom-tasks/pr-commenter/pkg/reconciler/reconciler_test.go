@@ -20,6 +20,7 @@ func TestReconcile(t *testing.T) {
 	testCases := []struct {
 		name             string
 		existingComments []*scm.Comment
+		isPRClosed       bool
 		info             *ReportInfo
 		expectedComments []*scm.Comment
 	}{
@@ -167,6 +168,40 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 <!-- Tekton test report -->`,
 				Author: scm.User{Login: botUser},
 			}},
+		}, {
+			name: "do nothing for closed PR",
+			info: &ReportInfo{
+				Repo:       "some-org/some-repo",
+				PRNumber:   5,
+				SHA:        "abcd1234",
+				JobName:    "some-other-job",
+				Result:     "failure",
+				LogURL:     "http://some/where",
+				IsOptional: false,
+			},
+			existingComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
+			expectedComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
+			isPRClosed: true,
 		},
 	}
 
@@ -174,6 +209,10 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 		t.Run(tc.name, func(t *testing.T) {
 			fakeScmClient, fc := fake.NewDefault()
 
+			fc.PullRequests[tc.info.PRNumber] = &scm.PullRequest{
+				Number: tc.info.PRNumber,
+				Closed: tc.isPRClosed,
+			}
 			fc.PullRequestComments[5] = tc.existingComments
 
 			r := &Reconciler{
