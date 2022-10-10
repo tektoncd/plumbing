@@ -163,6 +163,16 @@ func createEntry(report *ReportInfo) string {
 }
 
 func (c *Reconciler) reportComment(ctx context.Context, report *ReportInfo, logger *zap.SugaredLogger) error {
+	// First, check if the PR is still open. If it isn't, don't comment.
+	pr, _, err := c.SCMClient.PullRequests.Find(ctx, report.Repo, report.PRNumber)
+	if err != nil {
+		return fmt.Errorf("error checking if PR %s #%d is open: %w", report.Repo, report.PRNumber, err)
+	}
+	if pr.Closed {
+		logger.Infof("Skipping comment create/edit for PR %s #%d because the PR is already closed", report.Repo, report.PRNumber)
+		return nil
+	}
+
 	ics, err := c.listPullRequestComments(ctx, report.Repo, report.PRNumber)
 	if err != nil {
 		return fmt.Errorf("error listing comments: %w", err)
