@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"go.uber.org/zap"
@@ -133,6 +134,12 @@ func parseIssueComments(report *ReportInfo, botUser string, ics []*scm.Comment) 
 		createNewComment = true
 		newEntries = append(newEntries, jobEntry)
 	}
+
+	// Don't do anything if the existing entries are identical to the "new" entries.
+	if d := cmp.Diff(entries, newEntries); d == "" {
+		return nil, nil, 0
+	}
+
 	deleteComments = append(deleteComments, previousComments...)
 	if (createNewComment || len(newEntries) == 0) && latestComment != 0 {
 		deleteComments = append(deleteComments, latestComment)
