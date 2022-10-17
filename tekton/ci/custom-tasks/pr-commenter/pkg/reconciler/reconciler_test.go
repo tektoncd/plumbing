@@ -18,11 +18,13 @@ func TestReconcile(t *testing.T) {
 	botUser := "k8s-ci-robot"
 
 	testCases := []struct {
-		name             string
-		existingComments []*scm.Comment
-		isPRClosed       bool
-		info             *ReportInfo
-		expectedComments []*scm.Comment
+		name                string
+		existingComments    []*scm.Comment
+		newCommentCount     int
+		deletedCommentCount int
+		isPRClosed          bool
+		info                *ReportInfo
+		expectedComments    []*scm.Comment
 	}{
 		{
 			name: "first comment",
@@ -45,6 +47,7 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 <!-- Tekton test report -->`,
 				Author: scm.User{Login: botUser},
 			}},
+			newCommentCount: 1,
 		}, {
 			name: "replace comment retaining existing failure",
 			info: &ReportInfo{
@@ -79,6 +82,8 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 <!-- Tekton test report -->`,
 				Author: scm.User{Login: botUser},
 			}},
+			newCommentCount:     1,
+			deletedCommentCount: 1,
 		}, {
 			name: "replace comment removing obsolete",
 			info: &ReportInfo{
@@ -112,6 +117,8 @@ some-other-job | 12345678 | [link](http://some/where/else) | true | ` + "`/test 
 <!-- Tekton test report -->`,
 				Author: scm.User{Login: botUser},
 			}},
+			newCommentCount:     1,
+			deletedCommentCount: 1,
 		}, {
 			name: "delete comment",
 			info: &ReportInfo{
@@ -134,7 +141,8 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 <!-- Tekton test report -->`,
 				Author: scm.User{Login: botUser},
 			}},
-			expectedComments: []*scm.Comment{},
+			expectedComments:    []*scm.Comment{},
+			deletedCommentCount: 1,
 		}, {
 			name: "do nothing for result == pending",
 			info: &ReportInfo{
@@ -143,6 +151,39 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 				SHA:        "abcd1234",
 				JobName:    "some-job",
 				Result:     "pending",
+				LogURL:     "http://some/where",
+				IsOptional: false,
+			},
+			existingComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
+			expectedComments: []*scm.Comment{{
+				ID: 1,
+				Body: `The following Tekton test **failed**:
+
+Test name | Commit | Details | Required | Rerun command
+--- | --- | --- | --- | ---
+some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" + `
+
+<!-- Tekton test report -->`,
+				Author: scm.User{Login: botUser},
+			}},
+		}, {
+			name: "do nothing for duplicate event",
+			info: &ReportInfo{
+				Repo:       "some-org/some-repo",
+				PRNumber:   5,
+				SHA:        "abcd1234",
+				JobName:    "some-job",
+				Result:     "failure",
 				LogURL:     "http://some/where",
 				IsOptional: false,
 			},
@@ -228,6 +269,13 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 
 			if d := cmp.Diff(tc.expectedComments, fc.PullRequestComments[5]); d != "" {
 				t.Errorf("comments differed from expected: %s", diff.PrintWantGot(d))
+			}
+
+			if len(fc.PullRequestCommentsAdded) > tc.newCommentCount {
+				t.Errorf("expected %d comments added, but got %d", tc.newCommentCount, len(fc.PullRequestCommentsAdded))
+			}
+			if len(fc.PullRequestCommentsDeleted) > tc.deletedCommentCount {
+				t.Errorf("expected %d comments deleted, but got %d", tc.deletedCommentCount, len(fc.PullRequestCommentsDeleted))
 			}
 		})
 	}
