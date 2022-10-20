@@ -1,0 +1,227 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: go-coverage
+  annotations:
+    description: |
+      Runs go coverage of a git repo using the knative coverage tool.
+spec:
+  params:
+    - name: pullRequestNumber
+      description: The number of the pull request to check out.
+    - name: gitRevision
+      description: sha of the commit making the pull request
+    - name: jobType
+      description: Type of prow job - presubmit/postsubmit/periodic.
+      default: presubmit
+    - name: buildUUID
+      description: Prow type build ID.
+    - name: repoName
+      description: name of the repository
+    - name: repoOwner
+      description: owner of the repo (user/orgaization).
+    - name: jobName
+      description: name of the job.
+    - name: postSubmitGcsBucket
+      description: Name of the gcs bucket where to fetch post submit job from.
+    - name: postSubmitJobName
+      description: Name of the post submit job to compare the coverage against.
+    - name: covTarget
+      description: the relative directory from where to run the coverage.
+      default: "."
+    - name: profileName
+      description: Name of the coverage profile file.
+      default: "coverage_profile.txt"
+    - name: covThresholdPercentage
+      description: coverage percentage below which to mark the coverage test as failed.
+      default: 0
+  workspaces:
+  - name: source
+    description: Location where the git repo will be installed.
+    mountPath: /go/src/github.com/tektoncd/$(params.repoName)
+  - name: github-token
+    description: |
+      A secret workspace where the github personal access token resides.
+      The token should be storage as a stringData with key "token" and
+      value "your access token".
+  steps:
+    - name: run-coverage
+      image: gcr.io/tekton-releases/dogfooding/coverage:latest
+      env:
+        - name: PULL_PULL_SHA
+          value: $(params.gitRevision)
+        - name: PULL_NUMBER
+          value: $(params.pullRequestNumber)
+        - name: JOB_TYPE
+          value: $(params.jobType)
+        - name: BUILD_NUMBER
+          value: $(params.buildUUID)
+        - name: REPO_NAME
+          value: $(params.repoName)
+        - name: REPO_OWNER
+          value: $(params.repoOwner)
+        - name: JOB_NAME
+          value: $(params.jobName)
+      command:
+        - /coverage
+      args:
+        - "--postsubmit-gcs-bucket=$(params.postSubmitGcsBucket)"
+        - "--postsubmit-job-name=$(params.postSubmitJobName)"
+        - "--artifacts=$(workspaces.source.path)/artifacts"
+        - "--profile-name=$(params.profileName)"
+        - "--cov-target=$(params.covTarget)"
+        - "--cov-threshold-percentage=$(params.covThresholdPercentage)"
+        - "--github-token=$(workspaces.github-token.path)/token"
+      workingDir: "$(workspaces.source.path)"
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: go-coverage-pipeline
+  annotations:
+    description: |
+      Runs go coverage of a git repo using the knative coverage tool.
+      Uploads the artifacts to the gcs bucket using gcs-upload.
+spec:
+  params:
+    - name: buildUUID
+      description: Prow type build ID.
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: package
+      description: The GitHub org/repo
+    - name: pullRequestNumber
+      description: The number of the pull request to check out.
+    - name: pullRequestBaseRef
+      description: The pull request base branch
+    - name: gitRevision
+      description: sha of the commit making the pull request
+    - name: jobType
+      description: Type of prow job - presubmit/postsubmit/periodic.
+      default: presubmit
+    - name: jobName
+      description: name of the job.
+    - name: postSubmitGcsBucket
+      description: Name of the gcs bucket where to fetch post submit job from.
+    - name: postSubmitJobName
+      description: Name of the post submit job to compare the coverage against.
+    - name: covTarget
+      description: the relative directory from where to run the coverage.
+      default: "."
+    - name: profileName
+      description: Name of the coverage profile file.
+      default: "coverage_profile.txt"
+    - name: covThresholdPercentage
+      description: coverage percentage below which to mark the coverage test as failed.
+      default: 0
+    - name: uploadGcsBucket
+      description: GCS bucket to upload artifacts to.
+  workspaces:
+    - name: source
+      description: Location where the git repo will be installed.
+    - name: github-token
+      description: |
+        A secret workspace where the github personal access token resides.
+        The token should be storage as a stringData with key "token" and
+        value "your access token".
+    - name: credentials
+  tasks:
+    - name: check-name-matches
+      taskRef:
+        name: check-name-matches
+      params:
+        - name: gitHubCommand
+          value: $(params.gitHubCommand)
+        - name: checkName
+          value: $(params.jobName)
+    - name: split-full-repo-name
+      when:  # implicit dependency on the check tasks
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      params:
+        - name: package
+          value: $(params.package)
+      taskSpec:
+        params:
+          - name: package
+            description: The GitHub org/repo
+        results:
+          - name: repoOwner
+            description: Owner of the repo.
+          - name: repoName
+            description: Name of the repo.
+        steps:
+          - name: split-name
+            image: ubuntu
+            script: |
+              printf '$(params.package)' | awk -F/ '{printf($1)}' | tee /tekton/results/repoOwner
+              printf '$(params.package)' | awk -F/ '{printf($2)}' | tee /tekton/results/repoName
+    - name: clone-repo
+      runAfter: ['split-full-repo-name']
+      taskRef:
+        name: git-batch-merge
+        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+      params:
+        - name: url
+          value: https://github.com/$(tasks.split-full-repo-name.results.repoOwner)/$(tasks.split-full-repo-name.results.repoName).git
+        - name: mode
+          value: "merge"
+        - name: revision
+          value: $(params.pullRequestBaseRef)
+        - name: refspec
+          value: refs/heads/$(params.pullRequestBaseRef):refs/heads/$(params.pullRequestBaseRef)
+        - name: batchedRefs
+          value: "refs/pull/$(params.pullRequestNumber)/head"
+      workspaces:
+        - name: output
+          workspace: source
+    - name: run-go-coverage
+      runAfter: ['clone-repo']
+      taskRef:
+        name: go-coverage
+      params:
+        - name: pullRequestNumber
+          value: $(params.pullRequestNumber)
+        - name: gitRevision
+          value: $(params.gitRevision)
+        - name: buildUUID
+          value: $(params.buildUUID)
+        - name: repoName
+          value: $(tasks.split-full-repo-name.results.repoName)
+        - name: repoOwner
+          value: $(tasks.split-full-repo-name.results.repoOwner)
+        - name: jobType
+          value: $(params.jobType)
+        - name: jobName
+          value: $(params.jobName)
+        - name: postSubmitGcsBucket
+          value: $(params.postSubmitGcsBucket)
+        - name: postSubmitJobName
+          value: $(params.postSubmitJobName)
+        - name: covTarget
+          value: $(params.covTarget)
+        - name: profileName
+          value: $(params.profileName)
+        - name: covThresholdPercentage
+          value: $(params.covThresholdPercentage)
+      workspaces:
+        - name: source
+          workspace: source
+        - name: github-token
+          workspace: github-token
+    - name: upload-artifacts
+      runAfter: ['run-go-coverage']
+      taskRef:
+        name: gcs-upload
+        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+      params:
+        - name: path
+          value: artifacts
+        - name: location
+          value: gs://$(params.uploadGcsBucket)/pr-logs/pull/$(tasks.split-full-repo-name.results.repoOwner)_$(tasks.split-full-repo-name.results.repoName)/$(params.pullRequestNumber)/$(params.jobName)/$(params.buildUUID)/artifacts"
+      workspaces:
+        - name: credentials
+          workspace: credentials
+        - name: source
+          workspace: source

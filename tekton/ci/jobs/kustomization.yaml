@@ -12,3 +12,4 @@ resources:
 - tekton-golang-lint.yaml
 - tekton-yamllint.yaml
 - tekton-github-tasks-completed.yaml
+- tekton-golang-coverage.yaml
