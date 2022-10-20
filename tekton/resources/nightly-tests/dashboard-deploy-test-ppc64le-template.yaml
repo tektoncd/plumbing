@@ -133,6 +133,8 @@ spec:
                 value: "0"
               - name: SKIP_BUILD_TEST
                 value: "true"
+              - name: E2E_VIDEO
+                value: "false"
               - name: SSL_CERT_FILE
                 value: $(workspaces.registry-shared.path)/cert.pem
               command:
