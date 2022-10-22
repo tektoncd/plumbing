@@ -11,9 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.15
-LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+FROM golang:1.18.3-alpine3.15 as build
+LABEL description="Build container"
 
 ARG TKN_VERSION=0.27.0
+RUN ARCH=$(uname -m) \
+    OS=$(uname) \
+    && wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_${OS}_${ARCH}.tar.gz | tar zxf - -C /usr/local/bin
 
-RUN ARCH=$(uname -m) && wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_${ARCH}.tar.gz | tar zxf - -C /usr/local/bin
+# Copy tkn binary from build container
+FROM alpine:3.15
+LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+COPY --from=build /usr/local/bin/tkn /usr/local/bin/tkn
+
