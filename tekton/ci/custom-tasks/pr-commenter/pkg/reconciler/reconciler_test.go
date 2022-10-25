@@ -20,6 +20,7 @@ func TestReconcile(t *testing.T) {
 	testCases := []struct {
 		name                string
 		existingComments    []*scm.Comment
+		commitStatuses      []*scm.Status
 		newCommentCount     int
 		deletedCommentCount int
 		isPRClosed          bool
@@ -243,6 +244,34 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 				Author: scm.User{Login: botUser},
 			}},
 			isPRClosed: true,
+		}, {
+			name: "no status for job so skip",
+			info: &ReportInfo{
+				Repo:       "some-org/some-repo",
+				PRNumber:   5,
+				SHA:        "abcd1234",
+				JobName:    "some-job",
+				Result:     "failure",
+				LogURL:     "http://some/where",
+				IsOptional: false,
+			},
+			commitStatuses: []*scm.Status{}, // Declared here as empty to ensure we don't populate a default status
+		}, {
+			name: "wrong status for job so skip",
+			info: &ReportInfo{
+				Repo:       "some-org/some-repo",
+				PRNumber:   5,
+				SHA:        "abcd1234",
+				JobName:    "some-job",
+				Result:     "failure",
+				LogURL:     "http://some/where",
+				IsOptional: false,
+			},
+			commitStatuses: []*scm.Status{{
+				State:  scm.StateSuccess,
+				Label:  "some-job",
+				Target: "http://some/where",
+			}},
 		},
 	}
 
@@ -255,6 +284,16 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 				Closed: tc.isPRClosed,
 			}
 			fc.PullRequestComments[5] = tc.existingComments
+
+			if tc.commitStatuses == nil {
+				fc.Statuses[tc.info.SHA] = []*scm.Status{{
+					State:  scm.ToState(tc.info.Result),
+					Label:  tc.info.JobName,
+					Target: tc.info.LogURL,
+				}}
+			} else if len(tc.commitStatuses) > 0 {
+				fc.Statuses[tc.info.SHA] = tc.commitStatuses
+			}
 
 			r := &Reconciler{
 				SCMClient: fakeScmClient,

@@ -54,6 +54,19 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 
 	// Don't do anything unless the result is failure or success
 	if spec.Result != "pending" {
+		// Don't do anything if the current status for the job on the PR doesn't match the input
+		matchesStatus, err := c.checkIfStatusMatchesReport(ctx, spec)
+		if err != nil {
+			r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", err.Error())
+			return err
+		}
+
+		if !matchesStatus {
+			r.Status.MarkRunFailed("StaleStatus", "Status for %s PR #%d job %s on sha %s either does not exist or does match report",
+				spec.Repo, spec.PRNumber, spec.JobName, spec.SHA)
+			return nil
+		}
+
 		fieldErr := c.reportComment(ctx, spec, logger)
 		if fieldErr != nil {
 			r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", fieldErr.Error())
@@ -65,6 +78,23 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 
 	// Don't emit events on nop-reconciliations, it causes scale problems.
 	return nil
+}
+
+func (c *Reconciler) checkIfStatusMatchesReport(ctx context.Context, report *ReportInfo) (bool, error) {
+	prStatus, _, err := c.SCMClient.Repositories.FindCombinedStatus(ctx, report.Repo, report.SHA)
+	if err != nil {
+		return false, err
+	}
+
+	for _, singleStatus := range prStatus.Statuses {
+		if singleStatus.Target == report.LogURL &&
+			singleStatus.Label == report.JobName &&
+			singleStatus.State.String() == report.Result {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 func createComment(entries []string) (string, error) {
