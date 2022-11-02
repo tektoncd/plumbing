@@ -1668,29 +1668,58 @@ presubmits:
   - name: pull-tekton-triggers-integration-tests
     labels:
       preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+      pipeline-kind-e2e: "true"
     agent: kubernetes
     always_run: true
     decorate: true
     rerun_command: "/test pull-tekton-triggers-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-triggers-integration-tests),?(\\s+|$)"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: pipeline-kind-e2e
+                    operator: Exists
+              topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
+      tolerations:
+        - key: kind-only
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:d6a49b0d6822f4db7ede60d3f6bb41c1278079ad7c631fcaf00a609a977d0ac0 # golang 1.18.7
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--integration-tests"
+        - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:d6a49b0d6822f4db7ede60d3f6bb41c1278079ad7c631fcaf00a609a977d0ac0 # golang 1.18.7
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
+          args:
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "/usr/local/bin/kind-e2e"
+            - "--k8s-version"
+            - "v1.23.x"
+            - "--nodes"
+            - "3"
+            - "--e2e-script"
+            - "./test/e2e-tests.sh"
+            - "--e2e-env"
+            - "./test/e2e-tests-kind-prow.env"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 3500m
+              memory: 4Gi
+            limits:
+              cpu: 3500m
+              memory: 8Gi
   - name: pull-tekton-triggers-go-coverage
     labels:
       preset-github-token: "true"
