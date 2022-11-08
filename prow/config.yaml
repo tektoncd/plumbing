@@ -1869,6 +1869,9 @@ periodics:
       - "--" # end bootstrap args, scenario args below
       - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
       - "./test/e2e-tests-upgrade.sh"
+      env:
+      - name: SKIP_INITIALIZE
+        value: "true"
 - cron: "6 3 * * *"
   name: periodic-tekton-catalog-integration-tests
   labels:
