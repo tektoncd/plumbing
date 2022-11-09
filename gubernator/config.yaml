@@ -28,4 +28,5 @@ jobs:
   - pull-tekton-pipeline-build-tests
   - pull-tekton-pipeline-integration-tests
   - pull-tekton-pipeline-alpha-integration-tests
+  - pull-tekton-pipeline-beta-integration-tests
 recursive_artifacts: false
