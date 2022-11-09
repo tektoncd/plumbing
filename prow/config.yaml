@@ -1364,6 +1364,61 @@ presubmits:
               value: "alpha"
             - name: EMBEDDED_STATUS_GATE
               value: "minimal"
+  - name: pull-tekton-pipeline-beta-integration-tests
+    labels:
+      preset-presubmit-sh: "true"
+      preset-dind-enabled: "true"
+      preset-kind-volume-mounts: "true"
+      pipeline-kind-e2e: "true"
+    agent: kubernetes
+    always_run: true
+    decorate: true
+    rerun_command: "/test pull-tekton-pipeline-beta-integration-tests"
+    trigger: "(?m)^/test (all|pull-tekton-pipeline-beta-integration-tests),?(\\s+|$)"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: pipeline-kind-e2e
+                    operator: Exists
+              topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
+      tolerations:
+        - key: kind-only
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+      containers:
+        - image: gcr.io/tekton-releases/dogfooding/test-runner:latest # TODO(abayer): Use specific version when https://github.com/tektoncd/plumbing/pull/1167 has merged
+          imagePullPolicy: Always
+          command:
+            - /usr/local/bin/entrypoint.sh
+          args:
+            - "--service-account=/etc/test-account/service-account.json"
+            - "--" # end bootstrap args, scenario args below
+            - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
+            - "/usr/local/bin/kind-e2e"
+            - "--k8s-version"
+            - "v1.23.x"
+            - "--nodes"
+            - "3"
+            - "--e2e-script"
+            - "./test/e2e-tests.sh"
+            - --e2e-env
+            - "./test/e2e-tests-kind-prow-beta.env"
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 3500m
+              memory: 4Gi
+            limits:
+              cpu: 3500m
+              memory: 8Gi
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
     labels:
