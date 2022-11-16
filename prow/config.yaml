@@ -1847,6 +1847,7 @@ periodics:
   labels:
     preset-presubmit-sh: "true"
   agent: kubernetes
+  decorate: true
   extra_refs:
   - org: tektoncd
     repo: pipeline
