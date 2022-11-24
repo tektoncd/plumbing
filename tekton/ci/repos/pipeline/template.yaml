@@ -4,56 +4,6 @@
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:
-      generateName: pull-pipeline-kind-k8s-v1-21-e2e-
-      labels:
-        prow.k8s.io/build-id: $(tt.params.buildUUID)
-        tekton.dev/source-event-id: $(tt.params.sourceEventId)
-        tekton.dev/kind: ci
-        tekton.dev/check-name: pull-pipeline-kind-k8s-v1-21-e2e
-        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
-      annotations:
-        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
-        tekton.dev/gitURL: "$(tt.params.gitRepository)"
-    spec:
-      serviceAccountName: tekton-ci-jobs
-      workspaces:
-        - name: sources
-          volumeClaimTemplate:
-            spec:
-              accessModes:
-                - ReadWriteOnce
-              resources:
-                requests:
-                  storage: 1Gi
-        - name: credentials
-          secret:
-            secretName: "release-secret"
-      pipelineRef:
-        name: kind-e2e
-      params:
-        - name: pullRequestNumber
-          value: $(tt.params.pullRequestNumber)
-        - name: pullRequestBaseRef
-          value: $(tt.params.pullRequestBaseRef)
-        - name: gitRepository
-          value: "$(tt.params.gitRepository)"
-        - name: gitCloneDepth
-          value: $(tt.params.gitCloneDepth)
-        - name: fileFilterRegex
-          value: '^(cmd/|examples/|images/|pkg/|test/|go\.)'
-        - name: checkName
-          value: pull-pipeline-kind-k8s-v1-21-e2e
-        - name: gitHubCommand
-          value: $(tt.params.gitHubCommand)
-        - name: k8s-version
-          value: v1.21.x
-        - name: e2e-script
-          value: test/e2e-tests.sh
-        - name: e2e-env
-          value: test/e2e-tests-kind.env
-  - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
-    metadata:
       generateName: run-go-coverage-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
