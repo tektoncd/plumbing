@@ -57,8 +57,15 @@ spec:
           image: ko://github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-commenter/cmd/pr-commenter
           securityContext:
             allowPrivilegeEscalation: false
-            # User 65532 is the distroless nonroot user ID
+            capabilities:
+              drop:
+                - "ALL"
+            # User 65532 is the nonroot user ID
             runAsUser: 65532
+            runAsGroup: 65532
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           env:
             - name: SYSTEM_NAMESPACE
               valueFrom:
