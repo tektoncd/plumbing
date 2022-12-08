@@ -8,7 +8,7 @@
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         tekton.dev/source-event-id: $(tt.params.sourceEventId)
-        tekton.dev/check-name: pull-tekton-pipeline-go-coverage-using-tekton
+        tekton.dev/check-name: pull-tekton-pipeline-go-coverage-df
         tekton.dev/kind: ci
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
       annotations:
@@ -36,7 +36,7 @@
         - name: buildUUID
           value: $(tt.params.buildUUID)
         - name: jobName
-          value: pull-tekton-pipeline-go-coverage-using-tekton
+          value: pull-tekton-pipeline-go-coverage-df
         - name: gitHubCommand
           value: $(tt.params.gitHubCommand)
         - name: package
