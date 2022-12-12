@@ -35,6 +35,8 @@ spec:
     - name: covThresholdPercentage
       description: coverage percentage below which to mark the coverage test as failed.
       default: 0
+    - name: githubTokenFile
+      descrtiption: The file within workspace that contains the GitHub token.
   workspaces:
   - name: source
     description: Location where the git repo will be installed.
@@ -71,7 +73,7 @@ spec:
         - "--profile-name=$(params.profileName)"
         - "--cov-target=$(params.covTarget)"
         - "--cov-threshold-percentage=$(params.covThresholdPercentage)"
-        - "--github-token=$(workspaces.github-token.path)/token"
+        - "--github-token=$(workspaces.github-token.path)/$(params.githubTokenFile)"
       workingDir: "$(workspaces.source.path)"
 ---
 apiVersion: tekton.dev/v1beta1
@@ -116,6 +118,8 @@ spec:
       default: 0
     - name: uploadGcsBucket
       description: GCS bucket to upload artifacts to.
+    - name: githubTokenFile
+      descrtiption: The file within workspace that contains the GitHub token.
   workspaces:
     - name: source
       description: Location where the git repo will be installed.
@@ -205,6 +209,8 @@ spec:
           value: $(params.profileName)
         - name: covThresholdPercentage
           value: $(params.covThresholdPercentage)
+        - name: githubTokenFile
+          value: $(params.githubTokenFile)
       workspaces:
         - name: source
           workspace: source

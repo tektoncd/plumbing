@@ -53,3 +53,5 @@
           value: post-tekton-pipeline-go-coverage
         - name: uploadGcsBucket
           value: tekton-prow
+        - name: githubTokenFile
+          value: bot-token
