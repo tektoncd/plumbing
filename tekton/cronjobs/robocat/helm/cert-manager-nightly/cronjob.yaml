@@ -19,7 +19,7 @@ spec:
               - name: CHART_NAME
                 value: "cert-manager"
               - name: CHART_VERSION
-                value: "v1.3"
+                value: "v1.10.1"
               - name: CHART_PARAMS
                 value: fullnameOverride=cert-manager,installCRDs=true
               - name: CHART_DESCRIPTION
