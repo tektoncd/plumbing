@@ -36,7 +36,7 @@ spec:
       description: coverage percentage below which to mark the coverage test as failed.
       default: 0
     - name: githubTokenFile
-      descrtiption: The file within workspace that contains the GitHub token.
+      description: The file within workspace that contains the GitHub token.
   workspaces:
   - name: source
     description: Location where the git repo will be installed.
@@ -119,7 +119,7 @@ spec:
     - name: uploadGcsBucket
       description: GCS bucket to upload artifacts to.
     - name: githubTokenFile
-      descrtiption: The file within workspace that contains the GitHub token.
+      description: The file within workspace that contains the GitHub token.
   workspaces:
     - name: source
       description: Location where the git repo will be installed.
