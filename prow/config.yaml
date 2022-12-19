@@ -1569,31 +1569,49 @@ presubmits:
       preset-presubmit-sh: "true"
       preset-dind-enabled: "true"
       preset-kind-volume-mounts: "true"
+      pipeline-kind-e2e: "true"
     agent: kubernetes
     always_run: true
     decorate: true
     rerun_command: "/test pull-tekton-results-integration-tests"
     trigger: "(?m)^/test (all|pull-tekton-results-integration-tests),?(\\s+|$)"
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: pipeline-kind-e2e
+                    operator: Exists
+              topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
+        cloud.google.com/gke-nodepool: n2-standard-4-kind
+      tolerations:
+        - key: kind-only
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
       containers:
       - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:01bace96516d22d70c092ff9c01f9ffe7af806c7475157dcaa7cdb45d84bd68b # golang 1.18.7
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
         args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
         - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
         - "--" # end bootstrap args, scenario args below
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "./test/presubmit-tests.sh"
         - "--integration-tests"
         securityContext:
           privileged: true
+        resources:
+            requests:
+              cpu: 3500m
+              memory: 4Gi
+            limits:
+              cpu: 3500m
+              memory: 8Gi
   tektoncd/triggers:
   - name: pull-tekton-triggers-build-tests
     labels:
