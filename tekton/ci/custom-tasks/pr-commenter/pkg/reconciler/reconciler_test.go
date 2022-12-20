@@ -8,7 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -281,14 +280,14 @@ some-job | abcd1234 | [link](http://some/where) | true | ` + "`/test some-job`" 
 	}
 }
 
-func reportInfoToRun(info *ReportInfo) *v1alpha1.Run {
-	return &v1alpha1.Run{
+func reportInfoToRun(info *ReportInfo) *v1beta1.CustomRun {
+	return &v1beta1.CustomRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "some-run",
 			Namespace: "foo",
 		},
-		Spec: v1alpha1.RunSpec{
-			Ref: &v1beta1.TaskRef{
+		Spec: v1beta1.CustomRunSpec{
+			CustomRef: &v1beta1.TaskRef{
 				Kind:       "PRCommenter",
 				APIVersion: "custom.tekton.dev/v0",
 			},

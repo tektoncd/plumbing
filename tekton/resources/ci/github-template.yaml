@@ -32,8 +32,8 @@ spec:
     description: The name of the task in the parent pipeline run - if any
     default: ""
   resourcetemplates:
-  - apiVersion: tekton.dev/v1alpha1
-    kind: Run
+  - apiVersion: tekton.dev/v1beta1
+    kind: CustomRun
     metadata:
       name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
       namespace: tekton-ci
@@ -43,7 +43,7 @@ spec:
         ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
         tekton.dev/pr-number: $(tt.params.pullRequestNumber)
     spec:
-      ref:
+      customRef:
         apiVersion: custom.tekton.dev/v0
         kind: PRStatusUpdater
       params:
