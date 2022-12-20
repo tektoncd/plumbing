@@ -11,6 +11,7 @@ spec:
         - name: "Validate GitHub payload and filter on eventType"
           ref:
             name: "github"
+            kind: ClusterInterceptor
           params:
             - name: "secretRef"
               value:
@@ -22,6 +23,7 @@ spec:
         - name: "Filter the GitHub org and actions and add git_clone_depth"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -34,6 +36,7 @@ spec:
         - name: "Add a build ID into the payload"
           ref:
             name: "build-id"
+            kind: ClusterInterceptor
       triggerSelector:
         namespaceSelector:
           matchNames:
@@ -46,6 +49,7 @@ spec:
         - name: "Validate GitHub payload and filter on eventType"
           ref:
             name: "github"
+            kind: ClusterInterceptor
           params:
             - name: "secretRef"
               value:
@@ -57,6 +61,7 @@ spec:
         - name: "Filter the GitHub org and actions state text"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -68,6 +73,7 @@ spec:
         - name: "Add a build ID into the payload"
           ref:
             name: "build-id"
+            kind: ClusterInterceptor
       triggerSelector:
         namespaceSelector:
           matchNames:
@@ -80,6 +86,7 @@ spec:
         - name: "Validate GitHub payload and filter on eventType"
           ref:
             name: "github"
+            kind: ClusterInterceptor
           params:
             - name: "secretRef"
               value:
@@ -91,6 +98,7 @@ spec:
         - name: "Filter the GitHub org and actions and add git_clone_depth"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -103,6 +111,7 @@ spec:
         - name: "Add a build ID into the payload"
           ref:
             name: "build-id"
+            kind: ClusterInterceptor
       triggerSelector:
         namespaceSelector:
           matchNames:

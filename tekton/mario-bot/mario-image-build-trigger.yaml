@@ -105,6 +105,7 @@ spec:
       interceptors:
         - ref:
             name: github
+            kind: ClusterInterceptor
           params:
             - name: secretRef
               value:

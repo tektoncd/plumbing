@@ -10,6 +10,7 @@ spec:
         - name: "Filter if there's no platform"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -24,6 +25,7 @@ spec:
         - name: "Filter if platform and docker build"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -41,6 +43,7 @@ spec:
         - name: "Filter if platform and ko build"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-

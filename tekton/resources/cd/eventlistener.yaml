@@ -22,6 +22,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -37,6 +38,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -52,6 +54,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -66,6 +69,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -81,6 +85,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -95,6 +100,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -114,6 +120,7 @@ spec:
       interceptors:
         - ref:
             name: cel
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -139,6 +146,7 @@ spec:
         - name: "Failed TaskRuns"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -161,6 +169,7 @@ spec:
         - name: "Tekton CI Jobs"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-
@@ -191,6 +200,7 @@ spec:
         - name: "Release Job Triggers"
           ref:
             name: "cel"
+            kind: ClusterInterceptor
           params:
             - name: "filter"
               value: >-

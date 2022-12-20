@@ -9,6 +9,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -24,6 +25,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -39,6 +41,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -54,6 +57,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -69,6 +73,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -84,6 +89,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -99,6 +105,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -114,6 +121,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -129,6 +137,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -144,6 +153,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -159,6 +169,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
@@ -174,6 +185,7 @@ spec:
     interceptors:
     - ref:
         name: cel
+        kind: ClusterInterceptor
       params:
         - name: "filter"
           value: >-
