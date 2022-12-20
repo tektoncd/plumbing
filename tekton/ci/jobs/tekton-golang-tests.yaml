@@ -1,14 +1,4 @@
 ---
-apiVersion: custom.tekton.dev/v1alpha1
-kind: TaskLoop
-metadata:
-  name: golang-tests
-spec:
-  iterateParam: context
-  taskRef:
-    name: golang-test
-    bundle: gcr.io/tekton-releases/catalog/upstream/golang-test:0.1
----
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -89,16 +79,17 @@ spec:
         operator: in
         values: ["passed"]
       taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: TaskLoop
-        name: golang-tests
+        name: golang-test
+        bundle: gcr.io/tekton-releases/catalog/upstream/golang-test:0.2
+      matrix:
+        params:
+        - name: context
+          value: [$(params.folders)]
       params:
       - name: package
         value: "$(params.package)"
-      - name: context
-        value: [$(params.folders)]
       - name: version
-        value: "1.15"
+        value: "1.18"
       workspaces:
         - name: source
           workspace: sources
