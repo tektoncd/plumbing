@@ -60,15 +60,6 @@ spec:
         --digest-file=${DIGEST_FILE} \
         --no-push
 ---
-apiVersion: custom.tekton.dev/v1alpha1
-kind: TaskLoop
-metadata:
-  name: image-build
-spec:
-  iterateParam: CONTEXT
-  taskRef:
-    name: kaniko4ci
----
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -148,14 +139,14 @@ spec:
         operator: in
         values: ["passed"]
       taskRef:
-        apiVersion: custom.tekton.dev/v1alpha1
-        kind: TaskLoop
-        name: image-build
+        name: kaniko4ci
+      matrix:
+        params:
+        - name: CONTEXT
+          value: [$(tasks.check-git-files-changed.results.files)]
       params:
       - name: pullRequestNumber
         value: "$(params.pullRequestNumber)"
-      - name: CONTEXT
-        value: $(tasks.check-git-files-changed.results.files)
       workspaces:
         - name: source
           workspace: sources
