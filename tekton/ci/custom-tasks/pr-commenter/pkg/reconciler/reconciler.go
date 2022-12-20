@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"go.uber.org/zap"
 	"knative.dev/pkg/logging"
 	kreconciler "knative.dev/pkg/reconciler"
@@ -26,7 +26,7 @@ type Reconciler struct {
 }
 
 // ReconcileKind implements Interface.ReconcileKind.
-func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconciler.Event {
+func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1beta1.CustomRun) kreconciler.Event {
 	logger := logging.FromContext(ctx)
 	logger.Infof("Reconciling %s/%s", r.Namespace, r.Name)
 
@@ -36,19 +36,19 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 		return nil
 	}
 
-	if r.Spec.Ref == nil ||
-		r.Spec.Ref.APIVersion != "custom.tekton.dev/v0" || r.Spec.Ref.Kind != "PRCommenter" {
+	if r.Spec.CustomRef == nil ||
+		r.Spec.CustomRef.APIVersion != "custom.tekton.dev/v0" || r.Spec.CustomRef.Kind != "PRCommenter" {
 		// This is not a Run we should have been notified about; do nothing.
 		return nil
 	}
-	if r.Spec.Ref.Name != "" {
-		r.Status.MarkRunFailed("UnexpectedName", "Found unexpected ref name: %s", r.Spec.Ref.Name)
-		return fmt.Errorf("unexpected ref name: %s", r.Spec.Ref.Name)
+	if r.Spec.CustomRef.Name != "" {
+		r.Status.MarkCustomRunFailed("UnexpectedName", "Found unexpected ref name: %s", r.Spec.CustomRef.Name)
+		return fmt.Errorf("unexpected ref name: %s", r.Spec.CustomRef.Name)
 	}
 
 	spec, err := ReportInfoFromRun(r)
 	if err != nil {
-		r.Status.MarkRunFailed("InvalidParams", "Invalid parameters: %s", err.Error())
+		r.Status.MarkCustomRunFailed("InvalidParams", "Invalid parameters: %s", err.Error())
 		return err
 	}
 
@@ -56,12 +56,12 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, r *v1alpha1.Run) kreconc
 	if spec.Result != "pending" {
 		fieldErr := c.reportComment(ctx, spec, logger)
 		if fieldErr != nil {
-			r.Status.MarkRunFailed("SCMError", "Error interacting with SCM: %s", fieldErr.Error())
+			r.Status.MarkCustomRunFailed("SCMError", "Error interacting with SCM: %s", fieldErr.Error())
 			return fieldErr
 		}
 	}
 
-	r.Status.MarkRunSucceeded("Commented", "PR comment successfully added/updated/deleted")
+	r.Status.MarkCustomRunSucceeded("Commented", "PR comment successfully added/updated/deleted")
 
 	// Don't emit events on nop-reconciliations, it causes scale problems.
 	return nil
