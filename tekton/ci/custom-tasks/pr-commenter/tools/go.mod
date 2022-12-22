@@ -2,7 +2,7 @@ module github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-commenter/tools
 
 go 1.18
 
-require github.com/golangci/golangci-lint v1.47.2
+require github.com/golangci/golangci-lint v1.50.1
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
