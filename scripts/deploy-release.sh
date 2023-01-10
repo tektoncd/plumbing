@@ -65,11 +65,7 @@ if [ -z "$TEKTON_VERSION" ]; then
 fi
 RELEASE_BUCKET=${RELEASE_BUCKET_OPT:-gs://tekton-releases}
 if [ -z "$RELEASE_FILE" ]; then
-    if [ "$TEKTON_PROJECT" == "dashboard" ]; then
-        RELEASE_FILE="tekton-dashboard-release-readonly.yaml"
-    else
-        RELEASE_FILE="release.yaml"
-    fi
+    RELEASE_FILE="release.yaml"
 fi
 if [ -z "$POST_RELEASE_FILE" ]; then
     if [ "$TEKTON_PROJECT" == "triggers" ]; then
