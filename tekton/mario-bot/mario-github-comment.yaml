@@ -48,35 +48,38 @@ spec:
     description: The name of the image build PipelineRun for the logs link
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: CustomRun
+    kind: PipelineRun
     metadata:
       generateName: mario-comment-github-
     spec:
-      customRef:
-        apiVersion: tekton.dev/v1alpha1
-        kind: PipelineToTaskRun
-        name: mario-comment-github
+      pipelineSpec:
+        tasks:
+        - name: comment
+          taskRef:
+            apiVersion: tekton.dev/v1alpha1
+            kind: PipelineToTaskRun
+            name: mario-comment-github
+          params:
+          - name: pullRequestID
+            value: $(tt.params.pullRequestID)
+          - name: gitURL
+            value: $(tt.params.gitURL)
+          - name: targetImage
+            value: $(tt.params.targetImage)
+          - name: passedOrFailed
+            value: $(tt.params.passedOrFailed)
+          - name: buildPipelineRun
+            value: $(tt.params.buildPipelineRun)
+          workspaces:
+          - name: pr
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 10Mi
       serviceAccountName: mario-listener
-      workspaces:
-      - name: pr
-        volumeClaimTemplate:
-          spec:
-            accessModes:
-            - ReadWriteOnce
-            resources:
-              requests:
-                storage: 10Mi
-      params:
-      - name: pullRequestID
-        value: $(tt.params.pullRequestID)
-      - name: gitURL
-        value: $(tt.params.gitURL)
-      - name: targetImage
-        value: $(tt.params.targetImage)
-      - name: passedOrFailed
-        value: $(tt.params.passedOrFailed)
-      - name: buildPipelineRun
-        value: $(tt.params.buildPipelineRun)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
