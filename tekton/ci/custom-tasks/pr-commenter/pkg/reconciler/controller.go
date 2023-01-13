@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/jenkins-x/go-scm/scm"
-	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
-	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
+	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
+	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
 	tkncontroller "github.com/tektoncd/pipeline/pkg/controller"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
