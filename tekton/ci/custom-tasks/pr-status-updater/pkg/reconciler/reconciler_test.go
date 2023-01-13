@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/driver/fake"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -107,14 +108,14 @@ func TestReconcile(t *testing.T) {
 	}
 }
 
-func statusInfoToRun(info *StatusInfo) *v1beta1.CustomRun {
-	return &v1beta1.CustomRun{
+func statusInfoToRun(info *StatusInfo) *v1alpha1.Run {
+	return &v1alpha1.Run{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "some-run",
 			Namespace: "foo",
 		},
-		Spec: v1beta1.CustomRunSpec{
-			CustomRef: &v1beta1.TaskRef{
+		Spec: v1alpha1.RunSpec{
+			Ref: &v1beta1.TaskRef{
 				Kind:       "PRStatusUpdater",
 				APIVersion: "custom.tekton.dev/v0",
 			},

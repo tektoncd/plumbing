@@ -19,6 +19,7 @@ package reconciler
 import (
 	"fmt"
 
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"knative.dev/pkg/apis"
 )
@@ -56,7 +57,7 @@ type StatusInfo struct {
 }
 
 // StatusInfoFromRun reads params from the given Run and returns either a populated info or errors.
-func StatusInfoFromRun(r *v1beta1.CustomRun) (*StatusInfo, *apis.FieldError) {
+func StatusInfoFromRun(r *v1alpha1.Run) (*StatusInfo, *apis.FieldError) {
 	statusInfo := &StatusInfo{}
 	var errs *apis.FieldError
 
