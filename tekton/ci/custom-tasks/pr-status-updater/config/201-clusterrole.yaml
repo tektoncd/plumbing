@@ -23,13 +23,13 @@ metadata:
 rules:
   # Controller needs cluster access to all of the CRDs that it is responsible for managing.
   - apiGroups: ["tekton.dev"]
-    resources: ["runs"]
+    resources: ["runs", "customruns"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["tekton.dev"]
-    resources: ["runs/finalizers"]
+    resources: ["runs/finalizers", "customruns/finalizers"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["tekton.dev"]
-    resources: ["runs/status"]
+    resources: ["runs/status", "customruns/status"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
 ---
 kind: ClusterRole
