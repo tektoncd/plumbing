@@ -219,7 +219,7 @@ spec:
         - name: path
           value: artifacts
         - name: location
-          value: gs://$(params.uploadGcsBucket)/pr-logs/pull/$(tasks.split-full-repo-name.results.repoOwner)_$(tasks.split-full-repo-name.results.repoName)/$(params.pullRequestNumber)/$(params.jobName)/$(params.buildUUID)/artifacts"
+          value: gs://$(params.uploadGcsBucket)/pr-logs/pull/$(tasks.split-full-repo-name.results.repoOwner)_$(tasks.split-full-repo-name.results.repoName)/$(params.pullRequestNumber)/$(params.jobName)/$(params.buildUUID)/artifacts
       workspaces:
         - name: credentials
           workspace: credentials
