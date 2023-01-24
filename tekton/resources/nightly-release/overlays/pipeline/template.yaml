@@ -23,6 +23,8 @@
           value: $(tt.params.versionTag)
         - name: serviceAccountPath
           value: release.json
+        timeouts:
+          pipeline: 1h30m0s
         workspaces:
           - name: workarea
             volumeClaimTemplate:
