@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-artifact-bucket
-  namespace: tekton-pipelines
-data:
-  bucket.service.account.field.name: GOOGLE_APPLICATION_CREDENTIALS
-  bucket.service.account.secret.key: release.json
-  bucket.service.account.secret.name: release-secret
