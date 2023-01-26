@@ -34,8 +34,14 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-batch-merge
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+          - name: name
+            value: git-batch-merge
+          - name: kind
+            value: task
       params:
         - name: url
           value: $(params.gitRepository)
@@ -79,8 +85,14 @@ spec:
         operator: in
         values: ["passed"]
       taskRef:
-        name: golang-test
-        bundle: gcr.io/tekton-releases/catalog/upstream/golang-test:0.2
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/golang-test:0.2
+          - name: name
+            value: golang-test
+          - name: kind
+            value: task
       matrix:
         params:
         - name: context

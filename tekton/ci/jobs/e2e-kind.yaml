@@ -134,8 +134,14 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-batch-merge
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+          - name: name
+            value: git-batch-merge
+          - name: kind
+            value: task
       params:
         - name: url
           value: $(params.gitRepository)
@@ -199,8 +205,14 @@ spec:
   finally:
     - name: upload-logs
       taskRef:
-        name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+          - name: name
+            value: gcs-upload
+          - name: kind
+            value: task
       params:
         - name: path
           value: artifacts

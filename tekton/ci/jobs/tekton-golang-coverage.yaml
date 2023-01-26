@@ -164,8 +164,14 @@ spec:
     - name: clone-repo
       runAfter: ['split-full-repo-name']
       taskRef:
-        name: git-batch-merge
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+          - name: name
+            value: git-batch-merge
+          - name: kind
+            value: task
       params:
         - name: url
           value: https://github.com/$(tasks.split-full-repo-name.results.repoOwner)/$(tasks.split-full-repo-name.results.repoName).git
@@ -219,8 +225,14 @@ spec:
     - name: upload-artifacts
       runAfter: ['run-go-coverage']
       taskRef:
-        name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+          - name: name
+            value: gcs-upload
+          - name: kind
+            value: task
       params:
         - name: path
           value: artifacts

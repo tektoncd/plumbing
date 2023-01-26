@@ -28,8 +28,14 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-batch-merge
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+          - name: name
+            value: git-batch-merge
+          - name: kind
+            value: task
       params:
         - name: url
           value: $(params.gitRepository)
@@ -62,8 +68,14 @@ spec:
         operator: in
         values: ["passed"]
       taskRef:
-        name: github-request-reviewers
-        bundle: gcr.io/tekton-releases/catalog/upstream/github-request-reviewers:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/github-request-reviewers:0.1
+          - name: name
+            value: github-request-reviewers
+          - name: kind
+            value: task
       params:
       - name: PACKAGE
         value: "$(params.package)"

@@ -18,8 +18,14 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-clone
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.4
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.4
+          - name: name
+            value: git-clone
+          - name: kind
+            value: task
       workspaces:
         - name: output
           workspace: source
@@ -36,8 +42,14 @@ spec:
       runAfter:
         - clone-repo
       taskRef:
-        name: git-cli
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-cli:0.3
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-cli:0.3
+          - name: name
+            value: git-cli
+          - name: kind
+            value: task
       workspaces:
         - name: source
           workspace: source
@@ -94,8 +106,14 @@ spec:
           operator: notin
           values: [""]
       taskRef:
-        name: github-add-comment
-        bundle: gcr.io/tekton-releases/catalog/upstream/github-add-comment:0.3
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/github-add-comment:0.3
+          - name: name
+            value: github-add-comment
+          - name: kind
+            value: task
       params:
         - name: COMMENT_OR_FILE
           value: diff-task-results.txt

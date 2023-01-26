@@ -80,8 +80,14 @@ spec:
     - name: upload-data
       runAfter: ["collect-logs"]
       taskRef:
-        name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.3
+          - name: name
+            value: gcs-upload
+          - name: kind
+            value: task
       params:
         - name: path
           value: "logs.txt"

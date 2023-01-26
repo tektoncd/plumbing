@@ -48,8 +48,14 @@ spec:
   tasks:
     - name: git-clone
       taskRef:
-        name: git-clone
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
+          - name: name
+            value: git-batch-merge
+          - name: kind
+            value: task
       workspaces:
         - name: output
           workspace: workarea
@@ -62,8 +68,14 @@ spec:
     - name: unit-tests
       runAfter: [git-clone]
       taskRef:
-        name: golang-test
-        bundle: gcr.io/tekton-releases/catalog/upstream/golang-test:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/golang-test:0.1
+          - name: name
+            value: golang-test
+          - name: kind
+            value: task
       params:
         - name: package
           value: $(params.package)/$(params.subfolder)
@@ -74,8 +86,14 @@ spec:
     - name: build
       runAfter: [git-clone]
       taskRef:
-        name: golang-build
-        bundle: gcr.io/tekton-releases/catalog/upstream/golang-build:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/golang-build:0.1
+          - name: name
+            value: golang-build
+          - name: kind
+            value: task
       params:
         - name: package
           value: $(params.package)/$(params.subfolder)
@@ -116,8 +134,14 @@ spec:
     - name: publish-to-bucket
       runAfter: [publish-images]
       taskRef:
-        name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+          - name: name
+            value: gcs-upload
+          - name: kind
+            value: task
       workspaces:
         - name: credentials
           workspace: release-secret
@@ -138,8 +162,14 @@ spec:
           operator: in
           values: ["true"]
       taskRef:
-        name: gcs-upload
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+          - name: name
+            value: gcs-upload
+          - name: kind
+            value: task
       workspaces:
         - name: credentials
           workspace: release-secret
