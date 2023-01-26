@@ -15,12 +15,37 @@
 approve:
 - repos:
   - tektoncd
+  - tektoncd-catalog
   require_self_approval: true
   ignore_review_state: false
   commandHelpLink: https://prow.tekton.dev/command-help
 
 plugins:
   tektoncd:
+    plugins:
+      - approve
+      - assign
+      - blunderbuss
+      - buildifier
+      - cat
+      - dog
+      - golint
+      - heart
+      - help
+      - hold
+      - label
+      - lgtm
+      - lifecycle
+      - milestone
+      - project
+      - retitle
+      - size
+      - skip
+      - trigger
+      - verify-owners
+      - wip
+      - yuks
+  tektoncd-catalog:
     plugins:
       - approve
       - assign
@@ -59,6 +84,11 @@ plugins:
 
 external_plugins:
   tektoncd:
+  - name: needs-rebase
+    events:
+      - issue_comment
+      - pull_request
+  tektoncd-catalog:
   - name: needs-rebase
     events:
       - issue_comment
