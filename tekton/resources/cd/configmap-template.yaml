@@ -107,8 +107,14 @@ spec:
   tasks:
     - name: git-clone
       taskRef:
-        name: git-clone
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+          - name: name
+            value: git-clone
+          - name: kind
+            value: task
       params:
         - name: url
           value: $(params.gitRepository)

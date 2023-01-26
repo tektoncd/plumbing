@@ -311,8 +311,14 @@ spec:
   tasks:
     - name: clone-repo
       taskRef:
-        name: git-clone
-        bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.5
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.5
+          - name: name
+            value: git-clone
+          - name: kind
+            value: task
       params:
         - name: url
           value: https://github.com/$(params.package)
@@ -324,8 +330,14 @@ spec:
           subPath: repo
     - name: clone-bucket
       taskRef:
-        name: gcs-download
-        bundle: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+        resolver: bundles
+        params:
+          - name: bundle
+            value: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+          - name: name
+            value: gcs-download
+          - name: kind
+            value: task
       params:
         - name: path
           value: .
