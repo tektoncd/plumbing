@@ -83,7 +83,7 @@ fi
 
 # Create the kind cluster
 # create a cluster with the local registry enabled in containerd
-running_cluster=$(kind get clusters | grep tekton || true)
+running_cluster=$(kind get clusters | grep "$KIND_CLUSTER_NAME" || true)
 if [ "${running_cluster}" != "$KIND_CLUSTER_NAME" ]; then
  cat <<EOF | kind create cluster --config=-
 kind: Cluster

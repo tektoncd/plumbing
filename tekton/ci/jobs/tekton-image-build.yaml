@@ -148,8 +148,9 @@ spec:
         name: kaniko4ci
       matrix:
         params:
-        - name: CONTEXT
-          value: [$(tasks.check-git-files-changed.results.files)]
+          - name: CONTEXT
+            value:
+              - $(tasks.check-git-files-changed.results.files[0])
       params:
       - name: pullRequestNumber
         value: "$(params.pullRequestNumber)"
