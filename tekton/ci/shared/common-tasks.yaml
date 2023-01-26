@@ -24,16 +24,17 @@ spec:
       description: passed or failed
     - name: files
       description: list of files modified that match
+      type: array
   steps:
     - name: check-files-changed
-      image: alpine/git
+      image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:d6a49b0d6822f4db7ede60d3f6bb41c1278079ad7c631fcaf00a609a977d0ac0 # golang 1.18.7
       env:
       - name: GIT_CLONE_DEPTH
         value: $(params.gitCloneDepth)
       - name: REGEX
         value: $(params.regex)
       script: |
-        #!/bin/sh
+        #!/usr/bin/env bash
         set -ex
         set -o pipefail
 
@@ -41,7 +42,7 @@ spec:
         CHECK="failed"
         cd $(workspaces.input.path)
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
-            grep -E "${REGEX}" > $(results.files.path) || true
+            grep -E "${REGEX}" | jq -ncR '[inputs]' > $(results.files.path) || true
         git diff-tree --no-commit-id --name-only -r HEAD $BACK | \
             grep -E "${REGEX}" && CHECK="passed"
         printf $CHECK > $(results.check.path)
