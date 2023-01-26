@@ -72,6 +72,19 @@ branch-protection:
           required_status_checks:
             contexts:
             - check-pr-has-kind-label
+    tektoncd-catalog:
+      # Protect all branches in tektoncd-catalog
+      # This means all prow jobs with "always_run" set are required
+      # to pass before tide can merge the PR.
+      # Currently this is manually enabled by the tekton org admins,
+      # but it's stated here for documentation and reference purposes.
+      protect: true
+      # Admins can overrule checks
+      enforce_admins: false
+      # Enforce EasyCLA for all repos
+      required_status_checks:
+        contexts:
+        - EasyCLA
 
 sinker:
   resync_period: 1m
@@ -100,6 +113,7 @@ tide:
     - tektoncd/results
     - tektoncd/triggers
     - tektoncd/website
+    - tektoncd-catalog/golang
     labels:
     - lgtm
     - approved
@@ -129,6 +143,7 @@ tide:
     tektoncd/results: rebase
     tektoncd/triggers: rebase
     tektoncd/website: rebase
+    tektoncd-catalog/golang: rebase
   target_url: https://prow.tekton.dev/tide
   priority:
   - labels: ["kind/flake", "priority/critical-urgent"]
