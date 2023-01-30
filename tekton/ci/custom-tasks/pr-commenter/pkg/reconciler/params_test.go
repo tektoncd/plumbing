@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"github.com/tektoncd/pipeline/test/diff"
 )
@@ -12,14 +11,14 @@ import (
 func TestReportInfoFromRun(t *testing.T) {
 	testCases := []struct {
 		name string
-		run  *v1alpha1.Run
+		run  *v1beta1.CustomRun
 		info *ReportInfo
 		err  string
 	}{
 		{
 			name: "valid run",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
@@ -57,8 +56,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			},
 		}, {
 			name: "missing repo",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  prNumberKey,
@@ -85,8 +84,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "missing field(s): repo",
 		}, {
 			name: "missing PR number",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
@@ -113,8 +112,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "missing field(s): prNumber",
 		}, {
 			name: "missing SHA",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
@@ -141,8 +140,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "missing field(s): sha",
 		}, {
 			name: "missing job name",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
@@ -169,8 +168,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "missing field(s): jobName",
 		}, {
 			name: "missing result",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{
 						{
 							Name:  repoKey,
@@ -197,8 +196,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "missing field(s): result",
 		}, {
 			name: "non-string value",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
 						Value: *v1beta1.NewStructuredValues("bob", "steve"),
@@ -226,8 +225,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "invalid value: should be a string, is array: repo",
 		}, {
 			name: "non-int value",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
 						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
@@ -255,8 +254,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "invalid value: five should be a number: prNumber",
 		}, {
 			name: "non-bool value",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
 						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),
@@ -284,8 +283,8 @@ func TestReportInfoFromRun(t *testing.T) {
 			err: "invalid value: banana should be a bool: isOptional",
 		}, {
 			name: "invalid result value",
-			run: &v1alpha1.Run{
-				Spec: v1alpha1.RunSpec{
+			run: &v1beta1.CustomRun{
+				Spec: v1beta1.CustomRunSpec{
 					Params: []v1beta1.Param{{
 						Name:  repoKey,
 						Value: *v1beta1.NewStructuredValues("some-org/some-repo"),

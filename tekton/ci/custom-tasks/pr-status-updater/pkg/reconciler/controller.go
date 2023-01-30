@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/jenkins-x/go-scm/scm"
-	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1alpha1/run"
-	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1alpha1/run"
+	runinformer "github.com/tektoncd/pipeline/pkg/client/injection/informers/pipeline/v1beta1/customrun"
+	runreconciler "github.com/tektoncd/pipeline/pkg/client/injection/reconciler/pipeline/v1beta1/customrun"
 	tkncontroller "github.com/tektoncd/pipeline/pkg/controller"
 	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
@@ -32,7 +32,7 @@ func NewController(scmClient *scm.Client, botUser string) func(context.Context, 
 		})
 
 		runinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
-			FilterFunc: tkncontroller.FilterRunRef("custom.tekton.dev/v0", "PRStatusUpdater"),
+			FilterFunc: tkncontroller.FilterCustomRunRef("custom.tekton.dev/v0", "PRStatusUpdater"),
 			Handler:    controller.HandleAll(impl.Enqueue),
 		})
 

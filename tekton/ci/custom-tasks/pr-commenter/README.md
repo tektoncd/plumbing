@@ -18,8 +18,8 @@ deployment for that to be reflected in the comment.
 ## Example `Run`
 
 ```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: Run
+apiVersion: tekton.dev/v1beta1
+kind: CustomRun
 metadata:
   name: example-pr-comment
   namespace: tekton-ci
