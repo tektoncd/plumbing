@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
 	"knative.dev/pkg/apis"
 )
@@ -64,7 +63,7 @@ type ReportInfo struct {
 }
 
 // ReportInfoFromRun reads params from the given Run and returns either a populated info or errors.
-func ReportInfoFromRun(r *v1alpha1.Run) (*ReportInfo, *apis.FieldError) {
+func ReportInfoFromRun(r *v1beta1.CustomRun) (*ReportInfo, *apis.FieldError) {
 	report := &ReportInfo{}
 	var errs *apis.FieldError
 

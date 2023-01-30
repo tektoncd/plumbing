@@ -11,8 +11,8 @@ The `GITHUB_TOKEN` secret is the same GitHub OAuth token used in a number of oth
 ## Example `Run`
 
 ```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: Run
+apiVersion: tekton.dev/v1beta1
+kind: CustomRun
 metadata:
   name: example-pr-status-update
   namespace: tekton-ci
