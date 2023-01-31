@@ -1,0 +1,2 @@
+resources:
+- https://github.com/tektoncd/chains/releases/download/v0.14.0/release.yaml
