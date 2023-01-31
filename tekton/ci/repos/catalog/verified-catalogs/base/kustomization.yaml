@@ -1,6 +1,6 @@
-namePrefix: tekton-catalog-
+namePrefix: tekton-verified-catalog-
 bases:
-  - ../../bases
+  - ../../base
 
 patches:
   - path: template.yaml
@@ -9,8 +9,3 @@ patches:
       version: v1beta1
       kind: TriggerTemplate
       name: ci-pipeline
-  - path: trigger.yaml
-    target:
-      group: triggers.tekton.dev
-      version: v1beta1
-      kind: Trigger

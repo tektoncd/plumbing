@@ -9,7 +9,6 @@
           prow.k8s.io/build-id: $(tt.params.buildUUID)
           tekton.dev/source-event-id: $(tt.params.sourceEventId)
           tekton.dev/kind: ci
-          tekton.dev/check-name: pull-catalog-catlin-lint
           tekton.dev/pr-number: $(tt.params.pullRequestNumber)
         annotations:
           tekton.dev/gitRevision: "$(tt.params.gitRevision)"
