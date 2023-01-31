@@ -850,7 +850,7 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "/usr/local/bin/kind-e2e"
         - "--k8s-version"
-        - "v1.23.x"
+        - "v1.24.x"
         - "--nodes"
         - "3"
         - "--e2e-script"
@@ -1122,7 +1122,7 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "/usr/local/bin/kind-e2e"
         - "--k8s-version"
-        - "v1.23.x"
+        - "v1.24.x"
         - "--nodes"
         - "3"
         - "--e2e-script"
@@ -1297,7 +1297,7 @@ presubmits:
             - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
             - "/usr/local/bin/kind-e2e"
             - "--k8s-version"
-            - "v1.23.x"
+            - "v1.24.x"
             - "--nodes"
             - "3"
             - "--e2e-script"
@@ -1343,7 +1343,7 @@ presubmits:
             - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
             - "/usr/local/bin/kind-e2e"
             - "--k8s-version"
-            - "v1.23.x"
+            - "v1.24.x"
             - "--nodes"
             - "3"
             - "--e2e-script"
@@ -1956,7 +1956,7 @@ periodics:
       - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
       - "/usr/local/bin/kind-e2e"
       - "--k8s-version"
-      - "v1.23.x"
+      - "v1.24.x"
       - "--nodes"
       - "3"
       - "--e2e-script"
