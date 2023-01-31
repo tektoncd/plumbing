@@ -16,6 +16,9 @@ spec:
   params:
     - name: gitCloneDepth
       description: Number of commits in the change + 1
+    - name: versioning
+      description: The versioning strategy of the catalog, either "git" or "directory"
+      default: git
   steps:
     - name: find-changed-tasks
       image: docker.io/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
@@ -54,7 +57,7 @@ spec:
         echo '```' >> catlin.txt
 
         # performing catlin validate
-        catlin validate $(cat changed-files.txt) | tee -a catlin.txt
+        catlin validate $(cat changed-files.txt) --versioning $(params.versioning) | tee -a catlin.txt
         echo '```' >> catlin.txt
         echo "</details>" >> catlin.txt
 
@@ -106,6 +109,9 @@ spec:
       description: The pull request base branch
     - name: pullRequestNumber
       description: The pullRequestNumber
+    - name: versioning
+      description: The versioning strategy of the catalog, either "git" or "directory"
+      default: git
   tasks:
     - name: check-name-match
       taskRef:
@@ -154,6 +160,8 @@ spec:
       params:
         - name: gitCloneDepth
           value: $(params.gitCloneDepth)
+        - name: versioning
+          value: $(params.versioning)
   finally:
     - name: post-comment
       when:

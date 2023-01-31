@@ -1,0 +1,10 @@
+namePrefix: golang-
+bases:
+  - ../base
+
+patches:
+  - path: trigger.yaml
+    target:
+      group: triggers.tekton.dev
+      version: v1beta1
+      kind: Trigger

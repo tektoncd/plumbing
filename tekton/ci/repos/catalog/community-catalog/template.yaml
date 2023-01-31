@@ -1,0 +1,8 @@
+- op: add
+  path: /spec/resourcetemplates/0/spec/params/0
+  value: 
+    name: versioning
+    value: directory
+- op: add
+  path: /spec/resourcetemplates/0/metadata/labels/tekton.dev~1check-name
+  value: pull-catalog-catlin-lint
