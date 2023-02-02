@@ -7,3 +7,4 @@ patchesStrategicMerge:
 - webhook.yaml
 - controller.yaml
 - feature-flags.yaml
+- git-resolver-config.yaml
