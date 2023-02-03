@@ -1362,8 +1362,6 @@ presubmits:
           env:
             - name: PIPELINE_FEATURE_GATE
               value: "alpha"
-            - name: EMBEDDED_STATUS_GATE
-              value: "minimal"
   - name: pull-tekton-pipeline-beta-integration-tests
     labels:
       preset-presubmit-sh: "true"
