@@ -11,3 +11,110 @@
 - op: add
   path: /spec/resourcetemplates/0/metadata/labels/tekton.dev~1check-name
   value: pull-tekton-catalog-build-tests
+- op: add
+  path: /spec/resourcetemplates/1
+  value: 
+    apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: pull-catalog-integration-tests-latest-run-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
+        tekton.dev/check-name: pull-tekton-catalog-integration-tests-latest
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      workspaces:
+        - name: sources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: "release-secret"
+      pipelineRef:
+        name: kind-e2e
+      params:
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: pullRequestBaseRef
+          value: $(tt.params.pullRequestBaseRef)
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: ""
+        - name: checkName
+          value: pull-tekton-catalog-integration-tests-latest
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+        - name: k8s-version
+          value: v1.23.x
+        - name: e2e-script
+          value: test/e2e-tests.sh
+        - name: e2e-env
+          value: test/e2e-tests-latest-pipeline-ver.env
+- op: add
+  path: /spec/resourcetemplates/2
+  value: 
+    apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: pull-catalog-integration-tests-min-compatible-run-
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        tekton.dev/source-event-id: $(tt.params.sourceEventId)
+        tekton.dev/check-name: pull-tekton-catalog-integration-tests-min-compatible
+        tekton.dev/kind: ci
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+      annotations:
+        tekton.dev/gitRevision: "$(tt.params.gitRevision)"
+        tekton.dev/gitURL: "$(tt.params.gitRepository)"
+    spec:
+      serviceAccountName: tekton-ci-jobs
+      workspaces:
+        - name: sources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: credentials
+          secret:
+            secretName: "release-secret"
+      pipelineRef:
+        name: kind-e2e
+      params:
+        - name: pullRequestNumber
+          value: $(tt.params.pullRequestNumber)
+        - name: pullRequestBaseRef
+          value: $(tt.params.pullRequestBaseRef)
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitCloneDepth
+          value: $(tt.params.gitCloneDepth)
+        - name: fileFilterRegex
+          value: ""
+        - name: checkName
+          value: pull-tekton-catalog-integration-tests-min-compatible
+        - name: gitHubCommand
+          value: $(tt.params.gitHubCommand)
+        - name: k8s-version
+          value: v1.23.x
+        - name: e2e-script
+          value: test/e2e-tests.sh
+        - name: e2e-env
+          value: test/e2e-tests-min-compatible-pipeline-ver.env
+
