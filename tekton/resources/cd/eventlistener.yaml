@@ -179,6 +179,7 @@ spec:
                 (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
                 (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
                 (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-post-comment') == -1) &&
                 'ownerReferences' in body.taskRun.metadata
             - name: "overlays"
               value:
