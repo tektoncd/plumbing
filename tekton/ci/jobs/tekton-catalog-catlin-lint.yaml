@@ -152,6 +152,10 @@ spec:
     - name: lint-catalog
       runAfter:
         - "clone-repo"
+      when:
+        - input: $(tasks.check-name-match.results.check)
+          operator: in
+          values: ["passed"]
       taskRef:
         name: catlin-lint
       workspaces:
