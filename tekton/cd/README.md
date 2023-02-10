@@ -3,6 +3,7 @@
 This folder includes overlays used to maintain the configuration of Tekton
 services in the Tekton infra clusters `dogfooding` and `prow`.
 
+## Deploy Tekton service on-demand
 Tekton services can be deployed on-demand using a Tekton task called
 `install-tekton-release`. For example, Tekton Pipeline can be deployed as
 follows using the `tkn` client:
@@ -36,3 +37,14 @@ tkn pipeline start \
   -w name=credentials,emptyDir=
   install-tekton-release
 ```
+
+## Make changes to Tekton resources
+The Tekton resources to be deployed are built based on `kustomization.yaml` files in the corresponding directory. The [folder-cd-trigger](../cronjobs/dogfooding/manifests/plumbing-tekton/cronjob.yaml) cron job applies the latest resource under the `plumbing/tekton` directory to the cluster on an hourly basis. The `folder-cd-trigger` cronjob triggers the [deploy-from-folder](../resources/cd/folder-template.yaml) Task to build the final resource yaml files using the [kustomize tool](https://github.com/kubernetes-sigs/kustomize) and deploy. 
+
+To validate your changes to the resources locally, please install [kustomize](https://github.com/kubernetes-sigs/kustomize) and run the following command from the `plumbing/tekton/` directory.
+
+```bash
+kustomize build
+```
+
+Please check the [kustomize documentation](https://github.com/kubernetes-sigs/kustomize#readme) for more information.

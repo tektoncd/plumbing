@@ -77,6 +77,8 @@ Tekton is deployed the `dogfooding` cluster with cloud events enabled.
 All cloud events are sent to the [`tekton-events`](../resources/cd/eventlistener.yaml)
 event listener. CEL filters are used to select events from CI jobs `TaskRuns`.
 
+*Note* Please make sure to update the CEL filters of the [`ci-job-triggers`](../resources/cd/eventlistener.yaml) trigger group accordingly when adding a new `Task` or `PipelineTask` to avoid unexpected Github Check updates.
+
 When a start, failed or succeeded event is received for a CI job, the
 [`github-template.yaml`](../resources/ci/github-template.yaml) is triggered,
 which takes care of updating the check status on GitHub side accordingly.
