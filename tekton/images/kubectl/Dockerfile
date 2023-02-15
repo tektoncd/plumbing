@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.18.7-alpine3.16 as build
+FROM golang:1.19-alpine@sha256:31c62d91ada60d52cd2e40e1134778d32549cd58c131b30dd41069f998dc8490 as build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
@@ -25,7 +25,7 @@ ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
 RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.5
 
-FROM alpine:3.15
+FROM alpine:3.16@sha256:1bd67c81e4ad4b8f4a5c1c914d7985336f130e5cefb3e323654fd09d6bcdbbe2
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 # Kustomize requires git when pulling remote resources
