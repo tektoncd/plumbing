@@ -81,6 +81,9 @@ plugins:
   tektoncd/triggers:
     plugins:
       - release-note
+  tektoncd/results:
+    plugins:
+      - release-note
 
 external_plugins:
   tektoncd:
@@ -107,4 +110,10 @@ external_plugins:
   - name: cherrypicker
     events:
       - issue_comment
+      - pull_request
+  tektoncd/results:
+  - name: cherrypicker
+    events:
+      - issue_comment
       - pull_request      
+      
