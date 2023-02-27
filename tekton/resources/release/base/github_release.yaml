@@ -219,8 +219,10 @@ spec:
 
         $(awk -F";" '/kind\/bug/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/flake/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/security/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
         $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
         $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+        $(awk -F";" '/kind\/security/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
 
         ### Misc
 
@@ -262,7 +264,7 @@ spec:
 
         <!--
         ## Unsorted PR List
-        $(egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }')
+        $(egrep -v 'kind/(feature|documentation|cleanup|flake|bug|security|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }')
 
         To Be Done: Deprecation Notices, Backward Incompatible Changes
         -->
