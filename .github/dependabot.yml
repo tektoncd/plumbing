@@ -4,4 +4,125 @@ updates:
     directory: "/tekton/images"
     schedule:
       interval: "weekly"
-  
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/bots/buildcaptain"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/bots/mariobot"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/pipelinerun-logs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/add-team-members"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/github"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/add-pr-body"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-status-updater"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-status-updater/tools"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-commenter"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-commenter/tools"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/cluster-interceptors/build-id"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/cluster-interceptors/add-pr-body"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
