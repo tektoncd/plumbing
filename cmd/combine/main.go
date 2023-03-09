@@ -64,6 +64,11 @@ func main() {
 			if desc.Platform == nil {
 				return fmt.Errorf("found nil platform for manifest %s", desc.Digest)
 			}
+			// skip unknown platforms.
+			// Docker uses these to store attestation data: https://docs.docker.com/build/attestations/attestation-storage/#examples
+			if desc.Platform.OS == "unknown" || desc.Platform.Architecture == "unknown" {
+				continue
+			}
 			b, err := json.Marshal(desc.Platform)
 			if err != nil {
 				return fmt.Errorf("marshalling platform: %w", err)
