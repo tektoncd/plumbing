@@ -106,6 +106,7 @@ tide:
     - tektoncd/experimental
     - tektoncd/friends
     - tektoncd/hub
+    - tektoncd/infra
     - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
@@ -136,6 +137,7 @@ tide:
     tektoncd/experimental: rebase
     tektoncd/friends: rebase
     tektoncd/hub: rebase
+    tektoncd/chains: squash
     tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
