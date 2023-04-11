@@ -174,7 +174,7 @@ RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
     GO111MODULE="on" go install sigs.k8s.io/kind@${KIND_VERSION}
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
-ARG GOLANGCI_VERSION=1.50.1
+ARG GOLANGCI_VERSION=1.52.2
 RUN curl -sL https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_VERSION}/golangci-lint-${GOLANGCI_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "*/golangci-lint"
 
 # Install Kustomize:
