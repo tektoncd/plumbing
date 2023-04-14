@@ -32,7 +32,6 @@ spec:
       namespace: $(tt.params.namespace)
     spec:
       timeout:
-        pipeline: "3h4m0s"
         tasks: "2h0m0s"
       workspaces:
       # this workspace will be used to share info between tasks
