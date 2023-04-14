@@ -159,7 +159,7 @@ spec:
             - image: docker:dind
               name: server
               args:
-                - --storage-driver=vfs
+                - --storage-driver=overlay2
                 - --userland-proxy=false
                 - --debug
               securityContext:
