@@ -146,6 +146,8 @@ spec:
                 value: "false"
               - name: SSL_CERT_FILE
                 value: $(workspaces.registry-shared.path)/cert.pem
+              - name: USE_NIGHTLY_RELEASE
+                value: "true"
               command:
               - /bin/bash
               args:
