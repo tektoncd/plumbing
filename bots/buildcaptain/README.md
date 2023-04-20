@@ -20,7 +20,7 @@ Other folks who are not build captains but have build captain access:
 - Alan Greene @AlanGreene (for Dashboard releases)
 - Billy Lynch @wlynch (for Results / Chains releases)
 
-Build captain access is given with [adjustpermissions.py](../../adjustpermissions.py).
+Build captain access is given via https://github.com/tektoncd/infra Terraform.
 
 ## Rotation
 
