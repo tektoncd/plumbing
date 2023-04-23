@@ -25,6 +25,9 @@ spec:
   - name: k8s-shared
     description: workspace for k8s config, configuration file is expected to have `config` name
     mountPath: /root/.kube
+  - name: registry-shared
+    description: workspace for docker config
+    mountPath: /root/.docker
   - name: source-code
     description: workspace with source code for tekton component
   steps:

@@ -133,6 +133,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
@@ -152,6 +155,9 @@ spec:
           - name: k8s-shared
             workspace: shared-workspace
             subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
@@ -160,7 +166,7 @@ spec:
           - name: package
             value: github.com/tektoncd/pipeline
           - name: container-registry
-            value: $(params.container-registry)
+            value: "192.168.0.13:6001"
           - name: target-arch
             value: $(params.target-arch)
           - name: tags
