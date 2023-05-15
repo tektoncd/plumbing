@@ -8,6 +8,7 @@ spec:
     description: workspace to get k8s config file
     mountPath: /root/.kube
   - name: registry-shared
+    optional: true
     description: workspace for docker config
     mountPath: /root/.docker
   - name: source-code
