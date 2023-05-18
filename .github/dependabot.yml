@@ -1,14 +1,5 @@
 version: 2
 updates:
-  - package-ecosystem: "docker"
-    directory: "/tekton/images"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "ok-to-test"
-      - "dependencies"
-      - "release-note-none"
-      - "kind/misc"
   - package-ecosystem: "gomod"
     directory: "/bots/buildcaptain"
     schedule:
@@ -119,6 +110,141 @@ updates:
       - "kind/misc"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/cluster-interceptors/add-pr-body"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/pipelinerun-logs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/koparse"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/ko-gcloud"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/skopeo"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/alpine-git-nonroot"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kind-e2e"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kind"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/test-runner"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/ko"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kubectl"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/tkn"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/openssh-server"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/hub"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/coverage"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/buildx-gcloud"
     schedule:
       interval: "weekly"
     labels:
