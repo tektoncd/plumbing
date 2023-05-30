@@ -8,7 +8,7 @@ require (
 	github.com/tektoncd/pipeline v0.47.0
 	go.uber.org/zap v1.24.0
 	k8s.io/apimachinery v0.27.2
-	k8s.io/client-go v0.25.9
+	k8s.io/client-go v0.27.2
 	knative.dev/pkg v0.0.0-20230221145627-8efb3485adcf
 )
 
@@ -62,7 +62,6 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/prometheus/statsd_exporter v0.21.0 // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260 // indirect
 	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
@@ -89,7 +88,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.25.9 // indirect
+	k8s.io/api v0.27.2 // indirect
 	k8s.io/apiextensions-apiserver v0.25.4 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
