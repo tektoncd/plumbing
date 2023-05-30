@@ -29,7 +29,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:296.0.0-alpine@sha256:75e541d1c8d481799246a00ed40dea7396a33b9d7a2f6bf60b3fa5770b185f62
+FROM google/cloud-sdk:432.0.0-alpine@sha256:d11d7e7e830742ec864bf7b6fc0186d7893b05a5e9d128021d552bd5fd317288
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
