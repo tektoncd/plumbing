@@ -76,12 +76,6 @@ while [[ $# -ne 0 ]]; do
   shift
 done
 
-# If E2E_ENV is set but the file doesn't exist, fall back on the old approach of invoking presubmit-tests.sh directly.
-if [[ "${E2E_ENV}" != "" && ! -f "${E2E_ENV}" ]]; then
-  ./test/presubmit-tests.sh --integration-tests
-  exit $?
-fi
-
 # The version map correlated with this version of KinD
 KIND_VERSION="v0.11.1"
 case ${K8S_VERSION} in

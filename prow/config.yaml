@@ -1359,9 +1359,6 @@ presubmits:
             limits:
               cpu: 3500m
               memory: 8Gi
-          env:
-            - name: PIPELINE_FEATURE_GATE
-              value: "alpha"
   - name: pull-tekton-pipeline-beta-integration-tests
     labels:
       preset-presubmit-sh: "true"
