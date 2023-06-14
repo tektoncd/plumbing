@@ -14,7 +14,7 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.19-alpine@sha256:31c62d91ada60d52cd2e40e1134778d32549cd58c131b30dd41069f998dc8490
+FROM golang:1.20-alpine@sha256:b036c52b3bcc8e4e31be19a7a902bb9897b2bf18028f40fd306a9778bab5771c
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 WORKDIR /kind
