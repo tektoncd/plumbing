@@ -7,7 +7,7 @@ require (
 	github.com/jenkins-x/go-scm v1.14.7
 	github.com/tektoncd/pipeline v0.48.0
 	k8s.io/apimachinery v0.27.2
-	k8s.io/client-go v0.25.9
+	k8s.io/client-go v0.27.2
 	knative.dev/pkg v0.0.0-20230221145627-8efb3485adcf
 )
 
@@ -88,7 +88,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.25.9 // indirect
+	k8s.io/api v0.27.2 // indirect
 	k8s.io/apiextensions-apiserver v0.25.4 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
