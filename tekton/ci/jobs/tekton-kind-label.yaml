@@ -21,7 +21,7 @@ spec:
   - name: install-pyyaml
     image: python:3-alpine
     script: |
-      pip install pyyaml --user
+      pip install "Cython<3.0" pyyaml --user --no-build-isolation
   - name: check-labels
     image: python:3-alpine
     volumeMounts:
