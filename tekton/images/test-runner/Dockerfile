@@ -166,7 +166,7 @@ RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${K
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Extra tools through go install
-ARG KIND_VERSION="v0.14.0"
+ARG KIND_VERSION="v0.20.0"
 RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
     GO111MODULE="on" go install github.com/jstemmer/go-junit-report@latest && \
     GO111MODULE="on" go install github.com/raviqqe/liche@latest && \
