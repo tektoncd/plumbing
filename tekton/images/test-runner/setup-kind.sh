@@ -83,36 +83,25 @@ if [[ "${E2E_ENV}" != "" && ! -f "${E2E_ENV}" ]]; then
 fi
 
 # The version map correlated with this version of KinD
-KIND_VERSION="v0.11.1"
 case ${K8S_VERSION} in
-  v1.20.x)
-    K8S_VERSION="1.20.15"
-    KIND_IMAGE_SHA="sha256:393bb9096c6c4d723bb17bceb0896407d7db581532d11ea2839c80b28e5d8deb"
-    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
-    ;;
-  v1.21.x)
-    K8S_VERSION="1.21.10"
-    KIND_IMAGE_SHA="sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c"
-    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
-    ;;
-  v1.22.x)
-    K8S_VERSION="1.22.7"
-    KIND_IMAGE_SHA="sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166"
-    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
-    ;;
-  v1.23.x)
-    K8S_VERSION="1.23.4"
-    KIND_IMAGE_SHA="sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
-    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
-    ;;
   v1.24.x)
-    K8S_VERSION="1.24.7"
-    KIND_IMAGE_SHA="sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315"
+    K8S_VERSION="1.24.15"
+    KIND_IMAGE_SHA="sha256:7db4f8bea3e14b82d12e044e25e34bd53754b7f2b0e9d56df21774e6f66a70ab"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   v1.25.x)
-    K8S_VERSION="1.25.3"
-    KIND_IMAGE_SHA="sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"
+    K8S_VERSION="1.25.11"
+    KIND_IMAGE_SHA="sha256:227fa11ce74ea76a0474eeefb84cb75d8dad1b08638371ecf0e86259b35be0c8"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.26.x)
+    K8S_VERSION="1.26.6"
+    KIND_IMAGE_SHA="sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.27.x)
+    K8S_VERSION="1.27.3"
+    KIND_IMAGE_SHA="sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   *) abort "Unsupported version: ${K8S_VERSION}" ;;
@@ -222,8 +211,7 @@ kind create cluster --config kind.yaml
 #############################################################
 echo '--- Setup metallb'
 
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 
 network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
