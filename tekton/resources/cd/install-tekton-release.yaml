@@ -102,8 +102,11 @@ spec:
       fi
       # Wait for pods to be ready and CRDs to be established
       kubectl wait --for condition=ready --timeout=120s pods -l app.kubernetes.io/part-of=$APPLICATION -n ${NAMESPACE}
-      kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
 
+      # No CRDs for chains
+      if [ "${PROJECT_NAME}" != "chains" ]; then
+        kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
+      fi
   - name: deploy-extra-manifest
     image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
