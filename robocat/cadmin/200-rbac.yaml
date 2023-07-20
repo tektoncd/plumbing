@@ -45,7 +45,7 @@ rules:
     verbs: ["*"]
   - apiGroups: [""]
     resources: [namespaces]
-    verbs: ["patch"]
+    verbs: ["patch", "list", "get"]
     resourceNames: ["tekton-pipelines"]
   - apiGroups: ["triggers.tekton.dev"]
     resources: ["clusterinterceptors"]
@@ -59,6 +59,19 @@ subjects:
   - kind: ServiceAccount
     name: tekton-deployer
     namespace: tekton-pipelines
+roleRef:
+  kind: ClusterRole
+  name: tekton-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-deployer-tekton-admin-chains
+subjects:
+  - kind: ServiceAccount
+    name: tekton-deployer
+    namespace: tekton-pipelines-chains
 roleRef:
   kind: ClusterRole
   name: tekton-admin
