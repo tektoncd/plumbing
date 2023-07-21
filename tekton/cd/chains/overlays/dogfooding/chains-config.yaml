@@ -9,5 +9,8 @@ data:
   artifacts.taskrun.format: in-toto
   artifacts.taskrun.signer: kms
   artifacts.taskrun.storage: oci
+  artifacts.pipelinerun.format: in-toto
+  artifacts.pipelinerun.signer: kms
+  artifacts.pipelinerun.storage: oci
   signers.kms.kmsref: gcpkms://projects/tekton-releases/locations/global/keyRings/chains/cryptoKeys/signing-key
   transparency.enabled: manual
