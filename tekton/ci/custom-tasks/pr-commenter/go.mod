@@ -7,7 +7,7 @@ require (
 	github.com/jenkins-x/go-scm v1.14.0
 	github.com/tektoncd/pipeline v0.47.0
 	go.uber.org/zap v1.24.0
-	k8s.io/apimachinery v0.27.3
+	k8s.io/apimachinery v0.27.4
 	k8s.io/client-go v0.27.3
 	knative.dev/pkg v0.0.0-20230221145627-8efb3485adcf
 )
