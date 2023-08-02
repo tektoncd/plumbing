@@ -3,7 +3,6 @@ resources:
 - serviceaccount.yaml
 - bindings.yaml
 - eventlistener.yaml
-- tasks.yaml
 - overlays/dashboard
 - overlays/pipeline
 - overlays/triggers
