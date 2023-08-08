@@ -316,8 +316,8 @@ github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o
 github.com/stretchr/testify v1.8.2 h1:+h33VjcLVPDHtOdpUCuF+7gSuG3yGIftsP1YvFihtJ8=
 github.com/tektoncd/pipeline v0.47.0 h1:zZxmp6im8/p9RaH32LgeCP6dwH/4hcsfvEQUrwGsUPA=
 github.com/tektoncd/pipeline v0.47.0/go.mod h1:7H1DeNuEJFGoExGwQTlRul2IziCPxkjXRdDdirWmoQs=
-github.com/tektoncd/triggers v0.24.0 h1:+yJpOjn88TcX0GSwYVle8Rm0Cq6W4nc1urZ9rD5lmwY=
-github.com/tektoncd/triggers v0.24.0/go.mod h1:yQcliUXLfIp0YijT30R0t/4hItCsznTpOxOlSIrKF78=
+github.com/tektoncd/triggers v0.24.1 h1:JOQonXtnsIar4P2/N1bAvUCX9561PCwh3oA1Bd6O64k=
+github.com/tektoncd/triggers v0.24.1/go.mod h1:yQcliUXLfIp0YijT30R0t/4hItCsznTpOxOlSIrKF78=
 github.com/tidwall/gjson v1.12.1 h1:ikuZsLdhr8Ws0IdROXUS1Gi4v9Z4pGqpX/CvJkxvfpo=
 github.com/tidwall/gjson v1.12.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/match v1.1.1 h1:+Ho715JplO36QYgwN9PGYNhgZvoUSc9X2c80KVTi+GA=
