@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/debian:bullseye@sha256:7ac88cb3b95d347e89126a46696374fab97153b63d25995a5c6e75b5e98a0c79
+FROM docker.io/library/debian:12.1@sha256:88b0908ef4de0f7015fd61b7fcbfa407854349af42d1e2081595768d575995c1
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
@@ -47,6 +47,7 @@ RUN apt update && apt install -y --no-install-recommends \
     python3-dev \
     python3-openssl \
     python3-pip \
+    python-is-python3 \
     rsync \
     unzip \
     wget \
@@ -54,8 +55,6 @@ RUN apt update && apt install -y --no-install-recommends \
     zip \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
     && python -m pip install --upgrade pip setuptools wheel
 
 # Install gcloud
