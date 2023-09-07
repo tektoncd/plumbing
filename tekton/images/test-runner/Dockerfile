@@ -23,12 +23,11 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/debian:bullseye@sha256:7ac88cb3b95d347e89126a46696374fab97153b63d25995a5c6e75b5e98a0c79
+FROM docker.io/library/ubuntu:22.10@sha256:d36481db487c935436420cc4b705db8c81eec3872085ebd27963b775695fbe24
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
-ENV DEBIAN_FRONTEND noninteractive \
-    TERM=xterm
+ENV TERM=xterm
 
 # common util tools
 # https://github.com/GoogleCloudPlatform/gsutil/issues/446 for python-openssl
@@ -94,22 +93,18 @@ RUN apt update && apt install -y --no-install-recommends \
     lsb-release && \
     rm -rf /var/lib/apt/lists/*
 
-# Add the Docker apt-repository
-RUN curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg \
-    | apt-key add - && \
-    add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
-    $(lsb_release -cs) stable"
+# Add the Docker apt-repository and Install Docker
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt update && apt install -y --no-install-recommends docker-ce && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install Docker
 # TODO: the `sed` is a bit of a hack, look into alternatives.
 # Why this exists: `docker service start` on debian runs a `cgroupfs_mount` method,
 # We're already inside docker though so we can be sure these are already mounted.
 # Trying to remount these makes for a very noisy error block in the beginning of
 # the pod logs, so we just comment out the call to it... :shrug:
-RUN apt update && apt install -y --no-install-recommends docker-ce && \
-    rm -rf /var/lib/apt/lists/* && \
-    sed -i 's/cgroupfs_mount$/#cgroupfs_mount\n/' /etc/init.d/docker \
+RUN sed -i 's/cgroupfs_mount$/#cgroupfs_mount\n/' /etc/init.d/docker \
     && update-alternatives --set iptables /usr/sbin/iptables-legacy \
     && update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 
