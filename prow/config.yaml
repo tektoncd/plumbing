@@ -1122,7 +1122,7 @@ presubmits:
         - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
         - "/usr/local/bin/kind-e2e"
         - "--k8s-version"
-        - "v1.24.x"
+        - "v1.25.x"
         - "--nodes"
         - "3"
         - "--e2e-script"
