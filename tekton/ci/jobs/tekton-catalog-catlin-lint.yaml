@@ -63,6 +63,7 @@ spec:
 
         # performing catlin script validattion only on yaml files
         for file in $(cat changed-files.txt);do
+          cat ${file}/*.yaml | grep 'tekton.dev/deprecated: \"true\"' && continue
           catlin lint script ${file}/*.yaml | tee -a catlin-script.txt
         done
 
