@@ -1490,7 +1490,7 @@ presubmits:
           value: "true"
           effect: NoSchedule
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner:11dc05cf6e81786ce5935e43aad29a84d6b662804cb57f740c9fb3e1e73ff5f7
+      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:11dc05cf6e81786ce5935e43aad29a84d6b662804cb57f740c9fb3e1e73ff5f7
         imagePullPolicy: Always
         securityContext:
           privileged: true
