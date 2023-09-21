@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/ubuntu:22.10@sha256:d36481db487c935436420cc4b705db8c81eec3872085ebd27963b775695fbe24
+FROM docker.io/library/ubuntu:23.04@sha256:24898c8e1ac370d2d309d6d9df56af52bebdad86925c623b5e87e12404453518
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
@@ -46,6 +46,9 @@ RUN apt update && apt install -y --no-install-recommends \
     python3-dev \
     python3-openssl \
     python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    yamllint \
     rsync \
     unzip \
     wget \
@@ -54,8 +57,9 @@ RUN apt update && apt install -y --no-install-recommends \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 \
-    && python -m pip install --upgrade pip setuptools wheel
+    && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+    # \
+    # && python -m pip install --upgrade pip setuptools wheel
 
 # Install gcloud
 
@@ -156,7 +160,7 @@ RUN apt update && apt install -y uuid-runtime  # for uuidgen
 RUN apt update && apt install -y rubygems  # for mdl
 
 # Install ko
-ARG KO_VERSION=0.12.0
+ARG KO_VERSION=0.14.1
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
@@ -183,9 +187,6 @@ RUN curl -sL https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/t
 # Extra tools through gem
 RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl -v 0.5.0
-
-# Extra tools through pip
-RUN python -m pip install yamllint
 
 # Install yq
 ARG YQ_VERSION=4.13.4
