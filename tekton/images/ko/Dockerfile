@@ -11,14 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM golang:1.20-alpine@sha256:c63dbdb3cca37abbee4c50f61e34b1d043c2669d03f34485f9ee6fe5feed4e48
+FROM golang:1.20-alpine@sha256:90246ec31bcf460ff3dbe8a4a63e8997bc36781a2eba9e0419e9b53e0bd36a0d
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 ENV GOROOT /usr/local/go
 RUN apk add --no-cache curl ca-certificates
 RUN update-ca-certificates
 
-ARG KO_VERSION=0.12.0
+ARG KO_VERSION=0.14.1
 RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
