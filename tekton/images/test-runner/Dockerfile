@@ -58,8 +58,6 @@ RUN apt update && apt install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
     && update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
-    # \
-    # && python -m pip install --upgrade pip setuptools wheel
 
 # Install gcloud
 
