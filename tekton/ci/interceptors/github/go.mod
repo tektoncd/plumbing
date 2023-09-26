@@ -8,7 +8,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v34 v34.0.0
 	github.com/tektoncd/triggers v0.12.1
-	google.golang.org/grpc v1.56.2
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/grpc v1.58.2
+	google.golang.org/protobuf v1.31.0
 	sigs.k8s.io/yaml v1.3.0
 )
