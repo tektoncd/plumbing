@@ -24,7 +24,7 @@
         - name: serviceAccountPath
           value: release.json
         timeouts:
-          pipeline: 1h30m0s
+          pipeline: 2h30m0s
         workspaces:
           - name: workarea
             volumeClaimTemplate:
