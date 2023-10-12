@@ -1,0 +1,27 @@
+contents:
+  packages:
+    - bash
+    - busybox
+    - git
+    - go
+    - google-cloud-sdk
+    - ko
+    - kubectl
+    - kustomize
+    # Pin to python 3.11 until issues with 3.12 are resolved.
+    # ref: https://issuetracker.google.com/issues/303737178
+    - python3~3.11
+    - yq
+
+entrypoint:
+  command: /bin/bash
+
+accounts:
+  groups:
+    - groupname: nonroot
+      gid: 65532
+  users:
+    - username: nonroot
+      uid: 65532
+      gid: 65532
+  run-as: 65532
