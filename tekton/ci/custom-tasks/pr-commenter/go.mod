@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/jenkins-x/go-scm v1.14.14
 	github.com/tektoncd/pipeline v0.52.1
-	go.uber.org/zap v1.25.0
+	go.uber.org/zap v1.26.0
 	k8s.io/apimachinery v0.27.3
 	k8s.io/client-go v0.27.3
 	knative.dev/pkg v0.0.0-20230718152110-aef227e72ead
