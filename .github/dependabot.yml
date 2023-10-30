@@ -9,6 +9,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/bots/mariobot"
     schedule:
@@ -18,6 +22,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
@@ -27,6 +35,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/pipelinerun-logs"
     schedule:
@@ -36,6 +48,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/interceptors/add-team-members"
     schedule:
@@ -45,6 +61,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/interceptors/github"
     schedule:
@@ -63,6 +83,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/custom-tasks/pr-status-updater"
     schedule:
@@ -72,6 +96,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/custom-tasks/pr-status-updater/tools"
     schedule:
@@ -81,6 +109,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/custom-tasks/pr-commenter"
     schedule:
@@ -90,6 +122,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/custom-tasks/pr-commenter/tools"
     schedule:
@@ -99,6 +135,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/cluster-interceptors/build-id"
     schedule:
@@ -108,6 +148,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "gomod"
     directory: "/tekton/ci/cluster-interceptors/add-pr-body"
     schedule:
@@ -117,6 +161,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/pipelinerun-logs"
     schedule:
@@ -126,6 +174,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/koparse"
     schedule:
@@ -135,6 +187,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/ko-gcloud"
     schedule:
@@ -144,6 +200,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/skopeo"
     schedule:
@@ -153,6 +213,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/alpine-git-nonroot"
     schedule:
@@ -162,6 +226,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/kind-e2e"
     schedule:
@@ -171,6 +239,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/kind"
     schedule:
@@ -180,6 +252,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/test-runner"
     schedule:
@@ -189,6 +265,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/ko"
     schedule:
@@ -198,6 +278,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/kubectl"
     schedule:
@@ -207,6 +291,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/tkn"
     schedule:
@@ -216,6 +304,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/openssh-server"
     schedule:
@@ -225,6 +317,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/hub"
     schedule:
@@ -234,6 +330,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/coverage"
     schedule:
@@ -243,6 +343,10 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/buildx-gcloud"
     schedule:
@@ -252,3 +356,7 @@ updates:
       - "dependencies"
       - "release-note-none"
       - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
