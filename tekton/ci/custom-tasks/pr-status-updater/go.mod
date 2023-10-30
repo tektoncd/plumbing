@@ -3,7 +3,7 @@ module github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-status-updater
 go 1.18
 
 require (
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/jenkins-x/go-scm v1.14.14
 	github.com/tektoncd/pipeline v0.52.1
 	k8s.io/apimachinery v0.28.3
