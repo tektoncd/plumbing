@@ -35,7 +35,6 @@ plugins:
       - hold
       - label
       - lgtm
-      - lifecycle
       - milestone
       - project
       - retitle
@@ -59,7 +58,6 @@ plugins:
       - hold
       - label
       - lgtm
-      - lifecycle
       - milestone
       - project
       - retitle
