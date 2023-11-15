@@ -150,7 +150,7 @@ spec:
         params:
           - name: CONTEXT
             value:
-              - $(tasks.check-git-files-changed.results.files[0])
+              - $(tasks.check-git-files-changed.results.files)
       params:
       - name: pullRequestNumber
         value: "$(params.pullRequestNumber)"
