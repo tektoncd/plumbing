@@ -324,8 +324,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
-github.com/tektoncd/pipeline v0.53.0 h1:PRgIrOKelWKyj6JZ+/ftGKJZ9lyGeq5+y0UR7runCG0=
-github.com/tektoncd/pipeline v0.53.0/go.mod h1:tO7iI+L4+kO+CrAYiM9FlXQYveyjyMDCYmy+7VLiwjk=
+github.com/tektoncd/pipeline v0.53.2 h1:NEULiwVKlCQVNNMLE7MJ5csb13dWfkkObtSiVJwMPzc=
+github.com/tektoncd/pipeline v0.53.2/go.mod h1:tO7iI+L4+kO+CrAYiM9FlXQYveyjyMDCYmy+7VLiwjk=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
