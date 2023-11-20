@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jenkins-x/go-scm v1.14.19
 	github.com/tektoncd/pipeline v0.53.0
-	k8s.io/apimachinery v0.28.3
+	k8s.io/apimachinery v0.28.4
 	k8s.io/client-go v0.28.3
 	knative.dev/pkg v0.0.0-20231011193800-bd99f2f98be7
 )
