@@ -44,19 +44,7 @@ There are several GCP projects used by Tekton:
   is used to hold nightly release artifacts and [the robocat cluster](#the-robocat-cluster)
 
 ### Adjusting GCP permissions
-The script [adjustpermissions.py](../adjustpermissions.py) gives users access to these projects.
-
-```sh
-# Create and activate a python virtual environment
-python3 -m venv .venv
-. .venv/bin/activate
-
-# Install required dependencies
-pip3 install -r ./teps/tools/requirements.txt
-
-# Add or remove permissions
-python3 -m adjustpermissions --users "user1@example.com,user2@example.com"
-```
+Access and permissions to the GCP projects are automated via [Terraform](https://www.terraform.io/). The configuration is maintained in the [tektoncd/infra](tektoncd/infra) repo. The [@plumbing.collaborators](https://github.com/orgs/tektoncd/teams/plumbing-collaborators) team has read access and [@plumbing.maintainers](https://github.com/orgs/tektoncd/teams/plumbing-maintainers) team has maintainer access to this repository. To adjust permissions, please ask in the #plumbing channel on [Slack](https://github.com/tektoncd/community/blob/main/contact.md#slack). 
 
 ## DNS
 
