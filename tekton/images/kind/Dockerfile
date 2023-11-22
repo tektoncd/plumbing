@@ -18,12 +18,14 @@ FROM golang:1.20-alpine@sha256:90246ec31bcf460ff3dbe8a4a63e8997bc36781a2eba9e041
 
 WORKDIR /kind
 
-ARG KO_VERSION=0.14.1
-RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
-RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
+ARG KO_VERSION=0.15.1
 
 RUN apk add --no-cache \
   bash curl docker git jq openssl
+
+# Install ko
+RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
+RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Install kubectl and make sure it's available in the PATH.
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl && chmod +x ./kubectl && mv ./kubectl /bin
