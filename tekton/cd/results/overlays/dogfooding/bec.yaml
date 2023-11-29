@@ -9,4 +9,4 @@ spec:
     requestPath: /
     # This currently points to the prometheus port as a very rough
     # health check to determine whether the server is alive.
-    port: 8080
+    port: 9090

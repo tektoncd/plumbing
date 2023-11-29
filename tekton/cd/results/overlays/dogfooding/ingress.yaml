@@ -22,6 +22,6 @@ spec:
           service:
             name: tekton-results-api-service
             port:
-              number: 50051
+              number: 8080
         path: /*
         pathType: ImplementationSpecific
