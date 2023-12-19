@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/tektoncd/triggers v0.24.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 	knative.dev/pkg v0.0.0-20230224205330-75da922ef055
 )
 
