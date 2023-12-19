@@ -48,10 +48,10 @@
           value:
             - bots/buildcaptain
             - bots/mariobot
-            - catlin
             - pipelinerun-logs
             - tekton/ci/interceptors/add-team-members
             - tekton/ci/interceptors/add-pr-body
+            - tekton/ci/interceptors/github
             - tekton/ci/custom-tasks/pr-commenter
             - tekton/ci/custom-tasks/pr-status-updater
   - apiVersion: tekton.dev/v1beta1
