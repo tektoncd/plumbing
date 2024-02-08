@@ -1,14 +1,15 @@
 - op: add
   path: /spec/resourcetemplates
   value:
-    - apiVersion: tekton.dev/v1beta1
+    - apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
         generateName: dashboard-release-nightly-
         labels:
           tekton.dev/kind: release
       spec:
-        timeout: "1h30m"
+        timeouts:
+          pipeline: "1h30m"
         pipelineRef:
           name: dashboard-release
         params:
