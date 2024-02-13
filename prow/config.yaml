@@ -96,6 +96,8 @@ tide:
   sync_period: 2m
   queries:
   - repos:
+    - tektoncd-catalog/golang
+    - tektoncd/actions
     - tektoncd/ahmetb-gen-crd-api-reference-docs
     - tektoncd/catalog
     - tektoncd/catlin
@@ -113,7 +115,6 @@ tide:
     - tektoncd/results
     - tektoncd/triggers
     - tektoncd/website
-    - tektoncd-catalog/golang
     labels:
     - lgtm
     - approved
@@ -126,6 +127,8 @@ tide:
     - needs-ok-to-test
     - needs-rebase
   merge_method:
+    tektoncd-catalog/golang: rebase
+    tektoncd/actions: rebase
     tektoncd/ahmetb-gen-crd-api-reference-docs: rebase
     tektoncd/catalog: rebase
     tektoncd/catlin: rebase
@@ -143,7 +146,6 @@ tide:
     tektoncd/results: rebase
     tektoncd/triggers: rebase
     tektoncd/website: rebase
-    tektoncd-catalog/golang: rebase
   target_url: https://prow.tekton.dev/tide
   priority:
   - labels: ["kind/flake", "priority/critical-urgent"]
