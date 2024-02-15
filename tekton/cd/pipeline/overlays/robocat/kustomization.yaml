@@ -1,7 +1,6 @@
 bases:
 - ../../base
 patchesStrategicMerge:
-- config-artifact-bucket.yaml
 - feature-flags.yaml
 resources:
 - tekton-storage-secret.yaml
