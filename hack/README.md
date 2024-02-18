@@ -29,7 +29,7 @@ This script uses [`kind`](https://kind.sigs.k8s.io/) to create a local K8s clust
 #### Usage
 
 ```sh
-tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version]
+tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version -k container-runtime]
 ```
 
 > **Note**: the default `cluster-name` is `'tekton'`
