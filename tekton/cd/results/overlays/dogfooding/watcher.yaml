@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       containers:
-        - name: tekton-results-watcher
+        - name: watcher
           args:
             [
               "-api_addr",
