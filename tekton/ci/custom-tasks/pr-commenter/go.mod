@@ -5,10 +5,10 @@ go 1.18
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jenkins-x/go-scm v1.14.26
-	github.com/tektoncd/pipeline v0.56.0
+	github.com/tektoncd/pipeline v0.56.1
 	go.uber.org/zap v1.26.0
-	k8s.io/apimachinery v0.29.1
-	k8s.io/client-go v0.29.1
+	k8s.io/apimachinery v0.29.2
+	k8s.io/client-go v0.29.2
 	knative.dev/pkg v0.0.0-20231023150739-56bfe0dd9626
 )
 
@@ -95,7 +95,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.29.1 // indirect
+	k8s.io/api v0.29.2 // indirect
 	k8s.io/apiextensions-apiserver v0.26.5 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
