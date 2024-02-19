@@ -2124,7 +2124,7 @@ periodics:
       - "--e2e-script"
       - "./test/e2e-tests.sh"
       - "--e2e-env"
-      - "./test/e2e-tests-kind-prow.env"
+      - "./test/e2e-tests-kind-prow-feature-flags.env"
       securityContext:
         privileged: true
       resources:
