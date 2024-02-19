@@ -78,6 +78,19 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-deployer-tekton-admin-resolvers
+subjects:
+  - kind: ServiceAccount
+    name: tekton-deployer
+    namespace: tekton-pipelines-resolvers
+roleRef:
+  kind: ClusterRole
+  name: tekton-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: admin-plus
@@ -100,10 +113,46 @@ rules:
     verbs: ["*"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: admin-plus
+  namespace: tekton-pipelines-resolvers
+rules:
+  - apiGroups: [""]
+    resources: [serviceaccounts, configmaps, secrets, services]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: [pods, namespaces]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [apps]
+    resources: [deployments]
+    verbs: ["*"]
+  - apiGroups: [tekton.dev]
+    resources: [pipelines, tasks]
+    verbs: ["*"]
+  - apiGroups: [rbac.authorization.k8s.io]
+    resources: [roles, rolebindings]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tekton-deployer-admin-plus
   namespace: tekton-pipelines
+subjects:
+  - kind: ServiceAccount
+    name: tekton-deployer
+    namespace: tekton-pipelines
+roleRef:
+  kind: Role
+  name: admin-plus
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-deployer-admin-plus-resolvers
+  namespace: tekton-pipelines-resolvers
 subjects:
   - kind: ServiceAccount
     name: tekton-deployer
