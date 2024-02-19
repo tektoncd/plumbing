@@ -63,7 +63,7 @@ spec:
       if [ ! -f /workspace/${CONFIG_MAP_KEY} ]; then
         echo "First time deployment"
         kubectl create configmap ${CONFIG_MAP_NAME} \
-          --from-file=${CONFIG_MAP_KEY}=${RESOURCES_PATH}}/${CONFIG_PATH} \
+          --from-file=${CONFIG_MAP_KEY}=${RESOURCES_PATH}/${CONFIG_PATH} \
           -n ${NAMESPACE}
           exit 0
       fi
