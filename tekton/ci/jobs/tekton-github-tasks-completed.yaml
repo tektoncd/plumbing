@@ -3,9 +3,9 @@ kind: Task
 metadata:
   name: github-tasks-completed
   namespace: tekton-ci
+spec:
   description: |
     Verifies that a PR has all the tasks completed. A task is considered to be any part of the text that looks like a github markdown checkbox ("- []").
-spec:
   params:
     - name: body
       description: The body of the Pull Request
