@@ -31,7 +31,7 @@ spec:
       generateName: tekton-triggers-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
     spec:
-      timeout: 2h
+      timeout: 3h
       workspaces:
       # this workspace will be used to share info between tasks
       - name: shared-workspace
