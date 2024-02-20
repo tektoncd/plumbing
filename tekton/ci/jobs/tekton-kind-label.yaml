@@ -3,9 +3,9 @@ kind: Task
 metadata:
   name: kind-label
   namespace: tekton-ci
+spec:
   description: |
     Verifies that a PR has one valid kind label
-spec:
   params:
   - name: labels
     description: The labels attached to the Pull Request
