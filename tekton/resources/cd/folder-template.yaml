@@ -99,9 +99,12 @@ spec:
       #!/bin/sh
       set -ex
 
-      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] && yq 'select(.kind == "ServiceAccount")' \
+      # If there's nothing to be done, just end the step
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] || exit 0
+
+      yq 'select(.kind == "ServiceAccount")' \
         ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
-      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] && yq 'select(.kind != "ServiceAccount")' \
+      yq 'select(.kind != "ServiceAccount")' \
         ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 
   - name: deploy-resources
@@ -109,6 +112,9 @@ spec:
     script: |
       #!/bin/sh
       set -ex
+
+      # If there's nothing to be done, just end the step
+      [ -s ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml ] || exit 0
 
       # Determine whether to enforce namespace across resources
       NAMESPACE_PARAM="-n ${NAMESPACE}"
