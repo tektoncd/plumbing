@@ -1,5 +1,6 @@
 bases:
-- ../../base
+  - ../../base
 patchesStrategicMerge:
-- chains-config.yaml
-- serviceaccount.yaml
+  - chains-config.yaml
+  - config-observability.yaml
+  - serviceaccount.yaml
