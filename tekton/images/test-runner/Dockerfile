@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.21.7
+ARG GO_VERSION=1.22.1
 # Build kubetest independently of the rest
 FROM golang:${GO_VERSION}@sha256:b8e62cf593cdaff36efd90aa3a37de268e6781a2e68c6610940c48f7cdf36984 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/ubuntu:23.04@sha256:ea1285dffce8a938ef356908d1be741da594310c8dced79b870d66808cb12b0f
+FROM docker.io/library/ubuntu:23.04@sha256:24898c8e1ac370d2d309d6d9df56af52bebdad86925c623b5e87e12404453518
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
@@ -72,10 +72,10 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.ta
     tar xzf google-cloud-sdk.tar.gz -C / && \
     rm google-cloud-sdk.tar.gz && \
     /google-cloud-sdk/install.sh \
-        --disable-installation-options \
-        --bash-completion=false \
-        --path-update=false \
-        --usage-reporting=false && \
+    --disable-installation-options \
+    --bash-completion=false \
+    --path-update=false \
+    --usage-reporting=false && \
     gcloud components update && \
     gcloud components install alpha beta kubectl docker-credential-gcr gke-gcloud-auth-plugin && \
     gcloud info | tee /gcloud-info.txt
@@ -167,7 +167,6 @@ ARG KIND_VERSION="v0.20.0"
 RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
     GO111MODULE="on" go install github.com/jstemmer/go-junit-report@latest && \
     GO111MODULE="on" go install github.com/raviqqe/liche@latest && \
-    GO111MODULE="off" go get github.com/golang/dep/cmd/dep && \
     GO111MODULE="on" go install sigs.k8s.io/kind@${KIND_VERSION}
 
 # Install GolangCI linter: https://github.com/golangci/golangci-lint/
