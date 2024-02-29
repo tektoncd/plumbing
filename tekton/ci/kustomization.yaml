@@ -5,5 +5,6 @@ commonAnnotations:
 resources:
 - infra
 - shared
+- stepactions
 - jobs
 - repos
