@@ -187,7 +187,7 @@ RUN gem install mixlib-config -v 2.2.4  # required because ruby is 2.1
 RUN gem install mdl -v 0.5.0
 
 # Install yq
-ARG YQ_VERSION=4.13.4
+ARG YQ_VERSION=4.42.1
 RUN wget https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64 -O /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
 
