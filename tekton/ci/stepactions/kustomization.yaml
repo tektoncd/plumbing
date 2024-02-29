@@ -1,0 +1,3 @@
+resources:
+- git-batch-merge.yaml
+- gcs-upload.yaml
