@@ -120,6 +120,8 @@ spec:
         The token should be storage as a stringData with key "token" and
         value "your access token".
     - name: credentials
+      description: |
+        Path containing the GCS credentials to use during upload.
   tasks:
     - name: check-name-matches
       taskRef:
@@ -154,6 +156,10 @@ spec:
               printf '$(params.package)' | awk -F/ '{printf($2)}' | tee /tekton/results/repoName
     - name: clone-coverage-upload
       runAfter: ['split-full-repo-name']
+      workspaces:
+        - name: source
+        - name: credentials
+        - name: github-token
       taskSpec:
         steps:
           - name: clone
@@ -217,7 +223,7 @@ spec:
         workspaces:
         - name: source
           description: Location where the git repo will be installed.
-          mountPath: /go/src/github.com/tektoncd/$(params.repoName)
+          mountPath: /go/src/github.com/tektoncd/$(tasks.split-full-repo-name.results.repoName)
         - name: github-token
           description: |
             A secret workspace where the github personal access token resides.
