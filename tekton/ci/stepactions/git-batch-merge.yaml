@@ -152,5 +152,5 @@ spec:
     RESULT_SHA="$(git -C $CHECKOUT_DIR rev-parse HEAD)"
     TREE_SHA="$(git -C $CHECKOUT_DIR rev-parse HEAD^{tree})"
     # Make sure we don't add a trailing newline to the result!
-    echo -n "$(echo $RESULT_SHA | tr -d '\n')" > $(results.commit.path)
-    echo -n "$(echo $TREE_SHA | tr -d '\n')" > $(results.tree.path)
+    echo -n "$(echo $RESULT_SHA | tr -d '\n')" > $(step.results.commit.path)
+    echo -n "$(echo $TREE_SHA | tr -d '\n')" > $(step.results.tree.path)
