@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.20
+ARG GO_VERSION=1.21.7
 # Build kubetest independently of the rest
-FROM golang:${GO_VERSION}@sha256:7e3f47de2f547717ebca35255d2b1f4985962d8ebe85bb70746f586e9dc0ab7b as kubetest
+FROM golang:${GO_VERSION}@sha256:b8e62cf593cdaff36efd90aa3a37de268e6781a2e68c6610940c48f7cdf36984 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/ubuntu:23.04@sha256:24898c8e1ac370d2d309d6d9df56af52bebdad86925c623b5e87e12404453518
+FROM docker.io/library/ubuntu:23.04@sha256:ea1285dffce8a938ef356908d1be741da594310c8dced79b870d66808cb12b0f
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
