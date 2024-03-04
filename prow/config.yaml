@@ -647,7 +647,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:bc9ad50aa7a1fef839543b282d7058f9505349637169d2e1d01771a574181070 # golang 1.20
+      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:00fb20f80bbb96f29abff09bbd1e09212480b57c178260b419cb45eb4e5e032e # golang 1.21
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -680,7 +680,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-build-cross-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:bc9ad50aa7a1fef839543b282d7058f9505349637169d2e1d01771a574181070 # golang 1.20
+      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:00fb20f80bbb96f29abff09bbd1e09212480b57c178260b419cb45eb4e5e032e # golang 1.21
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -713,7 +713,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-cli-unit-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:bc9ad50aa7a1fef839543b282d7058f9505349637169d2e1d01771a574181070 # golang 1.20
+      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:00fb20f80bbb96f29abff09bbd1e09212480b57c178260b419cb45eb4e5e032e # golang 1.21
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
@@ -756,7 +756,7 @@ presubmits:
           value: "true"
           effect: NoSchedule
       containers:
-      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:bc9ad50aa7a1fef839543b282d7058f9505349637169d2e1d01771a574181070 # golang 1.20
+      - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:00fb20f80bbb96f29abff09bbd1e09212480b57c178260b419cb45eb4e5e032e # golang 1.21
         imagePullPolicy: Always
         securityContext:
           privileged: true
