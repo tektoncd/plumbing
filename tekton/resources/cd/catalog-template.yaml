@@ -97,11 +97,6 @@ spec:
         workspace: shared
   - name: publish
     runAfter: ['create-dockerfile']
-    workspaces:
-      - name: catalog
-        workspace: shared
-      - name: dockerconfig
-        workspace: shared
     params:
     - name: REGISTRY
       value: "$(params.registry)"
@@ -109,8 +104,62 @@ spec:
       value: "$(params.registryPath)"
     - name: TAG
       value: "$(tasks.git-clone.results.commit)"
-    taskRef:
-      name: tekton-catalog-publish
+    workspaces:
+      - name: shared
+    taskSpec:
+      params:
+        - name: REGISTRY
+        - name: PATH
+        - name: TAG
+      workspaces:
+        - name: shared
+      steps:
+        - name: publish-tasks
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
+          params:
+            - name: catalogPath
+              value: ${workspaces.shared.path}
+            - name: dockerconfigPath
+              value: ${workspaces.shared.path}
+            - name: RESOURCE
+              value: "task"
+            - name: REGISTRY
+              value: "$(params.REGISTRY)"
+            - name: PATH
+              value: "$(params.PATH)/tasks"
+            - name: TAG
+              value: "$(params.TAG)"
+        - name: publish-steps
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
+          params:
+            - name: catalogPath
+              value: ${workspaces.shared.path}
+            - name: dockerconfigPath
+              value: ${workspaces.shared.path}
+            - name: RESOURCE
+              value: "stepaction"
+            - name: REGISTRY
+              value: "$(params.REGISTRY)"
+            - name: PATH
+              value: "$(params.PATH)/stepactions"
+            - name: TAG
+              value: "$(params.TAG)"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
