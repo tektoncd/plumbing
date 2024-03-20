@@ -11,7 +11,7 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/docker/cli v24.0.0+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.7+incompatible // indirect
+	github.com/docker/docker v24.0.9+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/go-logr/logr v1.2.0 // indirect
