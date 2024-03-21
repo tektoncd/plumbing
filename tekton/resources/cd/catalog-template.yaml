@@ -126,9 +126,9 @@ spec:
                 value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
           params:
             - name: catalogPath
-              value: ${workspaces.shared.path}
+              value: $(workspaces.shared.path)
             - name: dockerconfigPath
-              value: ${workspaces.shared.path}
+              value: $(workspaces.shared.path)
             - name: RESOURCE
               value: "task"
             - name: REGISTRY
@@ -149,9 +149,9 @@ spec:
                 value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
           params:
             - name: catalogPath
-              value: ${workspaces.shared.path}
+              value: $(workspaces.shared.path)
             - name: dockerconfigPath
-              value: ${workspaces.shared.path}
+              value: $(workspaces.shared.path)
             - name: RESOURCE
               value: "stepaction"
             - name: REGISTRY
