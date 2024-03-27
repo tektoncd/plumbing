@@ -4,6 +4,7 @@ resources:
 - hub-nightly
 - ko-gcloud-nightly
 - ko-nightly
+- koparse-nightly
 - kubectl-nightly
 - openssh-server-nightly
 - pipeline-test-runner-nightly
