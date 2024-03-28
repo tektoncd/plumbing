@@ -13,3 +13,6 @@
 
 **/.bin
 **/.DS_Store
+
+.terraform**
+terraform.tfstate**
