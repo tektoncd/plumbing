@@ -147,11 +147,41 @@ spec:
             value: $(params.container-registry)
           - name: target-arch
             value: $(params.target-arch)
+        - name: examples-test-pipeline
+          runAfter: [e2e-test-pipeline]
+          taskRef:
+            name: test-e2e-tekton-component
+          workspaces:
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
+          - name: source-code
+            workspace: shared-workspace
+            subPath: source-code
+          retries: 2
+          params:
+          - name: package
+            value: github.com/tektoncd/pipeline
+          - name: container-registry
+            value: "192.168.156.194:5000"
+          - name: target-arch
+            value: $(params.target-arch)
+          - name: tags
+            value: "examples"
         finally:
         - name: delete-k8s-cluster
           taskRef:
             name: create-delete-k8s-cluster-$(tt.params.targetArch)
           workspaces:
+          - name: k8s-shared
+            workspace: shared-workspace
+            subPath: k8s-shared
+          - name: registry-shared
+            workspace: shared-workspace
+            subPath: registry-shared
           - name: ssh-secret
             workspace: ssh-secret
           params:
