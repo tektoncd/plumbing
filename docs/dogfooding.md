@@ -12,7 +12,8 @@ Secrets which have been applied to the `dogfooding` cluster but are not committe
 
 - `GitHub` personal access tokens:
   - In the default namespace:
-    - `bot-token-github` used for syncing label configuration and org configuration
+    - `bot-token-github` used for syncing label configuration
+    - `peribolos-token-github` used for syncing org configuration
     - `github-token` used to create a draft release
   - In the `tekton-ci` namespace:
     - `bot-token-github` used for custom interceptors and CI jobs
