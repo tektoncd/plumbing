@@ -19,7 +19,7 @@ spec:
     - name: repoName
       description: name of the repository
     - name: repoOwner
-      description: owner of the repo (user/orgaization).
+      description: owner of the repo (user/organization).
     - name: jobName
       description: name of the job.
     - name: postSubmitGcsBucket
