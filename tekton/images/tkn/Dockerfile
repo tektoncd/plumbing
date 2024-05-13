@@ -14,7 +14,7 @@
 FROM golang:1.22-alpine@sha256:cdc86d9f363e8786845bea2040312b4efa321b828acdeb26f393faa864d887b0 as build
 LABEL description="Build container"
 
-ARG TKN_VERSION=0.36.0
+ARG TKN_VERSION=0.37.0
 RUN ARCH=$(uname -m) \
     OS=$(uname) \
     && wget -O- https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_${OS}_${ARCH}.tar.gz | tar zxf - -C /usr/local/bin
