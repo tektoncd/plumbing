@@ -24,7 +24,7 @@ spec:
         workspaces:
           - name: github-oauth
             secret:
-              secretName: bot-token-github
+              secretName: peribolos-token-github
           - name: shared-workspace
             volumeClaimTemplate:
               spec:
