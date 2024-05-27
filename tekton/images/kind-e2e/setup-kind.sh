@@ -30,7 +30,7 @@ function abort() {
 }
 
 # Defaults
-K8S_VERSION="v1.20.x"
+K8S_VERSION="v1.28.x"
 REGISTRY_NAME="registry.local"
 REGISTRY_PORT="5000"
 CLUSTER_SUFFIX="cluster.local"
@@ -77,26 +77,35 @@ while [[ $# -ne 0 ]]; do
 done
 
 # The version map correlated with this version of KinD
-KIND_VERSION="v0.11.1"
 case ${K8S_VERSION} in
-  v1.20.x)
-    K8S_VERSION="1.20.15"
-    KIND_IMAGE_SHA="sha256:393bb9096c6c4d723bb17bceb0896407d7db581532d11ea2839c80b28e5d8deb"
+  v1.25.x)
+    K8S_VERSION="1.25.16"
+    KIND_IMAGE_SHA="sha256:5da57dfc290ac3599e775e63b8b6c49c0c85d3fec771cd7d55b45fae14b38d3b"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
-  v1.21.x)
-    K8S_VERSION="1.21.10"
-    KIND_IMAGE_SHA="sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c"
+  v1.26.x)
+    K8S_VERSION="1.26.15"
+    KIND_IMAGE_SHA="sha256:84333e26cae1d70361bb7339efb568df1871419f2019c80f9a12b7e2d485fe19"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
-  v1.22.x)
-    K8S_VERSION="1.22.7"
-    KIND_IMAGE_SHA="sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166"
+  v1.27.x)
+    K8S_VERSION="1.27.13"
+    KIND_IMAGE_SHA="sha256:17439fa5b32290e3ead39ead1250dca1d822d94a10d26f1981756cd51b24b9d8"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
-  v1.23.x)
-    K8S_VERSION="1.23.4"
-    KIND_IMAGE_SHA="sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
+  v1.28.x)
+    K8S_VERSION="1.28.9"
+    KIND_IMAGE_SHA="sha256:dca54bc6a6079dd34699d53d7d4ffa2e853e46a20cd12d619a09207e35300bd0"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.29.x)
+    K8S_VERSION="1.29.4"
+    KIND_IMAGE_SHA="sha256:3abb816a5b1061fb15c6e9e60856ec40d56b7b52bcea5f5f1350bc6e2320b6f8"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.30.x)
+    K8S_VERSION="1.30.0"
+    KIND_IMAGE_SHA="sha256:047357ac0cfea04663786a612ba1eaba9702bef25227a794b52890dd8bcd692e"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   *) abort "Unsupported version: ${K8S_VERSION}" ;;

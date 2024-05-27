@@ -30,7 +30,7 @@ function abort() {
 }
 
 # Defaults
-K8S_VERSION="v1.20.x"
+K8S_VERSION="v1.28.x"
 REGISTRY_NAME="registry.local"
 REGISTRY_PORT="5000"
 CLUSTER_SUFFIX="cluster.local"
@@ -84,24 +84,34 @@ fi
 
 # The version map correlated with this version of KinD
 case ${K8S_VERSION} in
-  v1.24.x)
-    K8S_VERSION="1.24.15"
-    KIND_IMAGE_SHA="sha256:7db4f8bea3e14b82d12e044e25e34bd53754b7f2b0e9d56df21774e6f66a70ab"
-    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
-    ;;
   v1.25.x)
-    K8S_VERSION="1.25.11"
-    KIND_IMAGE_SHA="sha256:227fa11ce74ea76a0474eeefb84cb75d8dad1b08638371ecf0e86259b35be0c8"
+    K8S_VERSION="1.25.16"
+    KIND_IMAGE_SHA="sha256:5da57dfc290ac3599e775e63b8b6c49c0c85d3fec771cd7d55b45fae14b38d3b"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   v1.26.x)
-    K8S_VERSION="1.26.6"
-    KIND_IMAGE_SHA="sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb"
+    K8S_VERSION="1.26.15"
+    KIND_IMAGE_SHA="sha256:84333e26cae1d70361bb7339efb568df1871419f2019c80f9a12b7e2d485fe19"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   v1.27.x)
-    K8S_VERSION="1.27.3"
-    KIND_IMAGE_SHA="sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72"
+    K8S_VERSION="1.27.13"
+    KIND_IMAGE_SHA="sha256:17439fa5b32290e3ead39ead1250dca1d822d94a10d26f1981756cd51b24b9d8"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.28.x)
+    K8S_VERSION="1.28.9"
+    KIND_IMAGE_SHA="sha256:dca54bc6a6079dd34699d53d7d4ffa2e853e46a20cd12d619a09207e35300bd0"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.29.x)
+    K8S_VERSION="1.29.4"
+    KIND_IMAGE_SHA="sha256:3abb816a5b1061fb15c6e9e60856ec40d56b7b52bcea5f5f1350bc6e2320b6f8"
+    KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
+    ;;
+  v1.30.x)
+    K8S_VERSION="1.30.0"
+    KIND_IMAGE_SHA="sha256:047357ac0cfea04663786a612ba1eaba9702bef25227a794b52890dd8bcd692e"
     KIND_IMAGE="kindest/node:${K8S_VERSION}@${KIND_IMAGE_SHA}"
     ;;
   *) abort "Unsupported version: ${K8S_VERSION}" ;;
