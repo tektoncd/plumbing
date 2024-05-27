@@ -18,7 +18,7 @@ FROM golang:1.22-alpine@sha256:f1fe698725f6ed14eb944dc587591f134632ed47fc0732ec2
 
 WORKDIR /kind
 
-ARG KO_VERSION=0.15.1
+ARG KO_VERSION=0.15.4
 
 RUN apk add --no-cache \
   bash curl docker git jq openssl

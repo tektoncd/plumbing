@@ -19,7 +19,7 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 WORKDIR /kind
 
-ARG KO_VERSION=0.15.1
+ARG KO_VERSION=0.15.4
 
 # common util tools
 RUN apk add --no-cache \
