@@ -2019,7 +2019,7 @@ periodics:
         value: "true"
         effect: NoSchedule
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:11dc05cf6e81786ce5935e43aad29a84d6b662804cb57f740c9fb3e1e73ff5f7 # golang 1.19
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:v20240527-ba6de3cc76@sha256:4bf32c37d0dc8571ad0c00bffc7c37236b0d5432c17076d367d6f2a5a829520e # go 1.22, kind 0.23, ko 0.15.4
       imagePullPolicy: Always
       command:
         - /usr/local/bin/entrypoint.sh
@@ -2071,7 +2071,7 @@ periodics:
       value: "true"
       effect: NoSchedule
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:11dc05cf6e81786ce5935e43aad29a84d6b662804cb57f740c9fb3e1e73ff5f7 # golang 1.19
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:v20240527-ba6de3cc76@sha256:4bf32c37d0dc8571ad0c00bffc7c37236b0d5432c17076d367d6f2a5a829520e # go 1.22, kind 0.23, ko 0.15.4
       imagePullPolicy: Always
       securityContext:
         privileged: true
@@ -2123,7 +2123,7 @@ periodics:
         value: "true"
         effect: NoSchedule
     containers:
-    - image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:11dc05cf6e81786ce5935e43aad29a84d6b662804cb57f740c9fb3e1e73ff5f7 # golang 1.19
+    - image: gcr.io/tekton-releases/dogfooding/test-runner:v20240527-ba6de3cc76@sha256:4bf32c37d0dc8571ad0c00bffc7c37236b0d5432c17076d367d6f2a5a829520e # go 1.22, kind 0.23, ko 0.15.4
       imagePullPolicy: Always
       command:
         - /usr/local/bin/entrypoint.sh
