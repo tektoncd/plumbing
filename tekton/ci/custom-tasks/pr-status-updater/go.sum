@@ -206,8 +206,8 @@ github.com/hashicorp/golang-lru v1.0.2/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uG
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/imdario/mergo v0.3.15 h1:M8XP7IuFNsqUx6VPK2P9OSmsYsI/YFaGil0uD21V3dM=
 github.com/imdario/mergo v0.3.15/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
-github.com/jenkins-x/go-scm v1.14.35 h1:Yov9MqNEJz8xUYhbqNDPVE8dlgfx7rpR8W7dTqguczQ=
-github.com/jenkins-x/go-scm v1.14.35/go.mod h1:xY4ZqijM05jodyXQCyhb+AywJBytXjMLVijkpBHk/aQ=
+github.com/jenkins-x/go-scm v1.14.37 h1:Tq59JXyg5p4iuvIKf6+EA+Yzgxgpn/yG/yfM1mL8DDg=
+github.com/jenkins-x/go-scm v1.14.37/go.mod h1:MRLj/i0mhpMtqwwZV+x78SkEB8mx9rv3ebdRg9WunS8=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
@@ -328,8 +328,8 @@ github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/stvp/go-udp-testing v0.0.0-20201019212854-469649b16807/go.mod h1:7jxmlfBCDBXRzr0eAQJ48XC1hBu1np4CS5+cHEYfwpc=
-github.com/tektoncd/pipeline v0.60.1 h1:SRQ0p3LXBMtG4jcLBVmhENjrQIevah9CSo3jEvKpZDk=
-github.com/tektoncd/pipeline v0.60.1/go.mod h1:7bCvVXxBB06Ee7GVqYp+UKgUN5IadFvvH9wdLds5jZE=
+github.com/tektoncd/pipeline v0.60.2 h1:MrVSuSgmXDU4QHa9N/ubYbRE3AkoafL/S9pyeH2I/Gk=
+github.com/tektoncd/pipeline v0.60.2/go.mod h1:7bCvVXxBB06Ee7GVqYp+UKgUN5IadFvvH9wdLds5jZE=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
