@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ARG GO_VERSION=1.22.1
-FROM golang:1.22-alpine@sha256:9bdd5692d39acc3f8d0ea6f81327f87ac6b473dd29a2b6006df362bff48dd1f8 AS build
+FROM golang:1.22-alpine@sha256:6522f0ca555a7b14c46a2c9f50b86604a234cdc72452bf6a268cae6461d9000b AS build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
@@ -29,7 +29,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:479.0.0-alpine@sha256:437da33d4a2daf8eaab6094d03a9fb030411bcdb6d4ffa4c771e700564b21ee2
+FROM google/cloud-sdk:480.0.0-alpine@sha256:01f32075c106a0916f84bfae39ae6e02f2c04bb9ceef3705bb2e2f5373923622
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
