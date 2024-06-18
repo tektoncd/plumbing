@@ -164,7 +164,7 @@ RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Extra tools through go install
 ARG KIND_VERSION="v0.23.0"
-RUN GO111MODULE="on" go install github.com/google/go-licenses@latest && \
+RUN GO111MODULE="on" go install github.com/google/go-licenses@v1.0.0 && \
     GO111MODULE="on" go install github.com/jstemmer/go-junit-report@latest && \
     GO111MODULE="on" go install github.com/raviqqe/liche@latest && \
     GO111MODULE="on" go install sigs.k8s.io/kind@${KIND_VERSION}
