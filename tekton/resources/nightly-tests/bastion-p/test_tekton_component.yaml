@@ -57,5 +57,7 @@ spec:
       source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
       # extend test timeout (from 10 minutes to 20 minutes) to resolve https://github.com/tektoncd/pipeline/issues/3627
       sed -i 's/timeout  = 10/timeout  = 20/g' test/wait.go
+      #Enable Step Actions,Disable Affinity Assistant feature flags to run testcases in the cluster
+      kubectl patch cm feature-flags -n tekton-pipelines -p '{"data":{"enable-step-actions":"true","disable-affinity-assistant":"true"}}'
       header "Running Go $(params.tags) tests"
       report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path) -kubeconfig /root/.kube/config
