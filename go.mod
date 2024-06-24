@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/google/go-containerregistry v0.19.2
-	github.com/google/go-licenses v1.0.0
+	github.com/google/go-licenses v1.6.0
 )
 
 require (
