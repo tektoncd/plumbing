@@ -18,3 +18,4 @@ resources:
 - pr-status-updater-nightly
 - concurrency-nightly
 - workflows-nightly
+- results-nightly
