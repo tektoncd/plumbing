@@ -6,7 +6,6 @@ resources:
 - ko-nightly
 - koparse-nightly
 - kubectl-nightly
-- openssh-server-nightly
 - pipeline-test-runner-nightly
 - tkn-nightly
 - buildx-gcloud-nightly
