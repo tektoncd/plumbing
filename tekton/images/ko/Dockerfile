@@ -17,5 +17,5 @@ LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN apk add --no-cache musl-dev gcc git
 ENV GO111MODULE on
-RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
+RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 COPY --from=ko /ko-app/ko /usr/local/bin/ko
