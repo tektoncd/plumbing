@@ -17,13 +17,13 @@ LABEL description="Build container"
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
 RUN update-ca-certificates
 
-ARG KUBECTL_VERSION=1.26.11
+ARG KUBECTL_VERSION=1.28.11
 RUN wget -O/usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl; chmod +x /usr/local/bin/kubectl
 
 # Install Kustomize
 ENV GOBIN=/usr/local/go/bin
 ENV GO111MODULE on
-RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.5
+RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 
 FROM alpine:3.20@sha256:0a4eaa0eecf5f8c050e5bba433f58c052be7587ee8af3e8b3910ef9ab5fbe9f5
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
