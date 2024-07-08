@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.22@sha256:a66eda637829ce891e9cf61ff1ee0edf544e1f6c5b0e666c7310dce231a66f28 as buildcoverage
+FROM golang:1.22@sha256:fcae9e0e7313c6467a7c6632ebb5e5fab99bd39bd5eb6ee34a211353e647827a as buildcoverage
 RUN git clone https://github.com/knative/test-infra /go/src/knative.dev/test-infra
 RUN git -C /go/src/knative.dev/test-infra checkout ba4c2c3e061a59ac4b167da84924e9fa55475ad9 # Last commit before removal of tools/coverage
 RUN make -C /go/src/knative.dev/test-infra/tools/coverage
 
-FROM golang:1.22@sha256:a66eda637829ce891e9cf61ff1ee0edf544e1f6c5b0e666c7310dce231a66f28
+FROM golang:1.22@sha256:fcae9e0e7313c6467a7c6632ebb5e5fab99bd39bd5eb6ee34a211353e647827a
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
