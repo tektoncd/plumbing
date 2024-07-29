@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/jenkins-x/go-scm v1.14.39
-	github.com/tektoncd/pipeline v0.61.1
+	github.com/jenkins-x/go-scm v1.14.41
+	github.com/tektoncd/pipeline v0.62.0
 	k8s.io/apimachinery v0.30.3
 	k8s.io/client-go v0.30.3
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
@@ -19,7 +19,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/bluekeyes/go-gitdiff v0.7.3 // indirect
+	github.com/bluekeyes/go-gitdiff v0.7.4 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
