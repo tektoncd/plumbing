@@ -3,7 +3,7 @@ module github.com/tektoncd/plumbing
 go 1.22
 
 require (
-	github.com/google/go-containerregistry v0.20.0
+	github.com/google/go-containerregistry v0.20.1
 	github.com/google/go-licenses v1.6.0
 )
 
