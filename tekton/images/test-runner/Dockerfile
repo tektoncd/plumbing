@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.22.1
+ARG GO_VERSION=1.22.5
 # Build kubetest independently of the rest
 FROM golang:${GO_VERSION}@sha256:b8e62cf593cdaff36efd90aa3a37de268e6781a2e68c6610940c48f7cdf36984 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
