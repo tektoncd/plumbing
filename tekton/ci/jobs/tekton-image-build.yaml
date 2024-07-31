@@ -47,7 +47,9 @@ spec:
       while [ ! -f "${CONTEXT}/Dockerfile" ]; do
         if [ "${CONTEXT}" == "/" ]; then
           echo "No Dockerfile found in ${FQ_DOCKER_FILE}'s directory or any of its parents"
-          exit 1
+          # The file may be missing if it was deleted as part of the PR
+          # so we stop building but do not fail
+          exit 0
         fi
         CONTEXT=$(dirname ${CONTEXT})
       done
