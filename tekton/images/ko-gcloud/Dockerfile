@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.22.1
+ARG GO_VERSION=1.22.5
 FROM ghcr.io/ko-build/ko:v0.15.4@sha256:ad4cf979054995a7c61d3ded9125ae9c2c37022d08c543eede5c805ee3ce3475 AS ko
 FROM golang:1.22-alpine@sha256:0d3653dd6f35159ec6e3d10263a42372f6f194c3dea0b35235d72aabde86486e AS build
 LABEL description="Build container"
