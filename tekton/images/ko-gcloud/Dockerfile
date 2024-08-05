@@ -13,7 +13,7 @@
 # limitations under the License.
 
 ARG GO_VERSION=1.22.1
-FROM ghcr.io/ko-build/ko:v0.15.4@sha256:ad4cf979054995a7c61d3ded9125ae9c2c37022d08c543eede5c805ee3ce3475 AS ko
+FROM ghcr.io/ko-build/ko:v0.16.0@sha256:2e1108263f0c5f6bff2961b3101162319a77930c4377a654ea179c9cd14f7d1e AS ko
 FROM golang:1.22-alpine@sha256:0d3653dd6f35159ec6e3d10263a42372f6f194c3dea0b35235d72aabde86486e AS build
 LABEL description="Build container"
 
@@ -31,7 +31,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v4@v4.5.7
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:485.0.0-alpine@sha256:0986d2cc540558f949c2ec15e277f22c0c4d07faa98f65728955d0690fef4bce
+FROM google/cloud-sdk:486.0.0-alpine@sha256:4c437f46e93d26af92e62c8d549c04d6deb15e559363fc8ccc2d1ccbbbbd0431
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
