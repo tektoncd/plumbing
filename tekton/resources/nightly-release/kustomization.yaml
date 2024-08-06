@@ -22,3 +22,4 @@ resources:
 - overlays/pr-status-updater
 - overlays/concurrency
 - overlays/workflows
+- overlays/results
