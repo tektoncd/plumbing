@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jenkins-x/go-scm v1.14.41
-	github.com/tektoncd/pipeline v0.62.1
+	github.com/tektoncd/pipeline v0.62.2
 	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.31.0
 	k8s.io/client-go v0.31.0
