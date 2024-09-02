@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine/git:2.45.2@sha256:974dba823be60087cee33ad28c472e4f099225a79b5385735879ff9179ed9319
+FROM alpine/git:2.45.2@sha256:b2be8bfb61e6034e6be964daec9237bab9de5905f61f039b43da51dde4048a8c
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN adduser -D nonroot -u 1000
