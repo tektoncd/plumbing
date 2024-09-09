@@ -14,3 +14,11 @@ spec:
     value: $(body.params.release.versionTag)
   - name: projectName
     value: $(body.params.release.projectName)
+  - name: imageRegistry
+    value: $(body.params.registry.baseUri)
+  - name: imageRegistryPath
+    value: $(body.params.registry.path)
+  - name: imageRegistryRegions
+    value: $(body.params.registry.regions)
+  - name: imageRegistryUser
+    value: $(body.params.registry.user)

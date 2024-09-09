@@ -19,10 +19,16 @@
           value: $(tt.params.imageRegistry)
         - name: imageRegistryPath
           value: $(tt.params.imageRegistryPath)
+        - name: imageRegistryUser
+          value: $(tt.params.imageRegistryUser)
+        - name: imageRegistryRegions
+          value: $(tt.params.imageRegistryRegions)
         - name: versionTag
           value: $(tt.params.versionTag)
         - name: serviceAccountPath
           value: release.json
+        - name: serviceAccountImagesPath
+          value: credentials
         timeouts:
           pipeline: 2h30m0s
         workspaces:
@@ -37,3 +43,6 @@
           - name: release-secret
             secret:
               secretName: release-secret
+          - name: release-image-secret
+            secret:
+              secretName: ghcr-creds
