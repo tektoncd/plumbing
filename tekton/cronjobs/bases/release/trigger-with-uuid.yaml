@@ -84,6 +84,12 @@ spec:
                       "gitRepository": "$GIT_REPO",
                       "versionTag": "$VERSION_TAG",
                       "projectName": "$PROJECT_NAME"
+                    },
+                    "registry": {
+                      "baseUri": "$CR_URI",
+                      "path": "$CR_PATH",
+                      "regions": "$CR_REGIONS",
+                      "user": "$CR_USER"
                     }
                   }
                 }

@@ -18,5 +18,11 @@ spec:
   - name: imageRegistryPath
     description: Registry project where the images will be published to.
     default: tekton-nightly
+  - name: imageRegistryRegions
+    description: Regions of the registry (for gcr.io)
+    default: "us eu asia"
+  - name: imageRegistryUser
+    description: Registry user for authentication.
+    default: _json_key
   - name: projectName
     description: Name of the Tekton project to release (e.g. pipeline, triggers, etc).
