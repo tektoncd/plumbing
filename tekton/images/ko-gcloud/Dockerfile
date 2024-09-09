@@ -14,7 +14,7 @@
 
 ARG GO_VERSION=1.22.1
 FROM ghcr.io/ko-build/ko:v0.16.0@sha256:2e1108263f0c5f6bff2961b3101162319a77930c4377a654ea179c9cd14f7d1e AS ko
-FROM golang:1.23-alpine@sha256:d0b31558e6b3e4cc59f6011d79905835108c919143ebecc58f35965bf79948f4 AS build
+FROM golang:1.23-alpine@sha256:ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc451bda6aa5a87bc06 AS build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
@@ -31,7 +31,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:490.0.0-alpine@sha256:eae6d5d2b8da9feb9de1160e976a21c6f02d4971a43da1e873dedd6051476d3c
+FROM google/cloud-sdk:491.0.0-alpine@sha256:20ad69032acbe8235dc884f30289d3c66c1a070a80275b4652bf3ab24ac09b7a
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
