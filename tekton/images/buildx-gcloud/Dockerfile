@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine@sha256:eae6d5d2b8da9feb9de1160e976a21c6f02d4971a43da1e873dedd6051476d3c
+FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine@sha256:20ad69032acbe8235dc884f30289d3c66c1a070a80275b4652bf3ab24ac09b7a
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN  mkdir -p ~/.docker/cli-plugins \
