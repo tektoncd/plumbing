@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/tektoncd/triggers v0.29.0
+	github.com/tektoncd/triggers v0.29.1
 	google.golang.org/grpc v1.65.0
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
 )
@@ -55,7 +55,7 @@ require (
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	github.com/tektoncd/pipeline v0.62.1 // indirect
+	github.com/tektoncd/pipeline v0.62.3 // indirect
 	github.com/tidwall/gjson v1.12.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
