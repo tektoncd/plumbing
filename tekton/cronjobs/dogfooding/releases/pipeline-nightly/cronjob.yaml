@@ -17,7 +17,7 @@ spec:
               - name: CR_URI
                 value: ghcr.io
               - name: CR_PATH
-                value: tektoncd
+                value: tektoncd/pipeline
               - name: CR_REGIONS
                 value: ""
               - name: CR_USER
