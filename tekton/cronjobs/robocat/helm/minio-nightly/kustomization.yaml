@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -minio-helm
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/helm
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-minio-helm"
+patches:
+- path: cronjob.yaml

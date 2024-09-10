@@ -1,2 +1,2 @@
-# yamllint disable-line rule:empty-values
-resources:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

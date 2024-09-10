@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -robotcat-tekton-resources
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/folder
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-robotcat-tekton-resources"
+patches:
+- path: cronjob.yaml

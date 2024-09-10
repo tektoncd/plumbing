@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -cloudevents-nightly-release
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/release
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-cloudevents-nightly-release"
+patches:
+- path: cronjob.yaml

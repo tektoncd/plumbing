@@ -6,3 +6,5 @@ resources:
 - mario-github-comment.yaml
 - mario-image-build-trigger.yaml
 - ingress.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

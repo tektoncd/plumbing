@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -tekton-upstream
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/catalog
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-tekton-upstream"
+patches:
+- path: cronjob.yaml

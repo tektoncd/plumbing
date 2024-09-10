@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -dogfooding-tekton-nightly
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/cleanup
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-dogfooding-tekton-nightly"
+patches:
+- path: cronjob.yaml

@@ -1,10 +1,12 @@
-bases:
-  - ../../../bases
 
 patches:
-  - path: template.yaml
-    target:
-      group: triggers.tekton.dev
-      version: v1beta1
-      kind: TriggerTemplate
-      name: ci-pipeline
+- path: template.yaml
+  target:
+    group: triggers.tekton.dev
+    kind: TriggerTemplate
+    name: ci-pipeline
+    version: v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../../bases

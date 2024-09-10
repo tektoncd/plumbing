@@ -1,9 +1,11 @@
-bases:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../base
-patchesStrategicMerge:
-- config-defaults.yaml
-- config-observability.yaml
-- webhook.yaml
-- controller.yaml
-- feature-flags.yaml
-- git-resolver-config.yaml
+patches:
+- path: config-defaults.yaml
+- path: config-observability.yaml
+- path: webhook.yaml
+- path: controller.yaml
+- path: feature-flags.yaml
+- path: git-resolver-config.yaml

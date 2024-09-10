@@ -1,18 +1,19 @@
 namePrefix: pr-status-updater-
-bases:
-  - ../../base
-patchesJson6902:
-  - target:
-      group: triggers.tekton.dev
-      version: v1alpha1
-      kind: TriggerTemplate
-      name: template
-    path: template.yaml
-  - target:
-      group: triggers.tekton.dev
-      version: v1alpha1
-      kind: Trigger
-      name: nightly
-    path: trigger.yaml
 resources:
-  - github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-status-updater/tekton/?ref=main
+- github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-status-updater/tekton/?ref=main
+- ../../base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: template.yaml
+  target:
+    group: triggers.tekton.dev
+    kind: TriggerTemplate
+    name: template
+    version: v1alpha1
+- path: trigger.yaml
+  target:
+    group: triggers.tekton.dev
+    kind: Trigger
+    name: nightly
+    version: v1alpha1

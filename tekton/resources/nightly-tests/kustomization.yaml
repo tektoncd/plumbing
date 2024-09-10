@@ -18,3 +18,5 @@ resources:
 - operator-deploy-test-ppc64le-template.yaml
 - dashboard-deploy-test-ppc64le-template.yaml
 - catalog-deploy-test-ppc64le-template.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

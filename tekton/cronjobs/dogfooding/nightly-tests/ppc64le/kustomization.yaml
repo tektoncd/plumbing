@@ -6,3 +6,5 @@ resources:
 - operator-nightly-test
 - dashboard-nightly-test
 - catalog-nightly-test
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
