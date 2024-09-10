@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -robocat-cert-manager
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/helm
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-robocat-cert-manager"
+patches:
+- path: cronjob.yaml

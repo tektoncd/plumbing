@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -hub
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/image-build
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-hub"
+patches:
+- path: cronjob.yaml

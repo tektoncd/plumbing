@@ -1,7 +1,11 @@
-commonLabels:
-  app: tekton.ci
 resources:
-  - template.yaml
-  - trigger.yaml
+- template.yaml
+- trigger.yaml
 configurations:
 - kustomizeconfig/trigger.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- includeSelectors: true
+  pairs:
+    app: tekton.ci

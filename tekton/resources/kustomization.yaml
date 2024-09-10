@@ -9,3 +9,5 @@ resources:
 - ci
 - nightly-release
 - nightly-tests
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

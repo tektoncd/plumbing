@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -catalog-s390x
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../../bases/nightly-tests
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-catalog-s390x"
+patches:
+- path: cronjob.yaml

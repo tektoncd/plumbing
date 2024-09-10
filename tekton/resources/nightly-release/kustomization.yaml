@@ -22,3 +22,5 @@ resources:
 - overlays/pr-status-updater
 - overlays/concurrency
 - overlays/workflows
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

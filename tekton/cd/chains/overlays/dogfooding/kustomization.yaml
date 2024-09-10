@@ -1,6 +1,8 @@
-bases:
-  - ../../base
-patchesStrategicMerge:
-  - chains-config.yaml
-  - config-observability.yaml
-  - serviceaccount.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../base
+patches:
+- path: chains-config.yaml
+- path: config-observability.yaml
+- path: serviceaccount.yaml

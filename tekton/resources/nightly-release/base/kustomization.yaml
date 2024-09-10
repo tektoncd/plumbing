@@ -1,11 +1,15 @@
 namePrefix: nightly-release-
-commonLabels:
-  app: tekton.plumbing
 commonAnnotations:
   release: nightly
 resources:
-  - template.yaml
-  - trigger.yaml
+- template.yaml
+- trigger.yaml
 configurations:
 - kustomizeconfig/eventlistener.yaml
 - kustomizeconfig/pipeline.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- includeSelectors: true
+  pairs:
+    app: tekton.plumbing

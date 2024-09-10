@@ -1,5 +1,7 @@
-bases:
-  - ../../../bases/image-build
-patchesStrategicMerge:
-  - cronjob.yaml
-nameSuffix: "-catlin"
+nameSuffix: -catlin
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../../bases/image-build
+patches:
+- path: cronjob.yaml

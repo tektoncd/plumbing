@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -prow-plugins
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/configmap
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-prow-plugins"
+patches:
+- path: cronjob.yaml

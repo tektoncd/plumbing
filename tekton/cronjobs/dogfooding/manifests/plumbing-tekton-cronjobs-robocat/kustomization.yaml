@@ -1,5 +1,7 @@
-bases:
+nameSuffix: -dogfooding-tekton-cronjobs-robocat
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
 - ../../../bases/folder
-patchesStrategicMerge:
-- cronjob.yaml
-nameSuffix: "-dogfooding-tekton-cronjobs-robocat"
+patches:
+- path: cronjob.yaml

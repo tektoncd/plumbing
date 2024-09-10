@@ -7,3 +7,5 @@ resources:
 - test_tekton_cli.yaml
 - k8s_cluster_setup.yaml
 - ../base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
