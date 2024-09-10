@@ -29,6 +29,8 @@
           value: release.json
         - name: serviceAccountImagesPath
           value: credentials
+        - name: koExtraArgs
+          value: ""
         timeouts:
           pipeline: 2h30m0s
         workspaces:
