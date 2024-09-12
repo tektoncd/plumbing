@@ -98,6 +98,14 @@ spec:
             env:
               - name: SINK_URL
                 value: "el-tekton-nightly.tekton-nightly.svc.cluster.local:8080"
+              - name: CR_URI
+                value: gcr.io
+              - name: CR_PATH
+                value: tekton-nightly
+              - name: CR_REGIONS
+                value: "us eu asia"
+              - name: CR_USER
+                value: _json_key
               - name: PROJECT_NAME
                 value: "project-name"
             volumeMounts:
