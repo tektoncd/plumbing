@@ -142,21 +142,13 @@ if __name__ == "__main__":
         container_registry, expected_images, base = backwards_compatible_params(
             args.container_registry, args.images, args.base)
 
-        # For backwards compatibility, if container registry is not provided, we assume it's
-        # the first section of the base, which is the legacy behavior. We then need to strip
-        # container registry out of the expected images and base
-        if not args.container_registry:
-            container_registry = "/".join(args.base.split("/")[:1])
-            base = "/".join(args.base.split("/")[2:])
-            expected_images = ["/".join(image.split("/")[2:]) for image in args.images]
-
         if args.preserve_path:
             search_path = "/".join([container_registry, args.base])
         else:
             search_path = container_registry
 
         images = parse_release(search_path, args.path)
-        compare_expected_images(images, images, container_registry, args.preserve_path)
+        compare_expected_images(expected_images, images, container_registry, args.preserve_path)
     except (IOError, BadActualImageFormatError) as e:
         sys.stderr.write("Error determining built images: %s\n" % e)
         sys.exit(1)
