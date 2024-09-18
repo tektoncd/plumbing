@@ -7,3 +7,4 @@ data:
   enable-api-fields: "alpha"
   enable-step-actions: "true"
   enable-tekton-oci-bundles: "true"
+  enable-cel-in-whenexpression: "true"
