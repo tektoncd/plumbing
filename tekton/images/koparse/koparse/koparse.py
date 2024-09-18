@@ -134,7 +134,7 @@ if __name__ == "__main__":
                             help="String prefix which is used to find images within the release.yaml")
     arg_parser.add_argument("--images", type=str, required=True, nargs="+",
                             help="List of all images expected to be built, without digests")
-    arg_parser.add_argument("--preserve-path", dest="preserve_path", type=bool, required=False, default=True,
+    arg_parser.add_argument("--preserve-path", dest="preserve_path", action=argparse.BooleanOptionalAction, required=False, default=True,
                             help="Whether ko is configured to preserve the images base path")
     args = arg_parser.parse_args()
 
