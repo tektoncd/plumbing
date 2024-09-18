@@ -60,7 +60,8 @@ spec:
         --context=${CONTEXT} \
         --destination=${IMAGE_NAME} \
         --digest-file=${DIGEST_FILE} \
-        --no-push
+        --no-push \
+        --force
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
