@@ -139,8 +139,8 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
 
     try:
-        container_registry, expected_images, base = backwards_compatible_params(
-            args.container_registry, args.images, args.base)
+        container_registry, base, expected_images = backwards_compatible_params(
+            args.container_registry, args.base, args.images)
 
         if args.preserve_path:
             search_path = "/".join([container_registry, args.base])
