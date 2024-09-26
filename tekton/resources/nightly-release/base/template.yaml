@@ -12,6 +12,8 @@ spec:
     description: The Git repository to be used for the release.
   - name: versionTag
     description: The version tag to be applied to published images.
+  - name: runTests
+    description: Whether to run the tests during release
   - name: imageRegistry
     description: Registry where the images will be published to.
     default: gcr.io
