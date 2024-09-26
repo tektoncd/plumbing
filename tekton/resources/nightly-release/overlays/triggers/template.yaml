@@ -41,6 +41,6 @@
           - name: release-secret
             secret:
               secretName: release-secret
-          - name: release-image-secret
+          - name: release-images-secret
             secret:
               secretName: ghcr-creds
