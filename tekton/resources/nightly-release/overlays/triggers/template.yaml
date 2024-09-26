@@ -25,6 +25,8 @@
           value: $(tt.params.imageRegistryRegions)
         - name: versionTag
           value: $(tt.params.versionTag)
+        - name: runTests
+          value: $(tt.params.runTests)
         - name: serviceAccountPath
           value: release.json
         - name: serviceAccountImagesPath

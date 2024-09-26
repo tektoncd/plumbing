@@ -14,6 +14,8 @@ spec:
     value: $(body.params.release.versionTag)
   - name: projectName
     value: $(body.params.release.projectName)
+  - name: runTests
+    value: $(body.params.release.runTests)
   - name: imageRegistry
     value: $(body.params.registry.baseUri)
   - name: imageRegistryPath
