@@ -29,6 +29,8 @@
           value: release.json
         - name: serviceAccountImagesPath
           value: credentials
+        - name: koExtraArgs
+          value: ""
         workspaces:
           - name: workarea
             volumeClaimTemplate:
