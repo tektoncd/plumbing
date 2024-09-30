@@ -31,89 +31,87 @@ spec:
     type: string
   - name: registryPath
     description: The base path in the registry
+  - name: registryUser
+    description: The user to authenticate to the registry
     type: string
-  - name: serviceAccountFilename
-    description: The name of the GKE service account file on the serviceaccount workspace
+  - name: registryCredentialsFilename
+    description: The path to the container registry credentials in the workspace
     type: string
   workspaces:
   - name: shared
     description: Shared workspace for tasks
-  - name: serviceaccount
-    description: Hosts a GKE service account file
+  - name: registryCredentials
+    description: Hosts credentials for the container registry
   tasks:
-  - name: git-clone
-    taskRef:
-      name: git-clone
-    workspaces:
-    - name: output
-      workspace: shared
+  - name: clone-and-publish
     params:
     - name: url
       value: "$(params.gitRepository)"
     - name: revision
       value: "$(params.gitRevision)"
-  - name: create-dockerfile
-    runAfter: ['git-clone']
-    taskSpec:
-      workspaces:
-        - name: serviceaccount
-        - name: dockerfile
-      params:
-        - name: serviceAccountFilename
-        - name: registry
-      steps:
-        - name: gke-serviceaccount-to-dockerfile
-          image: debian:bullseye-slim
-          env:
-            - name: DOCKER_CONFIG_FOLDER
-              value: "$(workspaces.dockerfile.path)"
-            - name: SERVICE_ACCOUNT_FILE
-              value: "$(workspaces.serviceaccount.path)/$(params.serviceAccountFilename)"
-            - name: REGISTRY
-              value: "$(params.registry)"
-          script: |
-            set -e
-            # This step transforms sensitive information
-            # Make sure we don't write it to the logs
-            set +x
-            cat <<EOF > "${DOCKER_CONFIG_FOLDER}/config.json"
-            {
-              "auths": {
-                "$REGISTRY": {
-                  "auth": "$(echo "_json_key:$(cat ${SERVICE_ACCOUNT_FILE})" | base64 -w 0)"
-                }
-              }
-            }
-            EOF
-    params:
-      - name: serviceAccountFilename
-        value: "$(params.serviceAccountFilename)"
-      - name: registry
-        value: "$(params.registry)"
-    workspaces:
-      - name: serviceaccount
-        workspace: serviceaccount
-      - name: dockerfile
-        workspace: shared
-  - name: publish
-    runAfter: ['create-dockerfile']
-    params:
-    - name: REGISTRY
+    - name: registry
       value: "$(params.registry)"
-    - name: PATH
+    - name: registryPath
       value: "$(params.registryPath)"
-    - name: TAG
-      value: "$(tasks.git-clone.results.commit)"
+    - name: registryUser
+      value: "$(params.registryUser)"
+    - name: registryCredentialsFilename
+      value: "$(params.registryCredentialsFilename)"
     workspaces:
       - name: shared
+        workspace: shared
+      - name: registryCredentials
+        workspace: registryCredentials
     taskSpec:
       params:
-        - name: REGISTRY
-        - name: PATH
-        - name: TAG
+        - name: url
+        - name: revision
+        - name: registry
+        - name: registryPath
+        - name: registryUser
+        - name: registryCredentialsFilename
       workspaces:
         - name: shared
+        - name: registryCredentials
       steps:
+        - name: fetch-repo
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/git-clone/0.1/git-clone.yaml
+          params:
+          - name: url
+            value: $(params.url)
+          - name: revision
+            value: $(params.revision)
+          - name: output-path
+            value: $(workspaces.shared.path)
+        - name: container-registry-auth
+          image: cgr.dev/chainguard/crane:latest-dev@sha256:cdb799cd2e649a2c9a52e1115453b9e2fce6546505f3836628816bf5c6ce8f6e
+          script: |
+            #!/bin/bash
+            set -ex
+
+            # Login to the container registry
+            DOCKER_CONFIG=$(cat ${CONTAINER_REGISTRY_CREDENTIALS} | \
+              crane auth login -u ${CONTAINER_REGISTRY_USER} --password-stdin ${REGISTRY} 2>&1 | \
+              sed 's,^.*logged in via \(.*\)$,\1,g')
+
+            cp ${DOCKER_CONFIG} ${DOCKER_CONFIG_FOLDER}/config.json
+          env:
+            - name: DOCKER_CONFIG_FOLDER
+              value: "$(workspaces.shared.path)"
+            - name: CONTAINER_REGISTRY_CREDENTIALS
+              value: "$(workspaces.registryCredentials.path)/$(params.registryCredentialsFilename)"
+            - name: REGISTRY
+              value: "$(params.registry)"
+            - name: CONTAINER_REGISTRY_USER
+              value: "$(params.registryUser)"
         - name: publish-tasks
           ref:
             resolver: git
@@ -132,11 +130,11 @@ spec:
             - name: RESOURCE
               value: "task"
             - name: REGISTRY
-              value: "$(params.REGISTRY)"
+              value: "$(params.registry)"
             - name: PATH
-              value: "$(params.PATH)/tasks"
+              value: "$(params.registryPath)/tasks"
             - name: TAG
-              value: "$(params.TAG)"
+              value: "$(steps.fetch-repo.results.commit)"
         - name: publish-steps
           ref:
             resolver: git
@@ -155,11 +153,11 @@ spec:
             - name: RESOURCE
               value: "stepaction"
             - name: REGISTRY
-              value: "$(params.REGISTRY)"
+              value: "$(params.registry)"
             - name: PATH
-              value: "$(params.PATH)/stepactions"
+              value: "$(params.registryPath)/stepactions"
             - name: TAG
-              value: "$(params.TAG)"
+              value: "$(steps.fetch-repo.results.commit)"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -175,6 +173,8 @@ spec:
     description: The registry to publish to
   - name: registryPath
     description: The base path in the registry
+  - name: registryUser
+    description: The user to authenticate to the registry
   - name: catalogDescription
     description: A descriptive name for the catalog
   resourcetemplates:
@@ -185,6 +185,9 @@ spec:
     spec:
       pipelineRef:
         name: catalog-publish
+      podTemplate:
+        securityContext:
+          fsGroup: 65532
       params:
         - name: gitRepository
           value: "$(tt.params.gitRepository)"
@@ -194,17 +197,13 @@ spec:
           value: "$(tt.params.registry)"
         - name: registryPath
           value: "$(tt.params.registryPath)"
-        - name: serviceAccountFilename
-          value: "release.json"
+        - name: registryUser
+          value: "$(tt.params.registryUser)"
+        - name: registryCredentialsFilename
+          value: "credentials"
       workspaces:
         - name: shared
-          volumeClaimTemplate:
-            spec:
-              accessModes:
-                - ReadWriteOnce
-              resources:
-                requests:
-                  storage: 1Gi
-        - name: serviceaccount
+          emptyDir: {}
+        - name: registryCredentials
           secret:
-            secretName: "release-secret"
+            secretName: "ghcr-creds"

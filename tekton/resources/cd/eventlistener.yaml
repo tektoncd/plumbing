@@ -112,6 +112,8 @@ spec:
           value: "$(body.params.catalog.registry)"
         - name: registryPath
           value: "$(body.params.catalog.registryPath)"
+        - name: registryUser
+          value: "$(body.params.catalog.registryUser)"
         - name: catalogDescription
           value: "$(body.params.catalog.description)"
       template:
