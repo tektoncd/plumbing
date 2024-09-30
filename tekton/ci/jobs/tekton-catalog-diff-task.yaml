@@ -21,7 +21,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.4
+            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
           - name: name
             value: git-clone
           - name: kind
