@@ -43,6 +43,7 @@ spec:
                     "catalog": {
                         "registry": "$REGISTRY_URL",
                         "registryPath": "$REGISTRY_PATH",
+                        "registryUser": "$REGISTRY_USER",
                         "description": "$CATALOG_DESCRIPTION"
                     }
                   }

@@ -17,8 +17,10 @@ spec:
               - name: GIT_REVISION
                 value: "main"
               - name: REGISTRY_URL
-                value: "gcr.io"
+                value: "ghcr.io"
               - name: REGISTRY_PATH
-                value: "tekton-releases/catalog/upstream"
+                value: "tektoncd/catalog/upstream"
+              - name: REGISTRY_USER
+                value: "tekton-robot"
               - name: CATALOG_DESCRIPTION
                 value: "tekton"
