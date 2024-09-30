@@ -66,7 +66,7 @@ spec:
         - name: git-clone-operator
           taskRef:
             name: git-clone
-            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.3
+            bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
           params:
           - name: url
             value: https://github.com/tektoncd/operator
