@@ -121,7 +121,7 @@ spec:
               - name: revision
                 value: main
               - name: pathInRepo
-                value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
+                value: stepaction/tekton-catalog-publish/0.2/tekton-catalog-publish.yaml
           params:
             - name: catalogPath
               value: $(workspaces.shared.path)
@@ -135,6 +135,8 @@ spec:
               value: "$(params.registryPath)/tasks"
             - name: TAG
               value: "$(steps.fetch-repo.results.commit)"
+            - name: TKN_ARGS
+              value: "--label org.opencontainers.image.source=$(params.url)"
         - name: publish-steps
           ref:
             resolver: git
@@ -144,7 +146,7 @@ spec:
               - name: revision
                 value: main
               - name: pathInRepo
-                value: stepaction/tekton-catalog-publish/0.1/tekton-catalog-publish.yaml
+                value: stepaction/tekton-catalog-publish/0.2/tekton-catalog-publish.yaml
           params:
             - name: catalogPath
               value: $(workspaces.shared.path)
@@ -158,6 +160,8 @@ spec:
               value: "$(params.registryPath)/stepactions"
             - name: TAG
               value: "$(steps.fetch-repo.results.commit)"
+            - name: TKN_ARGS
+              value: "--label org.opencontainers.image.source=github.com/tektoncd/catalog"
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
