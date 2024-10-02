@@ -100,7 +100,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-batch-merge:0.2
           - name: name
             value: git-batch-merge
           - name: kind

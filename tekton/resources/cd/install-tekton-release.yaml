@@ -160,7 +160,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
           - name: name
             value: git-clone
           - name: kind
@@ -185,7 +185,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/gcs-download:0.1
           - name: name
             value: gcs-download
           - name: kind
@@ -212,7 +212,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/gcs-download:0.1
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/gcs-download:0.1
           - name: name
             value: gcs-download
           - name: kind

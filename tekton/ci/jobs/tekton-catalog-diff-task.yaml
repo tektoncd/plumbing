@@ -21,7 +21,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
           - name: name
             value: git-clone
           - name: kind
@@ -45,7 +45,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-cli:0.3
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-cli:0.3
           - name: name
             value: git-cli
           - name: kind
@@ -109,7 +109,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/github-add-comment:0.3
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/github-add-comment:0.3
           - name: name
             value: github-add-comment
           - name: kind
