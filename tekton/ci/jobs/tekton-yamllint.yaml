@@ -26,7 +26,7 @@ spec:
   - name: git-clone
     taskRef:
       name: git-clone
-      bundle: gcr.io/tekton-releases/catalog/upstream/git-clone:0.7
+      bundle: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
     params:
       - name: url
         value: $(params.gitRepository)
@@ -67,7 +67,7 @@ spec:
         values: ["passed"]              # In cases triggered not by specific github comments
     taskRef:
       name: yaml-lint
-      bundle: gcr.io/tekton-releases/catalog/upstream/yaml-lint:0.1
+      bundle: ghcr.io/tektoncd/catalog/upstream/tasks/yaml-lint:0.1
     params:
     - name: args
       value: ["$(params.args[*])"]
