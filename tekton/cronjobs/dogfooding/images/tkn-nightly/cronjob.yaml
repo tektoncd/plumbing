@@ -22,7 +22,7 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/tkn
+              value: ghcr.io/tektoncd/plumbing/tkn
             - name: CONTEXT_PATH
               value: tekton/images/tkn
             - name: BUILD_TYPE

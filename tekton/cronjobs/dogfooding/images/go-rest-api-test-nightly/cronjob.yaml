@@ -22,7 +22,7 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/go-rest-api-test
+              value: ghcr.io/tektoncd/plumbing/go-rest-api-test
             - name: CONTEXT_PATH
               value: .
             - name: BUILD_TYPE
