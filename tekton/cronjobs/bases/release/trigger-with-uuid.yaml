@@ -110,7 +110,7 @@ spec:
               - name: PROJECT_NAME
                 value: "project-name"
               - name: RUN_TESTS
-                value: false
+                value: "false"
             volumeMounts:
             - mountPath: /shared
               name: shared-volume
