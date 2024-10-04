@@ -33,6 +33,8 @@
           value: credentials
         - name: koExtraArgs
           value: ""
+        - name: runTests
+          value: $(tt.params.runTests)
         workspaces:
           - name: workarea
             volumeClaimTemplate:
