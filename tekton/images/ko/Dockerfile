@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM ghcr.io/ko-build/ko:v0.16.0@sha256:2e1108263f0c5f6bff2961b3101162319a77930c4377a654ea179c9cd14f7d1e AS ko
-FROM golang:1.23-alpine@sha256:ac67716dd016429be8d4c2c53a248d7bcdf06d34127d3dc451bda6aa5a87bc06
+FROM golang:1.23-alpine@sha256:9dd2625a1ff2859b8d8b01d8f7822c0f528942fe56cfe7a1e7c38d3b8d72d679
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
 RUN apk add --no-cache musl-dev gcc git
