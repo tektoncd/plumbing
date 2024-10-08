@@ -198,7 +198,7 @@ spec:
             value: '{"pull-request-id": "$(params.pullRequestID)", "build-pipelinerun": "$(context.pipelineRun.name)", "git-url": "https://$(params.gitRepository)", "git-revision": "$(params.gitRevision)", "target-image": "$(params.targetImage)", "status": "$(tasks.clone-and-build.status)"}'
           taskRef:
             name: cloudevent
-            bundle: gcr.io/tekton-releases/catalog/upstream/cloudevent:0.1
+            bundle: ghcr.io/tektoncd/catalog/upstream/tasks/cloudevent:0.1
       params:
       - name: pullRequestID
         value: $(tt.params.pullRequestID)

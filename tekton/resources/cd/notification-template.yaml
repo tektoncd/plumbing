@@ -39,7 +39,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/send-to-webhook-slack:0.1
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/send-to-webhook-slack:0.1
           - name: name
             value: send-to-webhook-slack
           - name: kind

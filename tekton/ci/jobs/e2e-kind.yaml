@@ -137,7 +137,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/git-batch-merge:0.2
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-batch-merge:0.2
           - name: name
             value: git-batch-merge
           - name: kind
@@ -208,7 +208,7 @@ spec:
         resolver: bundles
         params:
           - name: bundle
-            value: gcr.io/tekton-releases/catalog/upstream/gcs-upload:0.1
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/gcs-upload:0.1
           - name: name
             value: gcs-upload
           - name: kind
