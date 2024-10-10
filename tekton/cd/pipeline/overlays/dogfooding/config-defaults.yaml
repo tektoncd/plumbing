@@ -4,4 +4,4 @@ metadata:
   name: config-defaults
   namespace: tekton-pipelines
 data:
-  default-cloud-events-sink: http://kafka-broker-ingress.knative-eventing.svc.cluster.local/default/default
+  default-cloud-events-sink: http://el-tekton-events.default:8080
