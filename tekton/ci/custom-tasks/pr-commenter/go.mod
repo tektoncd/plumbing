@@ -6,7 +6,7 @@ toolchain go1.22.4
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/jenkins-x/go-scm v1.14.41
+	github.com/jenkins-x/go-scm v1.14.43
 	github.com/tektoncd/pipeline v0.64.0
 	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.31.1
@@ -22,7 +22,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/bluekeyes/go-gitdiff v0.7.4 // indirect
+	github.com/bluekeyes/go-gitdiff v0.8.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
