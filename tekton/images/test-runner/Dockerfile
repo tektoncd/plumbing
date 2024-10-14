@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/ubuntu:24.04@sha256:b359f1067efa76f37863778f7b6d0e8d911e3ee8efa807ad01fbf5dc1ef9006b
+FROM docker.io/library/ubuntu:24.04@sha256:ab64a8382e935382638764d8719362bb50ee418d944c1f3d26e0c99fae49a345
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 
