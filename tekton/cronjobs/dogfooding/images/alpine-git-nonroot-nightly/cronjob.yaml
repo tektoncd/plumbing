@@ -22,7 +22,7 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/alpine-git-nonroot
+              value: ghcr.io/tektoncd/plumbing/alpine-git-nonroot
             - name: CONTEXT_PATH
               value: tekton/images/alpine-git-nonroot
             - name: BUILD_TYPE
