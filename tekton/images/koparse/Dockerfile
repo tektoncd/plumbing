@@ -13,6 +13,9 @@
 # limitations under the License.
 FROM python:3.13.0-alpine@sha256:81362dd1ee15848b118895328e56041149e1521310f238ed5b2cdefe674e6dbf
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for koparse"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 COPY ["koparse/koparse.py", "/usr/local/bin/koparse"]
 RUN chmod +x /usr/local/bin/koparse

@@ -34,6 +34,9 @@ RUN apk add --no-cache yq
 FROM google/cloud-sdk:496.0.0-alpine@sha256:f59b6e6a2ed1b935f810e16c60db066a91a6395dff880052bcd17ece8e798cac
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Build Container for Ko"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 # Install golang
 RUN curl https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz > go${GO_VERSION}.tar.gz

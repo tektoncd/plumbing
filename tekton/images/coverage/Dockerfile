@@ -19,6 +19,9 @@ RUN make -C /go/src/knative.dev/test-infra/tools/coverage
 
 FROM golang:1.23@sha256:a7f2fc9834049c1f5df787690026a53738e55fc097cd8a4a93faa3e06c67ee32
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for testing Coverage"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \

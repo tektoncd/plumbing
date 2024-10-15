@@ -27,6 +27,9 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 
 FROM alpine:3.20@sha256:beefdbd8a1da6d2915566fde36db9db0b524eb737fc57cd1367effd16dc0d06d
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for kubectl"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 # Kustomize requires git when pulling remote resources
 RUN apk --update add git less openssh && \
