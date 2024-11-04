@@ -22,7 +22,7 @@ spec:
             - name: SINK_URL
               value: el-image-builder.default.svc.cluster.local:8080
             - name: TARGET_IMAGE
-              value: gcr.io/tekton-releases/dogfooding/koparse
+              value: ghcr.io/tektoncd/plumbing/koparse
             - name: CONTEXT_PATH
               value: tekton/images/koparse
             - name: BUILD_TYPE
