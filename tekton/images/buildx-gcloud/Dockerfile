@@ -13,6 +13,9 @@
 # limitations under the License.
 FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine@sha256:1a165df95679dad757f1828601616d39a9d2c58582dc917984f4c1956a9e9655
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for Buildx"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 RUN  mkdir -p ~/.docker/cli-plugins \
      && curl -fsSL https://github.com/docker/buildx/releases/download/v0.8.1/buildx-v0.8.1.linux-amd64 > ~/.docker/cli-plugins/docker-buildx \

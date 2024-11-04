@@ -26,6 +26,9 @@ RUN cd /go/src/k8s.io/test-infra && \
 FROM docker.io/library/ubuntu:24.04@sha256:99c35190e22d294cdace2783ac55effc69d32896daaa265f0bbedbcde4fbe3e5
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for Test runner"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 ENV TERM=xterm
 
