@@ -6,7 +6,7 @@ toolchain go1.22.4
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/jenkins-x/go-scm v1.14.43
+	github.com/jenkins-x/go-scm v1.14.44
 	github.com/tektoncd/pipeline v0.65.0
 	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.31.2
@@ -18,6 +18,7 @@ require (
 	code.gitea.io/sdk/gitea v0.18.0 // indirect
 	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
+	fortio.org/safecast v1.0.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
