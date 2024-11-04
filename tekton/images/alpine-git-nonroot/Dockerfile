@@ -13,6 +13,9 @@
 # limitations under the License.
 FROM alpine/git:2.45.2@sha256:80ed34dbc31f821e1555812bfef429382b5d6959fc875c0937b44763ee780ebe
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for Alpine-git Nonroot"
+LABEL org.opencontainers.image.licenses=Apache-2.0
 
 RUN adduser -D nonroot -u 1000
 USER nonroot

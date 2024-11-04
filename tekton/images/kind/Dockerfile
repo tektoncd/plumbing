@@ -15,6 +15,10 @@
 # Runtime image for common dependencies when running kind tests.
 
 FROM golang:1.23-alpine@sha256:9dd2625a1ff2859b8d8b01d8f7822c0f528942fe56cfe7a1e7c38d3b8d72d679
+LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
+LABEL org.opencontainers.image.description="Image for kind"
+LABEL org.opencontainers.image.licenses=Apache-2.0
+
 
 WORKDIR /kind
 
