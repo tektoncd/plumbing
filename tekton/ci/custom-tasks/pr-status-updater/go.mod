@@ -7,7 +7,7 @@ toolchain go1.22.4
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/jenkins-x/go-scm v1.14.44
-	github.com/tektoncd/pipeline v0.65.0
+	github.com/tektoncd/pipeline v0.65.1
 	k8s.io/apimachinery v0.31.2
 	k8s.io/client-go v0.31.2
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
