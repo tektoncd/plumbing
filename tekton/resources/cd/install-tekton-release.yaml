@@ -57,7 +57,7 @@ spec:
         value: $(workspaces.resources.path)/plumbing/tekton/cd
   steps:
   - name: deploy-tekton-project
-    image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
@@ -92,7 +92,7 @@ spec:
       kubectl apply --kubeconfig $KUBECONFIG $APPLY_MODE
 
   - name: wait-until-pods-and-crds
-    image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail
@@ -108,7 +108,7 @@ spec:
         kubectl wait --for condition=established --timeout=60s crd -l app.kubernetes.io/part-of=$APPLICATION
       fi
   - name: deploy-extra-manifest
-    image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
+    image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
     script: |
       #!/usr/bin/env bash
       set -exo pipefail

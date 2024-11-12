@@ -40,7 +40,7 @@ spec:
         done
         echo -n $final_tests > changed-files.txt
     - name: lint-catalog
-      image: ghcr.io/tektoncd/plumbing/catlin:latest
+      image: gcr.io/tekton-releases/dogfooding/catlin:latest
       workingDir: $(workspaces.source.path)
       script: |
         set +e

@@ -72,7 +72,7 @@ spec:
             value: $(params.tags)
           - name: CONTEXT_PATH
             value: $(params.contextPath)
-          image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
+          image: gcr.io/tekton-releases/dogfooding/ko-gcloud:latest
           name: build-image-multi-arch
           script: |
             #!/usr/bin/env sh

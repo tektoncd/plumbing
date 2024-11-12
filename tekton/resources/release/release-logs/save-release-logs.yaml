@@ -34,7 +34,7 @@ spec:
         value: $(params.namespace)
   steps:
   - name: write-data
-    image: ghcr.io/tektoncd/plumbing/tkn:v20230113-3deba3be3c@sha256:f977259288f8961d5e7ed966584f272431edadfda3bd0a30022ad9416ebde47e
+    image: gcr.io/tekton-releases/dogfooding/tkn:v20230113-3deba3be3c@sha256:f977259288f8961d5e7ed966584f272431edadfda3bd0a30022ad9416ebde47e
     workingDir: $(workspaces.shared.path)
     script: |
       #!/usr/bin/env sh

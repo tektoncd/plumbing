@@ -27,7 +27,7 @@ spec:
       type: array
   steps:
     - name: check-files-changed
-      image: ghcr.io/tektoncd/plumbing/test-runner@sha256:d6a49b0d6822f4db7ede60d3f6bb41c1278079ad7c631fcaf00a609a977d0ac0 # golang 1.18.7
+      image: gcr.io/tekton-releases/dogfooding/test-runner@sha256:d6a49b0d6822f4db7ede60d3f6bb41c1278079ad7c631fcaf00a609a977d0ac0 # golang 1.18.7
       env:
       - name: GIT_CLONE_DEPTH
         value: $(params.gitCloneDepth)
