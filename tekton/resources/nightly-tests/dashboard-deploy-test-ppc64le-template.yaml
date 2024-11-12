@@ -116,7 +116,7 @@ spec:
               description: workspace with source code for tekton component
             steps:
             - name: run-e2e-tests
-              image: gcr.io/tekton-releases/dogfooding/test-runner:latest
+              image: ghcr.io/tektoncd/plumbing/test-runner:latest
               workingDir: $(workspaces.source-code.path)/src/github.com/tektoncd/dashboard
               env:
               # Connect to the sidecar over TCP, with TLS.
