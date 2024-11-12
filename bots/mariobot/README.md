@@ -26,7 +26,7 @@ This will respond with a JSON body something like this:
   "gitRepository": "github.com/tektoncd/plumbing",
   "gitRevision": "pull/20/head",
   "contextPath": "tekton/images/tkn",
-  "targetImage": "ghcr.io/tektoncd/plumbing/tkn:mario",
+  "targetImage": "gcr.io/tekton-releases/dogfooding/tkn:mario",
   "pullRequestID": "20"
 }
 ```

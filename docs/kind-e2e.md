@@ -91,7 +91,7 @@ This ensures that specific nodes are used for your `kind` job. These nodes have 
 and 16gb RAM, with local SSD-backed ephemeral storage. We have determined that this
 configuration is the optimal one for `kind`. 
 
-The image used in your container should be `ghcr.io/tektoncd/plumbing/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08`
+The image used in your container should be `gcr.io/tekton-releases/dogfooding/test-runner:v20220812-35d6c29808@sha256:b9010d2fe3d1da99c1735ad291271ca8ed56c8e0f3a16d4b0de7a1096fcf5a08`
 or newer. You can use `:latest`, but we'd recommend against that.
 
 The `args` for your job's container should look like this:

@@ -39,7 +39,7 @@ spec:
       description: The file within workspace that contains the GitHub token.
     - name: sourcePath
       description: Location where the git repo will be installed.
-  image: ghcr.io/tektoncd/plumbing/coverage:latest
+  image: gcr.io/tekton-releases/dogfooding/coverage:latest
   env:
     - name: PULL_PULL_SHA
       value: $(params.gitRevision)

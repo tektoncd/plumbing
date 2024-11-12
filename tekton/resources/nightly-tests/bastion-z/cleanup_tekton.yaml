@@ -20,7 +20,7 @@ spec:
     mountPath: /workspace
   steps:
   - name: cleanup-resources
-    image: ghcr.io/tektoncd/plumbing/kubectl:latest
+    image: gcr.io/tekton-releases/dogfooding/kubectl:latest
     env:
     - name: KUBECONFIG
       value: $(workspaces.k8s-shared.path)/config
@@ -34,7 +34,7 @@ spec:
         kubectl delete --ignore-not-found=true ${res}.tekton.dev --all || return true
       done
   - name: uninstall-tekton-project
-    image: ghcr.io/tektoncd/plumbing/test-runner:latest
+    image: gcr.io/tekton-releases/dogfooding/test-runner:latest
     workingDir: /workspace/src/$(params.package)
     env:
     - name: KUBECONFIG
