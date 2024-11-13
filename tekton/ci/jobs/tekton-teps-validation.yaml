@@ -13,10 +13,10 @@ spec:
     - name: input
   steps:
   - name: teps-validate
-    image: gcr.io/tekton-releases/dogfooding/teps:latest
+    image: ghcr.io/tektoncd/plumbing/teps:latest
     args: ['validate', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
   - name: teps-table-refresh
-    image: gcr.io/tekton-releases/dogfooding/teps:latest
+    image: ghcr.io/tektoncd/plumbing/teps:latest
     workingDir: $(workspaces.input.path)
     args: ['table', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
   - name: teps-table
