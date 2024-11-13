@@ -46,7 +46,7 @@ spec:
         set -ex
         mkdir -p "$ARTIFACTS_FOLDER"
         echo "Created folder $ARTIFACTS_FOLDER"
-    - image: gcr.io/tekton-releases/dogfooding/kind-e2e:latest
+    - image: ghcr.io/tektoncd/plumbing/kind-e2e:latest
       imagePullPolicy: Always
       workingDir: $(workspaces.source.path)
       name: kind

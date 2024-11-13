@@ -18,7 +18,7 @@ spec:
     mountPath: /root/.kube
   steps:
   - name: deploy
-    image: gcr.io/tekton-releases/dogfooding/kubectl:latest
+    image: ghcr.io/tektoncd/plumbing/kubectl:latest
     env:
     - name: KUBECONFIG
       value: $(workspaces.k8s-shared.path)/config

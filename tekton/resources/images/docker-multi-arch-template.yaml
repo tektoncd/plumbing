@@ -78,7 +78,7 @@ spec:
             value: $(params.tags)
           - name: IMAGE_URL
             value: $(params.imageUrl)
-          image: gcr.io/tekton-releases/dogfooding/buildx-gcloud:latest
+          image: ghcr.io/tektoncd/plumbing/buildx-gcloud:latest
           name: build-image-multi-arch
           script: |
             #!/usr/bin/env sh
