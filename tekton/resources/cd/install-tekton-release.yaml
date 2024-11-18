@@ -18,7 +18,7 @@ metadata:
 spec:
   params:
   - name: projectName
-    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+    description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard
     default: pipeline
   - name: namespace
     description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
@@ -129,7 +129,7 @@ spec:
       description: Git revision
       default: main
     - name: projectName
-      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard, experimental
+      description: Name of the Tekton project to install e.g. pipeline, trigger, dashboard
       default: pipeline
     - name: namespace
       description: The namespace specified in the release. This does not enforce a namespace, it's used to verify that all pods are running in the specified namespace
