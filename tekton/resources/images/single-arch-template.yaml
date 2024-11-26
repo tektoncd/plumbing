@@ -60,8 +60,8 @@ spec:
             workingDir: $(workspaces.source.path)
             image: gcr.io/kaniko-project/executor:v1.8.0-debug
             env:
-              - name: GOOGLE_APPLICATION_CREDENTIALS
-                value: $(workspaces.secret.path)/release.json
+              - name: IMAGE_REGISTRY_CREDENTIALS
+                value: $(workspaces.secret.path)/credentials
               - name: CONTEXT_PATH
                 value: $(params.contextPath)
               - name: TAGS
@@ -76,6 +76,12 @@ spec:
               DESTINATIONS=""
               for tag in ${TAGS}; do DESTINATIONS="${DESTINATIONS} --destination ${IMAGE_URL}:${tag}"; done
               IFS=$OIFS
+
+              IMAGE_REGISTRY_USER=tekton-robot
+              IMAGE_REGISTRY_TOKEN=$(cat "$IMAGE_REGISTRY_CREDENTIALS")
+              AUTH=$(echo -n ${IMAGE_REGISTRY_USER}:${IMAGE_REGISTRY_TOKEN} | base64)
+              echo "{\"auths\": {\"ghcr.io\": {\"auth\": \"${AUTH}\"}}}" > /kaniko/.docker/config.json
+
               # Run the build
               /kaniko/executor \
                 --dockerfile=Dockerfile \
@@ -126,7 +132,7 @@ spec:
                 storage: 1Gi
       - name: secret
         secret:
-          secretName: release-secret
+          secretName: ghcr-creds
       params:
         - name: contextPath
           value: $(tt.params.contextPath)
