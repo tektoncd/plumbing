@@ -205,19 +205,6 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: "docker"
-    directory: "/tekton/images/skopeo"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "ok-to-test"
-      - "dependencies"
-      - "release-note-none"
-      - "kind/misc"
-    groups:
-      all:
-        patterns:
-          - "*"
-  - package-ecosystem: "docker"
     directory: "/tekton/images/alpine-git-nonroot"
     schedule:
       interval: "weekly"
@@ -297,19 +284,6 @@ updates:
           - "*"
   - package-ecosystem: "docker"
     directory: "/tekton/images/tkn"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "ok-to-test"
-      - "dependencies"
-      - "release-note-none"
-      - "kind/misc"
-    groups:
-      all:
-        patterns:
-          - "*"
-  - package-ecosystem: "docker"
-    directory: "/tekton/images/openssh-server"
     schedule:
       interval: "weekly"
     labels:
