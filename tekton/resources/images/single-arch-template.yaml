@@ -58,7 +58,7 @@ spec:
         steps:
           - name: build-and-push
             workingDir: $(workspaces.source.path)
-            image: gcr.io/kaniko-project/executor:v1.8.0-debug
+            image: gcr.io/kaniko-project/executor:v1.23.2-debug
             env:
               - name: IMAGE_REGISTRY_CREDENTIALS
                 value: $(workspaces.secret.path)/credentials
