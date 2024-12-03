@@ -62,8 +62,8 @@ spec:
           - name: secret
         steps:
         - env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: $(workspaces.secret.path)/release.json
+          - name: IMAGE_REGISTRY_CREDENTIALS
+            value: $(workspaces.secret.path)/credentials
           - name: KO_DOCKER_REPO
             value: $(params.imageBaseUrl)
           - name: PLATFORMS
@@ -76,9 +76,8 @@ spec:
           name: build-image-multi-arch
           script: |
             #!/usr/bin/env sh
-
-            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-            gcloud auth configure-docker
+            IMAGE_REGISTRY_USER=tekton-robot
+            docker login ghcr.io -u ${IMAGE_REGISTRY_USER} --password-stdin <"${IMAGE_REGISTRY_CREDENTIALS}"
 
             cd $(workspaces.source.path)
             ko publish --platform ${PLATFORMS} --base-import-paths --tags ${IMAGE_TAGS} ${CONTEXT_PATH}
@@ -129,7 +128,7 @@ spec:
                 storage: 1Gi
       - name: secret
         secret:
-          secretName: release-secret
+          secretName: ghcr-creds
       params:
         - name: contextPath
           value: $(tt.params.contextPath)
