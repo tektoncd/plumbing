@@ -68,8 +68,8 @@ spec:
             value: "1"
           - name: DOCKER_CERT_PATH
             value: /certs/client
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: $(workspaces.secret.path)/release.json
+          - name: IMAGE_REGISTRY_CREDENTIALS
+            value: $(workspaces.secret.path)/credentials
           - name: PLATFORMS
             value: $(params.platforms)
           - name: CONTEXT_PATH
@@ -88,9 +88,8 @@ spec:
             # Docker buildx build supports a stringArray of destinations
             for tag in ${TAGS}; do DESTINATIONS="${DESTINATIONS} --tag ${IMAGE_URL}:${tag}"; done
             IFS=$OIFS
-
-            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-            gcloud auth configure-docker
+            IMAGE_REGISTRY_USER=tekton-robot
+            docker login ghcr.io -u ${IMAGE_REGISTRY_USER} --password-stdin < "${IMAGE_REGISTRY_CREDENTIALS}"
 
             docker run --rm --privileged tonistiigi/binfmt:latest --install all
             ln -s /root/.docker/cli-plugins ~/.docker/cli-plugins
@@ -178,7 +177,7 @@ spec:
                 storage: 1Gi
       - name: secret
         secret:
-          secretName: release-secret
+          secretName: ghcr-creds
       params:
         - name: contextPath
           value: $(tt.params.contextPath)
