@@ -1,0 +1,51 @@
+# The slash workflow handles slash commands
+#
+# Slash commands are given through comments on pull requests
+# and may be used only by individuals with "write" access to
+# the repository (i.e. maintainers).
+#
+# Slash commands must be placed at the very beginning of the
+# first line of a comment. More details are available in the
+# action docs: https://github.com/peter-evans/slash-command-dispatch/tree/main?tab=readme-ov-file#how-comments-are-parsed-for-slash-commands
+#
+# The workflow looks for and dispatches to another workflow
+# named <command>-command which must exist in the repository.
+#
+# Supported commands:
+# - /retest: re-run failed GitHub actions associated with the
+#            caller of this workflow
+#
+# When a command is recognised, the rocket and eyes emojis are added
+#
+# To use this in a repo:
+# 
+# name: Slash Command Routing
+# on:
+#   issue_comment:
+#     types: [created]
+#
+# jobs:
+#   check_comments:
+#     uses: tektoncd/plumbing/.github/actions/_slash.yml@main
+
+name: Slash Command Routing
+on:
+  workflow_call:
+
+jobs:
+  check_comments:
+    runs-on: ubuntu-latest
+    steps:
+    - name: route-chatops
+      uses: peter-evans/slash-command-dispatch@13bc09769d122a64f75aa5037256f6f2d78be8c4  # v4.0.0
+      with:
+        token: ${{ secrets.CHATOPS_TOKEN }}
+        config: >
+          [
+            {
+              "command": "retest",
+              "permission": "write",
+              "issue_type": "pull-request",
+              "repository": "${{ github.repository }}"
+            }
+          ]
