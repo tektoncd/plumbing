@@ -209,7 +209,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos
-        image: gcr.io/k8s-staging-boskos/boskos:v20220628-f099c7d
+        image: ghcr.io/tektoncd/plumbing/k8s-staging-boskos/boskos:v20220628-f099c7d
         args:
         - --config=/etc/config/config
         - --namespace=test-pods
@@ -276,7 +276,7 @@ spec:
       terminationGracePeriodSeconds: 300
       containers:
       - name: boskos-janitor
-        image: gcr.io/k8s-staging-boskos/janitor:v20220628-f099c7d
+        image: ghcr.io/tektoncd/plumbing/k8s-staging-boskos/janitor:v20220628-f099c7d
         args:
         - --boskos-url=http://boskos.test-pods.svc.cluster.local.
         - --resource-type=gke-project
@@ -314,7 +314,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: boskos-reaper
-        image: gcr.io/k8s-staging-boskos/reaper:v20220628-f099c7d
+        image: ghcr.io/tektoncd/plumbing/k8s-staging-boskos/reaper:v20220628-f099c7d
         args:
         - --boskos-url=http://boskos.test-pods.svc.cluster.local.
         - --resource-type=gke-project
