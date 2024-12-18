@@ -7,7 +7,7 @@ import koparse
 
 
 IMAGE_PATH = "github.com/tektoncd/pipeline/cmd/"
-CONTAINER_REGISTRY = "gcr.io/tekton-releases"
+CONTAINER_REGISTRY = "ghcr.io/tekton-releases"
 IMAGE_BASE = CONTAINER_REGISTRY + "/" + IMAGE_PATH
 PATH_TO_TEST_RELEASE_YAML = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "test_release.yaml")
@@ -16,16 +16,16 @@ PATH_TO_TEST_RELEASE_YAML_NO_PATH = os.path.join(os.path.dirname(
 PATH_TO_WRONG_FILE = os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "koparse.py")
 BUILT_IMAGES = [
-    "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
-    "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
-    "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41",
-    "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/webhook@sha256:cca7069a11aaf0d9d214306d456bc40b2e33e5839429bf07c123ad964d495d8a",
+    "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
+    "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
+    "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41",
+    "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/webhook@sha256:cca7069a11aaf0d9d214306d456bc40b2e33e5839429bf07c123ad964d495d8a",
 ]
 BUILT_IMAGES_NO_PATH = [
-    "gcr.io/tekton-releases/kubeconfigwriter-3d37fea0b053ea82d66b7c0bae03dcb0:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
-    "gcr.io/tekton-releases/git-init-4874978a9786b6625dd8b6ef2a21aa70@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
-    "gcr.io/tekton-releases/controller-10a3e32792f33651396d02b6855a6e36@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41",
-    "gcr.io/tekton-releases/webhook-d4749e605405422fd87700164e31b2d1@sha256:cca7069a11aaf0d9d214306d456bc40b2e33e5839429bf07c123ad964d495d8a",
+    "ghcr.io/tekton-releases/kubeconfigwriter-3d37fea0b053ea82d66b7c0bae03dcb0:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
+    "ghcr.io/tekton-releases/git-init-4874978a9786b6625dd8b6ef2a21aa70@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
+    "ghcr.io/tekton-releases/controller-10a3e32792f33651396d02b6855a6e36@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41",
+    "ghcr.io/tekton-releases/webhook-d4749e605405422fd87700164e31b2d1@sha256:cca7069a11aaf0d9d214306d456bc40b2e33e5839429bf07c123ad964d495d8a",
 ]
 EXPECTED_IMAGES = [
     "github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v20201022-ceeec6463e.1_1A",
