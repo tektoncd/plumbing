@@ -34,7 +34,7 @@ spec:
       value: $(params.namespace)
   steps:
   - name: cleanup-pr-tr
-    image: gcr.io/tekton-releases/dogfooding/tkn
+    image: ghcr.io/tektoncd/plumbing/tkn
     script: |
       #!/bin/sh
       set -ex

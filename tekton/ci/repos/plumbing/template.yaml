@@ -98,7 +98,7 @@
         - name: package
           value: $(tt.params.package)
         - name: imagePrefix
-          value: gcr.io/tekton-nightly/dogfooding/ci
+          value: ghcr.io/tektoncd/dogfooding/ci
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:

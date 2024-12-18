@@ -55,7 +55,7 @@ spec:
         value: $(params.rekor-uuid)
   steps:
     - name: header
-      image: gcr.io/tekton-releases/dogfooding/hub
+      image: ghcr.io/tektoncd/plumbing/hub
       script: |
         #!/bin/bash
         set -ex
@@ -112,7 +112,7 @@ spec:
         ## Changes
         EOF
     - name: filter-data
-      image: gcr.io/tekton-releases/dogfooding/hub
+      image: ghcr.io/tektoncd/plumbing/hub
       workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
@@ -237,7 +237,7 @@ spec:
         EOF
 
     - name: authors
-      image: gcr.io/tekton-releases/dogfooding/hub
+      image: ghcr.io/tektoncd/plumbing/hub
       workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
@@ -252,7 +252,7 @@ spec:
         $(awk -F";" '{ print "* :heart_eyes: @"$1 }' $HOME/pr-notes.csv | sort -u)
         EOF
     - name: pr-data
-      image: gcr.io/tekton-releases/dogfooding/hub
+      image: ghcr.io/tektoncd/plumbing/hub
       workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash
@@ -268,7 +268,7 @@ spec:
         -->
         EOF
     - name: create-draft
-      image: gcr.io/tekton-releases/dogfooding/hub
+      image: ghcr.io/tektoncd/plumbing/hub
       workingDir: $(workspaces.shared.path)/repo
       script: |
         #!/usr/bin/env bash

@@ -16,7 +16,7 @@ spec:
     description: timeout for the go test runner
     default: 30m
   - name: container-registry
-    description: container registry used to push images during tests e.g. gcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
+    description: container registry used to push images during tests e.g. ghcr.io/tekton-e2e-tests or icr.io/tekton-e2e-tests
   - name: tags
     default: e2e
   - name: target-arch
