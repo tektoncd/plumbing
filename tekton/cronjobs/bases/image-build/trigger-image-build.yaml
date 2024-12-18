@@ -101,7 +101,7 @@ spec:
               - name: SINK_URL
                 value: "sink-url"
               - name: TARGET_IMAGE
-                value: "gcr.io/tekton-releases/dogfooding/myimage"
+                value: "ghcr.io/tektoncd/myproject/myimage"
               - name: TAGS
                 value: "latest"
               - name: PLATFORMS

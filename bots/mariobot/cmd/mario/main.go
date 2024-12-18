@@ -50,7 +50,7 @@ type triggerErrorPayload struct {
 	Error string `json:"errorMessage,omitempty"`
 }
 
-const defaultRegistry = "gcr.io/tekton-releases/dogfooding"
+const defaultRegistry = "ghcr.io/tektoncd/plumbing"
 
 func main() {
 	secretToken := os.Getenv(envSecret)

@@ -13,7 +13,7 @@ dedicated trigger template:
   nightly builds
 * [`image-build`](../resources/images/image-build-trigger.yaml): build
   container images and push them to a container repo (by default
-  gcr.io/tekton-releases/dogfooding/myimage)
+  ghcr.io/tektoncd/dogfooding/myimage)
 * [`folder`](../resources/cd/folder-template.yaml): trigger deployment
   of manifests or overlays in a folder
 * [`configmap`](../resources/cd/configmap-template.yaml): trigger

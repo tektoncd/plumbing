@@ -81,7 +81,7 @@ A trigger in an event listener:
 The interceptor is installed via `ko`:
 
 ```bash
-export KO_DOCKER_REPO=gcr.io/tekton-releases/dogfooding
+export KO_DOCKER_REPO=ghcr.io/tektoncd/plumbing
 ko apply -P -f tekton/ci/interceptors/add-pr-body/config/
 ```
 

@@ -89,8 +89,8 @@ spec:
     - name: package
       description: package (and its children) under test
     - name: imagePrefix
-      description: The prefix for the image reference to build
-      default: gcr.io/tekton-nightly/dogfooding/ci
+      description: The prefix for the image reference to build - not used
+      default: ghcr.io/tektoncd/dogfooding/ci
   workspaces:
     - name: sources
       description: Workspace where the git repo is prepared for testing

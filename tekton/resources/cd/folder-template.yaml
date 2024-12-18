@@ -46,7 +46,7 @@ spec:
       value: $(params.isOverlay)
   steps:
   - name: deploy-from-folder
-    image: gcr.io/tekton-releases/dogfooding/kubectl
+    image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
       #!/bin/sh
       set -ex
@@ -108,7 +108,7 @@ spec:
         ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml > ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 
   - name: deploy-resources
-    image: gcr.io/tekton-releases/dogfooding/kubectl
+    image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
       #!/bin/sh
       set -ex
