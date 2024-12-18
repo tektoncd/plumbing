@@ -334,3 +334,12 @@ updates:
       all:
         patterns:
           - "*"
+  - package-ecosystem: "terraform"
+    directory: "/tekton/images"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
