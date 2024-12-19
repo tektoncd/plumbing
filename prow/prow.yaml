@@ -37,7 +37,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: gcr.io/k8s-prow/hook:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/hook:v20220628-aa928caf31
         imagePullPolicy: Always
         args:
         - --dry-run=false
@@ -137,7 +137,7 @@ spec:
       serviceAccountName: prow-controller-manager
       containers:
       - name: prow-controller-manager
-        image: gcr.io/k8s-prow/prow-controller-manager:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/prow-controller-manager:v20220628-aa928caf31
         args:
         - --config-path=/etc/config/config.yaml
         - --dry-run=false
@@ -207,7 +207,7 @@ spec:
       serviceAccountName: "sinker"
       containers:
       - name: sinker
-        image: gcr.io/k8s-prow/sinker:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/sinker:v20220628-aa928caf31
         ports:
         - name: metrics
           containerPort: 9090
@@ -263,7 +263,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: deck
-        image: gcr.io/k8s-prow/deck:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/deck:v20220628-aa928caf31
         args:
         - --config-path=/etc/config/config.yaml
         - --tide-url=http://tide:8888/
@@ -372,7 +372,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: horologium
-        image: gcr.io/k8s-prow/horologium:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/horologium:v20220628-aa928caf31
         args:
         - --config-path=/etc/config/config.yaml
         - --dry-run=false
@@ -425,7 +425,7 @@ spec:
       serviceAccountName: "tide"
       containers:
       - name: tide
-        image: gcr.io/k8s-prow/tide:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/tide:v20220628-aa928caf31
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
@@ -498,7 +498,7 @@ spec:
 #      terminationGracePeriodSeconds: 180
 #      containers:
 #      - name: statusreconciler
-#        image: gcr.io/k8s-prow/status-reconciler:v20190731-e3f7b9853
+#        image: ghcr.io/tektoncd/plumbing/k8s-prow/status-reconciler:v20190731-e3f7b9853
 #        args:
 #        - --dry-run=false
 #        - --continue-on-error=true
@@ -998,7 +998,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: crier
-        image: gcr.io/k8s-prow/crier:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/crier:v20220628-aa928caf31
         args:
         - --github-workers=1
         - --config-path=/etc/config/config.yaml
@@ -1106,7 +1106,7 @@ spec:
       serviceAccountName: prow-pipeline
       containers:
       - name: pipeline
-        image: gcr.io/k8s-prow/pipeline:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/pipeline:v20220628-aa928caf31
         args:
         - --all-contexts
         - --config=/etc/prow-config/config.yaml
@@ -1139,7 +1139,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: needs-rebase
-        image: gcr.io/k8s-prow/needs-rebase:v20220628-aa928caf31
+        image: ghcr.io/tektoncd/plumbing/k8s-prow/needs-rebase:v20220628-aa928caf31
         imagePullPolicy: Always
         args:
         - --dry-run=false
