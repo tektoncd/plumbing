@@ -11,7 +11,7 @@ $ go run ./ \
     ghcr.io/distroless/static \
     mcr.microsoft.com/windows/nanoserver:ltsc2022 \
     mcr.microsoft.com/windows/nanoserver:ltsc2019 \
-    gcr.io/MY_PROJECT/combined
+    ghcr.io/MY_PROJECT/combined
 ```
 
 This combines a [distroless](https://github.com/distroless/static) base image providing Linux platform support, with two image providing different versions of a Windows base image.
@@ -27,7 +27,7 @@ combine src1 src2 [src...] dst
 After running the script, you can check the image's platforms using [`crane`](https://github.com/google/go-containerregistry/blob/main/cmd/crane/README.md):
 
 ```
-$ crane manifest gcr.io/MY_PROJECT/combined | jq '.manifests[].platform'
+$ crane manifest ghcr.io/MY_PROJECT/combined | jq '.manifests[].platform'
 {
   "architecture": "386",
   "os": "linux"
