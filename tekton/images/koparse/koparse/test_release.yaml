@@ -255,7 +255,7 @@ metadata:
 ---
 apiVersion: v1
 data:
-  image: gcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
+  image: ghcr.io/k8s-prow/entrypoint@sha256:7c7cd8906ce4982ffee326218e9fc75da2d4896d53cabc9833b9cc8d2d6b2b8f
 kind: ConfigMap
 metadata:
   name: config-entrypoint
@@ -312,11 +312,11 @@ spec:
         "-logtostderr",
         "-stderrthreshold",
         "INFO",
-        "-kubeconfig-writer-image", "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
+        "-kubeconfig-writer-image", "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/kubeconfigwriter:v20201022-ceeec6463e.1_1A@sha256:68453f5bb4b76c0eab98964754114d4f79d3a50413872520d8919a6786ea2b35",
         "-git-image",
-        "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
+        "ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init@sha256:7d5520efa2d55e1346c424797988c541327ee52ef810a840b5c6f278a9de934a",
       ]
-        image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41
+        image: ghcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/controller@sha256:bdc6f22a44944c829983c30213091b60f490b41f89577e8492f6a2936be0df41
         name: tekton-pipelines-controller
         volumeMounts:
         - mountPath: /etc/config-logging
