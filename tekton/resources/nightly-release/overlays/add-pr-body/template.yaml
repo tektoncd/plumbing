@@ -1,7 +1,7 @@
 - op: add
   path: /spec/resourcetemplates
   value:
-    - apiVersion: tekton.dev/v1beta1
+    - apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
         generateName: add-pr-body-release-nightly-
@@ -9,20 +9,43 @@
           tekton.dev/kind: release
       spec:
         pipelineRef:
-          name: release
+          resolver: git
+          params:
+            - name: repo
+              value: plumbing
+            - name: org
+              value: tektoncd
+            - name: revision
+              value: $(tt.params.gitrevision)
+            - name: pathInRepo
+              value: tekton/catalog/pipelines/release.yaml
         params:
         - name: package
           value: $(tt.params.gitrepository)
+        - name: subfolder
+          value: tekton/ci/interceptors/add-pr-body
+        - name: images
+          value: add-pr-body
         - name: gitRevision
           value: $(tt.params.gitrevision)
         - name: imageRegistry
           value: $(tt.params.imageRegistry)
         - name: imageRegistryPath
           value: $(tt.params.imageRegistryPath)
+        - name: imageRegistryUser
+          value: $(tt.params.imageRegistryUser)
+        - name: imageRegistryRegions
+          value: $(tt.params.imageRegistryRegions)
         - name: versionTag
           value: $(tt.params.versionTag)
+        - name: runTests
+          value: $(tt.params.runTests)
         - name: serviceAccountPath
           value: release.json
+        - name: serviceAccountImagesPath
+          value: credentials
+        - name: koExtraArgs
+          value: ""
         workspaces:
           - name: workarea
             volumeClaimTemplate:
@@ -35,3 +58,6 @@
           - name: release-secret
             secret:
               secretName: release-secret
+          - name: release-images-secret
+            secret:
+              secretName: ghcr-creds
