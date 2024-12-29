@@ -46,6 +46,8 @@
           value: credentials
         - name: koExtraArgs
           value: ""
+        - name: releaseBucket
+          value: gs://tekton-releases-nightly/add-pr-body
         workspaces:
           - name: workarea
             volumeClaimTemplate:
