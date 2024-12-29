@@ -14,6 +14,14 @@ spec:
             env:
               - name: PROJECT_NAME
                 value: add-pr-body
+              - name: CR_URI
+                value: ghcr.io
+              - name: CR_PATH
+                value: tektoncd/plumbing/interceptors/add-pr-body
+              - name: CR_REGIONS
+                value: ""
+              - name: CR_USER
+                value: tekton-robot
           initContainers:
           - name: git
             env:

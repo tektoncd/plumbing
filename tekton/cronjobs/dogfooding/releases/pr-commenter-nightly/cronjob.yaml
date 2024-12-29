@@ -14,6 +14,14 @@ spec:
             env:
               - name: PROJECT_NAME
                 value: pr-commenter
+              - name: CR_URI
+                value: ghcr.io
+              - name: CR_PATH
+                value: tektoncd/plumbing/custom-tasks/pr-commenter
+              - name: CR_REGIONS
+                value: ""
+              - name: CR_USER
+                value: tekton-robot
           initContainers:
           - name: git
             env:
