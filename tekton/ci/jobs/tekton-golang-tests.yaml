@@ -101,7 +101,7 @@ spec:
       - name: package
         value: "$(params.package)"
       - name: version
-        value: "1.20"
+        value: "1.23"
       workspaces:
         - name: source
           workspace: sources
