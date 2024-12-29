@@ -1,6 +1,5 @@
 namePrefix: add-team-members-
 resources:
-- github.com/tektoncd/plumbing/tekton/ci/interceptors/add-team-members/tekton/?ref=main
 - ../../base
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

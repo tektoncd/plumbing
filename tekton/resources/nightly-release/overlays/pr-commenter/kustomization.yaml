@@ -1,6 +1,5 @@
 namePrefix: pr-commenter-
 resources:
-- github.com/tektoncd/plumbing/tekton/ci/custom-tasks/pr-commenter/tekton/?ref=main
 - ../../base
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
