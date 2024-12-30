@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM ghcr.io/ko-build/ko:v0.17.1@sha256:97b809c27679c4d1a6ed4a9acc18562a6b3688033cd3404c6e3722296cbdc802 AS ko
-FROM golang:1.23-alpine@sha256:c694a4d291a13a9f9d94933395673494fc2cc9d4777b85df3a7e70b3492d3574
+FROM golang:1.23.4-alpine@sha256:5949eba7ed5bb0b3da95b97ec5b8800c1dc0ce4338302fef50d71cf3ded6456a
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for Ko"
