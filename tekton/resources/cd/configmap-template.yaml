@@ -46,7 +46,7 @@ spec:
       value: $(params.configMapKey)
   steps:
   - name: fetch-current-config
-    image: gcr.io/tekton-releases/dogfooding/kubectl
+    image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
       #!/bin/sh
       set -ex
@@ -56,7 +56,7 @@ spec:
           /workspace/${CONFIG_MAP_KEY} || \
           rm /workspace/${CONFIG_MAP_KEY}
   - name: deploy
-    image: gcr.io/tekton-releases/dogfooding/kubectl
+    image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
       #!/bin/sh
       set -ex
