@@ -68,6 +68,15 @@ branch-protection:
         contexts:
         - EasyCLA
       repos:
+        dashboard:
+          required_status_checks:
+            contexts:
+            - "Build tests"
+            - "E2E tests (k8s-oldest, read-only)"
+            - "E2E tests (k8s-oldest, read-write)"
+            - "E2E tests (k8s-plus-one, read-only)"
+            - "E2E tests (k8s-plus-one, read-write)"
+            - "Unit tests"
         pipeline:
           required_status_checks:
             contexts:
@@ -779,105 +788,6 @@ presubmits:
         - "./test/e2e-tests.sh"
         - "--e2e-env"
         - "./test/e2e-tests-kind-prow.env"
-        resources:
-          requests:
-            cpu: 3500m
-            memory: 4Gi
-          limits:
-            cpu: 3500m
-            memory: 8Gi
-  tektoncd/dashboard:
-  - name: pull-tekton-dashboard-build-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-dashboard-build-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-build-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250108-44b28c7784@sha256:93b108a47e11ccda5c981c7acf3238be5d1c6962a52149a4234227954e3dbdeb # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--build-tests"
-  - name: pull-tekton-dashboard-unit-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-dashboard-unit-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-unit-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250108-44b28c7784@sha256:93b108a47e11ccda5c981c7acf3238be5d1c6962a52149a4234227954e3dbdeb # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--unit-tests"
-  - name: pull-tekton-dashboard-integration-tests
-    labels:
-      preset-presubmit-sh: "true"
-      preset-dind-enabled: "true"
-      preset-kind-volume-mounts: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-dashboard-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-dashboard-integration-tests),?(\\s+|$)"
-    spec:
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-        cloud.google.com/gke-nodepool: n2-standard-4-kind
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250108-44b28c7784@sha256:93b108a47e11ccda5c981c7acf3238be5d1c6962a52149a4234227954e3dbdeb # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "/usr/local/bin/kind-e2e"
-        - "--k8s-version"
-        - "v1.28.x"
-        - "--nodes"
-        - "3"
-        - "--e2e-script"
-        - "./test/e2e-tests-prow.sh"
-        - "--e2e-env"
-        - "./test/e2e-tests-kind-prow.env"
-        securityContext:
-          privileged: true
         resources:
           requests:
             cpu: 3500m
