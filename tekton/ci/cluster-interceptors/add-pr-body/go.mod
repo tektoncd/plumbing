@@ -1,7 +1,8 @@
 module github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body
 
-go 1.22
-toolchain go1.22.9
+go 1.22.7
+
+toolchain go1.23.4
 
 require (
 	github.com/google/go-cmp v0.6.0
