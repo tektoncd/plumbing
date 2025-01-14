@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github/v34 v34.0.0
 	github.com/tektoncd/triggers v0.30.1
 	google.golang.org/grpc v1.67.0
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.2
 	sigs.k8s.io/yaml v1.4.0
 )
 
