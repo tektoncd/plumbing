@@ -14,7 +14,7 @@
 
 ARG GO_VERSION=1.23.4
 # Build kubetest independently of the rest
-FROM golang:${GO_VERSION}@sha256:dfae8b3f3290159471653b51c6a70f00f676bfae0c93e3f0da375200eef4f610 as kubetest
+FROM golang:${GO_VERSION}@sha256:9820aca42262f58451f006de3213055974b36f24b31508c1baa73c967fcecb99 as kubetest
 RUN git clone https://github.com/kubernetes/test-infra /go/src/k8s.io/test-infra
 # Using e685556b32c5fb7ab12c3277d41112d47ceac0cd because after that, the URL kubetest
 # uses needs extract credentials.
