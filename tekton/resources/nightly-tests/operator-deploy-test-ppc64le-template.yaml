@@ -151,7 +151,6 @@ spec:
           - name: source-code
             workspace: shared-workspace
             subPath: source-code
-          retries: 2
         finally:
         - name: delete-k8s-cluster
           taskRef:
