@@ -1453,7 +1453,7 @@ presubmits:
     trigger: "(?m)^/test (all|pull-tekton-triggers-integration-tests),?(\\s+|$)"
     spec:
       containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250108-44b28c7784@sha256:93b108a47e11ccda5c981c7acf3238be5d1c6962a52149a4234227954e3dbdeb # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
+      - image: ghcr.io/tektoncd/plumbing/test-runner:v20240701-65c50ec2ee@sha256:3041dfd469504cd36d3119a0f8057061f9e401eccb7d46462bdfeffdb8948356 # go 1.22, kind 0.23, ko 0.15.4, go-license 1.0
         imagePullPolicy: Always
         command:
         - /usr/local/bin/entrypoint.sh
