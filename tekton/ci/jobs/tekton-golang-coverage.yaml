@@ -156,6 +156,10 @@ spec:
               printf '$(params.package)' | awk -F/ '{printf($2)}' | tee /tekton/results/repoName
     - name: clone-coverage-upload
       runAfter: ['split-full-repo-name']
+      when:  # implicit dependency on the check tasks
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
       workspaces:
         - name: source
         - name: credentials
