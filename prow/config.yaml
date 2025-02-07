@@ -1053,37 +1053,6 @@ presubmits:
           limits:
             cpu: 4000m
             memory: 8Gi
-  - name: pull-tekton-pipeline-go-coverage
-    labels:
-      preset-github-token: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-pipeline-go-coverage"
-    trigger: "(?m)^/test (all|pull-tekton-pipeline-go-coverage),?(\\s+|$)"
-    optional: true
-    clone_uri: "https://github.com/tektoncd/pipeline.git"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/coverage:latest
-        imagePullPolicy: Always
-        command:
-        - "/coverage"
-        args:
-        - "--postsubmit-gcs-bucket=tekton-prow"
-        - "--postsubmit-job-name=post-tekton-pipeline-go-coverage"
-        - "--artifacts=$(ARTIFACTS)"
-        - "--profile-name=coverage_profile.txt"
-        - "--cov-target=."
-        - "--cov-threshold-percentage=0"
-        - "--github-token=/etc/github-token/oauth"
-        resources:
-          requests:
-            cpu: 2000m
-            memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
   tektoncd/catalog:
   - name: pull-tekton-catalog-build-tests
     labels:
