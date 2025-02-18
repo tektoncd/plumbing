@@ -81,13 +81,17 @@ branch-protection:
           required_status_checks:
             contexts:
             - check-pr-has-kind-label
-            - "e2e tests (k8s-oldest, alpha)"
-            - "e2e tests (k8s-oldest, beta)"
-            - "e2e tests (k8s-oldest, stable)"
-            - "e2e tests (k8s-plus-one, alpha)"
-            - "e2e tests (k8s-plus-one, beta)"
-            - "e2e tests (k8s-plus-one, stable)"
-            - "lint"
+            - "ci / build"
+            - "ci / test"
+            - "ci / lint"
+            - "ci / Check generated code"
+            - "ci / Multi-arch build"
+            - "ci / e2e-tests / e2e tests (k8s-oldest, alpha)"
+            - "ci / e2e-tests / e2e tests (k8s-oldest, beta)"
+            - "ci / e2e-tests / e2e tests (k8s-oldest, stable)"
+            - "ci / e2e-tests / e2e tests (k8s-plus-one, alpha)"
+            - "ci / e2e-tests / e2e tests (k8s-plus-one, beta)"
+            - "ci / e2e-tests / e2e tests (k8s-plus-one, stable)"
     tektoncd-catalog:
       # Protect all branches in tektoncd-catalog
       # This means all prow jobs with "always_run" set are required
@@ -979,73 +983,6 @@ presubmits:
         - "--cov-target=."
         - "--cov-threshold-percentage=0"
         - "--github-token=/etc/github-token/oauth"
-        resources:
-          requests:
-            cpu: 2000m
-            memory: 4Gi
-          limits:
-            cpu: 4000m
-            memory: 8Gi
-  tektoncd/pipeline:
-  - name: pull-tekton-pipeline-build-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-pipeline-build-tests"
-    trigger: "(?m)^/test (all|pull-tekton-pipeline-build-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250122-f1b2461323@sha256:84aaa9da31caba929e55f77151bfe74a4958f32abc386d3c9b1ceed3d6c72653 # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--build-tests"
-        resources:
-          requests:
-            cpu: 8000m
-            memory: 4Gi
-          limits:
-            cpu: 8000m
-            memory: 8Gi
-  - name: pull-tekton-pipeline-unit-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-pipeline-unit-tests"
-    trigger: "(?m)^/test (all|pull-tekton-pipeline-unit-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250122-f1b2461323@sha256:84aaa9da31caba929e55f77151bfe74a4958f32abc386d3c9b1ceed3d6c72653 # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--unit-tests"
         resources:
           requests:
             cpu: 2000m
