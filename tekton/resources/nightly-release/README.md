@@ -22,7 +22,7 @@ are available to be passed down to the release pipelines:
     description: The version tag to be applied to published images.
   - name: imageRegistry
     description: Registry where the images will be published to.
-    default: gcr.io/tekton-nightly
+    default: ghcr.io/tektoncd
   - name: projectName
     description: Name of the Tekton project to release (e.g. pipeline, triggers, etc).
 ```
