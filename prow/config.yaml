@@ -81,13 +81,17 @@ branch-protection:
           required_status_checks:
             contexts:
             - check-pr-has-kind-label
-            - "e2e tests (k8s-oldest, alpha)"
-            - "e2e tests (k8s-oldest, beta)"
-            - "e2e tests (k8s-oldest, stable)"
-            - "e2e tests (k8s-plus-one, alpha)"
-            - "e2e tests (k8s-plus-one, beta)"
-            - "e2e tests (k8s-plus-one, stable)"
+            - "build"
+            - "test"
             - "lint"
+            - "Check generated code"
+            - "Multi-arch build"
+            - "e2e-tests / e2e tests (k8s-oldest, alpha)"
+            - "e2e-tests / e2e tests (k8s-oldest, beta)"
+            - "e2e-tests / e2e tests (k8s-oldest, stable)"
+            - "e2e-tests / e2e tests (k8s-plus-one, alpha)"
+            - "e2e-tests / e2e tests (k8s-plus-one, beta)"
+            - "e2e-tests / e2e tests (k8s-plus-one, stable)"
     tektoncd-catalog:
       # Protect all branches in tektoncd-catalog
       # This means all prow jobs with "always_run" set are required
