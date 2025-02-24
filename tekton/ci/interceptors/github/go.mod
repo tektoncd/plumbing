@@ -6,7 +6,7 @@ toolchain go1.23.4
 require (
 	github.com/gobwas/glob v0.2.3
 	github.com/golang/protobuf v1.5.4
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v34 v34.0.0
 	github.com/tektoncd/triggers v0.31.0
 	google.golang.org/grpc v1.70.0
