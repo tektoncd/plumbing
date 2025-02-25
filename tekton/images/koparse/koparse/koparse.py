@@ -129,7 +129,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--path", type=str, required=True,
                             help="Path to the release.yaml")
     arg_parser.add_argument("--container-registry", dest="container_registry", type=str, required=False,
-                            help="Container registry URI and path e.g. gcr.io/tekton-releases")
+                            help="Container registry URI and path e.g. ghcr.io/tektoncd")
     arg_parser.add_argument("--base", type=str, required=True,
                             help="String prefix which is used to find images within the release.yaml")
     arg_parser.add_argument("--images", type=str, required=True, nargs="+",
