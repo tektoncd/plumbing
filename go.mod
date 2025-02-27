@@ -1,7 +1,6 @@
 module github.com/tektoncd/plumbing
 
-go 1.22
-toolchain go1.23.5
+go 1.23
 
 require (
 	github.com/google/go-containerregistry v0.20.3
