@@ -38,7 +38,7 @@ spec:
                   name: mario-github-secret
                   key: secret-token
             - name: CONTAINER_REGISTRY
-              value: "gcr.io/tekton-releases/dogfooding"
+              value: "ghcr.io/tektoncd/plumbing"
 ---
 apiVersion: v1
 kind: Service

@@ -59,5 +59,5 @@ When connected to [the dogfood cluster](https://github.com/tektoncd/plumbing/blo
 
 ```bash
 # must be run from the `buildcaptain` dir or it will use the go.mod file one level up
-buildcaptain$ KO_DOCKER_REPO=gcr.io/tekton-releases/buildcaptain ko --context dogfood apply -f config/deployment.yaml
+buildcaptain$ KO_DOCKER_REPO=ghcr.io/tektoncd/plumbing/buildcaptain ko --context dogfood apply -f config/deployment.yaml
 ```
