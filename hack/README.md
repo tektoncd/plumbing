@@ -29,7 +29,7 @@ This script uses [`kind`](https://kind.sigs.k8s.io/) to create a local K8s clust
 #### Usage
 
 ```sh
-tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version -k container-runtime]
+tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version]
 ```
 
 > **Note**: the default `cluster-name` is `'tekton'`
@@ -50,12 +50,22 @@ kubectl apply -f https://storage.googleapis.com/tekton-releases/dashboard/previo
 
 > **Note**: The script issues `kind cluster create` which automatically creates a K8s context named `'kind-tekton'` and makes it the current for `kubectl` commands.
 
+> **Note**: The `kind` tool automatically updates the `current-context` for the `kubectl` command. After deleting your local cluster, `kind` unsets the `current-context` and you must manually set it again (e.g., `kubectl config use-context <context-name>`.
+
+> **Note**: This script also builds and deploys a `kind-registry` named `registry:2` to your Docker image registry and leaves it running on port `5000`. You may manually stop it and delete the image if you do not intend to use the script again. For that see the cleanup section.
+
 #### Cleanup
 
 If you wish to delete the cluster that the script created, use the following command:
 
 ```shell
 kind delete cluster --name tekton
+```
+
+To stop and delete the registry, use the following command:
+
+```shell
+docker stop kind-registry && docker rm kind-registry
 ```
 
 The `kind` tool will also use the cluster name from the `KIND_CLUSTER_NAME` environment variable if set.
@@ -65,10 +75,15 @@ export KIND_CLUSTER_NAME=tekton
 kind delete cluster
 Deleting cluster "tekton" ...
 ```
+#### Podman
 
-> **Note**: The `kind` tool automatically updates the `current-context` for the `kubectl` command. After deleting your local cluster, `kind` unsets the `current-context` and you must manually set it again (e.g., `kubectl config use-context <context-name>`.
+Podman support for kind is in experimental state as described [here](https://github.com/kubernetes-sigs/kind/issues/1778). If you still want to use this script with podman you can do so by setting two environment variables before executing the script:
 
-> **Note**: This script also builds and deploys a `kind-registry` named `registry:2` to your Docker image registry and leaves it running on port `5000`. You may manually stop it and delete the image if you do not intend to use the script again.
+```shell
+CONTAINER_RUNTIME=podman KIND_EXPERIMENTAL_PROVIDER=podman tekton_in_kind.sh
+```
+
+If you encounter problems check the [open](https://github.com/kubernetes-sigs/kind/issues?q=is%3Aissue%20state%3Aopen%20podman) and [closed](https://github.com/kubernetes-sigs/kind/issues?q=is%3Aissue%20state%3Aclosed%20podman) issues of the kind project on Github.
 
 ---
 
