@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/tektoncd/triggers v0.31.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 	knative.dev/pkg v0.0.0-20240416145024-0f34a8815650
 )
 
