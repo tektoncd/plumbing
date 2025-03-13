@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -e -o pipefail
 
-declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION CONTAINER_RUNTIME
+declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION
 
 # This script deploys Tekton on a local kind cluster
 # It creates a kind cluster and deploys pipeline, triggers and dashboard
 
 # Prerequisites:
 # - go 1.14+
-# - podman or docker (recommended 8GB memory config)
+# - docker (recommended 8GB memory config)
 # - kind
 
 # Notes:
@@ -23,7 +23,7 @@ get_latest_release() {
 }
 
 # Read command line options
-while getopts ":c:p:t:d:k" opt; do
+while getopts ":c:p:t:d:" opt; do
   case ${opt} in
     c )
       CLUSTER_NAME=$OPTARG
@@ -37,13 +37,10 @@ while getopts ":c:p:t:d:k" opt; do
     d )
       TEKTON_DASHBOARD_VERSION=$OPTARG
       ;;
-    k )
-      CONTAINER_RUNTIME="docker"
-      ;;
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo "Usage:  tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version [-k]"
+      echo "Usage: tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version]"
       ;;
     : )
       echo "Invalid option: $OPTARG requires an argument" 1>&2
@@ -65,8 +62,9 @@ if [ -z "$TEKTON_DASHBOARD_VERSION" ]; then
   TEKTON_DASHBOARD_VERSION=$(get_latest_release tektoncd/dashboard)
 fi
 if [ -z "$CONTAINER_RUNTIME" ]; then
-  CONTAINER_RUNTIME="podman"
+  CONTAINER_RUNTIME="docker"
 fi
+echo "Using container runtime: $CONTAINER_RUNTIME"
 
 # create registry container unless it already exists
 reg_name='kind-registry'
@@ -80,6 +78,7 @@ if [ "${running}" != 'true' ]; then
     -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
     registry:2
 fi
+echo "Registry started..."
 
 # Create the kind cluster
 # create a cluster with the local registry enabled in containerd
@@ -92,8 +91,6 @@ nodes:
   - role: control-plane
   - role: worker
   - role: worker
-featureGates:
-  "EphemeralContainers": true
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
@@ -103,20 +100,20 @@ containerdConfigPatches:
 EOF
 fi
 
-# connect the registry to the cluster network
+echo "Connect the registry to the cluster network..."
 # (the network may already be connected)
 "$CONTAINER_RUNTIME" network connect "kind" "${reg_name}" || true
+echo "Connection established..."
 
-
-# Install Tekton Pipeline, Triggers and Dashboard
+echo "Install Tekton Pipeline, Triggers and Dashboard..."
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
 kubectl wait --for=condition=Established --timeout=30s crds/clusterinterceptors.triggers.tekton.dev || true # Starting from triggers v0.13
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml || true
 kubectl apply -f https://storage.googleapis.com/tekton-releases/dashboard/previous/${TEKTON_DASHBOARD_VERSION}/release-full.yaml
 
-# Wait until all pods are ready
+echo "Wait until all pods are ready..."
 sleep 10
-kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=120s
+kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=180s
 kubectl port-forward service/tekton-dashboard -n tekton-pipelines 9097:9097 &> kind-tekton-dashboard.log &
-echo “Tekton Dashboard available at http://localhost:9097”
+echo "Tekton Dashboard available at http://localhost:9097"
