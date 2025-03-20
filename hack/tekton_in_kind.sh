@@ -22,6 +22,10 @@ get_latest_release() {
     sed -E 's/.*"([^"]+)".*/\1/'                                    # Pluck JSON value
 }
 
+info() {
+  echo -e "[\e[93mINFO\e[0m] $1"
+}
+
 # Read command line options
 while getopts ":c:p:t:d:k" opt; do
   case ${opt} in
@@ -43,7 +47,7 @@ while getopts ":c:p:t:d:k" opt; do
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo "Usage:  tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version [-k]"
+      echo "Usage: tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version [-k]"
       ;;
     : )
       echo "Invalid option: $OPTARG requires an argument" 1>&2
@@ -52,7 +56,7 @@ while getopts ":c:p:t:d:k" opt; do
 done
 shift $((OPTIND -1))
 
-# Check and defaults input params
+# Check and set default input params
 export KIND_CLUSTER_NAME=${CLUSTER_NAME:-"tekton"}
 
 if [ -z "$TEKTON_PIPELINE_VERSION" ]; then
@@ -68,32 +72,40 @@ if [ -z "$CONTAINER_RUNTIME" ]; then
   CONTAINER_RUNTIME="podman"
 fi
 
-# create registry container unless it already exists
+info "Using container runtime: $CONTAINER_RUNTIME"
+
+info "Checking if registry exists..."
 reg_name='kind-registry'
 reg_port='5000'
 running="$(${CONTAINER_RUNTIME} inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
 if [ "${running}" != 'true' ]; then
-  # It may exists and not be running, so cleanup just in case
+  info "Registry does not exist, creating..."
+  # It may exist and not be running, so cleanup just in case
   "$CONTAINER_RUNTIME" rm "${reg_name}" 2> /dev/null || true
-  # And start a new one
   "$CONTAINER_RUNTIME" run \
-    -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
+    -d \
+    --restart=always \
+    -p "${reg_port}:5000" \
+    --network bridge \
+    --name "${reg_name}" \
     registry:2
 fi
+info "Registry ready..."
 
-# Create the kind cluster
-# create a cluster with the local registry enabled in containerd
+info "Checking if kind cluster '$KIND_CLUSTER_NAME' exists..."
+# Tell kind to use the same container runtime as the registry
+# https://kind.sigs.k8s.io/docs/user/quick-start/#creating-a-cluster
+export KIND_EXPERIMENTAL_PROVIDER=$CONTAINER_RUNTIME
 running_cluster=$(kind get clusters | grep "$KIND_CLUSTER_NAME" || true)
 if [ "${running_cluster}" != "$KIND_CLUSTER_NAME" ]; then
- cat <<EOF | kind create cluster --config=-
+  info "Kind cluster '$KIND_CLUSTER_NAME' does not exist, creating with the local registry enabled in containerd..."
+  cat <<EOF | kind create cluster --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
   - role: worker
   - role: worker
-featureGates:
-  "EphemeralContainers": true
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${reg_port}"]
@@ -101,22 +113,24 @@ containerdConfigPatches:
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."${reg_name}:${reg_port}"]
     endpoint = ["http://${reg_name}:${reg_port}"]
 EOF
+  info "Waiting for the nodes to be ready..."
+  kubectl wait --for=condition=ready node --all --timeout=600s
 fi
+info "Kind cluster '$KIND_CLUSTER_NAME' ready..."
 
-# connect the registry to the cluster network
+info "Connect the registry to the cluster network..."
 # (the network may already be connected)
 "$CONTAINER_RUNTIME" network connect "kind" "${reg_name}" || true
+info "Connection established..."
 
-
-# Install Tekton Pipeline, Triggers and Dashboard
+info "Install Tekton Pipeline, Triggers and Dashboard..."
 kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
 kubectl wait --for=condition=Established --timeout=30s crds/clusterinterceptors.triggers.tekton.dev || true # Starting from triggers v0.13
 kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml || true
 kubectl apply -f https://storage.googleapis.com/tekton-releases/dashboard/previous/${TEKTON_DASHBOARD_VERSION}/release-full.yaml
 
-# Wait until all pods are ready
-sleep 10
-kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=120s
+info "Wait until all pods are ready..."
+kubectl wait -n tekton-pipelines --for=condition=ready pods --all --timeout=600s
 kubectl port-forward service/tekton-dashboard -n tekton-pipelines 9097:9097 &> kind-tekton-dashboard.log &
-echo “Tekton Dashboard available at http://localhost:9097”
+info "Tekton Dashboard available at http://localhost:9097"
