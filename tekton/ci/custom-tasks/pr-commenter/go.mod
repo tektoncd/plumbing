@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/jenkins-x/go-scm v1.14.56
-	github.com/tektoncd/pipeline v0.69.0
+	github.com/tektoncd/pipeline v0.69.1
 	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.32.3
 	k8s.io/client-go v0.32.3
