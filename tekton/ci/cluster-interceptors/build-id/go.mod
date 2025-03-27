@@ -1,6 +1,8 @@
 module github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/build-id
 
-go 1.18
+go 1.23.0
+
+toolchain go1.23.4
 
 require (
 	github.com/bwmarrin/snowflake v0.3.0
