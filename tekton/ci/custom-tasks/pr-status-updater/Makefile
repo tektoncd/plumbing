@@ -2,7 +2,7 @@ MODULE   = $(shell env GO111MODULE=on $(GO) list -m)
 DATE    ?= $(shell date +%FT%T%z)
 BIN      = $(CURDIR)/.bin
 
-GOLANGCI_VERSION = v1.52.2
+GOLANGCI_VERSION = v2.1.2
 
 GO           = go
 TIMEOUT_UNIT = 5m
