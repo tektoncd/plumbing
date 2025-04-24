@@ -175,6 +175,7 @@ tide:
     tektoncd/dashboard: rebase
     tektoncd/friends: rebase
     tektoncd/hub: rebase
+    tektoncd/mcp-server: rebase
     tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
