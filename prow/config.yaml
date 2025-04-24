@@ -103,6 +103,12 @@ branch-protection:
             - "Multi-arch build"
             - "e2e-tests / e2e tests (k8s-oldest)"
             - "e2e-tests / e2e tests (k8s-plus-one)"
+        mcp-server:
+          required_status_checks:
+            contexts:
+            - "build"
+            - "test"
+            - "lint"
     tektoncd-catalog:
       # Protect all branches in tektoncd-catalog
       # This means all prow jobs with "always_run" set are required
@@ -138,6 +144,7 @@ tide:
     - tektoncd/dashboard
     - tektoncd/friends
     - tektoncd/hub
+    - tektoncd/mcp-server
     - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
