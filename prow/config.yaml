@@ -109,6 +109,11 @@ branch-protection:
             - "build"
             - "test"
             - "lint"
+        triggers:
+          required_status_checks:
+            contexts:
+            - "lint"
+            - "Tekton Triggers CI"
     tektoncd-catalog:
       # Protect all branches in tektoncd-catalog
       # This means all prow jobs with "always_run" set are required
