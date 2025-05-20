@@ -59,7 +59,7 @@ spec:
       workspaces:
         - name: output
           workspace: workarea
-          subpath: git
+          subPath: git
       params:
         - name: url
           value: https://$(params.package)
@@ -82,7 +82,7 @@ spec:
       workspaces:
         - name: source
           workspace: workarea
-          subpath: git/tekton/ci/cluster-interceptors/build-id
+          subPath: git/tekton/ci/cluster-interceptors/build-id
     - name: build
       runAfter: [git-clone]
       taskRef:
@@ -100,7 +100,7 @@ spec:
       workspaces:
         - name: source
           workspace: workarea
-          subpath: git/tekton/ci/cluster-interceptors/build-id
+          subPath: git/tekton/ci/cluster-interceptors/build-id
     - name: publish-images
       runAfter: [build, unit-tests]
       taskRef:
@@ -125,10 +125,10 @@ spec:
       workspaces:
         - name: source
           workspace: workarea
-          subpath: git
+          subPath: git
         - name: output
           workspace: workarea
-          subpath: bucket
+          subPath: bucket
         - name: release-secret
           workspace: release-secret
     - name: publish-to-bucket
@@ -147,7 +147,7 @@ spec:
           workspace: release-secret
         - name: source
           workspace: workarea
-          subpath: bucket
+          subPath: bucket
       params:
         - name: location
           value: $(params.releaseBucket)/previous/$(params.versionTag)
@@ -175,7 +175,7 @@ spec:
           workspace: release-secret
         - name: source
           workspace: workarea
-          subpath: bucket
+          subPath: bucket
       params:
         - name: location
           value: $(params.releaseBucket)/latest
