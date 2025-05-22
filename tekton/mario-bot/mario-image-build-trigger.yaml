@@ -197,8 +197,14 @@ spec:
           - name: data
             value: '{"pull-request-id": "$(params.pullRequestID)", "build-pipelinerun": "$(context.pipelineRun.name)", "git-url": "https://$(params.gitRepository)", "git-revision": "$(params.gitRevision)", "target-image": "$(params.targetImage)", "status": "$(tasks.clone-and-build.status)"}'
           taskRef:
-            name: cloudevent
-            bundle: ghcr.io/tektoncd/catalog/upstream/tasks/cloudevent:0.1
+            resolver: bundles
+            params:
+            - name: bundle
+              value: ghcr.io/tektoncd/catalog/upstream/tasks/cloudevent:0.1
+            - name: name
+              value: cloudevent
+            - name: kind
+              value: task
       params:
       - name: pullRequestID
         value: $(tt.params.pullRequestID)
