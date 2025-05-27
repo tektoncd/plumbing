@@ -25,8 +25,14 @@ spec:
   tasks:
   - name: git-clone
     taskRef:
-      name: git-clone
-      bundle: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
     params:
       - name: url
         value: $(params.gitRepository)
@@ -66,8 +72,14 @@ spec:
         operator: in
         values: ["passed"]              # In cases triggered not by specific github comments
     taskRef:
-      name: yaml-lint
-      bundle: ghcr.io/tektoncd/catalog/upstream/tasks/yaml-lint:0.1
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/yaml-lint:0.1
+      - name: name
+        value: yaml-lint
+      - name: kind
+        value: task
     params:
     - name: args
       value: ["$(params.args[*])"]
