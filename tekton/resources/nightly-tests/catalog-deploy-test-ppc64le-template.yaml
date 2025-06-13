@@ -63,10 +63,16 @@ spec:
         - name: remote-port
         - name: remote-user
         tasks:
-        - name: git-clone-catalog
+        - name: git-clone
           taskRef:
-            name: git-clone
-            bundle: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+            resolver: bundles
+            params:
+              - name: name
+                value: git-clone
+              - name: bundle
+                value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+              - name: kind
+                value: task
           params:
           - name: url
             value: https://github.com/tektoncd/catalog
