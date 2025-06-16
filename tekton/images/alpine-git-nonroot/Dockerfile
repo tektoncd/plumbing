@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine/git:2.49.0@sha256:114b8421cb3e384adee24ba9c09124ef51a58b6a4df307470e3dbd9e381d341e
+FROM alpine/git:2.49.0@sha256:ec66a89e1ad387a8a0544ddf8e9d34aa5aaffa97c6dc04e67fe75ecd10897e98
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for Alpine-git Nonroot"
