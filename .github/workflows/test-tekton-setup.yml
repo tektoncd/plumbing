@@ -1,0 +1,72 @@
+name: Test Tekton Setup
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/actions/setup-tekton/**'
+      - '.github/workflows/nightly-release-template.yml'
+
+jobs:
+  test-setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Test Tekton setup
+        id: setup
+        uses: ./.github/actions/setup-tekton
+        with:
+          kubernetes-version: 'v1.28.x'
+          enable-chains: 'true'
+          
+      - name: Verify cluster is ready
+        env:
+          KUBECONFIG: ${{ steps.setup.outputs.kubeconfig }}
+        run: |
+          echo "Testing cluster connectivity..."
+          kubectl cluster-info
+          
+          echo "Checking Tekton installation..."
+          kubectl get pods -n tekton-pipelines
+          kubectl get pods -n tekton-chains
+          
+          echo "Verifying Chains configuration..."
+          kubectl get configmap chains-config -n tekton-chains -o yaml
+          
+          echo "Testing simple task execution..."
+          cat <<EOF | kubectl apply -f -
+          apiVersion: tekton.dev/v1beta1
+          kind: Task
+          metadata:
+            name: hello-test
+          spec:
+            steps:
+            - name: hello
+              image: alpine
+              script: |
+                echo "Hello from Tekton!"
+                echo "Cluster is working correctly"
+          ---
+          apiVersion: tekton.dev/v1beta1
+          kind: TaskRun
+          metadata:
+            name: hello-test-run
+          spec:
+            taskRef:
+              name: hello-test
+          EOF
+          
+          # Wait for task to complete
+          kubectl wait --for=condition=Succeeded --timeout=300s taskrun/hello-test-run
+          
+          echo "✅ Tekton setup test completed successfully!"
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          # Cleanup kind cluster
+          kind delete cluster || true 

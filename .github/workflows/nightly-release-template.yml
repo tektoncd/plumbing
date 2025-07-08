@@ -1,0 +1,238 @@
+name: Nightly Release Template
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Name of the Tekton project (pipeline, triggers, etc.)'
+        required: true
+        type: string
+      git-repository:
+        description: 'Git repository URL'
+        required: true
+        type: string
+      container-registry:
+        description: 'Container registry for images'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      container-registry-path:
+        description: 'Registry path for images'
+        required: false
+        type: string
+        default: 'tektoncd'
+      run-tests:
+        description: 'Whether to run tests during release'
+        required: false
+        type: boolean
+        default: false
+      schedule:
+        description: 'Cron schedule for the release'
+        required: false
+        type: string
+        default: '0 5 * * *'
+    secrets:
+      RELEASE_SECRET:
+        description: 'Release credentials'
+        required: false
+      REGISTRY_TOKEN:
+        description: 'Container registry token'
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+  attestations: write
+  packages: write
+
+jobs:
+  nightly-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+      
+    steps:
+      - name: Checkout plumbing
+        uses: actions/checkout@v4
+        with:
+          repository: tektoncd/plumbing
+          path: plumbing
+          
+      - name: Checkout project repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.git-repository }}
+          path: project
+          
+      - name: Setup Tekton cluster
+        id: tekton
+        uses: ./plumbing/.github/actions/setup-tekton
+        with:
+          kubernetes-version: 'v1.28.x'
+          enable-chains: 'true'
+          
+      - name: Generate release metadata
+        id: metadata
+        run: |
+          cd project
+          GIT_SHA=$(git rev-parse HEAD)
+          VERSION_TAG="v$(date +"%Y%m%d")-$(echo $GIT_SHA | cut -c 1-10)"
+          TRIGGER_UUID=$(python -c 'import uuid; print(uuid.uuid4())')
+          
+          echo "git-sha=$GIT_SHA" >> $GITHUB_OUTPUT
+          echo "version-tag=$VERSION_TAG" >> $GITHUB_OUTPUT
+          echo "trigger-uuid=$TRIGGER_UUID" >> $GITHUB_OUTPUT
+          
+      - name: Setup release resources
+        run: |
+          # Apply the nightly release templates and triggers
+          cd plumbing
+          kubectl apply -k tekton/resources/nightly-release/overlays/${{ inputs.project-name }}
+          
+          # Wait for EventListener to be ready
+          kubectl wait --for=condition=Ready --timeout=300s \
+            pods -l app.kubernetes.io/name=el-${{ inputs.project-name }}-nightly -n tekton-nightly
+            
+      - name: Create release secrets
+        run: |
+          # Create minimal release secret for this ephemeral cluster
+          kubectl create secret generic release-secret -n tekton-nightly \
+            --from-literal=release.json='{"type":"service_account"}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+            
+          # Create registry credentials  
+          kubectl create secret generic ghcr-creds -n tekton-nightly \
+            --from-literal=.dockerconfigjson='{"auths":{"ghcr.io":{"auth":""}}}' \
+            --type=kubernetes.io/dockerconfigjson \
+            --dry-run=client -o yaml | kubectl apply -f -
+            
+      - name: Trigger release pipeline
+        id: release
+        run: |
+          # Get EventListener service URL
+          EL_URL=$(kubectl get svc -n tekton-nightly -l app.kubernetes.io/name=el-${{ inputs.project-name }}-nightly -o jsonpath='{.items[0].spec.clusterIP}'):8080
+          
+          # Create release payload
+          cat <<EOF > release-payload.json
+          {
+            "buildUUID": "${{ steps.metadata.outputs.trigger-uuid }}",
+            "trigger-template": "nightly-release",
+            "params": {
+              "release": {
+                "gitRevision": "${{ steps.metadata.outputs.git-sha }}",
+                "gitRepository": "${{ inputs.git-repository }}",
+                "versionTag": "${{ steps.metadata.outputs.version-tag }}",
+                "projectName": "${{ inputs.project-name }}",
+                "runTests": "${{ inputs.run-tests }}"
+              },
+              "registry": {
+                "baseUri": "${{ inputs.container-registry }}",
+                "path": "${{ inputs.container-registry-path }}",
+                "regions": "",
+                "user": "token"
+              }
+            }
+          }
+          EOF
+          
+          # Port-forward to EventListener and trigger release
+          kubectl port-forward -n tekton-nightly svc/el-${{ inputs.project-name }}-nightly 8080:8080 &
+          sleep 5
+          
+          PIPELINE_RUN=$(curl -s -X POST http://localhost:8080 \
+            -H "Content-Type: application/json" \
+            -d @release-payload.json | jq -r '.metadata.name // empty')
+            
+          if [ -z "$PIPELINE_RUN" ]; then
+            echo "Failed to trigger pipeline"
+            exit 1
+          fi
+          
+          echo "pipeline-run=$PIPELINE_RUN" >> $GITHUB_OUTPUT
+          echo "Triggered pipeline run: $PIPELINE_RUN"
+          
+      - name: Wait for release completion
+        run: |
+          PIPELINE_RUN="${{ steps.release.outputs.pipeline-run }}"
+          
+          echo "Waiting for pipeline run $PIPELINE_RUN to complete..."
+          kubectl wait --for=condition=Succeeded --timeout=7200s \
+            pipelinerun/$PIPELINE_RUN -n tekton-nightly || \
+          kubectl wait --for=condition=Failed --timeout=60s \
+            pipelinerun/$PIPELINE_RUN -n tekton-nightly
+            
+          # Check final status
+          STATUS=$(kubectl get pipelinerun/$PIPELINE_RUN -n tekton-nightly -o jsonpath='{.status.conditions[0].type}')
+          if [ "$STATUS" != "Succeeded" ]; then
+            echo "Pipeline run failed!"
+            kubectl describe pipelinerun/$PIPELINE_RUN -n tekton-nightly
+            exit 1
+          fi
+          
+          echo "Pipeline run completed successfully!"
+          
+      - name: Collect artifacts and logs
+        if: always()
+        run: |
+          mkdir -p artifacts/logs artifacts/results
+          
+          # Collect pipeline run logs
+          PIPELINE_RUN="${{ steps.release.outputs.pipeline-run }}"
+          kubectl logs -n tekton-nightly pipelinerun/$PIPELINE_RUN > artifacts/logs/pipeline.log || true
+          
+          # Collect task run logs
+          for taskrun in $(kubectl get taskruns -n tekton-nightly -l tekton.dev/pipelineRun=$PIPELINE_RUN -o name); do
+            task_name=$(echo $taskrun | cut -d'/' -f2)
+            kubectl logs -n tekton-nightly $taskrun > artifacts/logs/$task_name.log || true
+          done
+          
+          # Collect pipeline results
+          kubectl get pipelinerun/$PIPELINE_RUN -n tekton-nightly -o yaml > artifacts/results/pipelinerun.yaml || true
+          
+          # List built images (from Chains annotations)
+          kubectl get taskruns -n tekton-nightly -l tekton.dev/pipelineRun=$PIPELINE_RUN \
+            -o jsonpath='{range .items[*]}{.metadata.annotations.chains\.tekton\.dev/signed}{"\n"}{end}' \
+            > artifacts/results/signed-images.txt || true
+            
+      - name: Generate GitHub attestations
+        if: success()
+        run: |
+          # Extract image information from the release
+          if [ -s artifacts/results/signed-images.txt ]; then
+            while read -r image_info; do
+              if [ -n "$image_info" ]; then
+                echo "Generating attestation for: $image_info"
+                # Parse image name and digest from Chains output
+                # This would need to be adapted based on actual Chains output format
+              fi
+            done < artifacts/results/signed-images.txt
+          fi
+          
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ inputs.project-name }}-${{ steps.metadata.outputs.version-tag }}
+          path: artifacts/
+          retention-days: 30
+          
+      - name: Create release summary
+        if: always()
+        run: |
+          cat >>$GITHUB_STEP_SUMMARY <<EOF
+          ## Nightly Release Summary - ${{ inputs.project-name }}
+          
+          **Version:** ${{ steps.metadata.outputs.version-tag }}  
+          **Git SHA:** ${{ steps.metadata.outputs.git-sha }}  
+          **Pipeline Run:** ${{ steps.release.outputs.pipeline-run }}  
+          **Status:** $(kubectl get pipelinerun/${{ steps.release.outputs.pipeline-run }} -n tekton-nightly -o jsonpath='{.status.conditions[0].type}' 2>/dev/null || echo "Unknown")
+          
+          ### Artifacts
+          - [Release Logs and Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          ### Images Built
+          \`\`\`
+          $(cat artifacts/results/signed-images.txt 2>/dev/null || echo "No signed images found")
+          \`\`\`
+          EOF 

@@ -1,0 +1,25 @@
+name: Nightly Dashboard Release
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 7am UTC
+  workflow_dispatch:
+    inputs:
+      run-tests:
+        description: 'Run tests during release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/nightly-release-template.yml
+    with:
+      project-name: 'dashboard'
+      git-repository: 'tektoncd/dashboard'
+      container-registry: 'ghcr.io'
+      container-registry-path: 'tektoncd/dashboard'
+      run-tests: ${{ inputs.run-tests || false }}
+    secrets:
+      RELEASE_SECRET: ${{ secrets.RELEASE_SECRET }}
+      REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

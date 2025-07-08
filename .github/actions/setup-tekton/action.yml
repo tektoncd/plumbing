@@ -1,0 +1,119 @@
+name: 'Setup Tekton Cluster'
+description: 'Sets up a Kind cluster with Tekton, Triggers, and Chains for nightly releases'
+inputs:
+  kubernetes-version:
+    description: 'Kubernetes version to use'
+    required: false
+    default: 'v1.28.x'
+  registry-url:
+    description: 'Container registry URL'
+    required: false
+    default: 'registry.local:5000'
+  enable-chains:
+    description: 'Enable Tekton Chains for signing'
+    required: false
+    default: 'true'
+outputs:
+  kubeconfig:
+    description: 'Path to kubeconfig file'
+    value: ${{ steps.kubeconfig.outputs.path }}
+  registry-url:
+    description: 'Registry URL for pushing images'
+    value: ${{ steps.registry.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Create Kind cluster with Tekton
+      shell: bash
+      run: |
+        # Use the existing kind-e2e setup script
+        docker pull ghcr.io/tektoncd/plumbing/kind-e2e:latest
+        
+        # Create cluster with local registry
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          -v "$(pwd):/workspace" -w /workspace \
+          --privileged \
+          ghcr.io/tektoncd/plumbing/kind-e2e:latest \
+          --k8s-version "${{ inputs.kubernetes-version }}" \
+          --registry-url "${{ inputs.registry-url }}" \
+          --nodes 2
+      
+    - name: Install Tekton Pipeline
+      shell: bash
+      run: |
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+        kubectl wait --for=condition=Ready pods --all -n tekton-pipelines --timeout=300s
+        
+    - name: Install Tekton Triggers  
+      shell: bash
+      run: |
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml
+        kubectl wait --for=condition=Ready pods --all -n tekton-pipelines --timeout=300s
+        
+    - name: Install Tekton Chains
+      if: inputs.enable-chains == 'true'
+      shell: bash
+      run: |
+        # Install Chains
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/chains/latest/release.yaml
+        kubectl wait --for=condition=Ready pods --all -n tekton-chains --timeout=300s
+        
+        # Configure Chains for GitHub OIDC signing
+        kubectl create configmap chains-config -n tekton-chains \
+          --from-literal=artifacts.oci.storage=oci \
+          --from-literal=artifacts.taskrun.storage=oci \
+          --from-literal=artifacts.pipelinerun.storage=oci \
+          --from-literal=transparency.enabled=true \
+          --from-literal=transparency.url=https://rekor.sigstore.dev \
+          --dry-run=client -o yaml | kubectl apply -f -
+          
+        # Restart chains controller to pick up config
+        kubectl rollout restart deployment tekton-chains-controller -n tekton-chains
+        kubectl wait --for=condition=Ready pods --all -n tekton-chains --timeout=300s
+        
+    - name: Setup namespaces and RBAC
+      shell: bash
+      run: |
+        # Create tekton-nightly namespace
+        kubectl create namespace tekton-nightly --dry-run=client -o yaml | kubectl apply -f -
+        
+        # Create service account with required permissions
+        cat <<EOF | kubectl apply -f -
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: tekton-releases
+          namespace: tekton-nightly
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: tekton-releases-admin
+        subjects:
+        - kind: ServiceAccount
+          name: tekton-releases
+          namespace: tekton-nightly
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+        EOF
+        
+    - name: Export kubeconfig
+      id: kubeconfig
+      shell: bash
+      run: |
+        KUBECONFIG_PATH="${GITHUB_WORKSPACE}/kubeconfig"
+        kind export kubeconfig --kubeconfig "$KUBECONFIG_PATH"
+        echo "path=$KUBECONFIG_PATH" >> $GITHUB_OUTPUT
+        
+    - name: Export registry info
+      id: registry
+      shell: bash
+      run: |
+        echo "url=${{ inputs.registry-url }}" >> $GITHUB_OUTPUT 

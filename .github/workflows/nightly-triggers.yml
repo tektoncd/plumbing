@@ -1,0 +1,25 @@
+name: Nightly Triggers Release
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6am UTC (1 hour after pipeline)
+  workflow_dispatch:
+    inputs:
+      run-tests:
+        description: 'Run tests during release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    uses: ./.github/workflows/nightly-release-template.yml
+    with:
+      project-name: 'triggers'
+      git-repository: 'tektoncd/triggers'
+      container-registry: 'ghcr.io'
+      container-registry-path: 'tektoncd/triggers'
+      run-tests: ${{ inputs.run-tests || false }}
+    secrets:
+      RELEASE_SECRET: ${{ secrets.RELEASE_SECRET }}
+      REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
