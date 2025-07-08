@@ -85,16 +85,39 @@ rules:
   verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-interceptor-access
+rules:
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["interceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tekton-ci-jobs-triggers-tekton-ci-workspace-listener
 subjects:
 - kind: ServiceAccount
   name: tekton-ci-workspace-listener
+  namespace: tekton-ci
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: tekton-ci-jobs-triggers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-interceptor-access-tekton-ci-workspace-listener
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-workspace-listener
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-interceptor-access
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
