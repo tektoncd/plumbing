@@ -125,16 +125,95 @@ Read more [here](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due
 
 ## tekton_ci.sh
 
-This script creates webhooks triggered by a specified GitHub repository and forwards the resulting events to your local K8s cluster running Tekton.  By default, the script assumes it is a fork of the `tektoncd/plumbing` repository.
+This script creates webhooks triggered by a specified GitHub repository and forwards the resulting events to your local K8s cluster running Tekton. By default, the script assumes it is a fork of the `tektoncd/plumbing` repository.
+
+The script automates the complete setup of a Tekton CI environment including:
+- Installing the build-id cluster interceptor
+- Deploying Tekton CI resources with customized GitHub org settings
+- Creating GitHub secrets for webhook authentication
+- Setting up port forwarding and smee proxy for local development
+- Creating webhooks in your GitHub repository
+
+### Prerequisites
+
+- `kubectl`: Kubernetes CLI tool
+- `kustomize`: Kubernetes configuration management tool
+- `smee`: GitHub webhook proxy for local development
+- `tkn`: Tekton CLI tool  
+- `ko`: Container image building tool for Go applications
+- `docker` or `podman`: Container runtime (script auto-detects which is available)
+- `openssl`: For generating webhook secrets (if not provided)
+- A GitHub personal access token with the following permissions:
+  - `repo` - Full control of private repositories
+  - `admin:repo_hook` - Full control of repository hooks
+  - `write:packages` - Upload packages to GitHub Package Registry
 
 ### Usage
 
 ```sh
-tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo>
+tekton_ci.sh -u <github-user> -t <github-token> -o <github-org> -r <github-repo> [-s <github-secret>]
 
 Options:
  -u <github-user>         Your GitHub username
- -t <github-token>        Your GitHub token
+ -t <github-token>        Your GitHub personal access token
  -o <github-org>          The org or user where your fork is hosted
  -r <github-repo>         The name of the fork, typically "plumbing"
+ -s <github-secret>       GitHub webhook secret (optional, will be generated if not provided)
+```
+
+### What the script does
+
+1. **Dependency Check**: Verifies all required tools are installed
+2. **Secret Generation**: Automatically generates a webhook secret if not provided
+3. **Resource Deployment**: Deploys Tekton CI resources with your GitHub org configuration
+4. **Registry Authentication**: Logs into GitHub Container Registry using your token
+5. **Cluster Interceptor**: Builds and deploys the build-id cluster interceptor to your container registry
+6. **Secret Creation**: Creates Kubernetes secrets for webhook authentication
+7. **Port Forwarding**: Sets up kubectl port-forward for the event listener
+8. **Smee Proxy**: Starts smee proxy to forward GitHub webhooks to your local cluster
+9. **Webhook Creation**: Automatically creates webhooks in your GitHub repository
+
+### GitHub Token Setup
+
+To create a GitHub personal access token:
+
+1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Click "Generate new token (classic)" **Note**: As of now ghcr registry access is supported only with classic tokens 
+3. Select the following scopes:
+   - `repo` - Full control of private repositories
+   - `admin:repo_hook` - Full control of repository hooks
+   - `write:packages` -  Upload and read packages in github registry
+4. Generate and copy the token
+
+### Process Management
+
+The script keeps running to maintain the port-forward and smee proxy processes. To stop:
+
+- Press `Ctrl+C` to gracefully stop all background processes
+- The script automatically cleans up log files and terminates child processes
+
+### Secrets Created
+
+The script creates two Kubernetes secrets:
+
+1. **ci-webhook**: Contains the webhook secret for GitHub event validation
+2. **github**: Contains both the GitHub token and webhook secret for API access
+
+### Troubleshooting
+
+- **Build-id interceptor fails**: Ensure Docker is running and you have push access to your GitHub Container Registry
+- **Registry authentication fails**: Verify your GitHub token has `write:packages` permission and is valid
+- **Permission denied**: Check that your GitHub token has the required permissions (`repo`, `admin:repo_hook`, `write:packages`)
+- **Port 9999 in use**: The script uses port 9999 for port-forwarding; ensure it's available
+- **Smee connection issues**: Check your internet connection and firewall settings
+- **Container registry access**: Ensure your repository allows container registry access (check GitHub repository settings)
+
+### Example
+
+```sh
+# Basic usage with auto-generated secret
+./tekton_ci.sh -u myuser -t ghp_xxxxxxxxxxxxxxxxxxxx -o myorg -r plumbing
+
+# With custom webhook secret
+./tekton_ci.sh -u myuser -t ghp_xxxxxxxxxxxxxxxxxxxx -o myorg -r plumbing -s mysecret123
 ```
