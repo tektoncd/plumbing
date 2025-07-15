@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	cloud.google.com/go/logging v1.13.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
-	google.golang.org/api v0.240.0
+	google.golang.org/api v0.241.0
 )
 
 require (
