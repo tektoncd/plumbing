@@ -14,7 +14,7 @@
 
 # Runtime image for common dependencies when running kind tests.
 
-FROM golang:1.24.5-alpine@sha256:ddf52008bce1be455fe2b22d780b6693259aaf97b16383b6372f4b22dd33ad66
+FROM golang:1.24.5-alpine@sha256:48ee313931980110b5a91bbe04abdf640b9a67ca5dea3a620f01bacf50593396
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for kind e2e"
