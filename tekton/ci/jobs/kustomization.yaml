@@ -1,7 +1,6 @@
 resources:
 - tekton-teps-validation.yaml
 - tekton-golang-tests.yaml
-- tekton-image-build.yaml
 - tekton-docs-reviews.yaml
 - tekton-catalog-catlin-lint.yaml
 - tekton-org-validation.yaml

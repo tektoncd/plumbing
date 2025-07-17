@@ -1,12 +1,6 @@
 namePrefix: tekton-plumbing-
 
 patches:
-- path: template.yaml
-  target:
-    group: triggers.tekton.dev
-    kind: TriggerTemplate
-    name: ci-pipeline
-    version: v1beta1
 - path: trigger.yaml
   target:
     group: triggers.tekton.dev
