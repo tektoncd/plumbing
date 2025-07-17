@@ -1,41 +1,50 @@
-linters-settings:
-  gomodguard:
-    blocked:
-      modules:
-        - github.com/ghodss/yaml:
-            recommendations:
-              - sigs.k8s.io/yaml
+version: "2"
+run:
+  build-tags:
+    - e2e
+  issues-exit-code: 1
 linters:
-  disable-all: true
+  default: none
   enable:
-  - deadcode
-  - errcheck
-  - gofmt
-  - goimports
-  - gomodguard
-  - gosec
-  - gocritic
-  - revive
-  - misspell
-  - unconvert
-output:
-  uniq-by-line: false
-issues:
-  exclude-rules:
-  - path: _test\.go
-    linters:
     - errcheck
+    - gocritic
+    - gomodguard
     - gosec
+    - misspell
+    - revive
+    - unconvert
+  settings:
+    gomodguard:
+      blocked:
+        modules:
+          - github.com/ghodss/yaml:
+              recommendations:
+                - sigs.k8s.io/yaml
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  include:
-  # Enable off-by-default rules for revive requiring that all exported elements have a properly formatted comment.
-  - EXC0012
-  - EXC0014
-run:
-  issues-exit-code: 1
-  build-tags:
-  - e2e
-  skip-files: []
-  skip-dirs: []
-  timeout: 10m
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
