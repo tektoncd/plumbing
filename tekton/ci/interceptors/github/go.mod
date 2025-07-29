@@ -12,7 +12,7 @@ require (
 	github.com/tektoncd/triggers v0.32.0
 	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
-	sigs.k8s.io/yaml v1.5.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
