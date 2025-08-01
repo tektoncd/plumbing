@@ -55,6 +55,7 @@ jobs:
         with:
           files: |
             tekton/images/${{ matrix.image }}/**
+            .github/workflows/images.yaml
       - name: changed files
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
