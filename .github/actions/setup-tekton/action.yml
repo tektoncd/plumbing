@@ -1,0 +1,266 @@
+name: 'Setup Tekton Release Environment'
+description: 'Sets up a complete Tekton environment for nightly releases with Kind cluster, Tekton components, and container registry'
+
+inputs:
+  kubernetes-version:
+    description: 'Kubernetes version for Kind cluster'
+    required: false
+    default: 'v1.31.0'
+  registry-url:
+    description: 'Container registry URL for image publishing'
+    required: false
+    default: 'ghcr.io'
+  enable-chains:
+    description: 'Install and configure Tekton Chains for supply chain security'
+    required: false
+    default: 'true'
+  cluster-name:
+    description: 'Kind cluster name'
+    required: false
+    default: 'tekton-release'
+
+outputs:
+  kubeconfig-path:
+    description: 'Path to the kubeconfig file'
+    value: ${{ steps.cluster-info.outputs.kubeconfig-path }}
+  registry-url:
+    description: 'Container registry URL'
+    value: ${{ steps.cluster-info.outputs.registry-url }}
+  cluster-endpoint:
+    description: 'Kubernetes cluster endpoint'
+    value: ${{ steps.cluster-info.outputs.cluster-endpoint }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        echo "🔍 Validating setup parameters..."
+        echo "Kubernetes version: ${{ inputs.kubernetes-version }}"
+        echo "Registry URL: ${{ inputs.registry-url }}"
+        echo "Chains enabled: ${{ inputs.enable-chains }}"
+        echo "Cluster name: ${{ inputs.cluster-name }}"
+
+    - name: Install Kind
+      shell: bash
+      run: |
+        echo "📦 Installing Kind..."
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+        kind version
+
+    - name: Create Kind cluster
+      shell: bash
+      run: |
+        echo "🏗️ Creating Kind cluster '${{ inputs.cluster-name }}'..."
+        cat <<EOF > kind-config.yaml
+        apiVersion: kind.x-k8s.io/v1alpha4
+        kind: Cluster
+        name: ${{ inputs.cluster-name }}
+        nodes:
+        - role: control-plane
+          image: kindest/node:${{ inputs.kubernetes-version }}
+          kubeadmConfigPatches:
+          - |
+            kind: InitConfiguration
+            nodeRegistration:
+              kubeletExtraArgs:
+                node-labels: "ingress-ready=true"
+        - role: worker
+          image: kindest/node:${{ inputs.kubernetes-version }}
+        - role: worker
+          image: kindest/node:${{ inputs.kubernetes-version }}
+        kubeadmConfigPatches:
+        - |
+          apiVersion: kubeadm.k8s.io/v1beta3
+          kind: ClusterConfiguration
+          metadata:
+            name: config
+          apiServer:
+            extraArgs:
+              service-account-issuer: kubernetes.default.svc.cluster.local
+              service-account-signing-key-file: /etc/kubernetes/pki/sa.key
+        EOF
+        timeout 600 kind create cluster --config kind-config.yaml --wait 300s
+        kubectl cluster-info --context kind-${{ inputs.cluster-name }}
+        kubectl wait --for=condition=Ready nodes --all --timeout=300s
+
+    - name: Install Tekton Pipeline
+      shell: bash
+      run: |
+        echo "⚡ Installing Tekton Pipeline..."
+        for attempt in 1 2 3; do
+          echo "Attempt $attempt/3..."
+          if kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml; then
+            echo "✅ Tekton Pipeline applied successfully"
+            break
+          elif [ $attempt -eq 3 ]; then
+            echo "❌ Failed to install Tekton Pipeline after 3 attempts"
+            exit 1
+          else
+            sleep 10
+          fi
+        done
+        kubectl wait --for=condition=Ready pods --all -n tekton-pipelines --timeout=600s
+
+    - name: Install Tekton Triggers
+      shell: bash
+      run: |
+        echo "🎯 Installing Tekton Triggers..."
+        for attempt in 1 2 3; do
+          echo "Attempt $attempt/3..."
+          if kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml && \
+             kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml; then
+            echo "✅ Tekton Triggers applied successfully"
+            break
+          elif [ $attempt -eq 3 ]; then
+            echo "❌ Failed to install Tekton Triggers after 3 attempts"
+            exit 1
+          else
+            sleep 10
+          fi
+        done
+        kubectl wait --for=condition=Ready pods --all -n tekton-pipelines --timeout=600s
+
+    - name: Install Tekton Chains
+      if: inputs.enable-chains == 'true'
+      shell: bash
+      run: |
+        echo "🔗 Installing Tekton Chains..."
+        for attempt in 1 2 3; do
+          echo "Attempt $attempt/3..."
+          if kubectl apply -f https://storage.googleapis.com/tekton-releases/chains/latest/release.yaml; then
+            echo "✅ Tekton Chains applied successfully"
+            break
+          elif [ $attempt -eq 3 ]; then
+            echo "❌ Failed to install Tekton Chains after 3 attempts"
+            exit 1
+          else
+            sleep 10
+          fi
+        done
+
+        kubectl wait --for=condition=Ready pods --all -n tekton-chains --timeout=600s
+
+        echo "⚙️ Configuring Tekton Chains..."
+        kubectl patch configmap chains-config -n tekton-chains --patch '{
+          "data": {
+            "artifacts.taskrun.format": "slsa/v1",
+            "artifacts.taskrun.storage": "oci",
+            "artifacts.pipelinerun.format": "slsa/v1",
+            "artifacts.pipelinerun.storage": "oci",
+            "transparency.enabled": "true",
+            "transparency.url": "https://rekor.sigstore.dev"
+          }
+        }' || kubectl create configmap chains-config -n tekton-chains \
+          --from-literal=artifacts.taskrun.format=slsa/v1 \
+          --from-literal=artifacts.taskrun.storage=oci \
+          --from-literal=artifacts.pipelinerun.format=slsa/v1 \
+          --from-literal=artifacts.pipelinerun.storage=oci \
+          --from-literal=transparency.enabled=true \
+          --from-literal=transparency.url=https://rekor.sigstore.dev
+
+        kubectl rollout restart deployment tekton-chains-controller -n tekton-chains
+        kubectl describe pod -n tekton-chains -l app=tekton-chains-controller || true
+
+        echo "🔍 Verifying Tekton Chains readiness..."
+        if ! kubectl wait --for=condition=Ready pod -l app=tekton-chains-controller -n tekton-chains --timeout=60s; then
+          echo "❌ Tekton Chains failed to become ready."
+          echo "📄 Chains controller logs:"
+          kubectl describe pod -n tekton-chains -l app=tekton-chains-controller || true
+          kubectl logs -l app=tekton-chains-controller -n tekton-chains --all-containers=true || true
+          exit 1
+        fi
+
+    - name: Setup release namespace and RBAC
+      shell: bash
+      run: |
+        echo "🔐 Setting up release namespace and RBAC..."
+        kubectl create namespace tekton-nightly --dry-run=client -o yaml | kubectl apply -f -
+
+        cat <<EOF | kubectl apply -f -
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: tekton-releases
+          namespace: tekton-nightly
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: tekton-nightly-releases
+        rules:
+        - apiGroups: ["tekton.dev"]
+          resources: ["tasks", "taskruns", "pipelineruns", "runs", "customruns"]
+          verbs: ["get", "list", "create", "update", "patch", "delete", "watch"]
+        - apiGroups: [""]
+          resources: ["configmaps", "secrets", "pods", "pods/log", "services", "persistentvolumeclaims", "persistentvolumes"]
+          verbs: ["get", "list", "create", "update", "patch", "delete"]
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: tekton-nightly-releases
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: tekton-nightly-releases
+        subjects:
+        - kind: ServiceAccount
+          name: tekton-releases
+          namespace: tekton-nightly
+        EOF
+
+    - name: Verify installation
+      shell: bash
+      run: |
+        echo "🔍 Verifying Tekton installation..."
+        kubectl get pods -A | grep tekton
+
+        cat <<EOF | kubectl apply -f -
+        apiVersion: tekton.dev/v1
+        kind: Task
+        metadata:
+          name: verify-setup
+          namespace: tekton-nightly
+        spec:
+          steps:
+          - name: verify
+            image: alpine:latest
+            script: |
+              echo "✅ Tekton cluster verification successful!"
+              echo "Cluster: ${{ inputs.cluster-name }}"
+              echo "Kubernetes: ${{ inputs.kubernetes-version }}"
+              echo "Registry: ${{ inputs.registry-url }}"
+        ---
+        apiVersion: tekton.dev/v1
+        kind: TaskRun
+        metadata:
+          name: verify-setup-run
+          namespace: tekton-nightly
+        spec:
+          taskRef:
+            name: verify-setup
+        EOF
+
+        kubectl wait --for=condition=Succeeded --timeout=300s taskrun/verify-setup-run -n tekton-nightly
+        echo "✅ Tekton setup verification completed successfully"
+
+    - name: Export cluster information
+      id: cluster-info
+      shell: bash
+      run: |
+        echo "📋 Exporting cluster information..."
+        KUBECONFIG_PATH="$HOME/.kube/config"
+        CLUSTER_ENDPOINT=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+
+        echo "kubeconfig-path=$KUBECONFIG_PATH" >> "$GITHUB_OUTPUT"
+        echo "registry-url=${{ inputs.registry-url }}" >> "$GITHUB_OUTPUT"
+        echo "cluster-endpoint=$CLUSTER_ENDPOINT" >> "$GITHUB_OUTPUT"
+
+        echo "✅ Cluster setup completed successfully!"
+        echo "📍 Kubeconfig: $KUBECONFIG_PATH"
+        echo "🌐 Cluster endpoint: $CLUSTER_ENDPOINT"
+        echo "📦 Registry: ${{ inputs.registry-url }}"
