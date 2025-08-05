@@ -65,7 +65,7 @@ jobs:
           echo "List all the files that have changed: ${{ steps.changed-files-specific.outputs.all_changed_files }}"
       - name: Log in to the Container registry
         if: steps.changed-files.outputs.any_changed == 'true' # || github.event_name != 'pull_request'
-        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # 343f7c4344506bcbf9b4de18042ae17996df046d
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # 343f7c4344506bcbf9b4de18042ae17996df046d
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
