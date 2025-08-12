@@ -6,8 +6,8 @@ toolchain go1.24.1
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/jenkins-x/go-scm v1.15.12
-	github.com/tektoncd/pipeline v1.3.0
+	github.com/jenkins-x/go-scm v1.15.13
+	github.com/tektoncd/pipeline v1.3.1
 	go.uber.org/zap v1.27.0
 	k8s.io/apimachinery v0.33.3
 	k8s.io/client-go v0.33.3
@@ -41,7 +41,7 @@ require (
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.26.0 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
