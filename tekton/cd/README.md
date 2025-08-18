@@ -33,8 +33,8 @@ tkn pipeline start \
   -p version=v0.9.2 \
   -p environment=dogfooding \
   -w name=targetCluster,secret=$K8S_CLUSTER \
-  -w name=resources,volumeClaimTemplateFile=workspace-template.yaml
-  -w name=credentials,emptyDir=
+  -w name=resources,volumeClaimTemplateFile=workspace-template.yaml \
+  -w name=credentials,emptyDir= \
   install-tekton-release
 ```
 
