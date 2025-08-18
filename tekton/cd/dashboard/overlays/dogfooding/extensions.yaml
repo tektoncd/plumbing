@@ -6,7 +6,7 @@ metadata:
 spec:
   apiVersion: batch/v1
   name: cronjobs
-  displayname: k8s cronjobs
+  displayName: k8s cronjobs
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
