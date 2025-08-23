@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- rbac.yaml
+- prow.yaml
+- extra.yaml
+- ghproxy.yaml
+- prowjob-schemaless_customresourcedefinition.yaml
+- tune-sysctls_daemonset.yaml
+
+configMapGenerator:
+  - name: config
+    files:
+    - config.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
+  - name: plugins
+    files:
+    - plugins.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
