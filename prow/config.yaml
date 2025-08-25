@@ -158,24 +158,6 @@ tide:
   queries:
   - repos:
     - tektoncd-catalog/golang
-    - tektoncd/actions
-    - tektoncd/ahmetb-gen-crd-api-reference-docs
-    - tektoncd/catalog
-    - tektoncd/catlin
-    - tektoncd/chains
-    - tektoncd/cli
-    - tektoncd/community
-    - tektoncd/dashboard
-    - tektoncd/friends
-    - tektoncd/hub
-    - tektoncd/mcp-server
-    - tektoncd/operator
-    - tektoncd/pipeline
-    - tektoncd/plumbing
-    - tektoncd/resolution
-    - tektoncd/results
-    - tektoncd/triggers
-    - tektoncd/website
     labels:
     - lgtm
     - approved
