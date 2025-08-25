@@ -23,5 +23,5 @@ spec:
             name: tekton-dashboard
             port:
               number: 9097
-        path: /*
-        pathType: ImplementationSpecific
+        path: /
+        pathType: Prefix
