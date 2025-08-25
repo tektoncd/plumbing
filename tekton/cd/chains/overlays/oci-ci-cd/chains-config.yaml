@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chains-config
+  namespace: tekton-chains
+data:
+  artifacts.oci.signer: x509
+  artifacts.oci.storage: oci
+  artifacts.taskrun.format: slsa/v2alpha4
+  artifacts.taskrun.signer: x509
+  artifacts.taskrun.storage: oci
+  artifacts.pipelinerun.format: slsa/v2alpha4
+  artifacts.pipelinerun.signer: x509
+  artifacts.pipelinerun.storage: oci
+  transparency.enabled: "true"

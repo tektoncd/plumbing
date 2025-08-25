@@ -5,7 +5,6 @@ resources:
 - rbac.yaml
 - prow.yaml
 - extra.yaml
-- ghproxy.yaml
 - prowjob-schemaless_customresourcedefinition.yaml
 - tune-sysctls_daemonset.yaml
 - oci
