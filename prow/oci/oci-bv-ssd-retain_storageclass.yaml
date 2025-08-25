@@ -1,0 +1,12 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: oci-bv-ssd-retain
+  namespace: default
+provisioner: blockvolume.csi.oraclecloud.com
+parameters:
+  # Use Higher Performance (SSD) storage
+  vpusPerGB: "10"  # Higher IOPS for SSD-like performance
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
