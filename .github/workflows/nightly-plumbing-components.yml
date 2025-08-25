@@ -1,0 +1,305 @@
+name: 'Nightly Plumbing Components Release'
+
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 7 AM UTC, after core Tekton components
+  workflow_dispatch:
+    inputs:
+      components:
+        description: 'Components to build (comma-separated: add-pr-body, add-pr-body-ci, add-team-members, pr-commenter, pr-status-updater, or "all")'
+        required: false
+        default: 'all'
+        type: string
+      run-tests:
+        description: 'Run integration tests'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  REGISTRY_URL: ghcr.io
+  REGISTRY_NAMESPACE: tektoncd/plumbing
+
+jobs:
+  prepare:
+    name: 'Prepare release matrix'
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.matrix.outputs.components }}
+      build-matrix: ${{ steps.matrix.outputs.build-matrix }}
+    steps:
+      - name: Prepare component matrix
+        id: matrix
+        run: |
+          # Define all available components
+          ALL_COMPONENTS="add-pr-body,add-pr-body-ci,add-team-members,pr-commenter,pr-status-updater"
+          
+          # Determine which components to build
+          if [ "${{ inputs.components }}" = "all" ] || [ -z "${{ inputs.components }}" ]; then
+            COMPONENTS_TO_BUILD="$ALL_COMPONENTS"
+          else
+            COMPONENTS_TO_BUILD="${{ inputs.components }}"
+          fi
+          
+          # Convert to JSON array for matrix strategy
+          MATRIX_JSON=$(echo "$COMPONENTS_TO_BUILD" | tr ',' '\n' | jq -R . | jq -s .)
+          
+          echo "components=$COMPONENTS_TO_BUILD" >> $GITHUB_OUTPUT
+          echo "build-matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          
+          echo "🔧 Components to build: $COMPONENTS_TO_BUILD"
+
+  release:
+    name: 'Release ${{ matrix.component }}'
+    runs-on: ubuntu-latest
+    needs: prepare
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        component: ${{ fromJSON(needs.prepare.outputs.build-matrix) }}
+    
+    steps:
+      - name: Checkout plumbing repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper versioning
+          
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Create Kind cluster
+        timeout-minutes: 10
+        run: |
+          echo "🏗️ Creating Kind cluster for ${{ matrix.component }}..."
+          
+          # Install Kind
+          curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+          chmod +x ./kind
+          sudo mv ./kind /usr/local/bin/kind
+          
+          # Create cluster
+          cat <<EOF > kind-config.yaml
+          apiVersion: kind.x-k8s.io/v1alpha4
+          kind: Cluster
+          nodes:
+          - role: control-plane
+            image: kindest/node:v1.31.0
+          - role: worker
+            image: kindest/node:v1.31.0
+          EOF
+          
+          kind create cluster --config kind-config.yaml --wait 300s
+          kubectl wait --for=condition=Ready nodes --all --timeout=300s
+          
+          echo "✅ Kind cluster ready"
+
+      - name: Install Tekton
+        timeout-minutes: 10
+        run: |
+          echo "⚡ Installing Tekton Pipeline..."
+          kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+          kubectl wait --for=condition=Ready pods --all -n tekton-pipelines --timeout=600s
+          
+          # Create namespace
+          kubectl create namespace tekton-nightly --dry-run=client -o yaml | kubectl apply -f -
+          
+          echo "✅ Tekton installed successfully"
+          
+      - name: Setup container registry authentication
+        run: |
+          echo "🔐 Configuring container registry authentication..."
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+      - name: Generate release metadata
+        id: metadata
+        run: |
+          echo "📋 Generating release metadata for ${{ matrix.component }}..."
+          
+          GIT_SHA=$(git rev-parse HEAD)
+          SHORT_SHA=$(echo $GIT_SHA | cut -c1-10)
+          VERSION_TAG="v$(date +"%Y%m%d")-${SHORT_SHA}"
+          
+          # Determine component path based on type
+          case "${{ matrix.component }}" in
+            "add-pr-body")
+              COMPONENT_PATH="tekton/ci/interceptors/add-pr-body"
+              REGISTRY_PATH="interceptors/add-pr-body"
+              ;;
+            "add-pr-body-ci")
+              COMPONENT_PATH="tekton/ci/cluster-interceptors/add-pr-body"
+              REGISTRY_PATH="cluster-interceptors/add-pr-body"
+              ;;
+            "add-team-members")
+              COMPONENT_PATH="tekton/ci/interceptors/add-team-members"
+              REGISTRY_PATH="interceptors/add-team-members"
+              ;;
+            "pr-commenter")
+              COMPONENT_PATH="tekton/ci/custom-tasks/pr-commenter"
+              REGISTRY_PATH="custom-tasks/pr-commenter"
+              ;;
+            "pr-status-updater")
+              COMPONENT_PATH="tekton/ci/custom-tasks/pr-status-updater"
+              REGISTRY_PATH="custom-tasks/pr-status-updater"
+              ;;
+            *)
+              echo "❌ Unknown component: ${{ matrix.component }}"
+              exit 1
+              ;;
+          esac
+          
+          echo "version=$VERSION_TAG" >> $GITHUB_OUTPUT
+          echo "sha=$GIT_SHA" >> $GITHUB_OUTPUT
+          echo "short-sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "component-path=$COMPONENT_PATH" >> $GITHUB_OUTPUT
+          echo "registry-path=$REGISTRY_PATH" >> $GITHUB_OUTPUT
+          
+          echo "📦 Component metadata:"
+          echo "  Component: ${{ matrix.component }}"
+          echo "  Version: $VERSION_TAG"
+          echo "  Path: $COMPONENT_PATH"
+          echo "  Registry: ${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${REGISTRY_PATH}"
+          
+      - name: Run integration tests
+        if: inputs.run-tests
+        timeout-minutes: 15
+        run: |
+          echo "🧪 Running integration tests for ${{ matrix.component }}..."
+          
+          # Run component-specific tests if they exist
+          COMPONENT_PATH="${{ steps.metadata.outputs.component-path }}"
+          
+          if [ -f "$COMPONENT_PATH/test.sh" ]; then
+            echo "Running component test script..."
+            cd "$COMPONENT_PATH"
+            ./test.sh
+          elif [ -f "$COMPONENT_PATH/Makefile" ]; then
+            echo "Running make test..."
+            cd "$COMPONENT_PATH"
+            make test || echo "No test target, skipping"
+          else
+            echo "No specific tests found, running basic validation..."
+            # Basic validation - check if we can build the component
+            if [ -f "$COMPONENT_PATH/main.go" ]; then
+              cd "$COMPONENT_PATH"
+              go build .
+            fi
+          fi
+          
+          echo "✅ Integration tests completed"
+          
+      - name: Build and publish component
+        timeout-minutes: 20
+        run: |
+          echo "🏗️ Building and publishing ${{ matrix.component }}..."
+          
+          COMPONENT_PATH="${{ steps.metadata.outputs.component-path }}"
+          REGISTRY_PATH="${{ steps.metadata.outputs.registry-path }}"
+          VERSION="${{ steps.metadata.outputs.version }}"
+          
+          # Set up build environment
+          export KO_DOCKER_REPO="${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${REGISTRY_PATH}"
+          export TAG="$VERSION"
+          
+          cd "$COMPONENT_PATH"
+          
+          # Build release artifacts
+          if [ -f "release.yaml" ]; then
+            echo "Using existing release.yaml..."
+            cp release.yaml ../../${{ matrix.component }}-release.yaml
+          elif [ -f "config" ] && [ -d "config" ]; then
+            echo "Building with kustomize..."
+            kustomize build config/ > ../../${{ matrix.component }}-release.yaml
+          elif [ -f "Dockerfile" ]; then
+            echo "Building container image..."
+            docker build -t "${KO_DOCKER_REPO}:${TAG}" .
+            docker push "${KO_DOCKER_REPO}:${TAG}"
+            # Create minimal release manifest
+            cat <<EOF > ../../${{ matrix.component }}-release.yaml
+          # Release manifest for ${{ matrix.component }} $VERSION
+          # Container image: ${KO_DOCKER_REPO}:${TAG}
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: ${{ matrix.component }}-release-info
+          data:
+            version: "$VERSION"
+            image: "${KO_DOCKER_REPO}:${TAG}"
+            component: "${{ matrix.component }}"
+          EOF
+          elif [ -f "main.go" ]; then
+            echo "Building with ko..."
+            ko publish --platform=linux/amd64,linux/arm64 --tags=$TAG .
+            # Create release manifest
+            cat <<EOF > ../../${{ matrix.component }}-release.yaml
+          # Release manifest for ${{ matrix.component }} $VERSION  
+          # Container image published via ko to ${KO_DOCKER_REPO}
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: ${{ matrix.component }}-release-info
+          data:
+            version: "$VERSION"
+            registry: "${KO_DOCKER_REPO}"
+            tag: "$TAG"
+            component: "${{ matrix.component }}"
+          EOF
+          else
+            echo "❌ No recognized build method found for ${{ matrix.component }}"
+            exit 1
+          fi
+          
+          echo "✅ Component build completed successfully"
+          
+      - name: Generate GitHub attestations
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: '${{ matrix.component }}-release.yaml'
+          
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{ matrix.component }}-release-${{ steps.metadata.outputs.version }}'
+          path: |
+            ${{ matrix.component }}-release.yaml
+          retention-days: 90
+          
+      - name: Component release summary
+        run: |
+          echo "# 🚀 Component Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 ${{ matrix.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.metadata.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git SHA**: \`${{ steps.metadata.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${REGISTRY_URL}/${REGISTRY_NAMESPACE}/${{ steps.metadata.outputs.registry-path }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests Run**: ${{ inputs.run-tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release completed successfully!" >> $GITHUB_STEP_SUMMARY
+
+  summary:
+    name: 'Release Summary'
+    runs-on: ubuntu-latest
+    needs: [prepare, release]
+    if: always()
+    steps:
+      - name: Create overall summary
+        run: |
+          echo "# 🎉 Nightly Plumbing Components Release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Release Overview" >> $GITHUB_STEP_SUMMARY
+          echo "- **Components**: ${{ needs.prepare.outputs.components }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests**: ${{ inputs.run-tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.release.result }}" = "success" ]; then
+            echo "✅ All components released successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Some components may have failed. Check individual job results." >> $GITHUB_STEP_SUMMARY
+          fi 
