@@ -33,15 +33,15 @@ spec:
       paths:
       - backend:
           service:
-            name: deck
-            port:
-              number: 80
-        path: /*
-        pathType: ImplementationSpecific
-      - backend:
-          service:
             name: hook
             port:
               number: 8888
         path: /hook
-        pathType: ImplementationSpecific
+        pathType: Prefix
+      - backend:
+          service:
+            name: deck
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
