@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/google/go-cmp v0.7.0
 	github.com/tektoncd/triggers v0.33.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
 	knative.dev/pkg v0.0.0-20250415155312-ed3e2158b883
 )
 
@@ -76,8 +76,8 @@ require (
 	golang.org/x/time v0.12.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/api v0.233.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
