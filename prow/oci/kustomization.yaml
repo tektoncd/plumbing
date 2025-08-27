@@ -14,3 +14,10 @@ configMapGenerator:
       disableNameSuffixHash: true
       labels:
         app: prow
+  - name: plugins
+    files:
+    - plugins.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
