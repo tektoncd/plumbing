@@ -9,10 +9,10 @@ patches:
     group: triggers.tekton.dev
     kind: TriggerTemplate
     name: template
-    version: v1alpha1
+    version: v1beta1
 - path: trigger.yaml
   target:
     group: triggers.tekton.dev
     kind: Trigger
     name: nightly
-    version: v1alpha1
+    version: v1beta1
