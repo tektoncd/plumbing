@@ -1,7 +1,12 @@
 - op: add
   path: /spec/interceptors
   value:
-    - cel:
-        filter: >-
-          'trigger-template' in body &&
-          body.params.release.projectName == 'operator'
+    - params:
+        - name: filter
+          value: >-
+            'trigger-template' in body && body.params.release.projectName == 'operator'
+        - name: overlays
+          value: null
+      ref:
+        kind: ClusterInterceptor
+        name: cel
