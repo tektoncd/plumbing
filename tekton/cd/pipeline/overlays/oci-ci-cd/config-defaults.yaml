@@ -5,3 +5,11 @@ metadata:
   namespace: tekton-pipelines
 data:
   default-cloud-events-sink: http://el-tekton-events.default:8080
+  default-pod-template: |
+    nodeSelector:
+      oci.oraclecloud.com/node-pool-name: tekton-nodepool
+    tolerations:
+    - key: workload
+      operator: Equal
+      value: tekton
+      effect: NoSchedule
