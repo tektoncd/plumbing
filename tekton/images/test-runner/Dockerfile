@@ -181,7 +181,7 @@ ARG KUSTOMIZE_VERSION=5.3.0
 RUN curl -sL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | tar -C /usr/local/bin -xvzf - --strip-components=1 --wildcards "kustomize"
 
 # Install the TektonCD CLI: https://github.com/tektoncd/cli/
-ARG TKN_VERSION=0.41.0
+ARG TKN_VERSION=0.42.0
 RUN curl -sL https://github.com/tektoncd/cli/releases/download/v${TKN_VERSION}/tkn_${TKN_VERSION}_Linux_x86_64.tar.gz | tar -C /usr/local/bin -xvzf - --wildcards "tkn"
 
 # Extra tools through gem
