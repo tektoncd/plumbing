@@ -1,6 +1,0 @@
-# This file is infomational only.
-# When adding a new cronjob, please use the value below as the hour config
-# in your cron spec and increment the value below to let authors
-# know the next value to use. We want to try and smear crons
-# throughout the day to reduce the load on the cluster.
-10
