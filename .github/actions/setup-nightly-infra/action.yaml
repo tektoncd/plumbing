@@ -1,0 +1,254 @@
+# This action sets up a complete Tekton CI/CD infrastructure for nightly builds
+# with the following components:
+#
+# 1. Kubernetes cluster using Kind for local development/testing
+# 2. Tekton Pipelines for workflow orchestration
+# 3. Tekton CLI (tkn) for pipeline management
+# 4. Git resolver configuration for GitHub repository access
+# 5. Required secrets and service accounts for:
+#    - GCS bucket access (release artifacts)
+#    - GHCR authentication (container registry)
+#    - Git operations (repository cloning)
+# 6. RBAC configuration for pipeline execution
+# 7. Tekton Chains with Sigstore integration for:
+#    - Supply chain security
+#    - Artifact signing and verification
+#    - Transparency logging
+# 8. GitHub OIDC token management for secure authentication
+
+name: Tekton Nightly Build Infra
+description: |
+  Sets up Tekton nightly build infrastructure.
+inputs:
+  kubernetes_version:
+    description: 'Kubernetes version to test with'
+    required: false
+    default: 'v1.33.x'
+  image_registry_user:
+    description: 'Image registry user'
+    required: false
+    default: 'tekton-robot'
+  ghcr_token:
+    description: 'GHCR token'
+    required: true
+  gcs_service_account_key:
+    description: 'GCS service account key'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    # Step 1: Set up Kubernetes cluster with Kind
+    - name: Set up Kind cluster
+      uses: chainguard-dev/actions/setup-kind@v1.4.12
+      with:
+        k8s-version: ${{ inputs.kubernetes_version }}
+
+    # Step 2: Install Tekton Pipelines
+    - name: Set up Tekton
+      uses: tektoncd/actions/setup-tektoncd@0986bcdfbaf4f83a8a7b19bc2fa360c44ee55929
+      with:
+        pipeline_version: v1.4.0
+        setup_registry: "true"
+        patch_etc_hosts: "true"
+
+    # Step 3: Install Tekton CLI
+    - name: Install tkn CLI
+      uses: tektoncd/actions/setup-tektoncd-cli@0986bcdfbaf4f83a8a7b19bc2fa360c44ee55929
+      with:
+        version: v0.42.0
+        
+    # Step 4: Configure Git Resolver for GitHub access
+    - name: Configure Tekton Git Resolver
+      env:
+        GITHUB_TOKEN: ${{ inputs.ghcr_token }}
+      run: |
+        set -euo pipefail
+        # Create git resolver secret in tekton-pipelines-resolvers namespace
+        kubectl create secret generic git-resolver-secret \
+          --from-literal=token="${GITHUB_TOKEN}" \
+          -n tekton-pipelines-resolvers || true
+        kubectl annotate secret git-resolver-secret \
+          tekton.dev/git-0=github.com \
+          -n tekton-pipelines-resolvers || true
+        # Create git resolver secret in default namespace
+        kubectl create secret generic git-resolver-secret \
+          --from-literal=token="${GITHUB_TOKEN}" \
+          -n default || true
+        kubectl annotate secret git-resolver-secret \
+          tekton.dev/git-0=github.com \
+          -n default || true
+        # Configure git resolver to use the secret
+        kubectl patch configmap git-resolver-config -n tekton-pipelines-resolvers --patch='
+        data:
+          api-token-secret-name: "git-resolver-secret"
+          api-token-secret-key: "token"
+        ' || true
+        # Enable CEL in when expressions for advanced pipeline logic
+        kubectl patch configmap feature-flags -n tekton-pipelines --patch='
+        data:
+          enable-cel-in-whenexpression: "true"
+        ' || true
+      shell: bash
+
+    # Step 5: Create required secrets and PVC template
+    - name: Create secrets, service account and PVC template
+      env:
+        GCS_SERVICE_ACCOUNT_KEY: ${{ inputs.gcs_service_account_key }}
+        GHCR_TOKEN: ${{ inputs.ghcr_token }}
+        IMAGE_REGISTRY_USER: ${{ inputs.image_registry_user }}
+      run: |
+        set -euo pipefail
+        trap 'rm -f /tmp/gcs-key.json /tmp/credentials' EXIT
+        # Create GCS service account secret for release bucket access
+        echo "${GCS_SERVICE_ACCOUNT_KEY}" > /tmp/gcs-key.json
+        kubectl create secret generic release-secret \
+          --from-file=release.json=/tmp/gcs-key.json
+        # Create Kubernetes secret for GHCR authentication
+        echo "${GHCR_TOKEN}" > /tmp/credentials
+        kubectl create secret generic ghcr-creds \
+          --from-file=credentials=/tmp/credentials
+        # Create PVC template for persistent storage
+        cat > workspace-template.yaml << EOF
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+        EOF
+      shell: bash
+
+    # Step 6: Set up RBAC and ServiceAccount
+    - name: Apply ServiceAccount, RBAC, and related resources
+      run: |
+        set -euo pipefail
+        kubectl apply -f - <<EOF
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: release-right-meow
+        secrets:
+        - name: release-secret
+        - name: git-resolver-secret
+        - name: ghcr-creds
+        ---
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: kube-api-secret
+          annotations:
+            kubernetes.io/service-account.name: release-right-meow
+        type: kubernetes.io/service-account-token
+        ---
+        kind: Role
+        apiVersion: rbac.authorization.k8s.io/v1
+        metadata:
+          name: pipeline-role
+        rules:
+        - apiGroups: [""]
+          resources: ["services", "configmaps", "secrets"]
+          verbs: ["get", "create", "update", "patch", "list"]
+        - apiGroups: ["apps"]
+          resources: ["deployments"]
+          verbs: ["get", "create", "update", "patch", "list"]
+        - apiGroups: ["tekton.dev"]
+          resources: ["pipelines", "pipelineruns", "tasks", "taskruns"]
+          verbs: ["get", "create", "update", "patch", "list"]
+        - apiGroups: [""]
+          resources: ["pods", "pods/log"]
+          verbs: ["get", "list"]
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: pipeline-role-binding
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
+          name: pipeline-role
+        subjects:
+        - kind: ServiceAccount
+          name: release-right-meow
+        EOF
+      shell: bash
+
+    # Step 7: Install and configure Tekton Chains with Sigstore
+    - name: Install Tekton Chains with Fulcio enabled
+      run: |
+        set -euo pipefail
+        # Install Tekton Chains from latest release
+        kubectl apply -f https://storage.googleapis.com/tekton-releases/chains/previous/v0.25.1/release.yaml -n tekton-chains
+        
+        # Configure Chains for Sigstore integration with Fulcio and Rekor
+        kubectl patch configmap chains-config -n tekton-chains --type merge -p '
+        {
+          "data": {
+            "artifacts.taskrun.format": "in-toto",
+            "artifacts.oci.format": "simplesigning",
+            "artifacts.oci.storage": "oci",
+            "artifacts.oci.signer": "x509",
+            "signers.x509.fulcio.enabled": "true",
+            "signers.x509.fulcio.address": "https://fulcio.sigstore.dev",
+            "signers.x509.fulcio.issuer": "https://token.actions.githubusercontent.com",
+            "transparency.enabled": "true",
+            "transparency.url": "https://rekor.sigstore.dev"
+          }
+        }'
+        # Restart controller to apply new configuration
+        kubectl rollout restart deployment tekton-chains-controller -n tekton-chains
+        
+        echo "Waiting for Tekton Chains controller to be ready..."
+        kubectl wait --for=condition=ready pod -l app=tekton-chains-controller -n tekton-chains --timeout=300s
+        echo "Tekton Chains is ready!"
+      shell: bash
+    
+    # Step 8: Set up GitHub OIDC token for Sigstore authentication.
+    # The token has expiry of 5 mins hence it is continuously refreshed in the background.
+    - name: Retrieve and refresh GitHub OIDC token in cluster 
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Function to mint and update OIDC token
+        mint_and_update() {
+          echo "Minting fresh OIDC token..."
+          token=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sigstore" | jq -r .value)
+
+          echo "::add-mask::$token"
+
+          # Create or update secret in tekton-chains namespace
+          kubectl create secret generic github-oidc-token \
+            -n tekton-chains \
+            --from-literal=oidc-token="$token" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Token refreshed at $(date)"
+        }
+
+        # Background function to refresh token every 5 minutes
+        refresh_loop() {
+          while true; do
+            sleep 280   # 20 seconds to 5 minutes
+            mint_and_update
+          done
+        }
+
+        # Initial token mint
+        mint_and_update
+
+        # Patch chains-controller to mount the OIDC token secret
+        echo "Ensuring chains-controller mounts the OIDC token secret..."
+        kubectl patch deployment tekton-chains-controller -n tekton-chains --type='json' -p='[
+          {
+            "op": "replace",
+            "path": "/spec/template/spec/volumes/1",
+            "value": { "name": "oidc-info", "secret": { "secretName": "github-oidc-token" } }
+          }
+        ]'
+
+        kubectl rollout status deployment tekton-chains-controller -n tekton-chains --timeout=120s
+
+        # Start background token refresher
+        refresh_loop &
+        echo "Background token refresher running..."
