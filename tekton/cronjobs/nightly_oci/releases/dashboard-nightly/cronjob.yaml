@@ -4,6 +4,8 @@ metadata:
   name: nightly-cron-trigger
 spec:
   schedule: "0 3 * * *"
+  startingDeadlineSeconds: 60
+  suspend: true
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
