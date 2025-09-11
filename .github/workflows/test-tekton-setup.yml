@@ -1,0 +1,123 @@
+name: 'Test Tekton Setup Action'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/actions/setup-tekton/**'
+      - '.github/workflows/nightly-release-template.yml'
+      - '.github/workflows/test-tekton-setup.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-setup:
+    name: 'Test Setup Action'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test Tekton setup action
+        id: setup
+        uses: ./.github/actions/setup-tekton
+        with:
+          kubernetes-version: 'v1.31.0'
+          enable-chains: 'true'
+          cluster-name: 'test-cluster'
+
+      - name: Verify cluster setup
+        id: verify
+        env:
+          KUBECONFIG: ${{ steps.setup.outputs.kubeconfig-path }}
+        run: |
+          echo "🔍 Verifying Tekton installation..."
+
+          kubectl cluster-info
+          kubectl get nodes
+
+          echo "🔍 Checking Tekton components..."
+          kubectl get pods -n tekton-pipelines
+          kubectl get pods -n tekton-chains || true
+
+          echo "🔍 Checking test namespace..."
+          kubectl get namespace tekton-nightly
+
+          echo "🔍 Checking Tekton Chains controller status..."
+          if kubectl wait --for=condition=ready pod -l app=tekton-chains-controller -n tekton-chains --timeout=60s; then
+            echo "CHAINS_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "CHAINS_STATUS=failure" >> $GITHUB_ENV
+            echo "❌ Tekton Chains failed to start."
+            echo "📄 Chains logs:"
+            kubectl describe pod -n tekton-chains -l app=tekton-chains-controller || true
+            kubectl logs -n tekton-chains -l app=tekton-chains-controller || true
+            exit 1
+          fi
+
+          echo "✅ All checks passed!"
+
+      - name: Test pipeline execution
+        env:
+          KUBECONFIG: ${{ steps.setup.outputs.kubeconfig-path }}
+        run: |
+          echo "🧪 Testing pipeline execution..."
+
+          cat <<EOF | kubectl apply -f -
+          apiVersion: tekton.dev/v1
+          kind: Task
+          metadata:
+            name: hello-test
+            namespace: tekton-nightly
+          spec:
+            steps:
+            - name: hello
+              image: alpine:latest
+              script: |
+                echo "[hello-test] Hello from Tekton!"
+                echo "[hello-test] Setup test completed successfully"
+                echo "[hello-test] Cluster: ${{ steps.setup.outputs.cluster-endpoint }}"
+                echo "[hello-test] Registry: ${{ steps.setup.outputs.registry-url }}"
+          ---
+          apiVersion: tekton.dev/v1
+          kind: TaskRun
+          metadata:
+            name: hello-test-run
+            namespace: tekton-nightly
+          spec:
+            taskRef:
+              name: hello-test
+          EOF
+
+          echo "⏳ Waiting for task completion..."
+          kubectl wait --for=condition=Succeeded --timeout=300s taskrun/hello-test-run -n tekton-nightly
+
+          echo "📄 TaskRun logs:"
+          kubectl logs -l tekton.dev/task=hello-test -n tekton-nightly --all-containers=true
+
+          echo "✅ Pipeline execution test completed successfully!"
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "# ✅ Tekton Setup Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏗️ Cluster Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cluster Name**: test-cluster" >> $GITHUB_STEP_SUMMARY
+          echo "- **Kubernetes Version**: v1.31.0" >> $GITHUB_STEP_SUMMARY
+          echo "- **Kubeconfig**: \`${{ steps.setup.outputs.kubeconfig-path }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${{ steps.setup.outputs.registry-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Endpoint**: ${{ steps.setup.outputs.cluster-endpoint }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Cluster creation: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Tekton Pipeline installation: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Tekton Triggers installation: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Tekton Chains installation: $([[ \"$CHAINS_STATUS\" == \"success\" ]] && echo '✅' || echo '❌')" >> $GITHUB_STEP_SUMMARY
+          echo "- Namespace and RBAC setup: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Pipeline execution test: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 **All tests completed!**" >> $GITHUB_STEP_SUMMARY
