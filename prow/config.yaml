@@ -123,6 +123,12 @@ branch-protection:
             contexts:
             - "lint"
             - "Tekton Triggers CI"
+        results:
+          required_status_checks:
+            contexts:
+            - "Build Tests"
+            - "Integration Tests"
+            - "Unit Tests"
         cli:
           required_status_checks:
             contexts:
@@ -894,131 +900,6 @@ presubmits:
         - "--integration-tests"
         securityContext:
           privileged: true
-  tektoncd/results:
-  - name: pull-tekton-results-build-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-results-build-tests"
-    trigger: "(?m)^/test (all|pull-tekton-results-build-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250122-f1b2461323@sha256:84aaa9da31caba929e55f77151bfe74a4958f32abc386d3c9b1ceed3d6c72653 # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--build-tests"
-  - name: pull-tekton-results-unit-tests
-    labels:
-      preset-presubmit-sh: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-results-unit-tests"
-    trigger: "(?m)^/test (all|pull-tekton-results-unit-tests),?(\\s+|$)"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250122-f1b2461323@sha256:84aaa9da31caba929e55f77151bfe74a4958f32abc386d3c9b1ceed3d6c72653 # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--scenario=kubernetes_execute_bazel"
-        - "--clean"
-        - "--job=$(JOB_NAME)"
-        - "--repo=github.com/$(REPO_OWNER)/$(REPO_NAME)=$(PULL_REFS)"
-        - "--root=/go/src"
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--upload=gs://tekton-prow/pr-logs"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--unit-tests"
-  - name: pull-tekton-results-integration-tests
-    labels:
-      preset-presubmit-sh: "true"
-      preset-dind-enabled: "true"
-      preset-kind-volume-mounts: "true"
-      pipeline-kind-e2e: "true"
-    agent: kubernetes
-    always_run: true
-    decorate: true
-    rerun_command: "/test pull-tekton-results-integration-tests"
-    trigger: "(?m)^/test (all|pull-tekton-results-integration-tests),?(\\s+|$)"
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: pipeline-kind-e2e
-                    operator: Exists
-              topologyKey: kubernetes.io/hostname
-      nodeSelector:
-        cloud.google.com/gke-ephemeral-storage-local-ssd: "true"
-        cloud.google.com/gke-nodepool: n2-standard-4-kind
-      tolerations:
-        - key: kind-only
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/test-runner:v20250122-f1b2461323@sha256:84aaa9da31caba929e55f77151bfe74a4958f32abc386d3c9b1ceed3d6c72653 # go 1.23, kind 0.23, ko 0.15.4, go-license 1.0
-        imagePullPolicy: Always
-        command:
-        - /usr/local/bin/entrypoint.sh
-        args:
-        - "--service-account=/etc/test-account/service-account.json"
-        - "--" # end bootstrap args, scenario args below
-        - "--" # end kubernetes_execute_bazel flags (consider following flags as text)
-        - "./test/presubmit-tests.sh"
-        - "--integration-tests"
-        securityContext:
-          privileged: true
-        resources:
-            requests:
-              cpu: 3500m
-              memory: 4Gi
-            limits:
-              cpu: 3500m
-              memory: 8Gi
-  - name: pull-tekton-results-go-coverage
-    labels:
-      preset-github-token: "true"
-    agent: kubernetes
-    always_run: true
-    rerun_command: "/test pull-tekton-results-go-coverage"
-    trigger: "(?m)^/test (all|pull-tekton-results-go-coverage),?(\\s+|$)"
-    optional: true
-    decorate: true
-    clone_uri: "https://github.com/tektoncd/results.git"
-    spec:
-      containers:
-      - image: ghcr.io/tektoncd/plumbing/coverage:latest
-        imagePullPolicy: Always
-        command:
-        - "/coverage"
-        args:
-        - "--postsubmit-gcs-bucket=tekton-prow"
-        - "--postsubmit-job-name=post-tekton-results-go-coverage"
-        - "--artifacts=$(ARTIFACTS)"
-        - "--profile-name=coverage_profile.txt"
-        - "--cov-target=."
-        - "--cov-threshold-percentage=0"
-        - "--github-token=/etc/github-token/oauth"
   tektoncd/triggers:
   - name: pull-tekton-triggers-build-tests
     labels:
