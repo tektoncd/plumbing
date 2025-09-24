@@ -129,6 +129,14 @@ branch-protection:
             - "Build Tests"
             - "Integration Tests"
             - "Unit Tests"
+        hub:
+          required_status_checks:
+            contexts:
+            - "golangci-lint"
+            - "UI Build and Test"
+            - "API Build"
+            - "API Unit Tests"
+            - "API Integration (E2E)"
         cli:
           required_status_checks:
             contexts:
