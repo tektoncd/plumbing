@@ -1,8 +1,6 @@
-commonAnnotations:
-  managed-by: Tekton
-
+namespace: default
 resources:
-- releases
-- nightly-tests
+- s390x
+- ppc64le
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
