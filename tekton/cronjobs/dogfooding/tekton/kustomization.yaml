@@ -1,6 +1,0 @@
-resources:
-- dashboard-to-robocat-nightly
-- pipeline-to-robocat-nightly
-- triggers-to-robotcat-nightly
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
