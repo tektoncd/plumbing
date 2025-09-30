@@ -1,7 +1,0 @@
-nameSuffix: -robotcat-triggers
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ../../../bases/tekton-service
-patches:
-- path: cronjob.yaml

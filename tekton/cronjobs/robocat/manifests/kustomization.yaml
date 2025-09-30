@@ -1,6 +1,0 @@
-resources:
-- cadmin-nightly
-- certificates-on-demand
-- plumbing-tekton-resources-nightly
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
