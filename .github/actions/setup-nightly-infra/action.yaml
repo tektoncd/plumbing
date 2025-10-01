@@ -177,7 +177,7 @@ runs:
       run: |
         set -euo pipefail
         # Install Tekton Chains from latest release
-        kubectl apply -f https://storage.googleapis.com/tekton-releases/chains/previous/v0.25.1/release.yaml -n tekton-chains
+        kubectl apply -f https://infra.tekton.dev/tekton-releases/chains/previous/v0.25.1/release.yaml -n tekton-chains
         
         # Configure Chains for Sigstore integration with Fulcio and Rekor
         kubectl patch configmap chains-config -n tekton-chains --type merge -p '

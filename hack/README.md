@@ -41,12 +41,12 @@ The script, after using `kind` to create the K8s cluster, will then use `kubectl
 
 ```sh
 # Use `-p` arg. value or `latest`
-kubectl apply -f https://storage.googleapis.com/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
+kubectl apply -f https://infra.tekton.dev/tekton-releases/pipeline/previous/${TEKTON_PIPELINE_VERSION}/release.yaml
 # Use `-t` arg. value or `latest`
-kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
-kubectl apply -f https://storage.googleapis.com/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml || true
+kubectl apply -f https://infra.tekton.dev/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/release.yaml
+kubectl apply -f https://infra.tekton.dev/tekton-releases/triggers/previous/${TEKTON_TRIGGERS_VERSION}/interceptors.yaml || true
 # Use `-d` arg. value or `latest`
-kubectl apply -f https://storage.googleapis.com/tekton-releases/dashboard/previous/${TEKTON_DASHBOARD_VERSION}/release-full.yaml
+kubectl apply -f https://infra.tekton.dev/tekton-releases/dashboard/previous/${TEKTON_DASHBOARD_VERSION}/release-full.yaml
 ```
 
 > **Note**: The script issues `kind cluster create` which automatically creates a K8s context named `'kind-tekton'` and makes it the current for `kubectl` commands.
