@@ -197,7 +197,7 @@ cluster so that Prow can trigger the execution of
 Prow supports pipelines v1alpha1 up to v0.13.1:
 
 ```bash
-kubectl apply --filename  https://storage.googleapis.com/tekton-releases/pipeline/previous/v0.13.1/release.yaml
+kubectl apply --filename  https://infra.tekton.dev/tekton-releases/pipeline/previous/v0.13.1/release.yaml
 ```
 
 _See also [Tekton Pipelines installation instructions](https://github.com/tektoncd/pipeline/blob/main/docs/install.md)._

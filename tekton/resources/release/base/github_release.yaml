@@ -75,7 +75,7 @@ spec:
         ## Installation one-liner
 
         ${BQ}${BQ}${BQ}shell
-        kubectl apply -f https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        kubectl apply -f https://infra.tekton.dev/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
         ${BQ}${BQ}${BQ}
 
         ## Attestation
@@ -90,7 +90,7 @@ spec:
 
         Verify that all container images in the attestation are in the release file:
         ${BQ}${BQ}${BQ}shell
-        RELEASE_FILE=https://storage.googleapis.com/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        RELEASE_FILE=https://infra.tekton.dev/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
         REKOR_UUID=${REKOR_UUID}
 
         # Obtains the list of images with sha from the attestation

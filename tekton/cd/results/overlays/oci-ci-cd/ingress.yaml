@@ -4,18 +4,18 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    cert-manager.io/issue-temporary-certificate: "true"
-    dns.gardener.cloud/dnsnames: 'results.dogfooding.tekton.dev'
+    dns.gardener.cloud/dnsnames: 'results.infra.tekton.dev'
     dns.gardener.cloud/ttl: "3600"
   name: results
   namespace: tekton-pipelines
 spec:
+  ingressClassName: nginx
   tls:
   - secretName: tekton-results-tls
     hosts:
-    - results.dogfooding.tekton.dev
+    - results.infra.tekton.dev
   rules:
-  - host: results.dogfooding.tekton.dev
+  - host: results.infra.tekton.dev
     http:
       paths:
       - backend:
@@ -23,5 +23,5 @@ spec:
             name: tekton-results-api-service
             port:
               number: 8080
-        path: /*
-        pathType: ImplementationSpecific
+        path: /
+        pathType: Prefix
