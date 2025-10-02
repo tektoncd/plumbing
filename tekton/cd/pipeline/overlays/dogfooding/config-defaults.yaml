@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: config-defaults
-  namespace: tekton-pipelines
-data:
-  default-cloud-events-sink: http://el-tekton-events.default:8080

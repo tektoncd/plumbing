@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+spec:
+  template:
+    spec:
+      containers:
+      - name: tekton-dashboard
+        args:
+        - --external-logs=http://logs.infra.tekton.dev/logs
