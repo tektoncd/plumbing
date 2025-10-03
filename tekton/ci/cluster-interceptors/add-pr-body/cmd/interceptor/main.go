@@ -49,7 +49,7 @@ func main() {
 	s := server.Server{
 		Logger: logger,
 	}
-	s.RegisterInterceptor("addPrBody", pkg.Interceptor{
+	s.RegisterInterceptor("add-pr-body", pkg.Interceptor{
 		AuthToken: getGitHubAuth(authSecretEnvVar),
 	})
 	mux := http.NewServeMux()
