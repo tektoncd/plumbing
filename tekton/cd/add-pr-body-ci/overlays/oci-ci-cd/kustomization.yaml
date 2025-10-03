@@ -3,3 +3,11 @@ kind: Kustomization
 namespace: tekton-ci
 resources:
 - ../../base
+patches:
+  - target:
+      kind: Service
+      name: add-pr-body-interceptor
+    patch: |-
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 8082
