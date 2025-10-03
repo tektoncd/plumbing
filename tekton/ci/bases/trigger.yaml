@@ -43,12 +43,10 @@ spec:
           value:
           - key: add_pr_body.pull_request_url
             expression: "body.issue.pull_request.url"
-    - webhook:
-        objectRef:
-          kind: Service
-          name: add-pr-body
-          apiVersion: v1
-          namespace: tekton-ci
+    - name: "Add PR body"
+      ref:
+        name: "add-pr-body"
+        kind: ClusterInterceptor
     - name: "Add git clone depth"
       ref:
         name: cel

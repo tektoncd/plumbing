@@ -6,6 +6,7 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     dns.gardener.cloud/dnsnames: 'webhook.ci.infra.tekton.dev'
     dns.gardener.cloud/ttl: "3600"
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
   name: github-webhook
 spec:
   ingressClassName: nginx
