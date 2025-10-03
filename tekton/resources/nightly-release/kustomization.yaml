@@ -6,9 +6,9 @@ resources:
 - overlays/dashboard
 - overlays/pipeline
 - overlays/triggers
-- overlays/add-pr-body
 - overlays/add-pr-body-ci
 - overlays/add-team-members
+- overlays/build-id-ci
 - overlays/operator
 - overlays/chains
 - overlays/pr-commenter

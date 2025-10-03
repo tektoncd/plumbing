@@ -4,7 +4,7 @@
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
-        generateName: add-pr-body-release-nightly-
+        generateName: build-id-ci-release-nightly-
         labels:
           tekton.dev/kind: release
       spec:
@@ -23,9 +23,9 @@
         - name: package
           value: $(tt.params.gitrepository)
         - name: subfolder
-          value: tekton/ci/interceptors/add-pr-body
+          value: tekton/ci/cluster-interceptors/build-id
         - name: images
-          value: add-pr-body
+          value: interceptor
         - name: gitRevision
           value: $(tt.params.gitrevision)
         - name: imageRegistry
@@ -47,7 +47,7 @@
         - name: koExtraArgs
           value: ""
         - name: releaseBucket
-          value: gs://tekton-releases-nightly/add-pr-body
+          value: gs://tekton-releases-nightly/build-id
         workspaces:
           - name: workarea
             volumeClaimTemplate:

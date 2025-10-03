@@ -1,4 +1,4 @@
-namePrefix: add-pr-body-
+namePrefix: build-id-ci-
 resources:
 - ../../base
 apiVersion: kustomize.config.k8s.io/v1beta1

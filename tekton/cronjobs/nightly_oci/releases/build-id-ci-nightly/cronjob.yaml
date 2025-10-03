@@ -13,11 +13,11 @@ spec:
           - name: trigger
             env:
               - name: PROJECT_NAME
-                value: add-pr-body
+                value: build-id
               - name: CR_URI
                 value: ghcr.io
               - name: CR_PATH
-                value: tektoncd/plumbing/interceptors/add-pr-body
+                value: tektoncd/plumbing/cluster-interceptors/build-id
               - name: CR_REGIONS
                 value: ""
               - name: CR_USER

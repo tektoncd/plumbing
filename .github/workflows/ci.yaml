@@ -27,6 +27,8 @@ jobs:
           - tekton/ci/interceptors/add-team-members
           - tekton/ci/interceptors/add-pr-body
           - tekton/ci/interceptors/github
+          - tekton/ci/cluster-interceptors/add-pr-body
+          - tekton/ci/cluster-interceptors/build-id
           - tekton/ci/custom-tasks/pr-commenter
           - tekton/ci/custom-tasks/pr-status-updater
     steps:
