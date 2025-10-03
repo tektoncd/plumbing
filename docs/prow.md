@@ -1,18 +1,12 @@
 # The prow cluster
 
-[The prow cluster](../prow) is where we run Prow, which currently does a lot of our CI, though
-we are trying to [dogfood](dogfooding.md) more and more.
+[The prow cluster](../prow) is where we run Prow, which currently is used for the merge queue (tide),
+as well as for the other commands like `/approve`, `/lgtm`, `/cherry-pick` etc.
 
-`tektoncd` uses
-[`Prow`](https://github.com/kubernetes/test-infra/tree/master/prow)
-for CI automation, though we are moving this over to
-[use our own dogfooding](dogfooding.md).
-
-- Prow runs in [the tektoncd GCP project](README.md#gcp-projects)
-- [Ingress is configured to `prow.tekton.dev`](#ingress)
-- Prow results are displayed via [gubernator](../gubernator/README.md)
+- Prow runs in the tekton tenant on OCI
+- [Ingress is configured to `prow.infra.tekton.dev`](#ingress)
 - [Instructions for creating the Prow cluster](#creating-the-prow-cluster)
-- [Instructions for updating Prow](#updating-prow-itself) and [Prow's Tekton Pipelines instance](#tekton-pipelines-with-prow)
+- [Instructions for updating Prow](#updating-prow-itself)
 - [Instructions for updating Prow configuration](#updating-prow-configuration)
 
 _[See the community docs](../CONTRIBUTING.md#pull-request-process) for more on
