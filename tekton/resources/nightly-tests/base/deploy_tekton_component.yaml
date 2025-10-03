@@ -31,9 +31,9 @@ spec:
     script: |
       #!/usr/bin/env sh
       set -exo pipefail
-      kubectl apply --filename https://infra.tekton.dev/tekton-releases-nightly/${PACKAGE}/${VERSION}/release.yaml
+      kubectl apply --filename https://infra.tekton.dev/tekton-nightly/${PACKAGE}/${VERSION}/release.yaml
       if [ "${EXTRA_FILE}" != "" ]; then
-        kubectl apply --filename https://infra.tekton.dev/tekton-releases-nightly/${PACKAGE}/${VERSION}/${EXTRA_FILE}
+        kubectl apply --filename https://infra.tekton.dev/tekton-nightly/${PACKAGE}/${VERSION}/${EXTRA_FILE}
       fi
       APPLICATION="tekton-${PACKAGE}"
       if [ "${PACKAGE}" == "pipeline" ]; then

@@ -1,0 +1,4 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- https://infra.tekton.dev/tekton-nightly/pr-commenter/previous/v20250430-fbaef240a3/release.yaml

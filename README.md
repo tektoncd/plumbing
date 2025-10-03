@@ -9,8 +9,6 @@ This repo holds configuration for infrastructure used across the tektoncd org ðŸ
   - Continuous Integration: run CI jobs, merge approved changes (via Tide)
   - Support functionality via various [plugins](prow/plugins.yaml)
 - [Ingress](prow/README.md#ingress) configuration for access via `tekton.dev`
-- [Gubernator](gubernator/README.md) is used for holding and displaying [Prow](prow/README.md) logs
-- [Boskos](boskos/README.md) is used to control a pool of GCP projects which end to end tests can run against
 - [Peribolos](tekton/resources/org-permissions/README.md) is used to control org and repo permissions
 - [bots](bots/README.md)
 - [custom interceptors](tekton/ci/interceptors), used for Tekton based CI
