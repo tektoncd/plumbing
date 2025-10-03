@@ -2,6 +2,9 @@
   path: /metadata/annotations
   value:
     triggers.tekton.dev/old-escape-quotes: 'true'
+- op: add
+  path: /spec/resourcetemplates
+  value:
   - apiVersion: tekton.dev/v1beta1
     kind: PipelineRun
     metadata:

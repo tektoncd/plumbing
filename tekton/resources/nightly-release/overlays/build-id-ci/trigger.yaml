@@ -4,7 +4,7 @@
     - params:
         - name: filter
           value: >-
-            'trigger-template' in body && body.params.release.projectName == 'add-pr-body'
+            'trigger-template' in body && body.params.release.projectName == 'build-id'
         - name: overlays
           value: null
       ref:
