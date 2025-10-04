@@ -1,7 +1,6 @@
 resources:
 - dashboard-nightly
 - triggers-nightly
-- add-pr-body-nightly
 - add-pr-body-ci-nightly
 - add-team-members-nightly
 - operator-nightly
