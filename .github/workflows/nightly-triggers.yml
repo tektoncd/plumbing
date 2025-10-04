@@ -1,0 +1,33 @@
+name: 'Nightly Triggers Release'
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 3 AM UTC
+  workflow_dispatch:
+    inputs:
+      run-tests:
+        description: 'Run integration tests before release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  nightly-release:
+    name: 'Tekton Triggers Nightly Release'
+    uses: ./.github/workflows/nightly-release-template.yml
+    with:
+      project-name: 'triggers'
+      git-repository: 'github.com/tektoncd/triggers'
+      registry-namespace: 'tektoncd/triggers'
+      run-tests: ${{ inputs.run-tests || false }}
+      kubernetes-version: 'v1.31.0'
+      enable-chains: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
