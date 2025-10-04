@@ -41,5 +41,5 @@ spec:
   - name: isOptional
     value: "false"
   - name: logURL
-    value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/tektoncd_plumbing/1185/check-pr-has-kind-label/1564708061786935296
+    value: https://tekton.infra.tekton.dev/#/namespaces/tekton-ci/pipelineruns/a7afce10-a0a5-check-pr-has-kind-label-failure
 ```

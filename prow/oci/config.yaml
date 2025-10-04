@@ -80,7 +80,6 @@ branch-protection:
         pipeline:
           required_status_checks:
             contexts:
-            - check-pr-has-kind-label
             - "build"
             - "test"
             - "lint"
@@ -104,7 +103,6 @@ branch-protection:
         operator:
           required_status_checks:
             contexts:
-            - check-pr-has-kind-label
             - "build"
             - "test"
             - "lint"

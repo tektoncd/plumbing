@@ -127,7 +127,7 @@ spec:
           - name: description
             value: $(tt.params.gitHubCheckDescription)
           - name: targetURL
-            value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)
         - name: comment-on-pr
           taskRef:
             apiVersion: custom.tekton.dev/v0
@@ -146,4 +146,4 @@ spec:
           - name: isOptional
             value: "false"
           - name: logURL
-            value: https://prow.tekton.dev/view/gs/tekton-prow/pr-logs/pull/$(tt.params.gitHubRepoUnderscore)/$(tt.params.pullRequestNumber)/$(tt.params.checkName)/$(tt.params.buildUUID)
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)
