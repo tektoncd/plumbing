@@ -41,7 +41,7 @@ spec:
             body.repository.name == 'repo'
         - name: overlays
           value:
-          - key: add_pr_body.pull_request_url
+          - key: add-pr-body.pull-request-url
             expression: "body.issue.pull_request.url"
     - name: "Add PR body"
       ref:
@@ -55,7 +55,7 @@ spec:
         - name: overlays
           value:
           - key: git_clone_depth
-            expression: "string(body.extensions.add_pr_body.pull_request_body.commits + 1.0)"
+            expression: "string(extensions.add-pr-body.pull-request-body.commits + 1.0)"
   bindings:
     - ref: tekton-ci-github-base
     - ref: tekton-ci-webhook-comment
