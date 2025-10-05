@@ -34,7 +34,7 @@ spec:
       default: "coverage_profile.txt"
     - name: covThresholdPercentage
       description: coverage percentage below which to mark the coverage test as failed.
-      default: 0
+      default: "0"
     - name: githubTokenFile
       description: The file within workspace that contains the GitHub token.
     - name: sourcePath
@@ -106,7 +106,7 @@ spec:
       default: "coverage_profile.txt"
     - name: covThresholdPercentage
       description: coverage percentage below which to mark the coverage test as failed.
-      default: 0
+      default: "0"
     - name: uploadGcsBucket
       description: GCS bucket to upload artifacts to.
     - name: githubTokenFile
