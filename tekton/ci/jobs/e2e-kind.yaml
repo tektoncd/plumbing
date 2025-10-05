@@ -64,6 +64,7 @@ spec:
       name: dind-sidecar
       securityContext:
         privileged: true
+      resources: {}
       volumeMounts:
         - mountPath: /var/lib/docker
           name: dind-storage

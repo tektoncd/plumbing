@@ -41,7 +41,7 @@ spec:
             body.repository.name == 'repo'
         - name: overlays
           value:
-          - key: add-pr-body.pull-request-url
+          - key: extensions.add-pr-body.pull-request-url
             expression: "body.issue.pull_request.url"
     - name: "Add PR body"
       ref:
