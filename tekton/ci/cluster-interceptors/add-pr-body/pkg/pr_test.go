@@ -86,11 +86,11 @@ func TestInterceptor_Process_Error(t *testing.T) {
 			Continue:   false,
 			Status: triggersv1.Status{
 				Code:    codes.FailedPrecondition,
-				Message: "no 'add-pr-body' found in the extensions",
+				Message: "no 'add_pr_body' found in the extensions",
 			},
 		},
 	}, {
-		name: "no add-pr-body in extensions",
+		name: "no add_pr_body in extensions",
 		req: triggersv1.InterceptorRequest{
 			Extensions: map[string]interface{}{
 				"foo": "bar",
@@ -101,11 +101,11 @@ func TestInterceptor_Process_Error(t *testing.T) {
 			Continue:   false,
 			Status: triggersv1.Status{
 				Code:    codes.FailedPrecondition,
-				Message: "no 'add-pr-body' found in the extensions",
+				Message: "no 'add_pr_body' found in the extensions",
 			},
 		},
 	}, {
-		name: "no-pull-request-url-found",
+		name: "no pull_request_url found",
 		req: triggersv1.InterceptorRequest{
 			Extensions: map[string]interface{}{
 				"add_pr_body": map[string]interface{}{
@@ -118,11 +118,11 @@ func TestInterceptor_Process_Error(t *testing.T) {
 			Continue:   false,
 			Status: triggersv1.Status{
 				Code:    codes.FailedPrecondition,
-				Message: "no 'pull-request-url' found",
+				Message: "no 'pull_request_url' found",
 			},
 		},
 	}, {
-		name: "pull-request-url not a string",
+		name: "pull_request_url not a string",
 		req: triggersv1.InterceptorRequest{
 			Extensions: map[string]interface{}{
 				"add_pr_body": map[string]interface{}{
@@ -135,7 +135,7 @@ func TestInterceptor_Process_Error(t *testing.T) {
 			Continue:   false,
 			Status: triggersv1.Status{
 				Code:    codes.FailedPrecondition,
-				Message: "'pull-request-url' found, but not a string",
+				Message: "'pull_request_url' found, but not a string",
 			},
 		},
 	}, {
