@@ -61,7 +61,7 @@ A trigger in an event listener:
           body.comment.body.matches('^/test($| [^ ]*$)')
     - name: "overlays"
       value:
-      - key: add-pr-body.pull-request-url
+      - key: add_pr_body.pull_request_url
         expression: "body.issue.pull_request.url"
   - name: "add PR body"
     ref: 

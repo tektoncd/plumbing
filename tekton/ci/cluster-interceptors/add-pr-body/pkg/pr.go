@@ -68,15 +68,15 @@ func (w Interceptor) Process(ctx context.Context, r *triggersv1.InterceptorReque
 func getPrUrlFromExtension(extensions map[string]interface{}) (string, error) {
 	addPrBody, ok := extensions[prExtensionsKey]
 	if !ok {
-		return "", errors.New("no 'add-pr-body' found in the extensions")
+		return "", errors.New("no 'add_pr_body' found in the extensions")
 	}
 	prUrl, ok := addPrBody.(map[string]interface{})[prExtensionsUrlKey]
 	if !ok {
-		return "", errors.New("no 'pull-request-url' found")
+		return "", errors.New("no 'pull_request_url' found")
 	}
 	prUrlString, ok := prUrl.(string)
 	if !ok {
-		return "", errors.New("'pull-request-url' found, but not a string")
+		return "", errors.New("'pull_request_url' found, but not a string")
 	}
 	return prUrlString, nil
 }
