@@ -4,6 +4,7 @@ namespace: tekton-ci
 resources:
 - ../../base
 patches:
+  - path: debug-logging.yaml
   - target:
       kind: Service
       name: add-pr-body-interceptor

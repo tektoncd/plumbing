@@ -20,11 +20,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	triggersv1 "github.com/tektoncd/triggers/pkg/apis/triggers/v1beta1"
 	"github.com/tektoncd/triggers/pkg/interceptors"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
 
@@ -39,21 +40,38 @@ var _ triggersv1.InterceptorInterface = (*Interceptor)(nil)
 type Interceptor struct {
 	// AuthToken is an OAuth token used to connect to the GitHub API
 	AuthToken string
+	Logger    *zap.SugaredLogger
+}
+
+func (w Interceptor) Debugw(msg string, keysAndValues ...interface{}) {
+	if w.Logger != nil {
+		w.Logger.Debugw(msg, keysAndValues...)
+	}
 }
 
 func (w Interceptor) Process(ctx context.Context, r *triggersv1.InterceptorRequest) *triggersv1.InterceptorResponse {
+	w.Debugw("add-pr-body: incoming request", "extensions", r.Extensions, "body", r.Body)
+
 	// Assumption - there is an extension key called "add_pr_body.pull_request_url")
 	// Get the URL from the body
 	prUrl, err := getPrUrlFromExtension(r.Extensions)
 	if err != nil {
+		w.Debugw("add-pr-body: failed to get PR URL", "error", err, "extensions", r.Extensions)
 		return interceptors.Fail(codes.FailedPrecondition, err.Error())
 	}
+
+	w.Debugw("add-pr-body: fetching PR", "url", prUrl)
+
 	// TODO: Refactor this into its own struct field?
 	prBody, err := getPrBody(prUrl, w.AuthToken)
 	if err != nil {
+		w.Debugw("add-pr-body: failed to get PR body", "error", err, "url", prUrl)
 		// TODO: Refactor getPrBody to map errors better to error codes
 		return interceptors.Fail(codes.Internal, err.Error())
 	}
+
+	w.Debugw("add-pr-body: success")
+
 	return &triggersv1.InterceptorResponse{
 		Extensions: map[string]interface{}{
 			prExtensionsKey: map[string]interface{}{
@@ -107,7 +125,7 @@ func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

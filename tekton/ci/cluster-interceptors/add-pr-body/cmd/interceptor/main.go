@@ -26,6 +26,8 @@ import (
 
 	"github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body/pkg"
 	"github.com/tektoncd/triggers/pkg/interceptors/server"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/signals"
@@ -51,6 +53,7 @@ func main() {
 	}
 	s.RegisterInterceptor("add-pr-body", pkg.Interceptor{
 		AuthToken: getGitHubAuth(authSecretEnvVar),
+		Logger:    initDebugLogger(),
 	})
 	mux := http.NewServeMux()
 	mux.Handle("/", &s)
@@ -82,4 +85,16 @@ func getGitHubAuth(key string) string {
 		return value
 	}
 	return ""
+}
+
+func initDebugLogger() *zap.SugaredLogger {
+	config := zap.NewProductionConfig()
+	if os.Getenv("DEBUG_LOGGING") == "true" {
+		config.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
+	}
+	logger, err := config.Build()
+	if err != nil {
+		return nil
+	}
+	return logger.Sugar()
 }
