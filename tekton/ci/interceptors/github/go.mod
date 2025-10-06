@@ -11,7 +11,7 @@ require (
 	github.com/google/go-github/v34 v34.0.0
 	github.com/tektoncd/triggers v0.32.0
 	google.golang.org/grpc v1.75.1
-	google.golang.org/protobuf v1.36.9
+	google.golang.org/protobuf v1.36.10
 	sigs.k8s.io/yaml v1.6.0
 )
 
