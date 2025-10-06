@@ -50,17 +50,17 @@ metadata:
 spec:
   params:
   - name: gitRevision
-    value: $(body.extensions.add_pr_body.pull_request_body.head.sha)
+    value: $(extensions.add_pr_body.pull_request_body.head.sha)
   - name: pullRequestNumber
-    value: $(body.extensions.add_pr_body.pull_request_body.number)
+    value: $(extensions.add_pr_body.pull_request_body.number)
   - name: pullRequestUrl
     value: $(body.issue.pull_request.html_url)
   - name: pullRequestBaseRef
-    value: $(body.extensions.add_pr_body.pull_request_body.base.ref)
+    value: $(extensions.add_pr_body.pull_request_body.base.ref)
   - name: gitHubCommand
     value: $(body.comment.body)
   - name: body
-    value: $(body.extensions.add_pr_body.pull_request_body.body)
+    value: $(extensions.add_pr_body.pull_request_body.body)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
