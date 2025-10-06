@@ -9,4 +9,4 @@ spec:
       - name: add-pr-body-interceptor
         env:
         - name: DEBUG_LOGGING
-          value: "true"
+          value: "false"

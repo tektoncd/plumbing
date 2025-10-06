@@ -42,7 +42,7 @@ spec:
         - name: overlays
           value:
           - key: add_pr_body.pull_request_url
-            expression: "body.issue.pull_request_url"
+            expression: "body.issue.pull_request.url"
     - name: "Add PR body"
       ref:
         name: "add-pr-body"
