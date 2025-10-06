@@ -1,4 +1,4 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://infra.tekton.dev/tekton-nightly/add-pr-body-ci/previous/v20251003-3504d909fc/release.yaml
+- https://storage.googleapis.com/tekton-releases-nightly/add-pr-body-ci/previous/v20251006-15a86e52ee/release.yaml
