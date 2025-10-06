@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: add-pr-body-interceptor
+spec:
+  template:
+    spec:
+      containers:
+      - name: add-pr-body-interceptor
+        env:
+        - name: DEBUG_LOGGING
+          value: "true"
