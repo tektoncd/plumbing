@@ -15,43 +15,6 @@
 prowjob_namespace: default
 pod_namespace: test-pods
 
-plank:
-  job_url_template: 'https://prow.infra.tekton.dev/view/gs/tekton-prow/{{if or (eq .Spec.Type "presubmit") (eq .Spec.Type "batch")}}pr-logs/pull{{with .Spec.Refs}}/{{.Org}}_{{.Repo}}{{end}}{{else}}logs{{end}}{{if eq .Spec.Type "presubmit"}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}{{else if eq .Spec.Type "batch"}}/batch{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}/'
-  report_templates:
-    '*': '[Full PR test history](https://prow.infra.tekton.dev/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}). [Your PR dashboard](https://prow.infra.tekton.dev/pr?query=is%3Apr%20state%3Aopen%20author%3A{{with index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).'
-  job_url_prefix_config:
-    '*': https://prow.infra.tekton.dev/view/
-  pod_pending_timeout: 60m
-  pod_unscheduled_timeout: 5m
-  default_decoration_configs:
-    '*':
-      timeout: 2h
-      grace_period: 15s
-      utility_images:
-        clonerefs: "gcr.io/k8s-prow/clonerefs:v20220628-aa928caf31"
-        initupload: "gcr.io/k8s-prow/initupload:v20220628-aa928caf31"
-        entrypoint: "gcr.io/k8s-prow/entrypoint:v20220628-aa928caf31"
-        sidecar: "gcr.io/k8s-prow/sidecar:v20220628-aa928caf31"
-      gcs_configuration:
-        bucket: "tekton-prow"
-        path_strategy: "explicit"
-        default_org: "tektoncd"
-        default_repo: "pipeline"
-      gcs_credentials_secret: "test-account"
-      resources:
-        clonerefs:
-          requests:
-            cpu: 100m
-        initupload:
-          requests:
-            cpu: 100m
-        place_entrypoint:
-          requests:
-            cpu: 100m
-        sidecar:
-          requests:
-            cpu: 100m
-
 branch-protection:
   orgs:
     tektoncd:
@@ -131,6 +94,13 @@ branch-protection:
             - "Multi-arch build"
             - "e2e-tests / e2e tests (k8s-oldest)"
             - "e2e-tests / e2e tests (k8s-plus-one)"
+        pruner:
+          required_status_checks:
+            contexts:
+            - "golangci-lint / lint (pull_request)"
+            - "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)"
+            - "Pruner kind E2E Tests / k8s (v1.32.x) / e2e test (pull_request)"
+            - "Pruner kind E2E Tests / pipelines-lts (v1.0.0) / e2e test (pull_request)"
     tektoncd-catalog:
       # Protect all branches in tektoncd-catalog
       # This means all prow jobs with "always_run" set are required
@@ -170,6 +140,7 @@ tide:
     - tektoncd/operator
     - tektoncd/pipeline
     - tektoncd/plumbing
+    - tektoncd/pruner
     - tektoncd/resolution
     - tektoncd/results
     - tektoncd/triggers
@@ -201,6 +172,7 @@ tide:
     tektoncd/operator: rebase
     tektoncd/pipeline: rebase
     tektoncd/plumbing: rebase
+    tektoncd/pruner: rebase
     tektoncd/resolution: rebase
     tektoncd/results: rebase
     tektoncd/triggers: rebase
@@ -311,12 +283,6 @@ deck:
         - ^artifacts/filtered\.cov$
       optional_files:
         - ^artifacts/filtered\.html$
-    - lens:
-        name: podinfo
-        config:
-          runner_configs:
-            "default":
-              pod_link_template: "https://console.cloud.google.com/kubernetes/pod/us-central1-a/prow/test-pods/{{ .Name }}/details?project=tekton-releases"
       required_files:
         - ^podinfo\.json$
       optional_files:
@@ -326,88 +292,3 @@ deck:
       required_files:
         - artifacts/.*\.link\.txt
   tide_update_period: 1s
-
-presets:
-- labels:
-    preset-presubmit-sh: "true"
-  volumeMounts:
-  - name: test-account
-    mountPath: /etc/test-account
-    readOnly: true
-  env:
-  - name: GOOGLE_APPLICATION_CREDENTIALS
-    value: /etc/test-account/service-account.json
-  - name: E2E_CLUSTER_REGION
-    value: us-central1
-  volumes:
-  - name: test-account
-    secret:
-      secretName: test-account
-- labels:
-    preset-postsubmit-sh: "true"
-  volumeMounts:
-  - name: nightly-account
-    mountPath: /etc/nightly-account
-    readOnly: true
-  env:
-  - name: GOOGLE_APPLICATION_CREDENTIALS
-    value: /etc/nightly-account/service-account.json
-  volumes:
-  # this secret/service-account has access to the tekton-nightly project, specifically make it possible to push
-  # images to gcr.io/tekton-nightly 👼
-  - name: nightly-account
-    secret:
-      secretName: nightly-account
-- labels:
-    preset-github-token: "true"
-  volumeMounts:
-  - name: github-token
-    mountPath: /etc/github-token
-    readOnly: true
-  volumes:
-  - name: github-token
-    secret:
-      secretName: oauth-token
-# docker-in-docker (with images/bootstrap) preset
-# NOTE: using this also requires using that image,
-# ensuring you run your test under either the ENTRYPOINT or:
-# /usr/local/bin/runner.sh my-test-command --foo --bar
-# AND setting the following on your PodSpec:
-# securityContext:
-#   privileged: true
-# These settings were taken from kubernetes/test-infra: https://github.com/kubernetes/test-infra/blob/aaf616ee940bcc64f775a77797fc80048df634b4/config/prow/config.yaml#L751
-- labels:
-    preset-dind-enabled: "true"
-  env:
-  - name: DOCKER_IN_DOCKER_ENABLED
-    value: "true"
-  volumes:
-  # kubekins-e2e legacy path
-  - name: docker-graph
-    emptyDir: {}
-  # krte (normal) path
-  - name: docker-root
-    emptyDir: {}
-  volumeMounts:
-  - name: docker-graph
-    mountPath: /docker-graph
-  - name: docker-root
-    mountPath: /var/lib/docker
-# volume mounts for kind
-- labels:
-    preset-kind-volume-mounts: "true"
-  volumeMounts:
-    - mountPath: /lib/modules
-      name: modules
-      readOnly: true
-    - mountPath: /sys/fs/cgroup
-      name: cgroup
-  volumes:
-    - name: modules
-      hostPath:
-        path: /lib/modules
-        type: Directory
-    - name: cgroup
-      hostPath:
-        path: /sys/fs/cgroup
-        type: Directory
