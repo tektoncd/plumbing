@@ -7,4 +7,22 @@ resources:
 - extra.yaml
 - prowjob-schemaless_customresourcedefinition.yaml
 - tune-sysctls_daemonset.yaml
-- oci
+- oci-bv-ssd-retain_storageclass.yaml
+- ingress.yaml
+- ghproxy.yaml
+
+configMapGenerator:
+  - name: config
+    files:
+    - config.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
+  - name: plugins
+    files:
+    - plugins.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
