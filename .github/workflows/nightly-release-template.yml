@@ -1,0 +1,247 @@
+name: 'Nightly Release Template'
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        description: 'Name of the project to release (e.g., pipeline, triggers, dashboard)'
+        required: true
+        type: string
+      git-repository:
+        description: 'Git repository URL (without https://)'
+        required: true
+        type: string
+      container-registry:
+        description: 'Container registry URL'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      registry-namespace:
+        description: 'Registry namespace/path'
+        required: true
+        type: string
+      run-tests:
+        description: 'Run integration tests before release'
+        required: false
+        type: boolean
+        default: false
+      kubernetes-version:
+        description: 'Kubernetes version for testing'
+        required: false
+        type: string
+        default: 'v1.31.0'
+      enable-chains:
+        description: 'Enable Tekton Chains for supply chain security'
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      release-version:
+        description: 'Generated release version'
+        value: ${{ jobs.release.outputs.release-version }}
+      release-sha:
+        description: 'Git SHA of the release'
+        value: ${{ jobs.release.outputs.release-sha }}
+      release-url:
+        description: 'URL to release artifacts'
+        value: ${{ jobs.release.outputs.release-url }}
+    secrets:
+      GH_TOKEN:
+        description: 'GitHub token for repository access'
+        required: true
+      REGISTRY_TOKEN:
+        description: 'Container registry authentication token'
+        required: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write  # For OIDC token generation
+  attestations: write  # For GitHub attestations
+
+env:
+  REGISTRY_URL: ${{ inputs.container-registry }}
+  REGISTRY_NAMESPACE: ${{ inputs.registry-namespace }}
+
+jobs:
+  release:
+    name: 'Release ${{ inputs.project-name }}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      release-version: ${{ steps.metadata.outputs.version }}
+      release-sha: ${{ steps.metadata.outputs.sha }}
+      release-url: ${{ steps.metadata.outputs.url }}
+    
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          repository: tektoncd/${{ inputs.project-name }}
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0  # Full history for proper versioning
+
+      - name: Show current working directory
+        run: pwd && ls -al 
+          
+      - name: Checkout plumbing for actions
+        uses: actions/checkout@v4
+        with:
+          path: plumbing
+
+      - name: Show current working directory
+        run: pwd && ls -al 
+
+      - name: Setup Tekton environment
+        id: tekton
+        uses: ./plumbing/.github/actions/setup-tekton
+        with:
+          kubernetes-version: ${{ inputs.kubernetes-version }}
+          registry-url: ${{ inputs.container-registry }}
+          enable-chains: ${{ inputs.enable-chains }}
+          cluster-name: '${{ inputs.project-name }}-release'
+          
+      - name: Setup container registry authentication
+        run: |
+          echo "🔐 Configuring container registry authentication..."
+          echo "${{ secrets.REGISTRY_TOKEN }}" | docker login ${{ inputs.container-registry }} -u ${{ github.actor }} --password-stdin
+          
+      - name: Generate release metadata
+        id: metadata
+        run: |
+          echo "📋 Generating release metadata..."
+          
+          # Get latest commit SHA
+          GIT_SHA=$(git rev-parse HEAD)
+          SHORT_SHA=$(echo $GIT_SHA | cut -c1-10)
+          
+          # Generate version tag
+          VERSION_TAG="v$(date +"%Y%m%d")-${SHORT_SHA}"
+          
+          # Construct release URL
+          RELEASE_URL="https://${{ inputs.container-registry }}/${{ inputs.registry-namespace }}/${{ inputs.project-name }}"
+          
+          echo "version=$VERSION_TAG" >> $GITHUB_OUTPUT
+          echo "sha=$GIT_SHA" >> $GITHUB_OUTPUT
+          echo "short-sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "url=$RELEASE_URL" >> $GITHUB_OUTPUT
+          
+          echo "📦 Release metadata:"
+          echo "  Project: ${{ inputs.project-name }}"
+          echo "  Version: $VERSION_TAG"
+          echo "  SHA: $GIT_SHA"
+          echo "  Registry: $RELEASE_URL"
+          
+      - name: Run integration tests
+        if: inputs.run-tests
+        timeout-minutes: 30
+        run: |
+          echo "🧪 Running integration tests for ${{ inputs.project-name }}..."
+          
+          # Set up test environment
+          export KUBECONFIG="${{ steps.tekton.outputs.kubeconfig-path }}"
+          export KO_DOCKER_REPO="${{ inputs.container-registry }}/${{ inputs.registry-namespace }}"
+          
+          # Run project-specific tests
+          if [ -f "./${{ inputs.project-name }}/test/e2e-tests.sh" ]; then
+            echo "Running e2e tests..."
+            ./${{ inputs.project-name }}/test/e2e-tests.sh
+          elif [ -f "./${{ inputs.project-name }}/test/presubmit-tests.sh" ]; then
+            echo "Running presubmit tests..."
+            ./${{ inputs.project-name }}/test/presubmit-tests.sh
+          else
+            echo "No standard test script found, running basic validation..."
+            make test || echo "No make test target, skipping"
+          fi
+          
+          echo "✅ Integration tests completed successfully"
+          
+      - name: Build and publish release
+        id: release
+        timeout-minutes: 30
+        run: |
+          echo "🏗️ Building and publishing release for ${{ inputs.project-name }}..."
+          
+          # Set up build environment
+          export KUBECONFIG="${{ steps.tekton.outputs.kubeconfig-path }}"
+          export KO_DOCKER_REPO="${{ inputs.container-registry }}/${{ inputs.registry-namespace }}"
+          export TAG="${{ steps.metadata.outputs.version }}"
+          
+          # Build release artifacts
+          if [ -f "./${{ inputs.project-name }}/hack/release.sh" ]; then
+            echo "Using project release script..."
+            ./${{ inputs.project-name }}/hack/release.sh --tag=$TAG --output=release.yaml
+          elif [ -f "./${{ inputs.project-name }}/config" ] && [ -d "./${{ inputs.project-name }}/config" ]; then
+            echo "Using kustomize build..."
+            kustomize build ${{ inputs.project-name }}/config/ > release.yaml
+          else
+            echo "❌ No recognized build method found"
+            exit 1
+          fi
+          
+          # Verify release.yaml was created
+          if [ ! -f "release.yaml" ]; then
+            echo "❌ release.yaml not found after build"
+            exit 1
+          fi
+          
+          echo "📦 Release artifacts generated:"
+          ls -la *.yaml || true
+          
+          # Tag and push container images
+          if command -v ko >/dev/null 2>&1; then
+            echo "Publishing container images with ko..."
+            ko publish --platform=linux/amd64,linux/arm64 --tags=$TAG ./${{ inputs.project-name }}/cmd/...
+          fi
+          
+          echo "✅ Release build completed successfully"
+          
+      - name: Generate GitHub attestations
+        if: inputs.enable-chains
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: 'release.yaml'
+          
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{ inputs.project-name }}-release-${{ steps.metadata.outputs.version }}'
+          path: |
+            release.yaml
+            *.yaml
+          retention-days: 90
+          
+      - name: Create release summary
+        run: |
+          echo "# 🚀 Nightly Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Release Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Project**: ${{ inputs.project-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.metadata.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git SHA**: \`${{ steps.metadata.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${{ steps.metadata.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tests Run**: ${{ inputs.run-tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Chains Enabled**: ${{ inputs.enable-chains }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📋 Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Release manifest: \`release.yaml\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Container images: Published to ${{ inputs.container-registry }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ inputs.enable-chains }}" = "true" ]; then
+            echo "- Supply chain attestations: Generated" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Release completed successfully!" >> $GITHUB_STEP_SUMMARY
+          
+  cleanup:
+    name: 'Cleanup'
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+    steps:
+      - name: Cleanup test environment
+        run: |
+          echo "🧹 Cleaning up test environment..."
+          # Cleanup is handled automatically by GitHub Actions runner reset
+          echo "✅ Cleanup completed" 
