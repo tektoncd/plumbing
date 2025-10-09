@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-  - secretName: tekton-results-tls
+  - secretName: ingress-tekton-results-tls
     hosts:
     - results.infra.tekton.dev
   rules:
