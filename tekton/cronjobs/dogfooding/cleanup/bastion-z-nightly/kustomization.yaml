@@ -1,7 +1,0 @@
-nameSuffix: -dogfooding-bastion-z
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-- ../../../bases/cleanup
-patches:
-- path: cronjob.yaml

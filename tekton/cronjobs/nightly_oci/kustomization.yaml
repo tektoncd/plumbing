@@ -2,8 +2,10 @@ commonAnnotations:
   managed-by: Tekton
 
 resources:
-- releases
-- nightly-tests
+- catalog
 - cleanup
+- nightly-tests
+- peribolos
+- releases
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
