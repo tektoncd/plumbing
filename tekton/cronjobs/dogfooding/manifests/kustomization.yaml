@@ -1,6 +1,0 @@
-resources:
-- plumbing-tekton
-- plumbing-tekton-cronjobs
-- plumbing-tekton-cronjobs-robocat
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
