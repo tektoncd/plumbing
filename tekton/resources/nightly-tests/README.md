@@ -64,7 +64,7 @@ The following pipelines are available:
 - catalog `e2e` tests
 
 They are running once a day automatically. The results can be seen
-at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-z/pipelineruns).
+at the [dogfooding dashboard](https://tekton.infra.tekton.dev/#/namespaces/bastion-z/pipelineruns).
 
 ### IBM Power Systems (ppc64le) architecture
 
@@ -83,5 +83,5 @@ The following pipelines are available:
 - catalog `e2e` tests
 
 They are running once a day automatically. The results can be seen
-at the [dogfooding dashboard](https://dashboard.dogfooding.tekton.dev/#/namespaces/bastion-p/pipelineruns).
+at the [dogfooding dashboard](https://tekton.infra.tekton.dev/#/namespaces/bastion-p/pipelineruns).
 

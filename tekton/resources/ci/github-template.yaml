@@ -61,7 +61,7 @@ spec:
           - name: description
             value: $(tt.params.gitHubCheckDescription)
           - name: targetURL
-            value: https://dashboard.dogfooding.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
