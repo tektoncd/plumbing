@@ -97,7 +97,7 @@ metadata:
   annotations:
     acme.cert-manager.io/http01-edit-in-place: "true"
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    dns.gardener.cloud/dnsnames: 'dashboard.dogfooding.tekton.dev'
+    dns.gardener.cloud/dnsnames: 'tekton.infra.tekton.dev'
     dns.gardener.cloud/ttl: "3600"
   name: ing
   namespace: tekton-pipelines
@@ -105,9 +105,9 @@ spec:
   tls:
   - secretName: dashboard-dogfooding-tekton-dev-tls
     hosts:
-    - dashboard.dogfooding.tekton.dev
+    - tekton.infra.tekton.dev
   rules:
-  - host: dashboard.dogfooding.tekton.dev
+  - host: tekton.infra.tekton.dev
     http:
       paths:
       - backend:

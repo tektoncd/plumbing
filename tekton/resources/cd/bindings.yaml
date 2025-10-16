@@ -176,4 +176,4 @@ metadata:
 spec:
   params:
   - name: dashboardBaseURL
-    value: https://dashboard.dogfooding.tekton.dev
+    value: https://tekton.infra.tekton.dev

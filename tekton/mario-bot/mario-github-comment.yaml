@@ -179,7 +179,7 @@ spec:
             )
 
           comment_template += (
-            '<a href="http://dashboard.dogfooding.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push&'
+            '<a href="http://tekton.infra.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push&'
             'namespace=mario">build logs</a>'
           )
           comment_params['buildpipelinerun'] = '${BUILD_PIPELINERUN}'
