@@ -6,12 +6,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
   namespace: tekton-ci
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
 subjects:
 - kind: ServiceAccount
   name: tekton-dashboard
@@ -78,12 +78,12 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
   namespace: tekton-nightly
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
 subjects:
 - kind: ServiceAccount
   name: tekton-dashboard
@@ -150,12 +150,12 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
   namespace: bastion-p
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
 subjects:
 - kind: ServiceAccount
   name: tekton-dashboard
@@ -222,12 +222,12 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
   namespace: bastion-z
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ekton-dashboard-tenant-view-restricted
+  name: tekton-dashboard-tenant-view-restricted
 subjects:
 - kind: ServiceAccount
   name: tekton-dashboard
