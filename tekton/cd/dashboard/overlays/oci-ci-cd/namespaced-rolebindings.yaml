@@ -1,0 +1,290 @@
+# Instead of clusterrolebindings, creates RoleBindings
+# to the required ClusterRoles for each of the namespace
+# where we want to list Tekton resources
+# tekton-ci namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ekton-dashboard-tenant-view-restricted
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ekton-dashboard-tenant-view-restricted
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-backend-view
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-backend-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-triggers-view
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-cronjobs-extension
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-cronjobs-extension
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-pipelines-view
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+
+# tekton-nightly namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ekton-dashboard-tenant-view-restricted
+  namespace: tekton-nightly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ekton-dashboard-tenant-view-restricted
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-backend-view
+  namespace: tekton-nightly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-backend-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-triggers-view
+  namespace: tekton-nightly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-cronjobs-extension
+  namespace: tekton-nightly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-cronjobs-extension
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-pipelines-view
+  namespace: tekton-nightly
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+
+# bastion-p namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ekton-dashboard-tenant-view-restricted
+  namespace: bastion-p
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ekton-dashboard-tenant-view-restricted
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-backend-view
+  namespace: bastion-p
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-backend-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-triggers-view
+  namespace: bastion-p
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-cronjobs-extension
+  namespace: bastion-p
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-cronjobs-extension
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-pipelines-view
+  namespace: bastion-p
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+
+# bastion-z namespace
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ekton-dashboard-tenant-view-restricted
+  namespace: bastion-z
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ekton-dashboard-tenant-view-restricted
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-backend-view
+  namespace: bastion-z
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-backend-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-triggers-view
+  namespace: bastion-z
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-cronjobs-extension
+  namespace: bastion-z
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-dashboard-cronjobs-extension
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-dashboard-pipelines-view
+  namespace: bastion-z
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-aggregate-view
+subjects:
+- kind: ServiceAccount
+  name: tekton-dashboard
+  namespace: tekton-pipelines
