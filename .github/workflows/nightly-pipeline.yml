@@ -1,0 +1,37 @@
+name: 'Nightly Pipeline Release'
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      run-tests:
+        description: 'Run integration tests before release'
+        required: false
+        type: boolean
+        default: false 
+  push: # Temporary for testing
+    branches: [nightly-to-gha]
+    paths:
+      - '.github/workflows/nightly-pipeline.yml'
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  nightly-release:
+    name: 'Tekton Pipeline Nightly Release'
+    uses: ./.github/workflows/nightly-release-template.yml
+    with:
+      project-name: 'pipeline'
+      git-repository: 'github.com/tektoncd/pipeline'
+      registry-namespace: 'tektoncd/pipeline'
+      run-tests: ${{ inputs.run-tests || false }}
+      kubernetes-version: 'v1.31.0'
+      enable-chains: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
