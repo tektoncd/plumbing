@@ -15,6 +15,13 @@ patches:
     - op: replace
       path: /spec/template/spec/containers/0/args/1
       value: --external-logs=https://logs.infra.tekton.dev/logs
+- target:
+    kind: Deployment
+    name: tekton-dashboard
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/5
+      value: --namespaces=tekton-ci,tekton-nightly,bastion-p,bastion-z
 - patch: |-
     $patch: delete
     apiVersion: rbac.authorization.k8s.io/v1
