@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: prow
+
+resources:
+- namespace.yaml
+- prow.yaml
+- extra.yaml
+- prowjob-schemaless_customresourcedefinition.yaml
+- tune-sysctls_daemonset.yaml
+- oci-bv-ssd-retain_storageclass.yaml
+- ingress.yaml
+- ghproxy.yaml
+
+configMapGenerator:
+  - name: plugins
+    namespace: prow
+    files:
+    - plugins.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
