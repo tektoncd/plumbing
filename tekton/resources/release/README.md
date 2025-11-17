@@ -82,3 +82,50 @@ tkn pipeline start \
   -p rekor-uuid="$REKOR_UUID" \
   release-draft
 ```
+
+#### Using Oracle Cloud Storage
+
+To draft a release by downloading the release manifests directly from Oracle Cloud Storage buckets, use the [release-draft-oci](./base/github_release_oci.yaml) pipeline instead.
+
+If Oracle Cloud login credentials are managed in a secret called `oci-release-secret`, then set the workspace secret addordingly.
+
+Please note the additional inputs `--pod-template` and the new parameter `repo-name` that are specific to release pipelines with oci related tags.
+
+Create a pod template file:
+
+```shell
+cat <<EOF > tekton/pod-template.yaml
+securityContext:
+  fsGroup: 65532
+  runAsUser: 65532
+  runAsNonRoot: true
+EOF
+```
+```shell
+export TEKTON_RELEASE_GIT_SHA=9c884fb3d3bf35c0a251936626f2ca9f17b5c183
+export TEKTON_PACKAGE=tektoncd/pipeline
+export TEKTON_VERSION=v0.9.0
+export TEKTON_OLD_VERSION=v0.8.0
+export TEKTON_RELEASE_NAME="Bengal Bender"
+export TEKON_REPO_NAME=pipeline
+
+RELEASE_FILE=https://infra.tekton.dev/tekton-releases/pipeline/previous/${TEKTON_VERSION}/release.yaml
+CONTROLLER_IMAGE_SHA=$(curl -L $RELEASE_FILE | egrep 'gcr.io.*controller' | cut -d'@' -f2)
+REKOR_UUID=$(rekor-cli search --sha $CONTROLLER_IMAGE_SHA | grep -v Found | head -1)
+echo -e "CONTROLLER_IMAGE_SHA: ${CONTROLLER_IMAGE_SHA}\nREKOR_UUID: ${REKOR_UUID}"
+
+tkn pipeline start \
+  --workspace name=shared,volumeClaimTemplateFile=workspace-template.yaml \
+  --workspace name=credentials,secret=oci-release-secret \
+  --pod-template pod-template.yaml \
+  -p package="${TEKTON_PACKAGE}" \
+  -p git-revision="$TEKTON_RELEASE_GIT_SHA" \
+  -p release-tag="${TEKTON_VERSION}" \
+  -p previous-release-tag="${TEKTON_OLD_VERSION}" \
+  -p release-name="${TEKTON_RELEASE_NAME}" \
+  -p repo-name="${TEKTON_REPO_NAME}" \
+  -p bucket="tekton-releases" \
+  -p rekor-uuid="$REKOR_UUID" \
+  release-draft-oci
+```
+
