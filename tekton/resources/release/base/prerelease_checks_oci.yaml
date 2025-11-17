@@ -1,0 +1,141 @@
+# Copyright 2025 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: prerelease-checks-oci
+spec:
+  params:
+  - name: package
+    description: package to release
+    default: github.com/tektoncd/pipeline
+  - name: versionTag
+    description: The X.Y.Z version that the artifacts would be tagged with
+  - name: releaseBucket
+    description: >-
+      The bucket where to look for the release, in the format <bucket-name>/<project-name>
+  - name: ociNamespace
+    description: The Oracle Cloud Infrastructure namespace for the bucket
+    default: ""
+  stepTemplate:
+    env:
+    - name: PACKAGE
+      value: $(params.package)
+    - name: VERSION_TAG
+      value: $(params.versionTag)
+    - name: RELEASE_BUCKET
+      value: $(params.releaseBucket)
+    - name: OCI_NAMESPACE
+      value: $(params.ociNamespace)
+  workspaces:
+    - name: source-to-release
+      description: The workspace where the repo has been cloned
+    - name: oci-credentials
+      description: The workspace containing OCI credentials secret
+      optional: false
+  steps:
+    - name: check-git-tag
+      image: alpine/git
+      script: |
+        echo "Checking git tag"
+        # Look for the tag in the list of tags
+        git ls-remote --tags https://$(params.package) | \
+          grep "${VERSION_TAG}$" || exit 0
+        # If the version was found fail
+        echo "Version ${VERSION_TAG} already tagged for ${PACKAGE}"
+        exit 1
+    - name: check-release-file
+      image: ghcr.io/oracle/oci-cli:sha-b324bd6  # released 2025-10-01
+      script: |
+        #!/bin/bash
+        set -e
+        echo "Checking release file"
+
+        # Create OCI CLI config directory
+        mkdir -p /oracle/.oci
+        chmod 700 /oracle/.oci
+
+        # Read credentials from workspace files directly into config
+        # Avoid storing sensitive data in environment variables
+        OCI_FINGERPRINT=$(cat $(workspaces.oci-credentials.path)/fingerprint)
+        OCI_TENANCY_OCID=$(cat $(workspaces.oci-credentials.path)/tenancy_ocid)
+        OCI_USER_OCID=$(cat $(workspaces.oci-credentials.path)/user_ocid)
+        OCI_REGION=$(cat $(workspaces.oci-credentials.path)/region)
+
+        # Copy the API key directly (avoid echoing or storing in variables)
+        cp $(workspaces.oci-credentials.path)/oci_api_key.pem /oracle/.oci/oci_api_key.pem
+        chmod 600 /oracle/.oci/oci_api_key.pem
+
+        # Create OCI config file
+        cat > /oracle/.oci/config <<OCICONFIG
+        [DEFAULT]
+        user=${OCI_USER_OCID}
+        fingerprint=${OCI_FINGERPRINT}
+        tenancy=${OCI_TENANCY_OCID}
+        region=${OCI_REGION}
+        key_file=/oracle/.oci/oci_api_key.pem
+        OCICONFIG
+        chmod 600 /oracle/.oci/config
+
+        echo "OCI CLI configured successfully"
+
+        # Automatically detect namespace from tenancy if not provided
+        if [ -z "${OCI_NAMESPACE}" ]; then
+          echo "Namespace not provided, auto-detecting from tenancy..."
+          OCI_NAMESPACE=$(oci os ns get --query data --raw-output)
+          echo "Detected namespace successfully"
+        fi
+
+        # Check if the release file already exists in Oracle Cloud Storage
+        # Extract bucket name from RELEASE_BUCKET
+        BUCKET_NAME=$(echo ${RELEASE_BUCKET} | awk -F'/' '{print $1}')
+        OBJECT_PATH=$(echo ${RELEASE_BUCKET} | cut -d'/' -f2-)/previous/${VERSION_TAG}/release.yaml
+
+        echo "Checking bucket: ${BUCKET_NAME}"
+        echo "Object path: ${OBJECT_PATH}"
+
+        # Check if object exists using OCI CLI
+        # oci os object head returns 0 if object exists, non-zero if not found
+        if oci os object head \
+           --bucket-name "${BUCKET_NAME}" \
+           --name "${OBJECT_PATH}" \
+           --namespace-name "${OCI_NAMESPACE}" 2>/dev/null; then
+          echo "Release file already exists for ${VERSION_TAG} in the release bucket,"
+          echo "but no git tag was found. To continue remove the release file first."
+          # Clean up credentials before exiting
+          rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
+          exit 1
+        fi
+        
+        # Clean up credentials
+        rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
+        echo "Release file does not exist. Check passed."
+    - name: check-github-release
+      image: python:3.6-alpine3.9
+      script: |
+        echo "Checking GitHub release"
+        PACKAGE=$(echo ${PACKAGE} | cut -d/ -f2,3)
+        # Check if the release exists on GitHub
+        wget -q -O- --header 'Accept: application/vnd.github.v3+json' \
+          https://api.github.com/repos/${PACKAGE}/releases | \
+          python -c 'import sys; import json; print("\n".join([x["tag_name"] for x in json.load(sys.stdin)]))' | \
+          grep "${VERSION_TAG}$" || exit 0
+        echo "Release ${VERSION_TAG} already exists for ${PACKAGE}"
+        exit 1
+    - name: success-confirmation
+      image: alpine
+      script: |
+        echo "All pre-release checks for ${PACKAGE} @ ${VERSION_TAG} where successful"
+        echo "Happy releasing 😺"

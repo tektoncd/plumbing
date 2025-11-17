@@ -1,0 +1,417 @@
+# Copyright 2025 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: create-draft-release-oci
+spec:
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: git-revision
+    description: the git revision of the release
+  - name: release-name
+    description: The name of the release (e.g. Cat + Robot for pipeline)
+  - name: release-tag
+    description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
+  - name: previous-release-tag
+    description: Previous release number - for author and PR list calculation
+  - name: rekor-uuid
+    description: The Rekor UUID associated to the attestation
+  workspaces:
+  - name: shared
+    description: contains the cloned repo and the release files
+  stepTemplate:
+    env:
+      - name: GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: github-token
+            key: GITHUB_TOKEN
+      - name: HOME
+        value: /tekton/home
+      - name: VERSION
+        value: $(params.release-tag)
+      - name: PROJECT
+        value: $(params.package)
+      - name: OLD_VERSION
+        value: $(params.previous-release-tag)
+      - name: RELEASE_NAME
+        value: $(params.release-name)
+      - name: GIT_REVISION
+        value: $(params.git-revision)
+      - name: REKOR_UUID
+        value: $(params.rekor-uuid)
+  steps:
+    - name: header
+      image: ghcr.io/tektoncd/plumbing/hub
+      script: |
+        #!/bin/bash
+        set -ex
+        TEKTON_PROJECT=$(basename $PROJECT)
+        BQ="\`" # Backquote
+
+        cat <<EOF | tee $HOME/release.md
+        Tekton ${TEKTON_PROJECT^} release ${VERSION} "${RELEASE_NAME}"
+
+        <!-- For major releases, add a tag line
+        # 🎉 [Tag Line - to be done] 🎉
+        -->
+
+        -[Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
+        -[Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
+
+        ## Installation one-liner
+
+        ${BQ}${BQ}${BQ}shell
+        kubectl apply -f https://infra.tekton.dev/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        ${BQ}${BQ}${BQ}
+
+        ## Attestation
+
+        The Rekor UUID for this release is \`${REKOR_UUID}\`
+
+        Obtain the attestation:
+        ${BQ}${BQ}${BQ}shell
+        REKOR_UUID=${REKOR_UUID}
+        rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | jq .
+        ${BQ}${BQ}${BQ}
+
+        Verify that all container images in the attestation are in the release file:
+        ${BQ}${BQ}${BQ}shell
+        RELEASE_FILE=https://infra.tekton.dev/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
+        REKOR_UUID=${REKOR_UUID}
+
+        # Obtains the list of images with sha from the attestation
+        REKOR_ATTESTATION_IMAGES=\$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
+
+        # Download the release file
+        curl -L "\$RELEASE_FILE" > release.yaml
+
+        # For each image in the attestation, match it to the release file
+        for image in \$REKOR_ATTESTATION_IMAGES; do
+          printf \$image; grep -q \$image release.yaml && echo " ===> ok" || echo " ===> no match";
+        done
+        ${BQ}${BQ}${BQ}
+
+        <!-- Any special upgrade notice
+        ## Upgrade Notices
+        -->
+
+        ## Changes
+        EOF
+    - name: filter-data
+      image: ghcr.io/tektoncd/plumbing/hub
+      workingDir: $(workspaces.shared.path)/repo
+      script: |
+        #!/usr/bin/env bash
+        set -ex
+
+        # Fix git ownership issue - needed even when running as same user due to workspace mounting
+        git config --global --add safe.directory $(workspaces.shared.path)/repo
+
+        # Restore full git history
+        git fetch --unshallow
+        git fetch --tags
+
+        # UPPER_THRESHOLD is the newest sha we are interested in
+        UPPER_THRESHOLD=${GIT_REVISION}
+        # COMMON_ANCESTOR is the common ancestor between the OLD_VERSION and UPPER_THRESHOLD
+        COMMON_ANCESTOR=$(git merge-base ${OLD_VERSION} ${UPPER_THRESHOLD})
+        # OLD_RELEASE_SUBJECTS is the list of commit subjects cherry-picked (probably?) from main
+        OLD_RELEASE_SUBJECTS=$HOME/old_subjects.txt
+        echo "Cherry-picked commits:"
+        git log --format="%s" $COMMON_ANCESTOR..$OLD_VERSION | sort -u | tee $OLD_RELEASE_SUBJECTS
+        echo "OLD_VERSION: $OLD_VERSION"
+        echo "COMMON_ANCESTOR: $COMMON_ANCESTOR"
+        echo "UPPER_THRESHOLD: $UPPER_THRESHOLD"
+
+        # Save the PR data in CSV. Only consider PRs whose sha verifies the condition
+        # COMMON_ANCESTOR is ancestor of SHA is ancestor of UPPER_THRESHOLD
+        # And title no in the OLD_VERSION branch.
+        # Working Assumptions:
+        #   - there are no duplicate titles in commits
+        #   - we always cherry-pick full PRs, never commits out of a multi-commit PR
+        # Format of output data:
+        # "author;number;title"
+        hub pr list --state merged -L 300 -f "%sm;%au;%i;%t;%L%n" | \
+          while read pr; do
+            SHA=$(echo $pr | cut -d';' -f1)
+            # Skip the common ancestor has it has already been released
+            if [ "$SHA" == "$COMMON_ANCESTOR" ]; then
+              continue
+            fi
+            SUBJECT=$(git log -1 --format="%s" $SHA || echo "__NOT_FOUND__")
+            git merge-base --is-ancestor $SHA $UPPER_THRESHOLD && \
+            git merge-base --is-ancestor $COMMON_ANCESTOR $SHA && \
+            ! $(egrep "^${SUBJECT}$" $OLD_RELEASE_SUBJECTS &> /dev/null) &&
+            echo $pr | cut -d';' -f2-
+          done > $HOME/pr.csv || true  # We do not want to fail is the last of the loop is not a match
+
+        echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
+        cat $HOME/pr.csv
+    - name: release-notes
+      image: stedolan/jq
+      script: |
+        #!/bin/bash
+        set -e
+
+        # First process pull requests that have release notes
+        # Extract the release notes but drop lines that match an unmodified PR template
+        # || true in case all PRs are "release-note-none"
+        grep -v "release-note-none" $HOME/pr.csv > $HOME/pr-notes-tmp.csv || true
+        cat $HOME/pr-notes-tmp.csv | while read pr; do
+          PR_NUM=$(echo $pr | cut -d';' -f2)
+          PR_RELEASE_NOTES_B64=$(wget -O- https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
+            jq .body -r | grep -oPz '(?s)(?<=```release-note..)(.+?)(?=```)' | \
+            grep -avP '\W*(Your release note here|action required: your release note here|NONE)\W*' | base64 -w0)
+          echo "$pr;$PR_RELEASE_NOTES_B64" >> $HOME/pr-notes.csv
+          # Avoid rate limiting
+          sleep 0.2
+        done
+
+        # Copy pull requests without release notes to a dedicated file
+        # || true in case no PRs have "release-note-none"
+        grep "release-note-none" $HOME/pr.csv > $HOME/pr-no-notes.csv || true
+    - name: body
+      image: busybox
+      script: |
+        #!/bin/sh
+        set -e
+        cat <<EOF | tee -a $HOME/release.md
+
+        # Features
+
+        $(awk -F";" '/kind\/feature/{ print "echo -e \"* :sparkles: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/feature/{ print "* :sparkles: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+
+        <!-- Fill in deprecation notices when applicable
+        # Deprecation Notices
+
+        * :rotating_light: [Deprecation Notice Title]
+
+        [Detailed deprecation notice description] (#Number).
+
+        [Fill list here]
+        -->
+
+        <!-- Fill in backward incompatible changes when applicable
+        # Backwards incompatible changes
+
+        In current release:
+
+        * :rotating_light: [Change Title]
+
+        [Detailed change description] (#Number).
+
+        [Fill list here]
+        -->
+
+        ### Fixes
+
+        $(awk -F";" '/kind\/bug/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/flake/{ print "echo -e \"* :bug: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/bug/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+        $(awk -F";" '/kind\/flake/{ print "* :bug: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+
+        ### Misc
+
+        $(awk -F";" '/kind\/cleanup/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/misc/{ print "echo -e \"* :hammer: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/cleanup/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+        $(awk -F";" '/kind\/misc/{ print "* :hammer: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+
+        ### Docs
+
+        $(awk -F";" '/kind\/documentation/{ print "echo -e \"* :book: "$3" ("$2")\n\n$(echo "$5" | base64 -d)\n\"" }' $HOME/pr-notes.csv | sh)
+        $(awk -F";" '/kind\/documentation/{ print "* :book: "$3" ("$2")" }' $HOME/pr-no-notes.csv)
+
+        EOF
+
+    - name: authors
+      image: ghcr.io/tektoncd/plumbing/hub
+      workingDir: $(workspaces.shared.path)/repo
+      script: |
+        #!/usr/bin/env bash
+        set -ex
+        cat <<EOF | tee -a $HOME/release.md
+        ## Thanks
+
+        Thanks to these contributors who contributed to ${VERSION}!
+        $(awk -F";" '{ print "* :heart: @"$1 }' $HOME/pr.csv | sort -u)
+
+        Extra shout-out for awesome release notes:
+        $(awk -F";" '{ print "* :heart_eyes: @"$1 }' $HOME/pr-notes.csv | sort -u)
+        EOF
+    - name: pr-data
+      image: ghcr.io/tektoncd/plumbing/hub
+      workingDir: $(workspaces.shared.path)/repo
+      script: |
+        #!/usr/bin/env bash
+        set -ex
+
+        cat <<EOF | tee -a $HOME/release.md
+
+        <!--
+        ## Unsorted PR List
+        $(egrep -v 'kind/(feature|documentation|cleanup|flake|bug|misc)' $HOME/pr.csv | awk -F";" '{ print "- "$3" ("$2")" }')
+
+        To Be Done: Deprecation Notices, Backward Incompatible Changes
+        -->
+        EOF
+    - name: create-draft
+      image: ghcr.io/tektoncd/plumbing/hub
+      workingDir: $(workspaces.shared.path)/repo
+      script: |
+        #!/usr/bin/env bash
+        set -ex
+
+        RELEASE_PATH="../release"
+        TEKTON_PROJECT=$(basename $PROJECT)
+        # List the files in the release folder
+        RELEASE_FILES=$(find "${RELEASE_PATH}" -type f | awk '{ print "-a "$1 }' | tr '\n' ' ')
+
+        hub release create --draft --prerelease \
+          --commitish ${GIT_REVISION} ${RELEASE_FILES} \
+          --file $HOME/release.md ${VERSION}
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: release-draft-oci
+spec:
+  params:
+  - name: package
+    description: package (and its children) under test
+  - name: repo-name
+    description: name of the repository (e.g. pipeline)
+  - name: git-revision
+    description: the git revision of the release
+  - name: release-name
+    description: The name of the release (e.g. Cat + Robot for pipeline)
+  - name: release-tag
+    description: Release number and git tag to be applied (e.g. v0.888.1, with 'v')
+  - name: previous-release-tag
+    description: Previous release number - for author and PR list calculation
+  - name: bucket
+    description: OCI bucket where to get the release files from (e.g. tekton-releases)
+  - name: rekor-uuid
+    description: The Rekor UUID associated to the attestation
+  workspaces:
+    - name: shared
+      description: Workspace where the git repo is prepared for testing
+    - name: credentials
+      description: OCI credentials
+  tasks:
+    - name: clone-repo
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+          - name: name
+            value: git-clone
+          - name: kind
+            value: task
+      params:
+        - name: url
+          value: https://github.com/$(params.package)
+        - name: revision
+          value: $(params.git-revision)
+      workspaces:
+        - name: output
+          workspace: shared
+          subPath: repo
+    - name: clone-bucket
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/oracle-cloud-storage-download:0.2
+          - name: name
+            value: oracle-cloud-storage-download
+          - name: kind
+            value: task
+      params:
+        - name: path
+          value: .
+        - name: bucketName
+          value: $(params.bucket)
+        - name: objectPrefix
+          value: $(params.repo-name)/previous/$(params.release-tag)
+        - name: typeDir
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared
+          subPath: release
+        - name: credentials
+          workspace: credentials
+    - name: verify-download
+      runAfter: ['clone-bucket']
+      taskSpec:
+        workspaces:
+          - name: shared
+            description: Workspace to verify
+        steps:
+          - name: check-files
+            image: alpine:3.20
+            script: |
+              #!/bin/sh
+              set -e
+              
+              RELEASE_PATH="$(workspaces.shared.path)/release"
+              
+              echo "Checking for downloaded files in: ${RELEASE_PATH}"
+              
+              # Count files in the release directory
+              FILE_COUNT=$(find "${RELEASE_PATH}" -type f | wc -l)
+              
+              echo "Found ${FILE_COUNT} files"
+              
+              if [ "${FILE_COUNT}" -eq 0 ]; then
+                echo "ERROR: No files were downloaded from the bucket!"
+                echo "Contents of workspace:"
+                ls -la "$(workspaces.shared.path)" || true
+                ls -la "${RELEASE_PATH}" || true
+                exit 1
+              fi
+              
+              echo "SUCCESS: Downloaded ${FILE_COUNT} files"
+              echo "Files:"
+              find "${RELEASE_PATH}" -type f
+      workspaces:
+        - name: shared
+          workspace: shared
+
+    - name: create-draft-release
+      runAfter: ['clone-repo', 'verify-download']
+      taskRef:
+        name: create-draft-release-oci
+      workspaces:
+        - name: shared
+          workspace: shared
+      params:
+        - name: package
+          value: $(params.package)
+        - name: git-revision
+          value: $(params.git-revision)
+        - name: release-name
+          value: $(params.release-name)
+        - name: release-tag
+          value: $(params.release-tag)
+        - name: previous-release-tag
+          value: $(params.previous-release-tag)
+        - name: rekor-uuid
+          value: $(params.rekor-uuid)
