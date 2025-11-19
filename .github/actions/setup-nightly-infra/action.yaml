@@ -39,7 +39,7 @@ runs:
   steps:
     # Step 1: Set up Kubernetes cluster with Kind
     - name: Set up Kind cluster
-      uses: chainguard-dev/actions/setup-kind@v1.4.12
+      uses: chainguard-dev/actions/setup-kind@be7b31a01af8ce7228fe901326f1d223fb788e14 # v1.4.12
       with:
         k8s-version: ${{ inputs.kubernetes_version }}
 
