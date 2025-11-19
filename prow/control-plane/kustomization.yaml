@@ -13,6 +13,14 @@ resources:
 - ghproxy.yaml
 
 configMapGenerator:
+  - name: config
+    namespace: prow
+    files:
+    - config.yaml
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: prow
   - name: plugins
     namespace: prow
     files:
