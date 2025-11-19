@@ -20,15 +20,15 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "deck"
+  name: deck
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "deck"
+  name: deck
 subjects:
 - kind: ServiceAccount
-  name: "deck"
-  namespace: default
+  name: deck
+  namespace: prow
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -47,13 +47,13 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   namespace: default
-  name: "horologium"
+  name: horologium
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "prow-controller-manager"
+  name: prow-controller-manager
 rules:
 - apiGroups:
    - ""
@@ -71,21 +71,21 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "prow-controller-manager"
+  name: prow-controller-manager
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "prow-controller-manager"
+  name: prow-controller-manager
 subjects:
 - kind: ServiceAccount
-  name: "prow-controller-manager"
-  namespace: default
+  name: prow-controller-manager
+  namespace: prow
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "sinker"
+  name: sinker
 rules:
   - apiGroups:
       - ""
@@ -102,12 +102,12 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: test-pods
-  name: "sinker"
+  name: sinker
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: "sinker"
+  name: sinker
 subjects:
 - kind: ServiceAccount
-  name: "sinker"
-  namespace: default
+  name: sinker
+  namespace: prow
