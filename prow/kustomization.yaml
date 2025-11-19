@@ -4,12 +4,3 @@ kind: Kustomization
 resources:
 - control-plane
 - test-pods
-
-configMapGenerator:
-  - name: config
-    files:
-    - config.yaml
-    options:
-      disableNameSuffixHash: true
-      labels:
-        app: prow
