@@ -45,7 +45,7 @@ runs:
 
     # Step 2: Install Tekton Pipelines
     - name: Set up Tekton
-      uses: tektoncd/actions/setup-tektoncd@0986bcdfbaf4f83a8a7b19bc2fa360c44ee55929
+      uses: tektoncd/actions/setup-tektoncd@dd92514472167b361de1c95fd31fc2ef83c282ec
       with:
         pipeline_version: v1.4.0
         setup_registry: "true"
@@ -53,7 +53,7 @@ runs:
 
     # Step 3: Install Tekton CLI
     - name: Install tkn CLI
-      uses: tektoncd/actions/setup-tektoncd-cli@0986bcdfbaf4f83a8a7b19bc2fa360c44ee55929
+      uses: tektoncd/actions/setup-tektoncd-cli@dd92514472167b361de1c95fd31fc2ef83c282ec
       with:
         version: v0.42.0
         
