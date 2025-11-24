@@ -31,7 +31,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:547.0.0-alpine@sha256:e4da6e889f53d0c829134481dd676224d3cb04351e1e6da99d28e38be6b2ea28
+FROM google/cloud-sdk:548.0.0-alpine@sha256:a63c45f1bf7bc62cbe82fba0a89ce895507252c056503bd308cc3474ed4b87ba
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
