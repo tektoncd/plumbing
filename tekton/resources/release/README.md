@@ -82,3 +82,25 @@ tkn pipeline start \
   -p rekor-uuid="$REKOR_UUID" \
   release-draft
 ```
+
+#### Using Oracle Cloud Storage
+
+To draft a release by downloading the release manifests directly from Oracle Cloud Storage buckets, use the `release-draft-oci` pipeline instead.
+
+The OCI access credentials are managed in a secret called `oci-release-secret`. Note that the bucket name format should include the base path and project name (e.g., `tekton-releases/pipeline/`).
+
+```shell
+tkn pipeline start \
+  --workspace name=shared,volumeClaimTemplateFile=workspace-template.yaml \
+  --workspace name=credentials,secret=oci-release-secret \
+  -p package="${TEKTON_PACKAGE}" \
+  -p git-revision="$TEKTON_RELEASE_GIT_SHA" \
+  -p release-tag="${TEKTON_VERSION}" \
+  -p previous-release-tag="${TEKTON_OLD_VERSION}" \
+  -p release-name="${TEKTON_RELEASE_NAME}" \
+  -p bucket="tekton-releases/pipeline/" \
+  -p rekor-uuid="$REKOR_UUID" \
+  release-draft-oci
+```
+
+
