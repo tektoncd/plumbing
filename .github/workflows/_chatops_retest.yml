@@ -18,7 +18,7 @@
 # jobs:
 #   retest:
 #     name: Rerun Failed Actions
-#     uses: tektoncd/plumbing/.github/actions/_chatops_retest.yml@main
+#     uses: tektoncd/plumbing/.github/workflows/_chatops_retest.yml@main
 
 name: Rerun Failed Actions
 on:
