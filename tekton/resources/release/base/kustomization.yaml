@@ -2,6 +2,6 @@ resources:
 - prerelease_checks.yaml
 - github_release.yaml
 - github_release_oci.yaml
-- prerelease-checks-oci.yaml
+- prerelease_checks_oci.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
