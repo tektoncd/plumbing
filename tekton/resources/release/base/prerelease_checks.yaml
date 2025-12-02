@@ -73,5 +73,5 @@ spec:
     - name: success-confirmation
       image: alpine
       script: |
-        echo "All pre-release checks for ${PACKAGE} @ ${VERSION_TAG} where successful"
+        echo "All pre-release checks for ${PACKAGE} @ ${VERSION_TAG} were successful"
         echo "Happy releasing 😺"
