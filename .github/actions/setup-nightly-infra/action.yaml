@@ -6,7 +6,7 @@
 # 3. Tekton CLI (tkn) for pipeline management
 # 4. Git resolver configuration for GitHub repository access
 # 5. Required secrets and service accounts for:
-#    - GCS bucket access (release artifacts)
+#    - OCI bucket access (release artifacts)
 #    - GHCR authentication (container registry)
 #    - Git operations (repository cloning)
 # 6. RBAC configuration for pipeline execution
@@ -31,9 +31,22 @@ inputs:
   ghcr_token:
     description: 'GHCR token'
     required: true
-  gcs_service_account_key:
-    description: 'GCS service account key'
+  oci_api_key:
+    description: 'OCI API key'
     required: true
+  oci_fingerprint:
+    description: 'OCI fingerprint'
+    required: true
+  oci_tenancy_ocid:
+    description: 'OCI tenancy OCID'
+    required: true
+  oci_user_ocid:
+    description: 'OCI user OCID'
+    required: true
+  oci_region:
+    description: 'OCI region'
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -93,16 +106,30 @@ runs:
     # Step 5: Create required secrets and PVC template
     - name: Create secrets, service account and PVC template
       env:
-        GCS_SERVICE_ACCOUNT_KEY: ${{ inputs.gcs_service_account_key }}
         GHCR_TOKEN: ${{ inputs.ghcr_token }}
         IMAGE_REGISTRY_USER: ${{ inputs.image_registry_user }}
+        OCI_API_KEY: ${{ inputs.oci_api_key }}
+        OCI_FINGERPRINT: ${{ inputs.oci_fingerprint }}
+        OCI_TENANCY_OCID: ${{ inputs.oci_tenancy_ocid }}
+        OCI_USER_OCID: ${{ inputs.oci_user_ocid }}
+        OCI_REGION: ${{ inputs.oci_region }}
       run: |
         set -euo pipefail
-        trap 'rm -f /tmp/gcs-key.json /tmp/credentials' EXIT
-        # Create GCS service account secret for release bucket access
-        echo "${GCS_SERVICE_ACCOUNT_KEY}" > /tmp/gcs-key.json
+        trap 'rm -f /tmp/oci_* /tmp/credentials' EXIT
+
+        # Create Oracle Cloud credentials secret for release bucket access
+        echo "${OCI_API_KEY}" > /tmp/oci_api_key.pem
+        echo "${OCI_FINGERPRINT}" > /tmp/oci_fingerprint
+        echo "${OCI_TENANCY_OCID}" > /tmp/oci_tenancy_ocid
+        echo "${OCI_USER_OCID}" > /tmp/oci_user_ocid
+        echo "${OCI_REGION}" > /tmp/oci_region
         kubectl create secret generic release-secret \
-          --from-file=release.json=/tmp/gcs-key.json
+          --from-file=oci_api_key.pem=/tmp/oci_api_key.pem \
+          --from-file=fingerprint=/tmp/oci_fingerprint \
+          --from-file=tenancy_ocid=/tmp/oci_tenancy_ocid \
+          --from-file=user_ocid=/tmp/oci_user_ocid \
+          --from-file=region=/tmp/oci_region
+
         # Create Kubernetes secret for GHCR authentication
         echo "${GHCR_TOKEN}" > /tmp/credentials
         kubectl create secret generic ghcr-creds \
