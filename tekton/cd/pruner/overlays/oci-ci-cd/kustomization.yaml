@@ -4,3 +4,4 @@ resources:
   - https://infra.tekton.dev/tekton-releases/pruner/previous/v0.3.3/release.yaml
 patches:
   - path: pruner-config.yaml
+  - path: deployment-resources-patch.yaml
