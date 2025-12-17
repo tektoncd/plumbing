@@ -112,10 +112,11 @@ jobs:
           TARGET_BRANCH: ${{ matrix.branch }}
           PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
         run: |
-          set +e  # Don't exit on error, we want to capture it
+          set -e  # Exit on error to catch unexpected failures
 
           # Capture all output
           OUTPUT_FILE=$(mktemp)
+          ERROR=""
 
           {
             echo "🤖 Starting cherry-pick process..."
@@ -125,7 +126,11 @@ jobs:
 
             # Get PR information
             echo "Fetching PR #$PR_NUMBER information..."
-            PR_DATA=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json state,mergeCommit,mergedAt,title,body)
+            PR_DATA=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json state,mergeCommit,mergedAt,title,body) || ERROR="Failed to fetch PR information"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              exit 1
+            fi
 
             # Check if PR is merged
             PR_STATE=$(echo "$PR_DATA" | jq -r '.state')
@@ -143,8 +148,9 @@ jobs:
 
             # Fetch target branch
             echo "Fetching target branch: $TARGET_BRANCH..."
-            if ! git fetch origin "$TARGET_BRANCH" 2>&1; then
-              echo "❌ ERROR: Target branch '$TARGET_BRANCH' does not exist or cannot be fetched."
+            git fetch origin "$TARGET_BRANCH" 2>&1 || ERROR="Target branch '$TARGET_BRANCH' does not exist or cannot be fetched"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
               exit 1
             fi
 
@@ -156,7 +162,11 @@ jobs:
               --head "$CHERRY_PICK_BRANCH" \
               --base "$TARGET_BRANCH" \
               --json number,url \
-              --jq '.[0] | select(. != null)')
+              --jq '.[0] | select(. != null)') || ERROR="Failed to check for existing PR"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              exit 1
+            fi
 
             if [ -n "$EXISTING_PR" ]; then
               PR_URL=$(echo "$EXISTING_PR" | jq -r '.url')
@@ -170,19 +180,28 @@ jobs:
 
             # Create new branch for cherry-pick
             echo "Creating cherry-pick branch: $CHERRY_PICK_BRANCH..."
-            git checkout -b "$CHERRY_PICK_BRANCH" "origin/$TARGET_BRANCH"
+            git checkout -b "$CHERRY_PICK_BRANCH" "origin/$TARGET_BRANCH" || ERROR="Failed to create cherry-pick branch"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              exit 1
+            fi
 
             # Perform cherry-pick
             echo "Cherry-picking commit $MERGE_COMMIT..."
-            if ! git cherry-pick -m 1 "$MERGE_COMMIT" 2>&1; then
-              echo "❌ ERROR: Cherry-pick failed due to conflicts or other errors."
+            git cherry-pick -m 1 "$MERGE_COMMIT" 2>&1 || ERROR="Cherry-pick failed due to conflicts or other errors"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
               git cherry-pick --abort 2>/dev/null || true
               exit 1
             fi
 
             # Push the new branch
             echo "Pushing cherry-pick branch..."
-            git push origin "$CHERRY_PICK_BRANCH"
+            git push origin "$CHERRY_PICK_BRANCH" 2>&1 || ERROR="Failed to push branch '$CHERRY_PICK_BRANCH' to remote. This might be due to missing 'workflow' scope on the token when modifying workflow files"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              exit 1
+            fi
 
             # Create pull request
             echo "Creating pull request..."
@@ -197,12 +216,21 @@ jobs:
             } > /tmp/pr-body.md
 
             # Create pull request with original PR content
-            gh pr create \
+            PR_URL=$(gh pr create \
               --repo ${{ github.repository }} \
               --base "$TARGET_BRANCH" \
               --head "$CHERRY_PICK_BRANCH" \
               --title "[cherry-pick: $TARGET_BRANCH] $PR_TITLE" \
-              --body-file /tmp/pr-body.md
+              --body-file /tmp/pr-body.md 2>&1) || ERROR="Failed to create pull request"
+
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              echo "Output: $PR_URL"
+              exit 1
+            fi
+
+            echo "Created PR: $PR_URL"
+            echo "new_pr_url=$PR_URL" >> $GITHUB_OUTPUT
 
             echo "✅ Cherry-pick completed successfully!"
           } 2>&1 | tee "$OUTPUT_FILE"
@@ -243,6 +271,8 @@ jobs:
             ✅ **Cherry-pick to `${{ matrix.branch }}` successful!**
 
             A new pull request has been created to cherry-pick this change to `${{ matrix.branch }}`.
+
+            **PR**: ${{ steps.cherry-pick.outputs.new_pr_url }}
 
             Please review and merge the cherry-pick PR.
 
