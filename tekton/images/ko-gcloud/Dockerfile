@@ -14,7 +14,7 @@
 
 ARG GO_VERSION=1.24.1
 FROM ghcr.io/ko-build/ko:v0.18.1@sha256:1ef724b37bccd9dcb153c8a8205ada3149644fd5b37398e808c85d5b84de7ca1 AS ko
-FROM golang:1.25.5-alpine@sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9 AS build
+FROM golang:1.25.5-alpine@sha256:ac09a5f469f307e5da71e766b0bd59c9c49ea460a528cc3e6686513d64a6f1fb AS build
 LABEL description="Build container"
 
 RUN apk update && apk add --no-cache alpine-sdk ca-certificates
@@ -31,7 +31,7 @@ RUN go install sigs.k8s.io/kustomize/kustomize/v5@v5.4.2
 # Install yq for YAML parsing
 RUN apk add --no-cache yq
 
-FROM google/cloud-sdk:549.0.1-alpine@sha256:be9d25dcf3d6d790a490a7dad8fd13b554eac45210286142d6e5a69ee4b73bc7
+FROM google/cloud-sdk:550.0.0-alpine@sha256:5e608bda5a78b4b795e541ea9fea62513c4feb23192b45f305754f968faf5813
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
