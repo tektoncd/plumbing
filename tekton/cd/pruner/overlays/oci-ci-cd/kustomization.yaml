@@ -1,7 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - https://infra.tekton.dev/tekton-releases/pruner/previous/v0.3.3/release.yaml
+  - https://infra.tekton.dev/tekton-releases/pruner/previous/v0.3.4/release.yaml
 patches:
   - path: pruner-config.yaml
-  - path: deployment-resources-patch.yaml
