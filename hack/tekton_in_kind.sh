@@ -16,6 +16,13 @@ declare TEKTON_PIPELINE_VERSION TEKTON_TRIGGERS_VERSION TEKTON_DASHBOARD_VERSION
 # - If a kind cluster named "tekton" already exists this will fail
 # - Local access to the dashboard requires port 9097 to be locally available
 
+# if script is ran with source, i.e. `. tekton_in_kind.sh` - a warning is displayed 
+# and suggested to run it in it's own shell process. 
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  echo "This script is not intended to be sourced. Please run it as ./tekton_in_kind.sh"
+  return 1
+fi
+
 get_latest_release() {
   curl --silent "https://api.github.com/repos/$1/releases/latest" | # Get latest release from GitHub api
     grep '"tag_name":' |                                            # Get tag line
