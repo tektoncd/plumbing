@@ -29,6 +29,7 @@ resources:
 - notification-triggers.yaml
 - ci-triggers.yaml
 - peribolos-template.yaml
+- terraform-branch-protection-template.yaml
 - install-tekton-release.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
