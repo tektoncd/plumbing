@@ -1,0 +1,143 @@
+# .github/workflows/sync-project-status.yml
+#
+# Syncs issues with 'area/roadmap' label from ALL tektoncd repos
+# to the Community Roadmap project (#34).
+#
+# Runs every 6 hours to keep the community roadmap up to date.
+# Status is managed by the project's built-in workflows.
+
+name: Sync Community Roadmap
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - log actions without making changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  # Community Roadmap v2 (#34)
+  COMMUNITY_PROJECT_ID: "PVT_kwDOAtZbZc4BNrgF"
+
+jobs:
+  sync-community-roadmap:
+    name: Sync Community Roadmap
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
+          private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
+          owner: tektoncd
+
+      - name: Search for roadmap issues across all repos
+        id: search_issues
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          echo "::group::Searching for roadmap issues"
+          echo "Searching for issues with 'area/roadmap' label in tektoncd org..."
+
+          # Search for all open issues with area/roadmap label
+          gh api -X GET /search/issues \
+            -f q='org:tektoncd label:area/roadmap is:open' \
+            -f per_page=100 \
+            --paginate \
+            --jq '.items' | jq -s 'add // []' > /tmp/roadmap_issues.json
+
+          ISSUE_COUNT=$(jq 'length' /tmp/roadmap_issues.json)
+          echo "Found $ISSUE_COUNT open issues with area/roadmap label"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+          # Show breakdown by repo
+          echo "::group::Issues by repository"
+          jq -r '.[].repository_url' /tmp/roadmap_issues.json | \
+            sed 's|https://api.github.com/repos/||' | \
+            sort | uniq -c | sort -rn
+          echo "::endgroup::"
+
+      - name: Sync issues to Community Roadmap
+        id: sync_issues
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          echo "::group::Sync configuration"
+          echo "Roadmap issues found: ${{ steps.search_issues.outputs.issue_count }}"
+          echo "Dry run: $DRY_RUN"
+          echo "::endgroup::"
+
+          SYNCED=0
+          ERRORS=0
+
+          echo "::group::Syncing issues to Community Roadmap"
+          # Process each roadmap issue
+          while IFS= read -r issue; do
+            ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
+            ISSUE_NODE_ID=$(echo "$issue" | jq -r '.node_id')
+            REPO_NAME=$(echo "$issue" | jq -r '.repository_url' | sed 's|https://api.github.com/repos/tektoncd/||')
+            ISSUE_TITLE=$(echo "$issue" | jq -r '.title' | head -c 50)
+
+            echo "SYNC: $REPO_NAME#$ISSUE_NUMBER - ${ISSUE_TITLE}..."
+
+            if [ "$DRY_RUN" != "true" ]; then
+              # Add to community project (idempotent - returns existing item if already present)
+              RESULT=$(gh api graphql -f query='
+                mutation($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: {
+                    projectId: $projectId
+                    contentId: $contentId
+                  }) {
+                    item { id }
+                  }
+                }' -f projectId="${{ env.COMMUNITY_PROJECT_ID }}" -f contentId="$ISSUE_NODE_ID" 2>&1)
+
+              if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
+                echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
+                ((ERRORS++))
+              else
+                ((SYNCED++))
+              fi
+
+              # Small delay to avoid rate limiting
+              sleep 0.3
+            else
+              ((SYNCED++))
+            fi
+          done < <(jq -c '.[]' /tmp/roadmap_issues.json)
+          echo "::endgroup::"
+
+          echo "::group::Results"
+          echo "Synced: $SYNCED"
+          echo "Errors: $ERRORS"
+          echo "::endgroup::"
+
+          # Set outputs for summary
+          echo "synced=$SYNCED" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      - name: Job summary
+        run: |
+          echo "## Community Roadmap Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Synced | ${{ steps.sync_issues.outputs.synced || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | ${{ steps.sync_issues.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Community Roadmap](https://github.com/orgs/tektoncd/projects/34)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Community Roadmap sync failed. Check the logs for details."
