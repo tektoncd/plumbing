@@ -186,14 +186,30 @@ jobs:
               exit 1
             fi
 
-            # Perform cherry-pick
-            echo "Cherry-picking commit $MERGE_COMMIT..."
-            git cherry-pick -m 1 "$MERGE_COMMIT" 2>&1 || ERROR="Cherry-pick failed due to conflicts or other errors"
+            # Get all commits from the PR (for rebase-merged PRs, we need all commits, not just the merge commit)
+            echo "Fetching commits from PR #$PR_NUMBER..."
+            COMMITS=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json commits --jq '.commits[].oid') || ERROR="Failed to fetch PR commits"
             if [[ "$ERROR" != "" ]]; then
               echo "❌ ERROR: $ERROR"
-              git cherry-pick --abort 2>/dev/null || true
               exit 1
             fi
+
+            COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
+            echo "Found $COMMIT_COUNT commit(s) to cherry-pick"
+
+            # Cherry-pick each commit in order
+            CURRENT=0
+            for COMMIT in $COMMITS; do
+              CURRENT=$((CURRENT + 1))
+              echo "Cherry-picking commit $CURRENT/$COMMIT_COUNT: $COMMIT..."
+              git cherry-pick "$COMMIT" 2>&1 || ERROR="Cherry-pick failed for commit $COMMIT due to conflicts or other errors"
+              if [[ "$ERROR" != "" ]]; then
+                echo "❌ ERROR: $ERROR"
+                git cherry-pick --abort 2>/dev/null || true
+                exit 1
+              fi
+            done
+            echo "Successfully cherry-picked all $COMMIT_COUNT commit(s)"
 
             # Push the new branch
             echo "Pushing cherry-pick branch..."
