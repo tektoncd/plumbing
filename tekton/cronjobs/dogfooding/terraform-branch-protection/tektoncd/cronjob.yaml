@@ -1,0 +1,58 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: terraform-branch-protection-trigger
+spec:
+  schedule: "0 0 * * *"  # Daily at midnight
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+          - name: workspace
+            emptyDir: {}
+          containers:
+          - name: trigger
+            image: curlimages/curl
+            command:
+              - /bin/sh
+            args:
+              - -ce
+              - |
+                cat <<EOF > /workspace/post-body.json
+                {
+                  "trigger-template": "terraform-branch-protection",
+                  "params": {
+                    "git": {
+                      "repository": "$GIT_REPOSITORY",
+                      "revision": "$GIT_REVISION"
+                    }
+                  }
+                }
+                EOF
+                curl -d @/workspace/post-body.json $SINK_URL
+            volumeMounts:
+            - mountPath: /workspace
+              name: workspace
+            env:
+              - name: SINK_URL
+                value: "http://el-tekton-cd.default.svc.cluster.local:8080"
+              - name: GIT_REPOSITORY
+                value: "https://github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "main"
+          restartPolicy: Never

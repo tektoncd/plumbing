@@ -1,0 +1,70 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: terraform-branch-protection
+spec:
+  params:
+  - name: terraformDir
+    default: terraform/branch-protection
+    description: Path to terraform configuration directory
+  - name: command
+    default: apply
+    description: Terraform command to run (plan, apply, destroy)
+  workspaces:
+  - name: source
+    description: The plumbing repository workspace
+  - name: github-oauth
+    mountPath: /etc/github
+    description: GitHub token for terraform provider authentication
+  steps:
+  - name: terraform-init
+    image: hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      terraform init
+  - name: terraform-validate
+    image: hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      terraform validate
+  - name: terraform-plan
+    image: hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      export GITHUB_TOKEN=$(cat /etc/github/bot-token)
+      terraform plan -out=tfplan
+  - name: terraform-execute
+    image: hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      export GITHUB_TOKEN=$(cat /etc/github/bot-token)
+
+      if [ "$(params.command)" = "apply" ]; then
+        terraform apply -auto-approve tfplan
+      elif [ "$(params.command)" = "plan" ]; then
+        echo "Plan only mode - skipping apply"
+      else
+        echo "Unknown command: $(params.command)"
+        exit 1
+      fi

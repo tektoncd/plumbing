@@ -132,6 +132,20 @@ spec:
         - ref: deploy-source-git
       template:
         ref: peribolos
+    - name: terraform-branch-protection
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'terraform-branch-protection'
+      bindings:
+        - ref: deploy-source-git
+      template:
+        ref: terraform-branch-protection
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: EventListener

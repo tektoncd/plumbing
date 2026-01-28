@@ -18,4 +18,4 @@
 **/source.tar.gz
 tekton/**/.ko.yaml
 tekton/**/vendor/
-.release-*/
+.release-*/.claude/settings.local.json
