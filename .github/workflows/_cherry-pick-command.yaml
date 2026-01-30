@@ -168,19 +168,25 @@ jobs:
               exit 1
             fi
 
+            UPDATE_EXISTING=false
             if [ -n "$EXISTING_PR" ]; then
               PR_URL=$(echo "$EXISTING_PR" | jq -r '.url')
               PR_NUM=$(echo "$EXISTING_PR" | jq -r '.number')
-              echo "ℹ️  Cherry-pick PR already exists: #$PR_NUM"
+              echo "ℹ️  Cherry-pick PR already exists: #$PR_NUM - will update it"
               echo "URL: $PR_URL"
               echo "existing_pr_url=$PR_URL" >> $GITHUB_OUTPUT
               echo "existing_pr_number=$PR_NUM" >> $GITHUB_OUTPUT
-              exit 0
+              UPDATE_EXISTING=true
             fi
 
-            # Create new branch for cherry-pick
-            echo "Creating cherry-pick branch: $CHERRY_PICK_BRANCH..."
-            git checkout -b "$CHERRY_PICK_BRANCH" "origin/$TARGET_BRANCH" || ERROR="Failed to create cherry-pick branch"
+            # Create or reset branch for cherry-pick
+            if [ "$UPDATE_EXISTING" = "true" ]; then
+              echo "Resetting cherry-pick branch: $CHERRY_PICK_BRANCH to origin/$TARGET_BRANCH..."
+              git checkout -B "$CHERRY_PICK_BRANCH" "origin/$TARGET_BRANCH" || ERROR="Failed to reset cherry-pick branch"
+            else
+              echo "Creating cherry-pick branch: $CHERRY_PICK_BRANCH..."
+              git checkout -b "$CHERRY_PICK_BRANCH" "origin/$TARGET_BRANCH" || ERROR="Failed to create cherry-pick branch"
+            fi
             if [[ "$ERROR" != "" ]]; then
               echo "❌ ERROR: $ERROR"
               exit 1
@@ -211,44 +217,53 @@ jobs:
             done
             echo "Successfully cherry-picked all $COMMIT_COUNT commit(s)"
 
-            # Push the new branch
-            echo "Pushing cherry-pick branch..."
-            git push origin "$CHERRY_PICK_BRANCH" 2>&1 || ERROR="Failed to push branch '$CHERRY_PICK_BRANCH' to remote. This might be due to missing 'workflow' scope on the token when modifying workflow files"
+            # Push the branch (force push if updating existing PR)
+            if [ "$UPDATE_EXISTING" = "true" ]; then
+              echo "Force pushing to update existing cherry-pick branch..."
+              git push --force origin "$CHERRY_PICK_BRANCH" 2>&1 || ERROR="Failed to force push branch '$CHERRY_PICK_BRANCH' to remote. This might be due to missing 'workflow' scope on the token when modifying workflow files"
+            else
+              echo "Pushing cherry-pick branch..."
+              git push origin "$CHERRY_PICK_BRANCH" 2>&1 || ERROR="Failed to push branch '$CHERRY_PICK_BRANCH' to remote. This might be due to missing 'workflow' scope on the token when modifying workflow files"
+            fi
             if [[ "$ERROR" != "" ]]; then
               echo "❌ ERROR: $ERROR"
               exit 1
             fi
 
-            # Create pull request
-            echo "Creating pull request..."
+            # Create pull request only if not updating existing
+            if [ "$UPDATE_EXISTING" = "true" ]; then
+              echo "✅ Updated existing cherry-pick PR: $PR_URL"
+              echo "updated_pr=true" >> $GITHUB_OUTPUT
+            else
+              echo "Creating pull request..."
 
-            # Prepare PR body file
-            {
-              echo "This is a cherry-pick of #$PR_NUMBER"
-              echo ""
-              echo "---"
-              echo ""
-              echo "$PR_BODY"
-            } > /tmp/pr-body.md
+              # Prepare PR body file
+              {
+                echo "This is a cherry-pick of #$PR_NUMBER"
+                echo ""
+                echo "---"
+                echo ""
+                echo "$PR_BODY"
+              } > /tmp/pr-body.md
 
-            # Create pull request with original PR content
-            PR_URL=$(gh pr create \
-              --repo ${{ github.repository }} \
-              --base "$TARGET_BRANCH" \
-              --head "$CHERRY_PICK_BRANCH" \
-              --title "[cherry-pick: $TARGET_BRANCH] $PR_TITLE" \
-              --body-file /tmp/pr-body.md 2>&1) || ERROR="Failed to create pull request"
+              # Create pull request with original PR content
+              PR_URL=$(gh pr create \
+                --repo ${{ github.repository }} \
+                --base "$TARGET_BRANCH" \
+                --head "$CHERRY_PICK_BRANCH" \
+                --title "[cherry-pick: $TARGET_BRANCH] $PR_TITLE" \
+                --body-file /tmp/pr-body.md 2>&1) || ERROR="Failed to create pull request"
 
-            if [[ "$ERROR" != "" ]]; then
-              echo "❌ ERROR: $ERROR"
-              echo "Output: $PR_URL"
-              exit 1
+              if [[ "$ERROR" != "" ]]; then
+                echo "❌ ERROR: $ERROR"
+                echo "Output: $PR_URL"
+                exit 1
+              fi
+
+              echo "Created PR: $PR_URL"
+              echo "new_pr_url=$PR_URL" >> $GITHUB_OUTPUT
+              echo "✅ Cherry-pick completed successfully!"
             fi
-
-            echo "Created PR: $PR_URL"
-            echo "new_pr_url=$PR_URL" >> $GITHUB_OUTPUT
-
-            echo "✅ Cherry-pick completed successfully!"
           } 2>&1 | tee "$OUTPUT_FILE"
 
           EXIT_CODE=${PIPESTATUS[0]}
@@ -262,17 +277,17 @@ jobs:
           rm -f "$OUTPUT_FILE"
           exit $EXIT_CODE
 
-      - name: Comment on existing PR
-        if: steps.cherry-pick.outcome == 'success' && steps.cherry-pick.outputs.existing_pr_url != ''
+      - name: Comment on updated PR
+        if: steps.cherry-pick.outcome == 'success' && steps.cherry-pick.outputs.updated_pr == 'true'
         uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
         with:
           token: ${{ secrets.CHATOPS_TOKEN }}
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
           body: |
-            ℹ️ **Cherry-pick to `${{ matrix.branch }}` already exists!**
+            🔄 **Cherry-pick to `${{ matrix.branch }}` updated!**
 
-            A pull request for this cherry-pick already exists: #${{ steps.cherry-pick.outputs.existing_pr_number }}
+            The existing cherry-pick PR #${{ steps.cherry-pick.outputs.existing_pr_number }} has been updated with the latest changes.
 
             **PR**: ${{ steps.cherry-pick.outputs.existing_pr_url }}
 
