@@ -1,0 +1,231 @@
+# Rebase Command Workflow
+#
+# This workflow is triggered by the /rebase slash command from the slash.yml workflow.
+# It rebases a pull request branch against its base branch and force pushes the result.
+#
+# Usage: Comment `/rebase` on a pull request
+#
+# Security Notes:
+# - Only users with "write" permission can trigger this command (enforced in slash.yml)
+# - Uses CHATOPS_TOKEN to push to branches
+# - The rebase is performed on the PR's head branch against its base branch
+#
+# To use this in a repo:
+#
+# name: Rebase Command
+# on:
+#   repository_dispatch:
+#     types: [rebase-command]
+#
+# jobs:
+#   rebase:
+#     name: Rebase PR
+#     uses: tektoncd/plumbing/.github/workflows/_rebase-command.yaml@main
+#     secrets:
+#       CHATOPS_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+
+name: Rebase Command
+
+on:
+  workflow_call:
+    secrets:
+      CHATOPS_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add reaction to trigger comment
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reactions: "+1"
+
+      - name: Validate PR state
+        id: validate
+        env:
+          GH_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+        run: |
+          # Get PR information
+          echo "Fetching PR #$PR_NUMBER information..."
+          PR_DATA=$(gh pr view $PR_NUMBER --repo ${{ github.repository }} --json state,headRefName,baseRefName,headRepository,headRepositoryOwner) || {
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=Failed to fetch PR information" >> $GITHUB_OUTPUT
+            exit 0
+          }
+
+          PR_STATE=$(echo "$PR_DATA" | jq -r '.state')
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=PR #$PR_NUMBER is not open (state: $PR_STATE). Can only rebase open PRs." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          HEAD_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
+          BASE_REF=$(echo "$PR_DATA" | jq -r '.baseRefName')
+          HEAD_REPO_OWNER=$(echo "$PR_DATA" | jq -r '.headRepositoryOwner.login')
+          HEAD_REPO_NAME=$(echo "$PR_DATA" | jq -r '.headRepository.name')
+
+          # Check if this is a fork
+          REPO_OWNER="${{ github.repository_owner }}"
+          if [ "$HEAD_REPO_OWNER" != "$REPO_OWNER" ]; then
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=Cannot rebase PRs from forks. The PR branch must be in the same repository." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
+          echo "error=false" >> $GITHUB_OUTPUT
+
+          echo "PR #$PR_NUMBER: rebasing '$HEAD_REF' onto '$BASE_REF'"
+
+      - name: Comment on validation error
+        if: steps.validate.outputs.error == 'true'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            ❌ **Rebase failed**: ${{ steps.validate.outputs.message }}
+
+      - name: Checkout repository
+        if: steps.validate.outputs.error == 'false'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          fetch-depth: 0
+          ref: ${{ steps.validate.outputs.head_ref }}
+
+      - name: Perform rebase
+        if: steps.validate.outputs.error == 'false'
+        id: rebase
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+          HEAD_REF: ${{ steps.validate.outputs.head_ref }}
+          BASE_REF: ${{ steps.validate.outputs.base_ref }}
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+        run: |
+          set -e
+
+          OUTPUT_FILE=$(mktemp)
+
+          {
+            echo "🤖 Starting rebase process..."
+
+            git config user.name "Tekton Bot"
+            git config user.email "tekton-bot@users.noreply.github.com"
+
+            # Fetch the base branch
+            echo "Fetching base branch: $BASE_REF..."
+            git fetch origin "$BASE_REF" || {
+              echo "❌ ERROR: Failed to fetch base branch '$BASE_REF'"
+              exit 1
+            }
+
+            # Get current HEAD for comparison
+            OLD_HEAD=$(git rev-parse HEAD)
+            echo "Current HEAD: $OLD_HEAD"
+
+            # Perform the rebase
+            echo "Rebasing '$HEAD_REF' onto 'origin/$BASE_REF'..."
+            if ! git rebase "origin/$BASE_REF"; then
+              echo "❌ ERROR: Rebase failed due to conflicts"
+              echo ""
+              echo "Conflicting files:"
+              git diff --name-only --diff-filter=U
+              git rebase --abort
+              exit 1
+            fi
+
+            NEW_HEAD=$(git rev-parse HEAD)
+            echo "New HEAD: $NEW_HEAD"
+
+            # Check if anything changed
+            if [ "$OLD_HEAD" = "$NEW_HEAD" ]; then
+              echo "ℹ️  Branch is already up to date with '$BASE_REF'"
+              echo "already_up_to_date=true" >> $GITHUB_OUTPUT
+            else
+              # Force push the rebased branch
+              echo "Force pushing rebased branch..."
+              git push --force-with-lease origin "$HEAD_REF" || {
+                echo "❌ ERROR: Failed to push rebased branch. Someone may have pushed new commits."
+                exit 1
+              }
+
+              COMMIT_COUNT=$(git rev-list --count "origin/$BASE_REF".."$NEW_HEAD")
+              echo "commits=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+              echo "already_up_to_date=false" >> $GITHUB_OUTPUT
+            fi
+
+            echo "✅ Rebase completed successfully!"
+          } 2>&1 | tee "$OUTPUT_FILE"
+
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          # Save output for use in comments
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "output<<$EOF" >> $GITHUB_OUTPUT
+          cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+          rm -f "$OUTPUT_FILE"
+          exit $EXIT_CODE
+
+      - name: Comment on success (up to date)
+        if: steps.validate.outputs.error == 'false' && steps.rebase.outcome == 'success' && steps.rebase.outputs.already_up_to_date == 'true'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            ℹ️ **Already up to date!**
+
+            The branch `${{ steps.validate.outputs.head_ref }}` is already up to date with `${{ steps.validate.outputs.base_ref }}`.
+
+      - name: Comment on success (rebased)
+        if: steps.validate.outputs.error == 'false' && steps.rebase.outcome == 'success' && steps.rebase.outputs.already_up_to_date == 'false'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            ✅ **Rebase successful!**
+
+            The branch `${{ steps.validate.outputs.head_ref }}` has been rebased onto `${{ steps.validate.outputs.base_ref }}` and force pushed.
+
+            **Commits**: ${{ steps.rebase.outputs.commits }} commit(s) on top of `${{ steps.validate.outputs.base_ref }}`
+
+      - name: Comment on failure
+        if: steps.validate.outputs.error == 'false' && steps.rebase.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            ❌ **Rebase failed!**
+
+            The rebase of `${{ steps.validate.outputs.head_ref }}` onto `${{ steps.validate.outputs.base_ref }}` failed.
+
+            **Output:**
+            ```
+            ${{ steps.rebase.outputs.output }}
+            ```
+
+            **Next steps:**
+            - Check the [action logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details
+            - If there are conflicts, you'll need to rebase manually and resolve them
