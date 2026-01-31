@@ -48,6 +48,11 @@ spec:
       source $(workspaces.source-code.path)/$(params.plumbing-path)/scripts/library.sh
       go build -o tkn $(params.package)/cmd/tkn
       for testsuite in clustertask eventlistener pipeline pipelinerun plugin task; do
-        header "Running Go $(params.tags) ${testsuite} tests"
-        report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path)/${testsuite}
+        if [[ -d "$(params.tests-path)/${testsuite}" ]]; then
+          header "Running Go $(params.tags) ${testsuite} tests"
+          report_go_test -v -count=1 -tags=$(params.tags) -timeout=$(params.timeout) $(params.tests-path)/${testsuite}
+        else
+          echo "Skipping Go $(params.tags) ${testsuite} tests: $(params.tests-path)/${testsuite} does not exist"
+        fi
       done
+
