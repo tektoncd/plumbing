@@ -21,7 +21,7 @@ type Push struct{}
 func (c *Push) Execute(ctx context.Context, client *github.Client, cfg *pb.Config, req *v1alpha1.InterceptorRequest) (*v1alpha1.InterceptorResponse, error) {
 	event := new(github.PushEvent)
 	if err := json.Unmarshal([]byte(req.Body), event); err != nil {
-		return nil, Errorf(codes.InvalidArgument, err.Error())
+		return nil, Errorf(codes.InvalidArgument, "%s", err.Error())
 	}
 
 	if cfg.GetPush() == nil {
