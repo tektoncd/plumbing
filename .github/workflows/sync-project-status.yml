@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         with:
           app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
           private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
