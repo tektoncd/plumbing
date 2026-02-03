@@ -12,123 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Import existing main branch protections into Terraform state
+# Import existing branch protections into Terraform state
 # These protections already exist on GitHub and need to be imported
 # so Terraform can manage them going forward.
 #
+# Uses for_each to dynamically import based on tektoncd_repos list.
 # After successful import, these blocks can be removed.
 
 import {
-  to = github_branch_protection.main["dashboard"]
-  id = "dashboard:main"
+  for_each = toset(local.tektoncd_repos)
+  to       = github_branch_protection.main[each.key]
+  id       = "${each.key}:main"
 }
 
 import {
-  to = github_branch_protection.main["pipeline"]
-  id = "pipeline:main"
-}
-
-import {
-  to = github_branch_protection.main["operator"]
-  id = "operator:main"
-}
-
-import {
-  to = github_branch_protection.main["mcp-server"]
-  id = "mcp-server:main"
-}
-
-import {
-  to = github_branch_protection.main["triggers"]
-  id = "triggers:main"
-}
-
-import {
-  to = github_branch_protection.main["cli"]
-  id = "cli:main"
-}
-
-import {
-  to = github_branch_protection.main["pruner"]
-  id = "pruner:main"
-}
-
-import {
-  to = github_branch_protection.main["chains"]
-  id = "chains:main"
-}
-
-import {
-  to = github_branch_protection.main["hub"]
-  id = "hub:main"
-}
-
-import {
-  to = github_branch_protection.main["results"]
-  id = "results:main"
-}
-
-import {
-  to = github_branch_protection.main["plumbing"]
-  id = "plumbing:main"
-}
-
-# Import existing release branch protections (release-v*)
-# These were created in the first terraform-branch-protection pipeline run.
-#
-# After successful import, these blocks can be removed.
-
-import {
-  to = github_branch_protection.releases["dashboard"]
-  id = "dashboard:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["pipeline"]
-  id = "pipeline:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["operator"]
-  id = "operator:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["mcp-server"]
-  id = "mcp-server:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["triggers"]
-  id = "triggers:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["cli"]
-  id = "cli:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["pruner"]
-  id = "pruner:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["chains"]
-  id = "chains:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["hub"]
-  id = "hub:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["results"]
-  id = "results:release-v*"
-}
-
-import {
-  to = github_branch_protection.releases["plumbing"]
-  id = "plumbing:release-v*"
+  for_each = toset(local.tektoncd_repos)
+  to       = github_branch_protection.releases[each.key]
+  id       = "${each.key}:release-v*"
 }
