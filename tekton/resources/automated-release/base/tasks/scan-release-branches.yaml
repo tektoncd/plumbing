@@ -1,0 +1,106 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: scan-release-branches
+spec:
+  description: Scans tektoncd repositories for release branches and triggers validation pipelines
+  params:
+  - name: repositories
+    description: Space-separated list of repositories to scan
+    type: string
+    default: "tektoncd/pipeline"
+  - name: eventListenerURL
+    description: EventListener URL for triggering releases
+    type: string
+    default: "http://el-tekton-releases.automated-releases.svc.cluster.local:8080"
+  - name: releaseMode
+    description: Release mode (validation-only or full-release)
+    type: string
+    default: "validation-only"
+  steps:
+  - name: scan-and-trigger
+    image: alpine/git:latest
+    script: |
+      #!/bin/sh
+      set -e
+
+      # Install curl and generate UUID capability
+      apk add --no-cache curl
+
+      REPOS="$(params.repositories)"
+      EL_URL="$(params.eventListenerURL)"
+      MODE="$(params.releaseMode)"
+
+      echo "Scanning repositories: ${REPOS}"
+      echo "EventListener URL: ${EL_URL}"
+      echo "Release mode: ${MODE}"
+      echo ""
+
+      for REPO in ${REPOS}; do
+        echo "=== Scanning ${REPO} ==="
+
+        # Get all release-vX.Y.x branches
+        git ls-remote --heads https://github.com/${REPO} 2>/dev/null | \
+          grep -E 'refs/heads/release-v[0-9]+\.[0-9]+\.x$' | \
+          while read COMMIT_SHA REF; do
+            BRANCH=$(echo ${REF} | sed 's|refs/heads/||')
+            PROJECT=$(echo ${REPO} | cut -d/ -f2)
+
+            # Extract major.minor version from branch (release-v1.10.x -> 1.10)
+            VERSION_PREFIX=$(echo ${BRANCH} | sed -E 's/release-v([0-9]+\.[0-9]+)\.x/\1/')
+
+            # Query existing tags to determine next version
+            LATEST_TAG=$(git ls-remote --tags --refs https://github.com/${REPO} 2>/dev/null | \
+              grep -E "refs/tags/v${VERSION_PREFIX}\.[0-9]+$" | \
+              sed 's|.*/v||' | \
+              sort -V | \
+              tail -1 || echo "")
+
+            if [ -z "${LATEST_TAG}" ]; then
+              NEXT_VERSION="v${VERSION_PREFIX}.0"
+            else
+              PATCH=$(echo ${LATEST_TAG} | cut -d. -f3)
+              NEXT_PATCH=$((PATCH + 1))
+              NEXT_VERSION="v${VERSION_PREFIX}.${NEXT_PATCH}"
+            fi
+
+            echo "  Branch: ${BRANCH}"
+            echo "  Commit: ${COMMIT_SHA}"
+            echo "  Next version: ${NEXT_VERSION}"
+
+            # Generate UUID for build
+            BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
+
+            # Trigger EventListener
+            PAYLOAD="{\"buildUUID\":\"${BUILD_UUID}\",\"params\":{\"release\":{\"gitRepository\":\"https://github.com/${REPO}\",\"releaseBranch\":\"${BRANCH}\",\"projectName\":\"${PROJECT}\",\"repositoryFullName\":\"${REPO}\",\"releaseMode\":\"${MODE}\",\"releaseType\":\"bugfix\",\"releaseVersion\":\"${NEXT_VERSION}\",\"commitSha\":\"${COMMIT_SHA}\"}}}"
+
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -H "Content-Type: application/json" \
+              -d "${PAYLOAD}" \
+              "${EL_URL}" 2>/dev/null || echo "000")
+
+            HTTP_CODE=$(echo "${RESPONSE}" | tail -1)
+
+            if [ "${HTTP_CODE}" = "202" ] || [ "${HTTP_CODE}" = "201" ]; then
+              echo "  ✓ Triggered (Build ID: ${BUILD_UUID})"
+            else
+              echo "  ✗ Failed (HTTP ${HTTP_CODE})"
+            fi
+            echo ""
+          done
+      done
+
+      echo "Scan complete"
