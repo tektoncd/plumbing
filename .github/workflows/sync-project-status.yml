@@ -103,15 +103,15 @@ jobs:
 
               if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
                 echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
-                ((ERRORS++))
+                ((++ERRORS))
               else
-                ((SYNCED++))
+                ((++SYNCED))
               fi
 
               # Small delay to avoid rate limiting
               sleep 0.3
             else
-              ((SYNCED++))
+              ((++SYNCED))
             fi
           done < <(jq -c '.[]' /tmp/roadmap_issues.json)
           echo "::endgroup::"
