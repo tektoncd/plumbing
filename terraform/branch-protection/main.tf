@@ -27,15 +27,17 @@ resource "github_branch_protection" "main" {
   require_conversation_resolution = var.require_conversation_resolution
 
   required_status_checks {
-    strict   = true
+    strict   = false # Match existing: branch doesn't need to be up-to-date before merge
     contexts = local.merged_status_checks[each.key]
   }
 
-  required_pull_request_reviews {
-    dismiss_stale_reviews           = var.dismiss_stale_reviews
-    require_code_owner_reviews      = var.require_code_owner_reviews
-    required_approving_review_count = var.required_approving_review_count
-  }
+  # Note: PR reviews not currently required on main branches
+  # Can be enabled later by uncommenting:
+  # required_pull_request_reviews {
+  #   dismiss_stale_reviews           = var.dismiss_stale_reviews
+  #   require_code_owner_reviews      = var.require_code_owner_reviews
+  #   required_approving_review_count = var.required_approving_review_count
+  # }
 }
 
 # Release branch protection (release-v*) for all tektoncd repositories
