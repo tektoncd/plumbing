@@ -29,8 +29,10 @@ locals {
     "plumbing",
   ]
 
-  # Base status checks required for all repos (EasyCLA)
-  base_status_checks = ["EasyCLA"]
+  # Base status checks required for all repos
+  # - tide: Prow's merge automation bot
+  # - EasyCLA: CLA verification
+  base_status_checks = ["tide", "EasyCLA"]
 
   # Repository-specific status checks from prow config
   repo_specific_checks = {
