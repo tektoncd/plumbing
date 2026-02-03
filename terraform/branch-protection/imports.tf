@@ -72,3 +72,63 @@ import {
   to = github_branch_protection.main["plumbing"]
   id = "plumbing:main"
 }
+
+# Import existing release branch protections (release-v*)
+# These were created in the first terraform-branch-protection pipeline run.
+#
+# After successful import, these blocks can be removed.
+
+import {
+  to = github_branch_protection.releases["dashboard"]
+  id = "dashboard:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["pipeline"]
+  id = "pipeline:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["operator"]
+  id = "operator:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["mcp-server"]
+  id = "mcp-server:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["triggers"]
+  id = "triggers:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["cli"]
+  id = "cli:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["pruner"]
+  id = "pruner:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["chains"]
+  id = "chains:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["hub"]
+  id = "hub:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["results"]
+  id = "results:release-v*"
+}
+
+import {
+  to = github_branch_protection.releases["plumbing"]
+  id = "plumbing:release-v*"
+}
