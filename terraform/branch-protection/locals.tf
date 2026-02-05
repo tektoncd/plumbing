@@ -50,21 +50,6 @@ locals {
       "lint",
       "Check generated code",
       "Multi-arch build",
-      "e2e-tests / e2e tests (k8s-oldest, alpha)",
-      "e2e-tests / e2e tests (k8s-oldest, beta)",
-      "e2e-tests / e2e tests (k8s-oldest, stable)",
-      "e2e-tests / e2e tests (k8s-latest-minus-three, alpha)",
-      "e2e-tests / e2e tests (k8s-latest-minus-three, beta)",
-      "e2e-tests / e2e tests (k8s-latest-minus-three, stable)",
-      "e2e-tests / e2e tests (k8s-latest-minus-two, alpha)",
-      "e2e-tests / e2e tests (k8s-latest-minus-two, beta)",
-      "e2e-tests / e2e tests (k8s-latest-minus-two, stable)",
-      "e2e-tests / e2e tests (k8s-latest-minus-one, alpha)",
-      "e2e-tests / e2e tests (k8s-latest-minus-one, beta)",
-      "e2e-tests / e2e tests (k8s-latest-minus-one, stable)",
-      "e2e-tests / e2e tests (k8s-latest, alpha)",
-      "e2e-tests / e2e tests (k8s-latest, beta)",
-      "e2e-tests / e2e tests (k8s-latest, stable)",
     ]
     operator = [
       "build",
@@ -72,8 +57,6 @@ locals {
       "lint",
       "Check generated code",
       "Multi-arch build",
-      "e2e-tests / e2e tests (k8s-oldest)",
-      "e2e-tests / e2e tests (k8s-plus-one)",
     ]
     "mcp-server" = [
       "build",
