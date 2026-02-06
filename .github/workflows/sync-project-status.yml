@@ -27,6 +27,8 @@ env:
 jobs:
   sync-community-roadmap:
     name: Sync Community Roadmap
+    # Only run in the upstream repo, not in forks (secrets won't be available)
+    if: github.repository == 'tektoncd/plumbing'
     runs-on: ubuntu-latest
 
     steps:
