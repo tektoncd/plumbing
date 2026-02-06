@@ -50,6 +50,7 @@ locals {
       "lint",
       "Check generated code",
       "Multi-arch build",
+      "e2e tests",
     ]
     operator = [
       "build",
