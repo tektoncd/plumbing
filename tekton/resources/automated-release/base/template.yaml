@@ -1,0 +1,131 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: release-automation
+spec:
+  params:
+  - name: buildID
+    description: Build UUID for tracking
+  - name: gitRepository
+    description: Git repository URL
+  - name: gitRevision
+    description: Git revision (branch name)
+  - name: releaseBranch
+    description: Release branch name (e.g., release-v0.50.x)
+  - name: projectName
+    description: Project name (e.g., pipeline, triggers)
+  - name: repositoryFullName
+    description: Full repository name (e.g., tektoncd/pipeline)
+  - name: releaseMode
+    description: Release mode (full-release or validation-only)
+    default: full-release
+  - name: releaseType
+    description: Release type (feature or bugfix)
+    default: ""
+  - name: releaseVersion
+    description: Release version number (e.g., v1.10.0)
+    default: ""
+  - name: triggerSource
+    description: Trigger source (webhook or cron)
+  - name: afterCommitSha
+    description: Commit SHA that triggered the release
+  resourcetemplates:
+  # First: Create or update release tracking issue
+  - apiVersion: tekton.dev/v1
+    kind: TaskRun
+    metadata:
+      generateName: create-release-issue-
+      labels:
+        tekton.dev/kind: release-automation
+        release.tekton.dev/project: $(tt.params.projectName)
+        release.tekton.dev/branch: $(tt.params.releaseBranch)
+        release.tekton.dev/trigger: $(tt.params.triggerSource)
+    spec:
+      taskRef:
+        name: manage-release-tracking-issue
+      params:
+      - name: repositoryFullName
+        value: $(tt.params.repositoryFullName)
+      - name: releaseBranch
+        value: $(tt.params.releaseBranch)
+      - name: buildID
+        value: $(tt.params.buildID)
+      - name: releaseMode
+        value: $(tt.params.releaseMode)
+      - name: releaseType
+        value: $(tt.params.releaseType)
+      - name: releaseVersion
+        value: $(tt.params.releaseVersion)
+      - name: commitSha
+        value: $(tt.params.afterCommitSha)
+      workspaces:
+      - name: github-secret
+        secret:
+          secretName: github-token
+  # Second: Run release pipeline
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      generateName: $(tt.params.projectName)-release-
+      labels:
+        tekton.dev/kind: release
+        release.tekton.dev/project: $(tt.params.projectName)
+        release.tekton.dev/branch: $(tt.params.releaseBranch)
+        release.tekton.dev/mode: $(tt.params.releaseMode)
+        release.tekton.dev/trigger: $(tt.params.triggerSource)
+    spec:
+      pipelineRef:
+        name: release
+      params:
+      - name: package
+        value: $(tt.params.gitRepository)
+      - name: gitRevision
+        value: $(tt.params.gitRevision)
+      - name: releaseMode
+        value: $(tt.params.releaseMode)
+      - name: versionTag
+        value: $(tt.params.releaseBranch)
+      - name: imageRegistry
+        value: gcr.io
+      - name: imageRegistryPath
+        value: tekton-releases
+      - name: imageRegistryUser
+        value: _json_key
+      - name: imageRegistryRegions
+        value: "us eu asia"
+      - name: releaseBucket
+        value: gs://tekton-releases/$(tt.params.projectName)
+      - name: serviceAccountPath
+        value: release.json
+      - name: runTests
+        value: "true"
+      timeouts:
+        pipeline: 2h30m0s
+      workspaces:
+      - name: workarea
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+      - name: release-secret
+        secret:
+          secretName: release-secret
+      - name: release-images-secret
+        secret:
+          secretName: release-images-secret
