@@ -26,7 +26,7 @@ type PullRequest struct{}
 func (c *PullRequest) Execute(ctx context.Context, client *github.Client, cfg *pb.Config, req *v1alpha1.InterceptorRequest) (*v1alpha1.InterceptorResponse, error) {
 	event := new(github.PullRequestEvent)
 	if err := json.Unmarshal([]byte(req.Body), event); err != nil {
-		return nil, Errorf(codes.InvalidArgument, err.Error())
+		return nil, Error(codes.InvalidArgument, err.Error())
 	}
 
 	if cfg.GetPullRequest() == nil {
