@@ -208,7 +208,7 @@ spec:
             - name: GIT_REVISION
               value: main
             - name: TARGET_IMAGE
-              value: ghcr.io/tektoncd/plumbing/myimage:latest
+              value: ghcr.io/tektoncd/plumbing/myimage:docker.io/latest
             - name: CONTEXT_PATH
               value: tekton/images/myimage
 ```

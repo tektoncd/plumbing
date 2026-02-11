@@ -50,7 +50,7 @@ spec:
               - name: GIT_REVISION
                 value: "main"
           - name: uuid
-            image: python:3.6-alpine3.9
+            image: docker.io/library/python:3.6-alpine3.9
             command:
             - /bin/sh
             args:

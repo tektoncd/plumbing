@@ -59,7 +59,7 @@ spec:
           exit 1
         fi
     - name: check-github-release
-      image: python:3.6-alpine3.9
+      image: docker.io/library/python:3.6-alpine3.9
       script: |
         echo "Checking GitHub release"
         PACKAGE=$(echo ${PACKAGE} | cut -d/ -f2,3)
@@ -71,7 +71,7 @@ spec:
         echo "Release ${VERSION_TAG} already exists for ${PACKAGE}"
         exit 1
     - name: success-confirmation
-      image: alpine
+      image: docker.io/library/alpine
       script: |
         echo "All pre-release checks for ${PACKAGE} @ ${VERSION_TAG} were successful"
         echo "Happy releasing 😺"

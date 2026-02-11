@@ -134,7 +134,7 @@ spec:
       - name: pr
       steps:
       - name: setup-comment
-        image: python:3-alpine
+        image: docker.io/library/python:3-alpine
         env:
         - name: PASSED_OR_FAILED
           value: $(params.passedOrFailed)

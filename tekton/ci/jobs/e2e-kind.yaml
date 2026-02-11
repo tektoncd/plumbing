@@ -37,7 +37,7 @@ spec:
     - name: source
   steps:
     - name: make-artifacts-folder
-      image: alpine:3.15.3
+      image: docker.io/library/alpine:3.15.3
       env:
         - name: ARTIFACTS_FOLDER
           value: "$(workspaces.source.path)/artifacts"
@@ -60,7 +60,7 @@ spec:
           name: cgroup
       args: ["$(params.arguments[*])"]
   sidecars:
-    - image: docker:20.10.11-dind
+    - image: docker.io/library/docker:20.10.11-dind
       name: dind-sidecar
       securityContext:
         privileged: true

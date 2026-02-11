@@ -70,7 +70,7 @@ spec:
       description: The result of the check, "passed" or "failed"
   steps:
     - name: check-name
-      image: alpine
+      image: docker.io/library/alpine
       env:
       - name: GITHUB_COMMAND
         value: $(params.gitHubCommand)

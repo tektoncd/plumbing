@@ -117,7 +117,7 @@ spec:
           env:
           - name: DOCKER_TLS_CERTDIR
             value: /certs
-          image: docker:dind
+          image: docker.io/library/docker:dind
           name: server-docker
           readinessProbe:
             exec:
