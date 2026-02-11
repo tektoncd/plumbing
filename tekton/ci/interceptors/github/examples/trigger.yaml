@@ -50,7 +50,7 @@ spec:
                 taskSpec:
                   steps:
                     - name: build-sources
-                      image: ubuntu
+                      image: docker.io/library/ubuntu
                       command:
                         - /bin/bash
                       args: ['-c', 'echo $(tt.params.owner) $(tt.params.repo) $(tt.params.clone_url) $(tt.params.pr) $(tt.params.sha) !!']

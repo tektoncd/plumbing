@@ -185,7 +185,7 @@ spec:
         # || true in case no PRs have "release-note-none"
         grep "release-note-none" $HOME/pr.csv > $HOME/pr-no-notes.csv || true
     - name: body
-      image: busybox
+      image: docker.io/library/busybox
       script: |
         #!/bin/sh
         set -e
@@ -366,7 +366,7 @@ spec:
             description: Workspace to verify
         steps:
           - name: check-files
-            image: alpine:3.20
+            image: docker.io/library/alpine:3.20
             script: |
               #!/bin/sh
               set -e

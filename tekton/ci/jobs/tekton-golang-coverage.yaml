@@ -150,7 +150,7 @@ spec:
             description: Name of the repo.
         steps:
           - name: split-name
-            image: ubuntu
+            image: docker.io/library/ubuntu
             script: |
               printf '$(params.package)' | awk -F/ '{printf($1)}' | tee /tekton/results/repoOwner
               printf '$(params.package)' | awk -F/ '{printf($2)}' | tee /tekton/results/repoName

@@ -17,11 +17,11 @@ spec:
         value: $(params.body)
   steps:
     - name: install-pyyaml
-      image: python:3-alpine
+      image: docker.io/library/python:3-alpine
       script: |
         pip install pyyaml --user
     - name: check-github-tasks-completed
-      image: python:3-alpine
+      image: docker.io/library/python:3-alpine
       script: |
         #!/usr/bin/env python
         import sys

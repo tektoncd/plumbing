@@ -51,7 +51,7 @@ spec:
               - name: GIT_REPO
                 value: "github.com/tektoncd/pipeline"
           - name: uuid
-            image: python:3.6-alpine3.9
+            image: docker.io/library/python:3.6-alpine3.9
             command:
             - /bin/sh
             args:

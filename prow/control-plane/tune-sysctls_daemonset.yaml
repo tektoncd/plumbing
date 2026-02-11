@@ -33,7 +33,7 @@ spec:
                 sysctl -w fs.inotify.max_user_instances=512
                 sleep 10
               done
-          image: alpine:3.6
+          image: docker.io/library/alpine:3.6
           imagePullPolicy: IfNotPresent
           resources: {}
           securityContext:
