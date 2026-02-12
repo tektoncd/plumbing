@@ -89,7 +89,7 @@ spec:
     spec:
       containers:
       - name: trigger
-        image: curlimages/curl
+        image: docker.io/curlimages/curl
         imagePullPolicy: Always
         volumeMounts:
         - mountPath: /workspace

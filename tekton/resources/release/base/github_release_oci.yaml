@@ -162,7 +162,7 @@ spec:
         echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
         cat $HOME/pr.csv
     - name: release-notes
-      image: stedolan/jq
+      image: docker.io/stedolan/jq
       script: |
         #!/bin/bash
         set -e

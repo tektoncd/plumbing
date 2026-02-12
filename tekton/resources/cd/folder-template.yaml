@@ -94,7 +94,7 @@ spec:
       chmod a+r ${RESOURCES_PATH}/DEPLOYABLE_ALL.yaml
 
   - name: split-yaml-file
-    image: mikefarah/yq
+    image: docker.io/mikefarah/yq
     script: |
       #!/bin/sh
       set -ex

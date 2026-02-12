@@ -35,7 +35,7 @@ spec:
       default: create
   steps:
     - name: ssh
-      image: kroniak/ssh-client
+      image: docker.io/kroniak/ssh-client
       env:
         - name: REMOTE_HOST
           value: $(params.remote-host)
