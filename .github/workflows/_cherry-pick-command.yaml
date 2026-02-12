@@ -203,6 +203,15 @@ jobs:
             COMMIT_COUNT=$(echo "$COMMITS" | wc -l)
             echo "Found $COMMIT_COUNT commit(s) to cherry-pick"
 
+            # Fetch the PR commits - they may be from a fork and not available locally
+            # GitHub makes PR commits available via refs/pull/<number>/head
+            echo "Fetching PR ref to make fork commits available locally..."
+            git fetch origin "pull/$PR_NUMBER/head" 2>&1 || ERROR="Failed to fetch PR commits from refs/pull/$PR_NUMBER/head"
+            if [[ "$ERROR" != "" ]]; then
+              echo "❌ ERROR: $ERROR"
+              exit 1
+            fi
+
             # Cherry-pick each commit in order
             CURRENT=0
             for COMMIT in $COMMITS; do
