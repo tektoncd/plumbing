@@ -26,7 +26,7 @@ spec:
             emptyDir: {}
           initContainers:
           - name: git
-            image: alpine/git
+            image: docker.io/alpine/git
             command:
             - /bin/sh
             args:
@@ -65,7 +65,7 @@ spec:
               name: workspace
           containers:
           - name: trigger
-            image: curlimages/curl
+            image: docker.io/curlimages/curl
             command:
             - /bin/sh
             args:

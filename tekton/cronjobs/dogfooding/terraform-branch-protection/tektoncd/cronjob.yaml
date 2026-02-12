@@ -27,7 +27,7 @@ spec:
             emptyDir: {}
           containers:
           - name: trigger
-            image: curlimages/curl
+            image: docker.io/curlimages/curl
             command:
               - /bin/sh
             args:

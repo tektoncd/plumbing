@@ -20,7 +20,7 @@ spec:
     workingDir: $(workspaces.input.path)
     args: ['table', '--teps-folder', '$(workspaces.input.path)/$(params.teps-folder)']
   - name: teps-table
-    image: alpine/git:latest
+    image: docker.io/alpine/git:latest
     workingDir: $(workspaces.input.path)
     args: ['diff', '--exit-code']
 ---
