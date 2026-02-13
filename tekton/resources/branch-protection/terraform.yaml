@@ -31,21 +31,21 @@ spec:
     description: GitHub token for terraform provider authentication
   steps:
   - name: terraform-init
-    image: hashicorp/terraform:1.7
+    image: docker.io/hashicorp/terraform:1.7
     workingDir: $(workspaces.source.path)/$(params.terraformDir)
     script: |
       #!/bin/sh
       set -ex
       terraform init
   - name: terraform-validate
-    image: hashicorp/terraform:1.7
+    image: docker.io/hashicorp/terraform:1.7
     workingDir: $(workspaces.source.path)/$(params.terraformDir)
     script: |
       #!/bin/sh
       set -ex
       terraform validate
   - name: terraform-plan
-    image: hashicorp/terraform:1.7
+    image: docker.io/hashicorp/terraform:1.7
     workingDir: $(workspaces.source.path)/$(params.terraformDir)
     script: |
       #!/bin/sh
@@ -53,7 +53,7 @@ spec:
       export GITHUB_TOKEN=$(cat /etc/github/bot-token)
       terraform plan -out=tfplan
   - name: terraform-execute
-    image: hashicorp/terraform:1.7
+    image: docker.io/hashicorp/terraform:1.7
     workingDir: $(workspaces.source.path)/$(params.terraformDir)
     script: |
       #!/bin/sh
