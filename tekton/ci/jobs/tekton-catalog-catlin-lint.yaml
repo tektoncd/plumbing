@@ -21,7 +21,7 @@ spec:
       default: git
   steps:
     - name: find-changed-tasks
-      image: docker.io/library/alpine/git:v2.26.2@sha256:23618034b0be9205d9cc0846eb711b12ba4c9b468efdd8a59aac1d7b1a23363f
+      image: docker.io/alpine/git:2.52.0@sha256:3b7890cb947afd3f71adab55aa6b549ad0f8ddc4b9ed28b027563d73d49d8e11
       workingDir: $(workspaces.source.path)
       env:
       - name: GIT_CLONE_DEPTH
