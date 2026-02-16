@@ -45,12 +45,7 @@ locals {
       "Unit tests",
     ]
     pipeline = [
-      "build",
-      "test",
-      "lint",
-      "Check generated code",
-      "Multi-arch build",
-      "e2e tests",
+      "CI summary",
     ]
     operator = [
       "build",

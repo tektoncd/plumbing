@@ -19,11 +19,11 @@ resource "github_branch_protection" "main" {
   repository_id = each.key
   pattern       = "main"
 
-  enforce_admins                   = var.enforce_admins
-  require_signed_commits           = var.require_signed_commits
-  required_linear_history          = var.required_linear_history
-  allows_deletions                 = var.allow_deletions
-  allows_force_pushes              = var.allow_force_pushes
+  enforce_admins                  = var.enforce_admins
+  require_signed_commits          = var.require_signed_commits
+  required_linear_history         = var.required_linear_history
+  allows_deletions                = var.allow_deletions
+  allows_force_pushes             = var.allow_force_pushes
   require_conversation_resolution = var.require_conversation_resolution
 
   required_status_checks {
@@ -57,11 +57,11 @@ resource "github_branch_protection" "releases" {
 
   required_status_checks {
     strict = true
-    # Use subset of checks for release branches (build + test minimum)
+    # Use subset of checks for release branches (build + test minimum, or unified CI summary)
     contexts = concat(
       local.base_status_checks,
       [for check in lookup(local.repo_specific_checks, each.key, []) :
-        check if can(regex("^(build|test|lint)$", check))
+        check if can(regex("^(build|test|lint|CI summary)$", check))
       ]
     )
   }
