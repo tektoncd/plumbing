@@ -24,7 +24,6 @@ locals {
     "cli",
     "pruner",
     "chains",
-    "hub",
     "results",
     "plumbing",
   ]

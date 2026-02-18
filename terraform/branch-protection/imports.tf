@@ -30,3 +30,21 @@ import {
   to       = github_branch_protection.releases[each.key]
   id       = "${each.key}:release-v*"
 }
+
+# hub repository was archived — remove from Terraform state
+# without attempting to destroy the resources (API calls would fail on archived repos)
+removed {
+  from = github_branch_protection.main["hub"]
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+removed {
+  from = github_branch_protection.releases["hub"]
+
+  lifecycle {
+    destroy = false
+  }
+}
