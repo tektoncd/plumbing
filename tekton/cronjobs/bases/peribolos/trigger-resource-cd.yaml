@@ -19,6 +19,7 @@ spec:
   schedule: "0 12 * * *"  # Daily at 12 pm
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 300
       template:
         spec:
           volumes:
