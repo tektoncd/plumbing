@@ -26,6 +26,12 @@ sinker:
 
 tide:
   sync_period: 2m
+  context_options:
+    # Derive required/optional contexts from GitHub branch protection
+    # rules (managed via Terraform in terraform/branch-protection/).
+    # This allows conditional/skipped GitHub Actions jobs to not block
+    # Tide from merging PRs.
+    from-branch-protection: true
   queries:
   - repos:
     - tektoncd-catalog/golang
