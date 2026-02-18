@@ -19,6 +19,7 @@ spec:
   schedule: "12 * * * *"  # Houly at *:12
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 300
       template:
         spec:
           volumes:

@@ -1,4 +1,5 @@
 resources:
+- build-id-ci-nightly
 - dashboard-nightly
 - triggers-nightly
 - add-pr-body-ci-nightly
