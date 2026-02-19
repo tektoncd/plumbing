@@ -10,5 +10,6 @@ resources:
 - nightly-release
 - nightly-tests
 - branch-protection
+- automated-release
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization

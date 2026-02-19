@@ -1,0 +1,141 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: manage-release-tracking-issue
+spec:
+  description: Create or update a GitHub issue to track automated release activities
+  params:
+  - name: repositoryFullName
+    description: "Full repository name (e.g., tektoncd/pipeline)"
+    type: string
+  - name: releaseBranch
+    description: "Release branch name (e.g., release-v0.50.x)"
+    type: string
+  - name: buildID
+    description: "Build UUID for tracking"
+    type: string
+  - name: releaseVersion
+    description: "Release version number (e.g., v1.10.0)"
+    type: string
+    default: ""
+  - name: commitSha
+    description: "Commit SHA being released"
+    type: string
+  workspaces:
+  - name: github-secret
+    description: GitHub token for API access
+  steps:
+  - name: check-or-create-issue
+    image: docker.io/alpine:3.21
+    script: |
+      #!/bin/sh
+      set -e
+
+      apk add --no-cache github-cli > /dev/null 2>&1
+
+      export GH_TOKEN=$(cat $(workspaces.github-secret.path)/GITHUB_TOKEN)
+
+      REPO="$(params.repositoryFullName)"
+      BRANCH="$(params.releaseBranch)"
+      BUILD_ID="$(params.buildID)"
+      VERSION="$(params.releaseVersion)"
+      COMMIT="$(params.commitSha)"
+
+      # Determine issue title and search term
+      if [ -n "${VERSION}" ]; then
+        ISSUE_TITLE="[Automated Release] ${VERSION}"
+        SEARCH_TERM="${VERSION}"
+        RELEASE_ID="${VERSION}"
+      else
+        ISSUE_TITLE="[Automated Release] ${BRANCH}"
+        SEARCH_TERM="${BRANCH}"
+        RELEASE_ID="${BRANCH}"
+      fi
+
+      echo "Managing release tracking issue for ${REPO}/${RELEASE_ID}"
+
+      # Search for existing open issue for this release
+      ISSUE_NUMBER=$(gh issue list \
+        --repo "${REPO}" \
+        --label "area/release" \
+        --state open \
+        --search "in:title [Automated Release] ${SEARCH_TERM}" \
+        --json number \
+        --jq '.[0].number // empty')
+
+      if [ -z "$ISSUE_NUMBER" ]; then
+        echo "Creating new release tracking issue..."
+
+        # Create issue from template using printf
+        TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+        # Build status lines
+        STATUS_VERSION=""
+        if [ -n "${VERSION}" ]; then
+          STATUS_VERSION="- **Version**: ${VERSION}"
+        fi
+        STATUS_BRANCH="- **Branch**: ${BRANCH}"
+        STATUS_COMMIT="- **Commit**: ${COMMIT}"
+        STATUS_BUILD="- **Build ID**: ${BUILD_ID}"
+        STATUS_TIME="- **Triggered**: ${TIMESTAMP}"
+
+        BODY=$(printf '%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n%s\n\n%s\n\n%s\n\n%s\n%s\n%s\n%s\n%s\n\n%s\n\n%s\n\n%s' \
+          "# Automated Release Tracking: ${RELEASE_ID}" \
+          "This issue tracks automated release activities for the \`${RELEASE_ID}\` release." \
+          "## Current Status" \
+          "${STATUS_VERSION}" \
+          "${STATUS_BRANCH}" \
+          "${STATUS_COMMIT}" \
+          "${STATUS_BUILD}" \
+          "${STATUS_TIME}" \
+          "## Release Commands" \
+          "You can control the release process using these slash commands:" \
+          "- \`/release-status\` - Check current release pipeline status" \
+          "- \`/release-cancel\` - Cancel the current release" \
+          "- \`/release-restart\` - Restart the release pipeline" \
+          "- \`/release-full\` - Trigger a full release (build, test, publish)" \
+          "- \`/release-validate\` - Run validation checks only" \
+          "**Note**: These commands require write access to the repository." \
+          "## Activity Log" \
+          "- Build ${BUILD_ID} started at ${TIMESTAMP}")
+
+        ISSUE_URL=$(gh issue create \
+          --repo "${REPO}" \
+          --title "${ISSUE_TITLE}" \
+          --label "area/release" \
+          --body "${BODY}")
+        ISSUE_NUMBER=$(echo "${ISSUE_URL}" | grep -oE '[0-9]+$')
+
+        echo "✓ Created issue #${ISSUE_NUMBER}"
+      else
+        echo "Found existing issue #${ISSUE_NUMBER}, adding update comment..."
+
+        # Append update to existing issue
+        TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        COMMENT=$(printf '%s\n%s\n%s\n%s' \
+          "**Update**: New release triggered" \
+          "- **Commit**: ${COMMIT}" \
+          "- **Build ID**: ${BUILD_ID}" \
+          "- **Time**: ${TIMESTAMP}")
+
+        gh issue comment "${ISSUE_NUMBER}" \
+          --repo "${REPO}" \
+          --body "${COMMENT}"
+
+        echo "✓ Updated issue #${ISSUE_NUMBER}"
+      fi
+
+      echo "Issue tracking: https://github.com/${REPO}/issues/${ISSUE_NUMBER}"

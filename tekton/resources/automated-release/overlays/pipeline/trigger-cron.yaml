@@ -1,0 +1,40 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Trigger for tektoncd/pipeline cron-based releases.
+# Fires when the scan-release-branches task detects new commits
+# on pipeline release branches.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: pipeline-release-cron
+  labels:
+    release.tekton.dev/project: pipeline
+spec:
+  interceptors:
+    - name: "Filter pipeline cron triggers"
+      ref:
+        name: "cel"
+        kind: ClusterInterceptor
+      params:
+        - name: "filter"
+          value: >-
+            'buildUUID' in body &&
+            'params' in body &&
+            'release' in body.params &&
+            body.params.release.projectName == 'pipeline'
+  bindings:
+    - ref: release-branch-cron
+  template:
+    ref: pipeline-release-automation

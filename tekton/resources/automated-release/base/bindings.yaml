@@ -1,0 +1,79 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: release-branch-webhook
+spec:
+  params:
+  - name: buildID
+    value: $(extensions.build-id.id)
+  - name: gitRepository
+    value: $(body.repository.html_url)
+  - name: gitRevision
+    value: $(body.after)
+  - name: releaseBranch
+    value: $(extensions.release_branch)
+  - name: projectName
+    value: $(body.repository.name)
+  - name: repositoryFullName
+    value: $(body.repository.full_name)
+  - name: triggerSource
+    value: $(extensions.trigger_source)
+  - name: afterCommitSha
+    value: $(body.after)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: release-branch-cron
+spec:
+  params:
+  - name: buildID
+    value: $(body.buildUUID)
+  - name: gitRepository
+    value: $(body.params.release.gitRepository)
+  - name: gitRevision
+    value: $(body.params.release.releaseBranch)
+  - name: releaseBranch
+    value: $(body.params.release.releaseBranch)
+  - name: projectName
+    value: $(body.params.release.projectName)
+  - name: repositoryFullName
+    value: $(body.params.release.repositoryFullName)
+  - name: releaseVersion
+    value: $(body.params.release.releaseVersion)
+  - name: triggerSource
+    value: 'cron'
+  - name: afterCommitSha
+    value: $(body.params.release.commitSha)
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: release-chatops-command
+spec:
+  params:
+  - name: command
+    value: $(extensions.command)
+  - name: issueNumber
+    value: $(extensions.issue_number)
+  - name: repositoryFullName
+    value: $(extensions.repository_full_name)
+  - name: commentAuthor
+    value: $(extensions.comment_author)
+  - name: commentBody
+    value: $(body.comment.body)
+  - name: issueTitle
+    value: $(body.issue.title)
