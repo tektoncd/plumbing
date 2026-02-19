@@ -48,6 +48,10 @@ spec:
                   value: "${EVENTLISTENER_URL}"
                 - name: minVersion
                   value: "${MIN_VERSION}"
+                workspaces:
+                - name: github-secret
+                  secret:
+                    secretName: github-token
               EOF
             env:
             - name: REPOSITORIES
