@@ -101,7 +101,7 @@ if echo "$CHANGED" | grep -qE "^(\.github/workflows/ci\.yaml|tekton/images/gener
 fi
 
 # Filter to only images with changes
-CHANGED_DIRS=$(echo "$CHANGED" | grep "^tekton/images/" | cut -d/ -f3 | sort -u)
+CHANGED_DIRS=$(echo "$CHANGED" | { grep "^tekton/images/" || true; } | cut -d/ -f3 | sort -u)
 if [[ -n "$CHANGED_DIRS" ]]; then
   FILTER=$(echo "$CHANGED_DIRS" | jq -R . | jq -sc '.')
   FILTERED=$(echo "$ALL_IMAGES" | jq -c --argjson dirs "$FILTER" \
