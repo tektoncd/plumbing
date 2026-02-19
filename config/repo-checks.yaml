@@ -46,7 +46,6 @@ repos:
     - "E2E tests (k8s-plus-one, read-only)"
     - "E2E tests (k8s-plus-one, read-write)"
     - "Unit tests"
-  hub: []
   mcp-server:
     - "build"
     - "test"
