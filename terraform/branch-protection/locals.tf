@@ -12,72 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Repository list from prow config
+# Single source of truth: config/repo-checks.yaml
+# Shared with Prow Tide context_options (see hack/generate-tide-contexts.py)
 locals {
-  # Core Tekton repositories
-  tektoncd_repos = [
-    "dashboard",
-    "pipeline",
-    "operator",
-    "mcp-server",
-    "triggers",
-    "cli",
-    "pruner",
-    "chains",
-    "results",
-    "plumbing",
-  ]
+  repo_checks = yamldecode(file("${path.module}/../../config/repo-checks.yaml"))
+
+  # All repositories listed in the shared config
+  tektoncd_repos = keys(local.repo_checks.repos)
 
   # Base status checks required for all repos
   # - tide: Prow's merge automation bot
   # - EasyCLA: CLA verification
-  base_status_checks = ["tide", "EasyCLA"]
+  base_status_checks = local.repo_checks.base_checks
 
-  # Repository-specific status checks from prow config
-  repo_specific_checks = {
-    dashboard = [
-      "Build tests",
-      "E2E tests (k8s-oldest, read-only)",
-      "E2E tests (k8s-oldest, read-write)",
-      "E2E tests (k8s-plus-one, read-only)",
-      "E2E tests (k8s-plus-one, read-write)",
-      "Unit tests",
-    ]
-    pipeline = [
-      "CI summary",
-    ]
-    operator = [
-      "build",
-      "test",
-      "lint",
-      "Check generated code",
-      "Multi-arch build",
-    ]
-    "mcp-server" = [
-      "build",
-      "test",
-      "lint",
-    ]
-    triggers = [
-      "lint",
-      "Tekton Triggers CI",
-    ]
-    cli = [
-      "build",
-      "test",
-      "lint",
-      "Check generated code",
-      "Multi-arch build",
-      "e2e-tests / e2e tests (k8s-oldest)",
-      "e2e-tests / e2e tests (k8s-plus-one)",
-    ]
-    pruner = [
-      "golangci-lint / lint (pull_request)",
-      "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)",
-      "Pruner kind E2E Tests / k8s (v1.32.x) / e2e test (pull_request)",
-      "Pruner kind E2E Tests / pipelines-lts (v1.0.0) / e2e test (pull_request)",
-    ]
-  }
+  # Repository-specific status checks
+  repo_specific_checks = local.repo_checks.repos
 
   # Merge base checks with repo-specific checks
   merged_status_checks = {

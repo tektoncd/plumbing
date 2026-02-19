@@ -26,12 +26,59 @@ sinker:
 
 tide:
   sync_period: 2m
+  # BEGIN GENERATED context_options — do not edit manually
+  # Allow conditional/skipped GitHub Actions jobs to not block Tide
+  # from merging PRs. Only the contexts listed in required-contexts
+  # are required; all others are treated as optional.
+  # Source: config/repo-checks.yaml
   context_options:
-    # Derive required/optional contexts from GitHub branch protection
-    # rules (managed via Terraform in terraform/branch-protection/).
-    # This allows conditional/skipped GitHub Actions jobs to not block
-    # Tide from merging PRs.
-    from-branch-protection: true
+    skip-unknown-contexts: true
+    orgs:
+      tektoncd:
+        repos:
+          cli:
+            required-contexts:
+            - "build"
+            - "test"
+            - "lint"
+            - "Check generated code"
+            - "Multi-arch build"
+            - "e2e-tests / e2e tests (k8s-oldest)"
+            - "e2e-tests / e2e tests (k8s-plus-one)"
+          dashboard:
+            required-contexts:
+            - "Build tests"
+            - "E2E tests (k8s-oldest, read-only)"
+            - "E2E tests (k8s-oldest, read-write)"
+            - "E2E tests (k8s-plus-one, read-only)"
+            - "E2E tests (k8s-plus-one, read-write)"
+            - "Unit tests"
+          mcp-server:
+            required-contexts:
+            - "build"
+            - "test"
+            - "lint"
+          operator:
+            required-contexts:
+            - "build"
+            - "test"
+            - "lint"
+            - "Check generated code"
+            - "Multi-arch build"
+          pipeline:
+            required-contexts:
+            - "CI summary"
+          pruner:
+            required-contexts:
+            - "golangci-lint / lint (pull_request)"
+            - "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)"
+            - "Pruner kind E2E Tests / k8s (v1.32.x) / e2e test (pull_request)"
+            - "Pruner kind E2E Tests / pipelines-lts (v1.0.0) / e2e test (pull_request)"
+          triggers:
+            required-contexts:
+            - "lint"
+            - "Tekton Triggers CI"
+  # END GENERATED context_options
   queries:
   - repos:
     - tektoncd-catalog/golang

@@ -15,6 +15,14 @@ permissions:
   checks: write # Used to annotate code in the PR
 
 jobs:
+  verify-tide-contexts:
+    name: Verify Tide context_options
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+      - run: make verify-tide-contexts
+
   build:
     name: build-lint-and-test
     runs-on: ubuntu-latest
