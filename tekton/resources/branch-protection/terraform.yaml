@@ -36,7 +36,9 @@ spec:
     script: |
       #!/bin/sh
       set -ex
-      terraform init
+      # -input=false prevents interactive prompts in CI
+      # -migrate-state handles backend transitions (no-op when backend is unchanged)
+      terraform init -input=false -migrate-state
   - name: terraform-validate
     image: docker.io/hashicorp/terraform:1.7
     workingDir: $(workspaces.source.path)/$(params.terraformDir)

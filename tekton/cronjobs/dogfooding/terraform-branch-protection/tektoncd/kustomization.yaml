@@ -16,3 +16,4 @@ kind: Kustomization
 namespace: default
 resources:
 - cronjob.yaml
+- rbac.yaml

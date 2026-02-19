@@ -15,6 +15,16 @@
 terraform {
   required_version = ">= 1.5"
 
+  # Store state in a Kubernetes Secret so it persists across ephemeral
+  # Tekton TaskRun pods. Without this, every run would start with empty
+  # state, import all resources, and destroy+recreate them — leaving
+  # repos unprotected during the ~3 minute window.
+  backend "kubernetes" {
+    secret_suffix     = "branch-protection"
+    namespace         = "default"
+    in_cluster_config = true
+  }
+
   required_providers {
     github = {
       source  = "integrations/github"
