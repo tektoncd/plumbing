@@ -1,11 +1,11 @@
 - op: add
   path: /spec/resourcetemplates/0/spec/params/0
-  value: 
+  value:
     name: checkName
     value: pull-catalog-catlin-lint
 - op: add
   path: /spec/resourcetemplates/0/spec/params/0
-  value: 
+  value:
     name: versioning
     value: directory
 - op: add

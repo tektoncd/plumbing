@@ -27,7 +27,7 @@ spec:
           params:
             - name: "filter"
               value: >-
-                (body.repository.full_name.startsWith('tektoncd/') || 
+                (body.repository.full_name.startsWith('tektoncd/') ||
                 body.repository.full_name.startsWith('tektoncd-catalog/')) &&
                 body.action in ['opened', 'synchronize', 'reopened']
             - name: "overlays"
@@ -66,7 +66,7 @@ spec:
           params:
             - name: "filter"
               value: >-
-                (body.repository.full_name.startsWith('tektoncd/') || 
+                (body.repository.full_name.startsWith('tektoncd/') ||
                 body.repository.full_name.startsWith('tektoncd-catalog/')) &&
                 body.action == 'created' &&
                 'pull_request' in body.issue &&

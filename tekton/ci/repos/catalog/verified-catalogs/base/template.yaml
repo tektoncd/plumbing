@@ -1,11 +1,11 @@
 - op: add
   path: /spec/resourcetemplates/0/spec/params/0
-  value: 
+  value:
     name: checkName
     value: pull-tekton-catalog-build-tests
 - op: add
   path: /spec/resourcetemplates/0/spec/params/0
-  value: 
+  value:
     name: versioning
     value: git
 - op: add

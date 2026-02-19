@@ -242,6 +242,8 @@ deck:
         - ^artifacts/filtered\.cov$
       optional_files:
         - ^artifacts/filtered\.html$
+    - lens:
+        name: podinfo
       required_files:
         - ^podinfo\.json$
       optional_files:

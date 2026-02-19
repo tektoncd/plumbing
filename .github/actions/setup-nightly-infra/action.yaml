@@ -69,7 +69,7 @@ runs:
       uses: tektoncd/actions/setup-tektoncd-cli@dd92514472167b361de1c95fd31fc2ef83c282ec
       with:
         version: v0.42.0
-        
+
     # Step 4: Configure Git Resolver for GitHub access
     - name: Configure Tekton Git Resolver
       env:
@@ -205,7 +205,7 @@ runs:
         set -euo pipefail
         # Install Tekton Chains from latest release
         kubectl apply -f https://infra.tekton.dev/tekton-releases/chains/previous/v0.25.1/release.yaml -n tekton-chains
-        
+
         # Configure Chains for Sigstore integration with Fulcio and Rekor
         kubectl patch configmap chains-config -n tekton-chains --type merge -p '
         {
@@ -223,15 +223,15 @@ runs:
         }'
         # Restart controller to apply new configuration
         kubectl rollout restart deployment tekton-chains-controller -n tekton-chains
-        
+
         echo "Waiting for Tekton Chains controller to be ready..."
         kubectl wait --for=condition=ready pod -l app=tekton-chains-controller -n tekton-chains --timeout=300s
         echo "Tekton Chains is ready!"
       shell: bash
-    
+
     # Step 8: Set up GitHub OIDC token for Sigstore authentication.
     # The token has expiry of 5 mins hence it is continuously refreshed in the background.
-    - name: Retrieve and refresh GitHub OIDC token in cluster 
+    - name: Retrieve and refresh GitHub OIDC token in cluster
       shell: bash
       run: |
         set -euo pipefail

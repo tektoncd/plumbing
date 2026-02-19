@@ -370,16 +370,16 @@ spec:
             script: |
               #!/bin/sh
               set -e
-              
+
               RELEASE_PATH="$(workspaces.shared.path)/release"
-              
+
               echo "Checking for downloaded files in: ${RELEASE_PATH}"
-              
+
               # Count files in the release directory
               FILE_COUNT=$(find "${RELEASE_PATH}" -type f | wc -l)
-              
+
               echo "Found ${FILE_COUNT} files"
-              
+
               if [ "${FILE_COUNT}" -eq 0 ]; then
                 echo "ERROR: No files were downloaded from the bucket!"
                 echo "Contents of workspace:"
@@ -387,7 +387,7 @@ spec:
                 ls -la "${RELEASE_PATH}" || true
                 exit 1
               fi
-              
+
               echo "SUCCESS: Downloaded ${FILE_COUNT} files"
               echo "Files:"
               find "${RELEASE_PATH}" -type f
