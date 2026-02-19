@@ -58,7 +58,8 @@ repos:
     - "Multi-arch build"
   pipeline:
     - "CI summary"
-  plumbing: []
+  plumbing:
+    - "CI summary"
   pruner:
     - "golangci-lint / lint (pull_request)"
     - "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)"
