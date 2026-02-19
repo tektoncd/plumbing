@@ -45,6 +45,9 @@ spec:
   - name: runTests
     description: If set to something other than "true", skip the build and test tasks
     default: "true"
+  - name: releaseMode
+    description: Release mode - "full-release" for complete release or "validation-only" for pre-release checks
+    default: "full-release"
   workspaces:
     - name: workarea
       description: The workspace where the repo will be cloned.
@@ -124,6 +127,8 @@ spec:
           subPath: git/$(params.subfolder)
     - name: publish-images
       runAfter: [build, unit-tests]
+      when:
+        - cel: "'$(params.releaseMode)' == 'full-release'"
       taskRef:
         resolver: git
         params:

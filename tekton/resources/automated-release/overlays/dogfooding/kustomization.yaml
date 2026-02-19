@@ -1,0 +1,24 @@
+# Dogfooding environment overlay for automated-release system.
+# Deploy to Oracle dogfooding cluster.
+# Includes the base (shared resources) and all per-project overlays.
+namespace: automated-releases
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../../base
+# Per-project release triggers and templates
+- ../pipeline
+# Future:
+# - ../triggers
+# - ../chains
+# - ../operator
+# - ../dashboard
+
+labels:
+- pairs:
+    environment: dogfooding
+
+commonAnnotations:
+  managed-by: Tekton
