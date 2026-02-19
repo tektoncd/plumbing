@@ -1,0 +1,71 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Single source of truth for required status checks per repository.
+#
+# Consumed by:
+# - Terraform branch protection (terraform/branch-protection/)
+# - Prow Tide context_options (prow/control-plane/config.yaml)
+#
+# "base_checks" are required for ALL repos in branch protection only.
+# Tide does not need to require "tide" or "EasyCLA" on itself.
+#
+# "repos" lists per-repo CI checks that must pass before merge.
+# Repos with empty lists still get branch protection with base_checks
+# but have no repo-specific required contexts for Tide.
+
+base_checks:
+  - "tide"
+  - "EasyCLA"
+
+repos:
+  chains: []
+  cli:
+    - "build"
+    - "test"
+    - "lint"
+    - "Check generated code"
+    - "Multi-arch build"
+    - "e2e-tests / e2e tests (k8s-oldest)"
+    - "e2e-tests / e2e tests (k8s-plus-one)"
+  dashboard:
+    - "Build tests"
+    - "E2E tests (k8s-oldest, read-only)"
+    - "E2E tests (k8s-oldest, read-write)"
+    - "E2E tests (k8s-plus-one, read-only)"
+    - "E2E tests (k8s-plus-one, read-write)"
+    - "Unit tests"
+  hub: []
+  mcp-server:
+    - "build"
+    - "test"
+    - "lint"
+  operator:
+    - "build"
+    - "test"
+    - "lint"
+    - "Check generated code"
+    - "Multi-arch build"
+  pipeline:
+    - "CI summary"
+  plumbing: []
+  pruner:
+    - "golangci-lint / lint (pull_request)"
+    - "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)"
+    - "Pruner kind E2E Tests / k8s (v1.32.x) / e2e test (pull_request)"
+    - "Pruner kind E2E Tests / pipelines-lts (v1.0.0) / e2e test (pull_request)"
+  results: []
+  triggers:
+    - "lint"
+    - "Tekton Triggers CI"

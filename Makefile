@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+.PHONY: generate-tide-contexts verify-tide-contexts
+
+generate-tide-contexts: ## Generate Tide context_options from config/repo-checks.yaml
+	uv run hack/generate-tide-contexts.py
+
+verify-tide-contexts: ## Verify Tide context_options is in sync with config/repo-checks.yaml
+	uv run hack/generate-tide-contexts.py --verify
+
 CONTAINER_RUNTIME=docker
 REPO =
 IMAGES = $(sort $(patsubst tekton/images/%/,%,$(dir $(wildcard tekton/images/*/))))
