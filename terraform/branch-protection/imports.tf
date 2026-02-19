@@ -31,20 +31,8 @@ import {
   id       = "${each.key}:release-v*"
 }
 
-# hub repository was archived — remove from Terraform state
-# without attempting to destroy the resources (API calls would fail on archived repos)
-removed {
-  from = github_branch_protection.main["hub"]
-
-  lifecycle {
-    destroy = false
-  }
-}
-
-removed {
-  from = github_branch_protection.releases["hub"]
-
-  lifecycle {
-    destroy = false
-  }
-}
+# hub repository was archived — its branch protection was removed from
+# config/repo-checks.yaml. After the first apply, remove the stale state
+# entries manually:
+#   terraform state rm 'github_branch_protection.main["hub"]'
+#   terraform state rm 'github_branch_protection.releases["hub"]'
