@@ -36,6 +36,10 @@ spec:
       process all branches.
     type: string
     default: "0.0"
+  workspaces:
+  - name: github-secret
+    description: Secret containing GITHUB_TOKEN for querying latest release
+    optional: true
   steps:
   - name: scan-and-trigger
     image: docker.io/alpine/git:latest
@@ -43,12 +47,17 @@ spec:
       #!/bin/sh
       set -e
 
-      # Install curl
-      apk add --no-cache curl
+      # Install curl and GitHub CLI
+      apk add --no-cache curl github-cli > /dev/null 2>&1
 
       REPOS="$(params.repositories)"
       EL_URL="$(params.eventListenerURL)"
       MIN_VERSION="$(params.minVersion)"
+
+      # Read GitHub token from workspace if available
+      if [ -f $(workspaces.github-secret.path)/GITHUB_TOKEN ]; then
+        export GH_TOKEN=$(cat $(workspaces.github-secret.path)/GITHUB_TOKEN)
+      fi
 
       # Convert major.minor to a comparable integer (major * 1000 + minor)
       version_to_int() {
@@ -65,6 +74,17 @@ spec:
         echo "=== Scanning ${REPO} ==="
 
         PROJECT=$(echo ${REPO} | cut -d/ -f2)
+
+        # Determine the latest release version to set releaseAsLatest correctly.
+        # Patch releases on the latest branch should update "latest" in the bucket.
+        LATEST_RELEASE_MINOR=""
+        if [ -n "${GH_TOKEN:-}" ]; then
+          LATEST_RELEASE_TAG=$(gh release list --repo "${REPO}" --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
+          if [ -n "${LATEST_RELEASE_TAG}" ]; then
+            LATEST_RELEASE_MINOR=$(echo "${LATEST_RELEASE_TAG}" | sed -E 's/^v([0-9]+\.[0-9]+)\..*/\1/')
+            echo "  Latest release: ${LATEST_RELEASE_TAG} (minor: ${LATEST_RELEASE_MINOR})"
+          fi
+        fi
 
         # Fetch all refs (branches + tags) in one call
         ALL_REFS=$(git ls-remote --heads --tags --refs https://github.com/${REPO} 2>/dev/null)
@@ -114,6 +134,13 @@ spec:
 
             echo "  ${BRANCH}: new commits since v${LATEST_TAG} → ${NEXT_VERSION}"
 
+            # Determine if this branch is the latest release branch
+            RELEASE_AS_LATEST="false"
+            if [ "${VERSION_PREFIX}" = "${LATEST_RELEASE_MINOR}" ]; then
+              RELEASE_AS_LATEST="true"
+              echo "    → will update latest (matches current latest release)"
+            fi
+
             # Generate UUID for build
             BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
 
@@ -128,6 +155,7 @@ spec:
             "projectName": "${PROJECT}",
             "repositoryFullName": "${REPO}",
             "releaseVersion": "${NEXT_VERSION}",
+            "releaseAsLatest": "${RELEASE_AS_LATEST}",
             "commitSha": "${BRANCH_SHA}"
           }
         }

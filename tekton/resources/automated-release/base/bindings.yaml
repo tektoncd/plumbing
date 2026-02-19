@@ -54,6 +54,8 @@ spec:
     value: $(body.params.release.repositoryFullName)
   - name: releaseVersion
     value: $(body.params.release.releaseVersion)
+  - name: releaseAsLatest
+    value: $(body.params.release.releaseAsLatest)
   - name: triggerSource
     value: 'cron'
   - name: afterCommitSha

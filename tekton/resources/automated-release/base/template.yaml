@@ -41,6 +41,9 @@ spec:
     description: Trigger source (webhook or cron)
   - name: afterCommitSha
     description: Commit SHA that triggered the release
+  - name: releaseAsLatest
+    description: Whether to publish this release as latest
+    default: "false"
   resourcetemplates:
   - apiVersion: tekton.dev/v1
     kind: TaskRun
