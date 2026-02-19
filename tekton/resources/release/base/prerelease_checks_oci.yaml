@@ -118,7 +118,7 @@ spec:
           rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
           exit 1
         fi
-        
+
         # Clean up credentials
         rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
         echo "Release file does not exist. Check passed."

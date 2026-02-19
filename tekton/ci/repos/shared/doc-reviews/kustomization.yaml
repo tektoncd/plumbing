@@ -1,4 +1,3 @@
-
 patches:
 - path: template.yaml
   target:

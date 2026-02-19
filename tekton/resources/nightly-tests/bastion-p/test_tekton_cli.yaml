@@ -55,4 +55,3 @@ spec:
           echo "Skipping Go $(params.tags) ${testsuite} tests: $(params.tests-path)/${testsuite} does not exist"
         fi
       done
-

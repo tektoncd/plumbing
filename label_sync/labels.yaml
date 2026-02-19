@@ -272,9 +272,6 @@ default:
     - color: "e11d21"
       description: Indicates that a PR should not merge because it is a work in progress.
       name: do-not-merge/work-in-progress
-      target: prs
-      prowPlugin: wip
-      addedBy: prow
       target: both
       prowPlugin: label
       addedBy: anyone

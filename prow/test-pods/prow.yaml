@@ -56,7 +56,7 @@ metadata:
   name: prow-controller-manager
 rules:
 - apiGroups:
-   - ""
+    - ""
   resources:
   - pods
   verbs:

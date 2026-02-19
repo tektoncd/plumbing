@@ -112,7 +112,7 @@ external_plugins:
   - name: cherrypicker
     events:
       - issue_comment
-      - pull_request      
+      - pull_request
   tektoncd/dashboard:
   - name: cherrypicker
     events:
