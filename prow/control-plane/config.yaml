@@ -68,6 +68,9 @@ tide:
           pipeline:
             required-contexts:
             - "CI summary"
+          plumbing:
+            required-contexts:
+            - "CI summary"
           pruner:
             required-contexts:
             - "golangci-lint / lint (pull_request)"

@@ -1,9 +1,18 @@
 name: ci
 
-on: [pull_request] # yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull-request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -12,33 +21,57 @@ defaults:
 
 permissions:
   contents: read
-  checks: write # Used to annotate code in the PR
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
+  changes:
+    name: categorize changes
+    runs-on: ubuntu-latest
+    outputs:
+      go-matrix: ${{ steps.detect.outputs.go-matrix }}
+      images-matrix: ${{ steps.detect.outputs.images-matrix }}
+      yaml: ${{ steps.detect.outputs.yaml }}
+    steps:
+    - name: Get base depth
+      if: github.event_name == 'pull_request'
+      id: base-depth
+      env:
+        COMMITS: ${{ github.event.pull_request.commits }}
+      run: echo "base-depth=$(( COMMITS + 1 ))" >> $GITHUB_OUTPUT
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        fetch-depth: ${{ steps.base-depth.outputs.base-depth || 0 }}
+    - name: detect
+      id: detect
+      run: >-
+        ./hack/detect-changes.sh
+        "${{ github.event_name }}"
+        "${{ github.base_ref }}"
+        "${{ github.event.pull_request.base.sha }}"
+        "${{ github.event.pull_request.head.sha }}"
+
   verify-tide-contexts:
     name: Verify Tide context_options
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b # v7.3.0
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b  # v7.3.0
       - run: make verify-tide-contexts
 
   build:
-    name: build-lint-and-test
+    name: build-lint-and-test (${{ matrix.project }})
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.go-matrix != '' }}
+    permissions:
+      contents: read
+      checks: write  # Used to annotate code in the PR
     strategy:
-      matrix:
-        project: 
-          - bots/buildcaptain
-          - bots/mariobot
-          - pipelinerun-logs
-          - tekton/ci/interceptors/add-team-members
-          - tekton/ci/interceptors/add-pr-body
-          - tekton/ci/interceptors/github
-          - tekton/ci/cluster-interceptors/add-pr-body
-          - tekton/ci/cluster-interceptors/build-id
-          - tekton/ci/custom-tasks/pr-commenter
-          - tekton/ci/custom-tasks/pr-status-updater
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.go-matrix) }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
     - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
@@ -57,18 +90,98 @@ jobs:
         fi
         echo "$gofmt_out"
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+      uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20  # v9.2.0
       with:
         version: v2.1.6
         only-new-issues: true
         args: --timeout=10m
         working-directory: ${{ matrix.project }}
-    - name: yamllint
-      working-directory: ${{ matrix.project }}
-      run: |
-        sudo apt update && sudo apt install -y yamllint
-        yamllint -c $(git rev-parse --show-toplevel)/.yamllint $(find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" -print | tr '\n' ' ')
     - name: test
       working-directory: ${{ matrix.project }}
       run: |
         go test -v ./...
+
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.yaml == 'true' }}
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - name: yamllint
+      run: |
+        sudo apt update && sudo apt install -y yamllint
+        yamllint -c .yamllint $(find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" -print | tr '\n' ' ')
+
+  build-image:
+    name: build-image (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.images-matrix != '' }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.images-matrix) }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - name: Log in to the Container registry
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130  # v3.7.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3.12.0
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5.10.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          tags: |
+            # set latest tag for default branch
+            type=ref,event=branch
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6.19.2
+        with:
+          platforms: ${{ matrix.platforms }}
+          context: tekton/images/${{ matrix.name }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  ci-summary:
+    name: CI summary
+    needs: [verify-tide-contexts, build, yamllint, build-image]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Check CI results
+      run: |
+        results=(
+          "verify-tide-contexts=${{ needs.verify-tide-contexts.result }}"
+          "build=${{ needs.build.result }}"
+          "yamllint=${{ needs.yamllint.result }}"
+          "build-image=${{ needs.build-image.result }}"
+        )
+        failed=0
+        for r in "${results[@]}"; do
+          name="${r%%=*}"
+          result="${r#*=}"
+          echo "${name}: ${result}"
+          if [ "$result" != "success" ] && [ "$result" != "skipped" ] && [ "$result" != "cancelled" ]; then
+            failed=1
+          fi
+        done
+        if [ "$failed" -eq 1 ]; then
+          echo ""
+          echo "Some CI jobs failed"
+          exit 1
+        fi
+        echo ""
+        echo "All CI checks passed"
