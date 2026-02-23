@@ -54,6 +54,8 @@ spec:
     value: $(body.params.release.repositoryFullName)
   - name: releaseVersion
     value: $(body.params.release.releaseVersion)
+  - name: previousVersion
+    value: $(body.params.release.previousVersion)
   - name: releaseAsLatest
     value: $(body.params.release.releaseAsLatest)
   - name: triggerSource

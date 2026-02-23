@@ -37,6 +37,9 @@ spec:
   - name: releaseVersion
     description: Release version number (e.g., v1.10.0)
     default: ""
+  - name: previousVersion
+    description: Previous release version tag (e.g., v1.9.0) for changelog generation
+    default: ""
   - name: triggerSource
     description: Trigger source (webhook or cron)
   - name: afterCommitSha

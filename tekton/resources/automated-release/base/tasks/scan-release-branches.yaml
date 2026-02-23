@@ -155,6 +155,7 @@ spec:
             "projectName": "${PROJECT}",
             "repositoryFullName": "${REPO}",
             "releaseVersion": "${NEXT_VERSION}",
+            "previousVersion": "v${LATEST_TAG}",
             "releaseAsLatest": "${RELEASE_AS_LATEST}",
             "commitSha": "${BRANCH_SHA}"
           }
