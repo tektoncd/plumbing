@@ -73,10 +73,7 @@ tide:
             - "CI summary"
           pruner:
             required-contexts:
-            - "golangci-lint / lint (pull_request)"
-            - "Pruner kind E2E Tests / k8s (v1.28.x) / e2e test (pull_request)"
-            - "Pruner kind E2E Tests / k8s (v1.32.x) / e2e test (pull_request)"
-            - "Pruner kind E2E Tests / pipelines-lts (v1.0.0) / e2e test (pull_request)"
+            - "CI summary"
           triggers:
             required-contexts:
             - "lint"
