@@ -46,6 +46,7 @@ repos:
     - "CI summary"
   pruner:
     - "CI summary"
-  results: []
+  results:
+    - "CI summary"
   triggers:
     - "CI summary"
