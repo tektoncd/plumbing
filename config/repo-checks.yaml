@@ -48,9 +48,7 @@ repos:
     - "E2E tests (k8s-plus-one, read-write)"
     - "Unit tests"
   mcp-server:
-    - "build"
-    - "test"
-    - "lint"
+    - "CI summary"
   operator:
     - "CI summary"
   pipeline:

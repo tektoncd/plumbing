@@ -58,9 +58,7 @@ tide:
             - "Unit tests"
           mcp-server:
             required-contexts:
-            - "build"
-            - "test"
-            - "lint"
+            - "CI summary"
           operator:
             required-contexts:
             - "CI summary"
