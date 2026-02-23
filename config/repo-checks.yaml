@@ -62,7 +62,8 @@ repos:
     - "CI summary"
   pruner:
     - "CI summary"
-  results: []
+  results:
+    - "CI summary"
   triggers:
     - "lint"
     - "Tekton Triggers CI"
