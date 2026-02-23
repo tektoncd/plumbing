@@ -76,8 +76,7 @@ tide:
             - "CI summary"
           triggers:
             required-contexts:
-            - "lint"
-            - "Tekton Triggers CI"
+            - "CI summary"
   # END GENERATED context_options
   queries:
   - repos:

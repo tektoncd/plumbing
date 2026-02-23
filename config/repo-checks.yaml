@@ -64,5 +64,4 @@ repos:
     - "CI summary"
   results: []
   triggers:
-    - "lint"
-    - "Tekton Triggers CI"
+    - "CI summary"
