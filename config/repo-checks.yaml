@@ -30,7 +30,8 @@ base_checks:
   - "EasyCLA"
 
 repos:
-  chains: []
+  chains:
+    - "CI summary"
   cli:
     - "build"
     - "test"

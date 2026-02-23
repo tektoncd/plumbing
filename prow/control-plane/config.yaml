@@ -36,6 +36,9 @@ tide:
     orgs:
       tektoncd:
         repos:
+          chains:
+            required-contexts:
+            - "CI summary"
           cli:
             required-contexts:
             - "build"
