@@ -32,13 +32,7 @@ base_checks:
 repos:
   chains: []
   cli:
-    - "build"
-    - "test"
-    - "lint"
-    - "Check generated code"
-    - "Multi-arch build"
-    - "e2e-tests / e2e tests (k8s-oldest)"
-    - "e2e-tests / e2e tests (k8s-plus-one)"
+    - "CI summary"
   dashboard:
     - "Build tests"
     - "E2E tests (k8s-oldest, read-only)"
