@@ -51,11 +51,7 @@ repos:
     - "test"
     - "lint"
   operator:
-    - "build"
-    - "test"
-    - "lint"
-    - "Check generated code"
-    - "Multi-arch build"
+    - "CI summary"
   pipeline:
     - "CI summary"
   plumbing:

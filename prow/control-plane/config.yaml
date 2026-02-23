@@ -60,11 +60,7 @@ tide:
             - "lint"
           operator:
             required-contexts:
-            - "build"
-            - "test"
-            - "lint"
-            - "Check generated code"
-            - "Multi-arch build"
+            - "CI summary"
           pipeline:
             required-contexts:
             - "CI summary"
