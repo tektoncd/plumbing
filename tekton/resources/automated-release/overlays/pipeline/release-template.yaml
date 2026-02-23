@@ -36,6 +36,9 @@ spec:
   - name: releaseVersion
     description: Release version number (e.g., v1.9.1)
     default: ""
+  - name: previousVersion
+    description: Previous release version tag (e.g., v1.9.0) for changelog generation
+    default: ""
   - name: triggerSource
     description: Trigger source (webhook or cron)
   - name: afterCommitSha
@@ -54,6 +57,8 @@ spec:
         release.tekton.dev/branch: $(tt.params.releaseBranch)
         release.tekton.dev/trigger: $(tt.params.triggerSource)
     spec:
+      taskRunTemplate:
+        serviceAccountName: release-automation
       # Fetch the release pipeline from the project's own release branch.
       # This ensures we always use the pipeline definition that matches
       # the branch being released, including its publish task, precheck, etc.
@@ -87,6 +92,8 @@ spec:
         value: tekton-releases
       - name: releaseAsLatest
         value: $(tt.params.releaseAsLatest)
+      - name: previousReleaseTag
+        value: $(tt.params.previousVersion)
       - name: serviceAccountImagesPath
         value: credentials
       - name: koExtraArgs
@@ -108,3 +115,6 @@ spec:
       - name: release-images-secret
         secret:
           secretName: ghcr-creds
+      - name: github-secret
+        secret:
+          secretName: github-token
