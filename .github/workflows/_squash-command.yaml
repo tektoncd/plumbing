@@ -7,6 +7,7 @@
 #   /squash                        - squash all commits, use first commit's message
 #   /squash Fix the auth bug       - squash all commits with custom message
 #   /squash --last 3               - squash only the last 3 commits
+#   /squash last=3                 - same as above (named arg format)
 #   /squash --last 3 Fix the bug   - squash last 3 commits with custom message
 #
 #   Multiline: lines after the /squash line become the commit body:
@@ -150,6 +151,12 @@ jobs:
 
           {
             echo "Starting squash process..."
+
+            # Parse --last N from unnamed args if not already set via named arg (last=N)
+            if [ -z "$LAST_N" ] && [[ "$CUSTOM_MESSAGE" =~ --last[[:space:]]+([0-9]+) ]]; then
+              LAST_N="${BASH_REMATCH[1]}"
+              CUSTOM_MESSAGE=$(echo "$CUSTOM_MESSAGE" | sed 's/--last[[:space:]]*[0-9]*//g' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+            fi
 
             git config user.name "Tekton Bot"
             git config user.email "tekton-bot@users.noreply.github.com"
