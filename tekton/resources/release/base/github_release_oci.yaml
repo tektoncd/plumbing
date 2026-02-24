@@ -29,6 +29,12 @@ spec:
     description: Previous release number - for author and PR list calculation
   - name: rekor-uuid
     description: The Rekor UUID associated to the attestation
+  - name: source-subpath
+    description: Subpath within workspace for the git checkout
+    default: "repo"
+  - name: release-subpath
+    description: Subpath within workspace for release artifacts
+    default: "release"
   workspaces:
   - name: shared
     description: contains the cloned repo and the release files
@@ -55,7 +61,7 @@ spec:
         value: $(params.rekor-uuid)
   steps:
     - name: header
-      image: ghcr.io/tektoncd/plumbing/hub
+      image: docker.io/library/alpine:3.21
       script: |
         #!/bin/bash
         set -ex
@@ -112,17 +118,20 @@ spec:
         ## Changes
         EOF
     - name: filter-data
-      image: ghcr.io/tektoncd/plumbing/hub
-      workingDir: $(workspaces.shared.path)/repo
+      image: docker.io/library/alpine:3.21
+      workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
         #!/usr/bin/env bash
         set -ex
+        apk add --no-cache git github-cli jq
+
+        export GH_TOKEN="${GITHUB_TOKEN}"
 
         # Fix git ownership issue - needed even when running as same user due to workspace mounting
-        git config --global --add safe.directory $(workspaces.shared.path)/repo
+        git config --global --add safe.directory $(workspaces.shared.path)/$(params.source-subpath)
 
         # Restore full git history
-        git fetch --unshallow
+        git fetch --unshallow 2>/dev/null || true
         git fetch --tags
 
         # UPPER_THRESHOLD is the newest sha we are interested in
@@ -145,7 +154,9 @@ spec:
         #   - we always cherry-pick full PRs, never commits out of a multi-commit PR
         # Format of output data:
         # "author;number;title"
-        hub pr list --state merged -L 300 -f "%sm;%au;%i;%t;%L%n" | \
+        gh pr list --repo "${PROJECT}" --state merged -L 300 \
+          --json mergeCommit,author,number,title,labels \
+          --jq '.[] | select(.mergeCommit != null) | "\(.mergeCommit.oid);\(.author.login);\("#" + (.number|tostring));\(.title);\([.labels[].name] | join(","))"' | \
           while read pr; do
             SHA=$(echo $pr | cut -d';' -f1)
             # Skip the common ancestor has it has already been released
@@ -162,10 +173,11 @@ spec:
         echo "$(wc -l $HOME/pr.csv | awk '{ print $1}') PRs in the new release."
         cat $HOME/pr.csv
     - name: release-notes
-      image: docker.io/stedolan/jq
+      image: docker.io/library/alpine:3.21
       script: |
         #!/bin/bash
         set -e
+        apk add --no-cache jq curl
 
         # First process pull requests that have release notes
         # Extract the release notes but drop lines that match an unmodified PR template
@@ -173,7 +185,7 @@ spec:
         grep -v "release-note-none" $HOME/pr.csv > $HOME/pr-notes-tmp.csv || true
         cat $HOME/pr-notes-tmp.csv | while read pr; do
           PR_NUM=$(echo $pr | cut -d';' -f2)
-          PR_RELEASE_NOTES_B64=$(wget -O- https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
+          PR_RELEASE_NOTES_B64=$(curl -sL https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
             jq .body -r | grep -oPz '(?s)(?<=```release-note..)(.+?)(?=```)' | \
             grep -avP '\W*(Your release note here|action required: your release note here|NONE)\W*' | base64 -w0)
           echo "$pr;$PR_RELEASE_NOTES_B64" >> $HOME/pr-notes.csv
@@ -185,7 +197,7 @@ spec:
         # || true in case no PRs have "release-note-none"
         grep "release-note-none" $HOME/pr.csv > $HOME/pr-no-notes.csv || true
     - name: body
-      image: docker.io/library/busybox
+      image: docker.io/library/alpine:3.21
       script: |
         #!/bin/sh
         set -e
@@ -240,8 +252,8 @@ spec:
         EOF
 
     - name: authors
-      image: ghcr.io/tektoncd/plumbing/hub
-      workingDir: $(workspaces.shared.path)/repo
+      image: docker.io/library/alpine:3.21
+      workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -255,8 +267,8 @@ spec:
         $(awk -F";" '{ print "* :heart_eyes: @"$1 }' $HOME/pr-notes.csv | sort -u)
         EOF
     - name: pr-data
-      image: ghcr.io/tektoncd/plumbing/hub
-      workingDir: $(workspaces.shared.path)/repo
+      image: docker.io/library/alpine:3.21
+      workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
         #!/usr/bin/env bash
         set -ex
@@ -271,20 +283,31 @@ spec:
         -->
         EOF
     - name: create-draft
-      image: ghcr.io/tektoncd/plumbing/hub
-      workingDir: $(workspaces.shared.path)/repo
+      image: docker.io/library/alpine:3.21
+      workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
         #!/usr/bin/env bash
         set -ex
+        apk add --no-cache github-cli
 
-        RELEASE_PATH="../release"
+        export GH_TOKEN="${GITHUB_TOKEN}"
+
+        RELEASE_PATH="$(workspaces.shared.path)/$(params.release-subpath)"
         TEKTON_PROJECT=$(basename $PROJECT)
-        # List the files in the release folder
-        RELEASE_FILES=$(find "${RELEASE_PATH}" -type f | awk '{ print "-a "$1 }' | tr '\n' ' ')
 
-        hub release create --draft --prerelease \
-          --commitish ${GIT_REVISION} ${RELEASE_FILES} \
-          --file $HOME/release.md ${VERSION}
+        # Collect release artifact files
+        ATTACH_FLAGS=""
+        for f in $(find "${RELEASE_PATH}" -type f 2>/dev/null); do
+          ATTACH_FLAGS="${ATTACH_FLAGS} ${f}"
+        done
+
+        gh release create "${VERSION}" \
+          --repo "${PROJECT}" \
+          --draft \
+          --prerelease \
+          --target "${GIT_REVISION}" \
+          --notes-file "$HOME/release.md" \
+          ${ATTACH_FLAGS}
 ---
 apiVersion: tekton.dev/v1
 kind: Pipeline
