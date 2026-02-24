@@ -240,11 +240,15 @@ jobs:
               fi
 
               # Collect unique trailers from commits being squashed
+              # Dedup: skip trailers already present in COMMIT_MSG (from %B)
               TRAILERS=""
               for KEY in "Co-authored-by" "Signed-off-by"; do
                 VALS=$(git log --format="%(trailers:key=$KEY,valueonly)" "$SQUASH_RANGE" | sort -u | grep -v '^$' || true)
                 while IFS= read -r val; do
-                  [ -n "$val" ] && TRAILERS="$TRAILERS"$'\n'"$KEY: $val"
+                  TRAILER_LINE="$KEY: $val"
+                  if [ -n "$val" ] && ! grep -qF "$TRAILER_LINE" <<< "$COMMIT_MSG"; then
+                    TRAILERS="$TRAILERS"$'\n'"$TRAILER_LINE"
+                  fi
                 done <<< "$VALS"
               done
 
