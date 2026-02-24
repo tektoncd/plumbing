@@ -3,7 +3,11 @@
 # This workflow is triggered by the /squash slash command from the slash.yml workflow.
 # It squashes all commits on a PR branch into a single commit and force pushes the result.
 #
-# Usage: Comment `/squash` on a pull request
+# Usage:
+#   /squash                        - squash all commits, use first commit's message
+#   /squash Fix the auth bug       - squash all commits with custom message
+#   /squash --last 3               - squash only the last 3 commits
+#   /squash --last 3 Fix the bug   - squash last 3 commits with custom message
 #
 # Security Notes:
 # - Only users with "write" permission can trigger this command (enforced in slash.yml)
@@ -130,6 +134,8 @@ jobs:
           PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
           IS_FORK: ${{ steps.validate.outputs.is_fork }}
           UPSTREAM_REPO: ${{ github.repository }}
+          CUSTOM_MESSAGE: ${{ github.event.client_payload.slash_command.args.unnamed.all }}
+          LAST_N: ${{ github.event.client_payload.slash_command.args.named.last }}
         run: |
           set -e
 
@@ -159,16 +165,38 @@ jobs:
             MERGE_BASE=$(git merge-base "${BASE_REMOTE}/${BASE_REF}" HEAD)
             echo "Merge base: $MERGE_BASE"
 
-            # Count commits
-            COMMIT_COUNT=$(git rev-list --count "$MERGE_BASE"..HEAD)
-            echo "Found $COMMIT_COUNT commit(s) on branch"
+            # Count total commits on branch
+            TOTAL_COMMITS=$(git rev-list --count "$MERGE_BASE"..HEAD)
+            echo "Found $TOTAL_COMMITS commit(s) on branch"
 
-            if [ "$COMMIT_COUNT" -le 1 ]; then
+            # Determine squash target based on --last N
+            if [ -n "$LAST_N" ]; then
+              if ! [[ "$LAST_N" =~ ^[1-9][0-9]*$ ]]; then
+                echo "ERROR: --last requires a positive integer, got: $LAST_N"
+                exit 1
+              fi
+              if [ "$LAST_N" -ge "$TOTAL_COMMITS" ]; then
+                echo "--last $LAST_N >= total commits ($TOTAL_COMMITS), squashing all."
+                SQUASH_TARGET="$MERGE_BASE"
+                SQUASH_COUNT="$TOTAL_COMMITS"
+              else
+                SQUASH_TARGET="HEAD~${LAST_N}"
+                SQUASH_COUNT="$LAST_N"
+                echo "Squashing last $LAST_N of $TOTAL_COMMITS commits."
+              fi
+              SQUASH_RANGE="${SQUASH_TARGET}..HEAD"
+            else
+              SQUASH_TARGET="$MERGE_BASE"
+              SQUASH_COUNT="$TOTAL_COMMITS"
+              SQUASH_RANGE="${MERGE_BASE}..HEAD"
+            fi
+
+            if [ "$SQUASH_COUNT" -le 1 ]; then
               echo "already_single_commit=true" >> $GITHUB_OUTPUT
               echo "Branch already has a single commit. Nothing to squash."
             else
               # Check for merge commits (warn but proceed)
-              MERGE_COMMIT_COUNT=$(git rev-list --merges --count "$MERGE_BASE"..HEAD)
+              MERGE_COMMIT_COUNT=$(git rev-list --merges --count "$SQUASH_RANGE")
               if [ "$MERGE_COMMIT_COUNT" -gt 0 ]; then
                 echo "has_merge_commits=true" >> $GITHUB_OUTPUT
                 echo "WARNING: Branch contains $MERGE_COMMIT_COUNT merge commit(s). The squash will proceed but consider using /rebase first for cleaner history."
@@ -176,21 +204,28 @@ jobs:
                 echo "has_merge_commits=false" >> $GITHUB_OUTPUT
               fi
 
-              # Save the first commit's message (the "main" commit message)
-              FIRST_COMMIT=$(git rev-list --reverse "$MERGE_BASE"..HEAD | head -1)
-              COMMIT_MSG=$(git log -1 --format="%B" "$FIRST_COMMIT")
+              # Determine commit message: custom message or first commit's message
+              if [ -n "$CUSTOM_MESSAGE" ]; then
+                COMMIT_MSG="$CUSTOM_MESSAGE"
+                echo "Using custom commit message."
+                echo "used_custom_message=true" >> $GITHUB_OUTPUT
+              else
+                FIRST_COMMIT=$(git rev-list --reverse "$SQUASH_RANGE" | head -1)
+                COMMIT_MSG=$(git log -1 --format="%B" "$FIRST_COMMIT")
+                echo "used_custom_message=false" >> $GITHUB_OUTPUT
+              fi
 
-              # Collect unique trailers from ALL commits being squashed
+              # Collect unique trailers from commits being squashed
               TRAILERS=""
               for KEY in "Co-authored-by" "Signed-off-by"; do
-                VALS=$(git log --format="%(trailers:key=$KEY,valueonly)" "$MERGE_BASE"..HEAD | sort -u | grep -v '^$' || true)
+                VALS=$(git log --format="%(trailers:key=$KEY,valueonly)" "$SQUASH_RANGE" | sort -u | grep -v '^$' || true)
                 while IFS= read -r val; do
                   [ -n "$val" ] && TRAILERS="$TRAILERS"$'\n'"$KEY: $val"
                 done <<< "$VALS"
               done
 
-              # Perform soft reset (squash all commits into staged changes)
-              git reset --soft "$MERGE_BASE"
+              # Perform soft reset to squash target
+              git reset --soft "$SQUASH_TARGET"
 
               # Build final commit message with preserved trailers
               FULL_MSG="$COMMIT_MSG"
@@ -211,7 +246,8 @@ jobs:
                 exit 1
               }
 
-              echo "commits_squashed=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+              echo "commits_squashed=$SQUASH_COUNT" >> $GITHUB_OUTPUT
+              echo "total_commits=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
               echo "already_single_commit=false" >> $GITHUB_OUTPUT
               echo "Squash completed successfully!"
             fi
@@ -250,7 +286,7 @@ jobs:
           body: |
             **Squash successful!**
 
-            Squashed ${{ steps.squash.outputs.commits_squashed }} commits on branch `${{ steps.validate.outputs.head_ref }}` into a single commit using the first commit's message.
+            Squashed ${{ steps.squash.outputs.commits_squashed }} commits on branch `${{ steps.validate.outputs.head_ref }}` into a single commit${{ steps.squash.outputs.used_custom_message == 'true' && ' with custom message.' || '.' }}
 
             ${{ steps.squash.outputs.has_merge_commits == 'true' && '**Note:** The branch contained merge commits. The squashed result may include changes from the base branch. Consider reviewing the diff.' || '' }}
 
