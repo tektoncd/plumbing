@@ -16,6 +16,7 @@
 #            caller of this workflow
 # - /cherry-pick: cherry-pick a merged PR to one or more target branches
 # - /rebase: rebase a PR branch against its base branch
+# - /squash: squash all commits on a PR into a single commit
 #
 # When a command is recognised, the rocket and eyes emojis are added
 #
@@ -58,6 +59,12 @@ jobs:
             },
             {
               "command": "rebase",
+              "permission": "write",
+              "issue_type": "pull-request",
+              "repository": "${{ github.repository }}"
+            },
+            {
+              "command": "squash",
               "permission": "write",
               "issue_type": "pull-request",
               "repository": "${{ github.repository }}"
