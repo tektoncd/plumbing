@@ -9,6 +9,12 @@
 #   /squash --last 3               - squash only the last 3 commits
 #   /squash --last 3 Fix the bug   - squash last 3 commits with custom message
 #
+#   Multiline: lines after the /squash line become the commit body:
+#     /squash Fix the auth bug
+#
+#     This resolves the token refresh issue that caused
+#     intermittent 401 errors on long-running pipelines.
+#
 # Security Notes:
 # - Only users with "write" permission can trigger this command (enforced in slash.yml)
 # - Supports fork PRs when "Allow edits from maintainers" is enabled
@@ -136,6 +142,7 @@ jobs:
           UPSTREAM_REPO: ${{ github.repository }}
           CUSTOM_MESSAGE: ${{ github.event.client_payload.slash_command.args.unnamed.all }}
           LAST_N: ${{ github.event.client_payload.slash_command.args.named.last }}
+          COMMENT_BODY: ${{ github.event.client_payload.github.payload.comment.body }}
         run: |
           set -e
 
@@ -204,9 +211,26 @@ jobs:
                 echo "has_merge_commits=false" >> $GITHUB_OUTPUT
               fi
 
-              # Determine commit message: custom message or first commit's message
-              if [ -n "$CUSTOM_MESSAGE" ]; then
-                COMMIT_MSG="$CUSTOM_MESSAGE"
+              # Determine commit message
+              # - First line args become the title (CUSTOM_MESSAGE from slash-command-dispatch)
+              # - Lines 2+ from the comment body become the extended description
+              EXTENDED_DESC=""
+              if [ -n "$COMMENT_BODY" ]; then
+                EXTENDED_DESC=$(printf '%s' "$COMMENT_BODY" | tail -n +2 | sed '/./,$!d')
+              fi
+
+              if [ -n "$CUSTOM_MESSAGE" ] || [ -n "$EXTENDED_DESC" ]; then
+                if [ -n "$CUSTOM_MESSAGE" ]; then
+                  TITLE="$CUSTOM_MESSAGE"
+                else
+                  FIRST_COMMIT=$(git rev-list --reverse "$SQUASH_RANGE" | head -1)
+                  TITLE=$(git log -1 --format="%s" "$FIRST_COMMIT")
+                fi
+                if [ -n "$EXTENDED_DESC" ]; then
+                  COMMIT_MSG="${TITLE}"$'\n\n'"${EXTENDED_DESC}"
+                else
+                  COMMIT_MSG="$TITLE"
+                fi
                 echo "Using custom commit message."
                 echo "used_custom_message=true" >> $GITHUB_OUTPUT
               else
