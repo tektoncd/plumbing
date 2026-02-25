@@ -50,12 +50,7 @@ tide:
             - "e2e-tests / e2e tests (k8s-plus-one)"
           dashboard:
             required-contexts:
-            - "Build tests"
-            - "E2E tests (k8s-oldest, read-only)"
-            - "E2E tests (k8s-oldest, read-write)"
-            - "E2E tests (k8s-plus-one, read-only)"
-            - "E2E tests (k8s-plus-one, read-write)"
-            - "Unit tests"
+            - "CI summary"
           mcp-server:
             required-contexts:
             - "CI summary"

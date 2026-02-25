@@ -41,12 +41,7 @@ repos:
     - "e2e-tests / e2e tests (k8s-oldest)"
     - "e2e-tests / e2e tests (k8s-plus-one)"
   dashboard:
-    - "Build tests"
-    - "E2E tests (k8s-oldest, read-only)"
-    - "E2E tests (k8s-oldest, read-write)"
-    - "E2E tests (k8s-plus-one, read-only)"
-    - "E2E tests (k8s-plus-one, read-write)"
-    - "Unit tests"
+    - "CI summary"
   mcp-server:
     - "CI summary"
   operator:
