@@ -63,13 +63,14 @@ spec:
     - name: header
       image: docker.io/library/alpine:3.21
       script: |
-        #!/bin/bash
+        #!/bin/sh
         set -ex
         TEKTON_PROJECT=$(basename $PROJECT)
         BQ="\`" # Backquote
 
+        TEKTON_PROJECT_CAPITALIZED=$(echo "$TEKTON_PROJECT" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')
         cat <<EOF | tee $HOME/release.md
-        Tekton ${TEKTON_PROJECT^} release ${VERSION} "${RELEASE_NAME}"
+        Tekton ${TEKTON_PROJECT_CAPITALIZED} release ${VERSION} "${RELEASE_NAME}"
 
         <!-- For major releases, add a tag line
         # 🎉 [Tag Line - to be done] 🎉
@@ -121,7 +122,7 @@ spec:
       image: docker.io/library/alpine:3.21
       workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
-        #!/usr/bin/env bash
+        #!/bin/sh
         set -ex
         apk add --no-cache git github-cli jq
 
@@ -166,7 +167,7 @@ spec:
             SUBJECT=$(git log -1 --format="%s" $SHA || echo "__NOT_FOUND__")
             git merge-base --is-ancestor $SHA $UPPER_THRESHOLD && \
             git merge-base --is-ancestor $COMMON_ANCESTOR $SHA && \
-            ! $(egrep "^${SUBJECT}$" $OLD_RELEASE_SUBJECTS &> /dev/null) &&
+            ! $(egrep "^${SUBJECT}$" $OLD_RELEASE_SUBJECTS > /dev/null 2>&1) &&
             echo $pr | cut -d';' -f2-
           done > $HOME/pr.csv || true  # We do not want to fail is the last of the loop is not a match
 
@@ -175,9 +176,9 @@ spec:
     - name: release-notes
       image: docker.io/library/alpine:3.21
       script: |
-        #!/bin/bash
+        #!/bin/sh
         set -e
-        apk add --no-cache jq curl
+        apk add --no-cache jq curl grep
 
         # First process pull requests that have release notes
         # Extract the release notes but drop lines that match an unmodified PR template
@@ -255,7 +256,7 @@ spec:
       image: docker.io/library/alpine:3.21
       workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
-        #!/usr/bin/env bash
+        #!/bin/sh
         set -ex
         cat <<EOF | tee -a $HOME/release.md
         ## Thanks
@@ -270,7 +271,7 @@ spec:
       image: docker.io/library/alpine:3.21
       workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
-        #!/usr/bin/env bash
+        #!/bin/sh
         set -ex
 
         cat <<EOF | tee -a $HOME/release.md
@@ -286,7 +287,7 @@ spec:
       image: docker.io/library/alpine:3.21
       workingDir: $(workspaces.shared.path)/$(params.source-subpath)
       script: |
-        #!/usr/bin/env bash
+        #!/bin/sh
         set -ex
         apk add --no-cache github-cli
 
