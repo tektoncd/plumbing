@@ -215,8 +215,7 @@ kind create cluster --config kind.yaml
 #############################################################
 echo '--- Setup metallb'
 
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.10/config/manifests/metallb-native.yaml
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
 
 network=$(docker network inspect kind -f "{{(index .IPAM.Config 0).Subnet}}" | cut -d '.' -f1,2)
@@ -274,7 +273,7 @@ docker network connect "kind" "$REGISTRY_NAME"
 
 # Make the $REGISTRY_NAME -> 127.0.0.1, to tell `ko` to publish to
 # local reigstry, even when pushing $REGISTRY_NAME:$REGISTRY_PORT/some/image
-echo "127.0.0.1 $REGISTRY_NAME" | tee -a /etc/hosts
+echo "127.0.0.1 $REGISTRY_NAME" | sudo tee -a /etc/hosts
 
 # Create a registry-credentials secret and attach it to the list of service accounts in the namespace.
 function sa_ips() {
