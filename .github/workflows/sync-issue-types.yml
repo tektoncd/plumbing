@@ -1,0 +1,235 @@
+# .github/workflows/sync-issue-types.yml
+#
+# Syncs GitHub Issue Types based on kind/* labels for all tektoncd repos.
+# Labels are the source of truth:
+# - kind/bug → Bug, kind/feature → Feature, other kind/* → Task
+# - No kind/* label → clears the type
+#
+# Runs daily and can be triggered manually.
+
+name: Sync Issue Types
+
+on:
+  schedule:
+    # Run daily at 7am UTC
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - log actions without making changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  # Issue Type IDs for tektoncd org
+  TYPE_TASK: "IT_kwDOAtZbZc4Almgp"
+  TYPE_BUG: "IT_kwDOAtZbZc4Almgr"
+  TYPE_FEATURE: "IT_kwDOAtZbZc4Almgt"
+
+jobs:
+  sync-issue-types:
+    name: Sync Issue Types
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        with:
+          app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
+          private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
+          owner: tektoncd
+
+      - name: Search for open issues
+        id: search_issues
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          echo "::group::Searching for open issues"
+
+          # Search for all open issues in the org
+          gh api graphql -f query='
+            query($cursor: String) {
+              search(query: "org:tektoncd is:issue is:open", type: ISSUE, first: 100, after: $cursor) {
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+                nodes {
+                  ... on Issue {
+                    id
+                    number
+                    repository { name }
+                    issueType { id name }
+                    labels(first: 20) {
+                      nodes { name }
+                    }
+                  }
+                }
+              }
+            }' --paginate | jq -s '[.[].data.search.nodes[]] | add // []' > /tmp/issues.json
+
+          ISSUE_COUNT=$(jq 'length' /tmp/issues.json)
+          echo "Found $ISSUE_COUNT open issues"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+      - name: Sync issue types based on labels
+        id: sync_types
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          echo "::group::Sync configuration"
+          echo "Issues found: ${{ steps.search_issues.outputs.issue_count }}"
+          echo "Dry run: $DRY_RUN"
+          echo "::endgroup::"
+
+          UPDATED=0
+          CLEARED=0
+          SKIPPED=0
+          ERRORS=0
+
+          echo "::group::Syncing issue types"
+
+          while IFS= read -r issue; do
+            ISSUE_ID=$(echo "$issue" | jq -r '.id')
+            ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
+            REPO_NAME=$(echo "$issue" | jq -r '.repository.name')
+            CURRENT_TYPE=$(echo "$issue" | jq -r '.issueType.name // "none"')
+
+            # Get kind/* labels
+            KIND_LABELS=$(echo "$issue" | jq -r '[.labels.nodes[].name | select(startswith("kind/"))] | join(",")')
+
+            # Determine target type based on labels
+            TARGET_TYPE_ID=""
+            TARGET_TYPE_NAME=""
+
+            if echo "$KIND_LABELS" | grep -q "kind/bug"; then
+              TARGET_TYPE_ID="${{ env.TYPE_BUG }}"
+              TARGET_TYPE_NAME="Bug"
+            elif echo "$KIND_LABELS" | grep -q "kind/feature"; then
+              TARGET_TYPE_ID="${{ env.TYPE_FEATURE }}"
+              TARGET_TYPE_NAME="Feature"
+            elif [ -n "$KIND_LABELS" ]; then
+              # All other kind/* labels map to Task
+              TARGET_TYPE_ID="${{ env.TYPE_TASK }}"
+              TARGET_TYPE_NAME="Task"
+            fi
+
+            # Case 1: Has kind label - set type based on label
+            if [ -n "$TARGET_TYPE_ID" ]; then
+              if [ "$CURRENT_TYPE" = "$TARGET_TYPE_NAME" ]; then
+                echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - already $CURRENT_TYPE"
+                ((++SKIPPED))
+                continue
+              fi
+
+              echo "UPDATE: $REPO_NAME#$ISSUE_NUMBER - $CURRENT_TYPE → $TARGET_TYPE_NAME (labels: $KIND_LABELS)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!, $typeId: ID!) {
+                    updateIssueIssueType(input: {
+                      issueId: $issueId
+                      issueTypeId: $typeId
+                    }) {
+                      issue {
+                        id
+                        issueType { name }
+                      }
+                    }
+                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1)
+
+                if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
+                  ((++ERRORS))
+                else
+                  ((++UPDATED))
+                fi
+
+                sleep 0.3
+              else
+                ((++UPDATED))
+              fi
+              continue
+            fi
+
+            # Case 2: No kind label but has type - clear the type
+            if [ "$CURRENT_TYPE" != "none" ]; then
+              echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing type $CURRENT_TYPE (no kind/* label)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!) {
+                    updateIssueIssueType(input: {
+                      issueId: $issueId
+                      issueTypeId: null
+                    }) {
+                      issue {
+                        id
+                        issueType { name }
+                      }
+                    }
+                  }' -f issueId="$ISSUE_ID" 2>&1)
+
+                if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
+                  ((++ERRORS))
+                else
+                  ((++CLEARED))
+                fi
+
+                sleep 0.3
+              else
+                ((++CLEARED))
+              fi
+              continue
+            fi
+
+            # Case 3: No kind label and no type - already correct
+            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no kind/* label and no type"
+            ((++SKIPPED))
+
+          done < <(jq -c '.[]' /tmp/issues.json)
+
+          echo "::endgroup::"
+
+          echo "::group::Results"
+          echo "Types set: $UPDATED"
+          echo "Types cleared: $CLEARED"
+          echo "Skipped: $SKIPPED"
+          echo "Errors: $ERRORS"
+          echo "::endgroup::"
+
+          # Set outputs for summary
+          echo "updated=$UPDATED" >> $GITHUB_OUTPUT
+          echo "cleared=$CLEARED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      - name: Job summary
+        run: |
+          echo "## Issue Type Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Types set | ${{ steps.sync_types.outputs.updated || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Types cleared | ${{ steps.sync_types.outputs.cleared || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | ${{ steps.sync_types.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | ${{ steps.sync_types.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Label → Type Mapping" >> $GITHUB_STEP_SUMMARY
+          echo "| Label | Type |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/bug | Bug |" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/feature | Feature |" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/* (other) | Task |" >> $GITHUB_STEP_SUMMARY
+          echo "| (no kind/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Issue type sync failed. Check the logs for details."
