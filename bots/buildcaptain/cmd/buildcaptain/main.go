@@ -13,9 +13,9 @@ import (
 const rotationURL = "https://raw.githubusercontent.com/tektoncd/plumbing/main/bots/buildcaptain/rotation.csv"
 
 var (
-	botID          string
-	token          string
-	channelID      string
+	botID     string
+	token     string
+	channelID string
 
 	vdemeest string
 )
