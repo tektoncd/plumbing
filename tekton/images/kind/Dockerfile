@@ -22,13 +22,13 @@ LABEL org.opencontainers.image.licenses=Apache-2.0
 
 WORKDIR /kind
 
-ARG KO_VERSION=0.15.4
+ARG KO_VERSION=0.18.1
 
 RUN apk add --no-cache \
   bash curl docker git jq openssl
 
 # Install ko
-RUN curl -L https://github.com/google/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
+RUN curl -L https://github.com/ko-build/ko/releases/download/v${KO_VERSION}/ko_${KO_VERSION}_Linux_x86_64.tar.gz > ko_${KO_VERSION}.tar.gz
 RUN tar -C /usr/local/bin -xzf ko_${KO_VERSION}.tar.gz
 
 # Install kubectl and make sure it's available in the PATH.
