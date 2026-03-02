@@ -66,6 +66,9 @@ tide:
           pruner:
             required-contexts:
             - "CI summary"
+          results:
+            required-contexts:
+            - "CI summary"
           triggers:
             required-contexts:
             - "lint"
