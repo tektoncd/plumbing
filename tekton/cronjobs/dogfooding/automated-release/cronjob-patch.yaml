@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scan-release-branches
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: create-taskrun
+            env:
+            - name: REPOSITORIES
+              # Start with pipeline only, expand to triggers and operator later
+              value: "tektoncd/pipeline"
+            - name: EVENTLISTENER_URL
+              value: "http://el-tekton-releases.automated-releases.svc.cluster.local:8080"
+            - name: MIN_VERSION
+              # Only process branches >= v1.9.x during testing
+              # Set to "0.0" to process all branches
+              value: "1.9"

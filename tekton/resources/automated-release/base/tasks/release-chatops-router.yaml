@@ -1,0 +1,260 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: release-chatops-router
+spec:
+  description: Routes release ChatOps commands to appropriate handlers
+  params:
+  - name: command
+    description: "ChatOps command (e.g., release-status)"
+    type: string
+  - name: issueNumber
+    description: "GitHub issue number"
+    type: string
+  - name: repositoryFullName
+    description: "Full repository name"
+    type: string
+  - name: commentAuthor
+    description: "GitHub user who issued the command"
+    type: string
+  - name: issueTitle
+    description: "Issue title (contains branch/version)"
+    type: string
+  - name: releaseNamespace
+    description: "Namespace where releases run"
+    type: string
+    default: "automated-releases"
+  - name: eventListenerURL
+    description: "EventListener URL for triggering releases"
+    type: string
+    default: "http://el-tekton-releases.automated-releases.svc.cluster.local:8080"
+  workspaces:
+  - name: github-secret
+    description: GitHub token for API access
+  steps:
+  - name: extract-release-info
+    image: docker.io/alpine:3.19
+    script: |
+      #!/bin/sh
+      set -e
+
+      ISSUE_TITLE="$(params.issueTitle)"
+      REPO="$(params.repositoryFullName)"
+
+      echo "Extracting release info from: ${ISSUE_TITLE}"
+
+      # Extract release branch from issue title
+      # Title formats:
+      #   "[Automated Release] release-v0.50.x"
+      #   "[Automated Release] v0.50.1"
+      BRANCH=$(echo "${ISSUE_TITLE}" | grep -oE 'release-v[0-9]+\.[0-9]+\.x' || true)
+      VERSION=$(echo "${ISSUE_TITLE}" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || true)
+
+      if [ -z "${BRANCH}" ] && [ -z "${VERSION}" ]; then
+        echo "Error: Could not extract release branch or version from title"
+        echo "" > $(results.releaseBranch.path)
+        echo "" > $(results.releaseVersion.path)
+        echo "" > $(results.projectName.path)
+        exit 0
+      fi
+
+      # If we have a version but no branch, derive branch from version
+      if [ -z "${BRANCH}" ] && [ -n "${VERSION}" ]; then
+        # v0.50.1 -> release-v0.50.x
+        MAJOR_MINOR=$(echo "${VERSION}" | sed -E 's/v([0-9]+\.[0-9]+)\.[0-9]+/\1/')
+        BRANCH="release-v${MAJOR_MINOR}.x"
+      fi
+
+      # Extract project name from repo (tektoncd/pipeline -> pipeline)
+      PROJECT=$(echo "${REPO}" | cut -d/ -f2)
+
+      echo "Branch: ${BRANCH}"
+      echo "Version: ${VERSION}"
+      echo "Project: ${PROJECT}"
+
+      echo -n "${BRANCH}" > $(results.releaseBranch.path)
+      echo -n "${VERSION}" > $(results.releaseVersion.path)
+      echo -n "${PROJECT}" > $(results.projectName.path)
+  - name: route-command
+    image: docker.io/rancher/kubectl:v1.31.3
+    env:
+    - name: GH_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: github-token
+          key: GITHUB_TOKEN
+    script: |
+      #!/bin/bash
+      set -e
+
+      COMMAND="$(params.command)"
+      ISSUE_NUM="$(params.issueNumber)"
+      REPO="$(params.repositoryFullName)"
+      AUTHOR="$(params.commentAuthor)"
+      NAMESPACE="$(params.releaseNamespace)"
+      EL_URL="$(params.eventListenerURL)"
+
+      BRANCH=$(cat $(results.releaseBranch.path))
+      VERSION=$(cat $(results.releaseVersion.path))
+      PROJECT=$(cat $(results.projectName.path))
+
+      echo "Processing command: ${COMMAND}"
+      echo "Issue: ${REPO}#${ISSUE_NUM}"
+      echo "Author: ${AUTHOR}"
+      echo "Branch: ${BRANCH}"
+      echo "Version: ${VERSION}"
+      echo "Project: ${PROJECT}"
+
+      # Helper function to post GitHub comment
+      post_comment() {
+        local body="$1"
+        curl -s -X POST \
+          -H "Authorization: token ${GH_TOKEN}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "https://api.github.com/repos/${REPO}/issues/${ISSUE_NUM}/comments" \
+          -d "{\"body\": \"${body}\"}"
+      }
+
+      # Helper function to build release payload
+      build_payload() {
+        local mode="$1"
+        local uuid="$2"
+        printf '{"buildUUID":"%s","params":{"release":{"gitRepository":"https://github.com/%s","releaseBranch":"%s","projectName":"%s","repositoryFullName":"%s","releaseMode":"%s","releaseType":"bugfix","releaseVersion":"%s","commitSha":"HEAD"}}}' \
+          "${uuid}" "${REPO}" "${BRANCH}" "${PROJECT}" "${REPO}" "${mode}" "${VERSION}"
+      }
+
+      # Helper function to trigger release
+      trigger_release() {
+        local mode="$1"
+        local uuid="$2"
+        local payload=$(build_payload "${mode}" "${uuid}")
+
+        curl -s -w "\n%{http_code}" -X POST \
+          -H "Content-Type: application/json" \
+          -d "${payload}" \
+          "${EL_URL}"
+      }
+
+      if [ -z "${BRANCH}" ]; then
+        echo "Error: Could not determine release branch"
+        post_comment ":x: Error: Could not determine release branch from issue title"
+        exit 1
+      fi
+
+      # Route to appropriate handler
+      case "${COMMAND}" in
+        release-status)
+          echo "Checking release status..."
+
+          # Query PipelineRuns with matching labels
+          PIPELINERUNS=$(kubectl get pipelinerun -n "${NAMESPACE}" \
+            -l "release.tekton.dev/branch=${BRANCH}" \
+            -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[0].reason}{"\t"}{.status.conditions[0].message}{"\n"}{end}' 2>/dev/null || echo "")
+
+          if [ -z "${PIPELINERUNS}" ]; then
+            post_comment ":information_source: **Release Status for \`${BRANCH}\`**\\n\\nNo PipelineRuns found for this release branch."
+          else
+            # Format status table
+            STATUS_TABLE=":information_source: **Release Status for \\\`${BRANCH}\\\`**\\n\\n| PipelineRun | Status | Message |\\n|-------------|--------|---------|"
+            while IFS=$'\t' read -r name reason message; do
+              if [ -n "${name}" ]; then
+                # Truncate message if too long
+                short_msg=$(echo "${message}" | head -c 50)
+                STATUS_TABLE="${STATUS_TABLE}\\n| \\\`${name}\\\` | ${reason} | ${short_msg} |"
+              fi
+            done <<< "${PIPELINERUNS}"
+            post_comment "${STATUS_TABLE}"
+          fi
+          ;;
+
+        release-cancel)
+          echo "Cancelling release..."
+
+          # Find running PipelineRuns
+          RUNNING=$(kubectl get pipelinerun -n "${NAMESPACE}" \
+            -l "release.tekton.dev/branch=${BRANCH}" \
+            --field-selector=status.conditions[0].reason=Running \
+            -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+
+          if [ -z "${RUNNING}" ]; then
+            post_comment ":warning: No running PipelineRun found for \`${BRANCH}\` to cancel."
+          else
+            # Cancel by patching the spec
+            kubectl patch pipelinerun "${RUNNING}" -n "${NAMESPACE}" \
+              --type=json \
+              -p='[{"op": "add", "path": "/spec/status", "value": "Cancelled"}]'
+
+            post_comment ":stop_sign: Cancelled PipelineRun \`${RUNNING}\` for \`${BRANCH}\`.\\n\\nRequested by @${AUTHOR}"
+          fi
+          ;;
+
+        release-restart)
+          echo "Restarting release (validation-only)..."
+
+          BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
+          RESPONSE=$(trigger_release "validation-only" "${BUILD_UUID}")
+          HTTP_CODE=$(echo "${RESPONSE}" | tail -1)
+
+          if [ "${HTTP_CODE}" = "202" ] || [ "${HTTP_CODE}" = "201" ]; then
+            post_comment ":arrows_counterclockwise: Restarted release validation for \`${BRANCH}\`.\\n\\n- **Build ID**: \`${BUILD_UUID}\`\\n- **Mode**: validation-only\\n- **Requested by**: @${AUTHOR}"
+          else
+            post_comment ":x: Failed to trigger release restart (HTTP ${HTTP_CODE})"
+          fi
+          ;;
+
+        release-full)
+          echo "Triggering full release..."
+
+          BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
+          RESPONSE=$(trigger_release "full-release" "${BUILD_UUID}")
+          HTTP_CODE=$(echo "${RESPONSE}" | tail -1)
+
+          if [ "${HTTP_CODE}" = "202" ] || [ "${HTTP_CODE}" = "201" ]; then
+            post_comment ":rocket: Triggered **full release** for \`${BRANCH}\`.\\n\\n- **Build ID**: \`${BUILD_UUID}\`\\n- **Mode**: full-release\\n- **Version**: ${VERSION}\\n- **Requested by**: @${AUTHOR}\\n\\n:warning: This will build, test, and publish release artifacts."
+          else
+            post_comment ":x: Failed to trigger full release (HTTP ${HTTP_CODE})"
+          fi
+          ;;
+
+        release-validate)
+          echo "Triggering validation..."
+
+          BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
+          RESPONSE=$(trigger_release "validation-only" "${BUILD_UUID}")
+          HTTP_CODE=$(echo "${RESPONSE}" | tail -1)
+
+          if [ "${HTTP_CODE}" = "202" ] || [ "${HTTP_CODE}" = "201" ]; then
+            post_comment ":mag: Triggered **validation** for \`${BRANCH}\`.\\n\\n- **Build ID**: \`${BUILD_UUID}\`\\n- **Mode**: validation-only\\n- **Requested by**: @${AUTHOR}\\n\\nThis will run tests without publishing artifacts."
+          else
+            post_comment ":x: Failed to trigger validation (HTTP ${HTTP_CODE})"
+          fi
+          ;;
+
+        *)
+          echo "Unknown command: ${COMMAND}"
+          post_comment ":x: Unknown command: \`/${COMMAND}\`\\n\\nAvailable commands:\\n- \`/release-status\` - Check pipeline status\\n- \`/release-cancel\` - Cancel running release\\n- \`/release-restart\` - Restart validation\\n- \`/release-full\` - Trigger full release\\n- \`/release-validate\` - Run validation only"
+          exit 1
+          ;;
+      esac
+
+      echo "Command processed successfully"
+  results:
+  - name: releaseBranch
+    description: Extracted release branch
+  - name: releaseVersion
+    description: Extracted release version
+  - name: projectName
+    description: Extracted project name

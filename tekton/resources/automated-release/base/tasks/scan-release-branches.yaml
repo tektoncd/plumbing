@@ -1,0 +1,184 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: scan-release-branches
+spec:
+  description: >-
+    Scans tektoncd repositories for release branches with new commits
+    since the last release tag. Only triggers a bugfix release when
+    the branch HEAD differs from the tagged commit.
+  params:
+  - name: repositories
+    description: Space-separated list of repositories to scan
+    type: string
+    default: "tektoncd/pipeline"
+  - name: eventListenerURL
+    description: EventListener URL for triggering releases
+    type: string
+    default: "http://el-tekton-releases.automated-releases.svc.cluster.local:8080"
+  - name: minVersion
+    description: >-
+      Minimum major.minor version to consider (e.g., "0.68").
+      Branches below this version are skipped. Set to "0.0" to
+      process all branches.
+    type: string
+    default: "0.0"
+  workspaces:
+  - name: github-secret
+    description: Secret containing GITHUB_TOKEN for querying latest release
+    optional: true
+  steps:
+  - name: scan-and-trigger
+    image: docker.io/alpine/git:latest
+    script: |
+      #!/bin/sh
+      set -e
+
+      # Install curl and GitHub CLI
+      apk add --no-cache curl github-cli > /dev/null 2>&1
+
+      REPOS="$(params.repositories)"
+      EL_URL="$(params.eventListenerURL)"
+      MIN_VERSION="$(params.minVersion)"
+
+      # Read GitHub token from workspace if available
+      if [ -f $(workspaces.github-secret.path)/GITHUB_TOKEN ]; then
+        export GH_TOKEN=$(cat $(workspaces.github-secret.path)/GITHUB_TOKEN)
+      fi
+
+      # Convert major.minor to a comparable integer (major * 1000 + minor)
+      version_to_int() {
+        echo "$1" | awk -F. '{ printf "%d", $1 * 1000 + $2 }'
+      }
+      MIN_VERSION_INT=$(version_to_int "${MIN_VERSION}")
+
+      echo "Scanning repositories: ${REPOS}"
+      echo "EventListener URL: ${EL_URL}"
+      echo "Minimum version: ${MIN_VERSION}"
+      echo ""
+
+      for REPO in ${REPOS}; do
+        echo "=== Scanning ${REPO} ==="
+
+        PROJECT=$(echo ${REPO} | cut -d/ -f2)
+
+        # Determine the latest release version to set releaseAsLatest correctly.
+        # Patch releases on the latest branch should update "latest" in the bucket.
+        LATEST_RELEASE_MINOR=""
+        if [ -n "${GH_TOKEN:-}" ]; then
+          LATEST_RELEASE_TAG=$(gh release list --repo "${REPO}" --limit 1 --json tagName --jq '.[0].tagName' 2>/dev/null || echo "")
+          if [ -n "${LATEST_RELEASE_TAG}" ]; then
+            LATEST_RELEASE_MINOR=$(echo "${LATEST_RELEASE_TAG}" | sed -E 's/^v([0-9]+\.[0-9]+)\..*/\1/')
+            echo "  Latest release: ${LATEST_RELEASE_TAG} (minor: ${LATEST_RELEASE_MINOR})"
+          fi
+        fi
+
+        # Fetch all refs (branches + tags) in one call
+        ALL_REFS=$(git ls-remote --heads --tags --refs https://github.com/${REPO} 2>/dev/null)
+
+        # Get all release-vX.Y.x branches
+        echo "${ALL_REFS}" | grep -E 'refs/heads/release-v[0-9]+\.[0-9]+\.x$' | \
+          while read BRANCH_SHA REF; do
+            BRANCH=$(echo ${REF} | sed 's|refs/heads/||')
+
+            # Extract major.minor version from branch (release-v1.10.x -> 1.10)
+            VERSION_PREFIX=$(echo ${BRANCH} | sed -E 's/release-v([0-9]+\.[0-9]+)\.x/\1/')
+
+            # Check minimum version
+            BRANCH_VERSION_INT=$(version_to_int "${VERSION_PREFIX}")
+            if [ "${BRANCH_VERSION_INT}" -lt "${MIN_VERSION_INT}" ]; then
+              echo "  ${BRANCH}: below minimum version ${MIN_VERSION}, skipping"
+              continue
+            fi
+
+            # Find the latest tag for this version series
+            LATEST_TAG=$(echo "${ALL_REFS}" | \
+              grep -E "refs/tags/v${VERSION_PREFIX}\.[0-9]+$" | \
+              sed 's|.*/v||' | \
+              sort -V | \
+              tail -1 || echo "")
+
+            if [ -z "${LATEST_TAG}" ]; then
+              # No tag exists yet — this branch has never been released.
+              # The initial release is handled by the webhook trigger on
+              # branch creation, not by the cron scanner.
+              echo "  ${BRANCH}: no tags yet, skipping (initial release via webhook)"
+              continue
+            fi
+
+            # Get the commit SHA of the latest tag
+            TAG_SHA=$(echo "${ALL_REFS}" | grep "refs/tags/v${LATEST_TAG}$" | awk '{print $1}')
+
+            if [ "${BRANCH_SHA}" = "${TAG_SHA}" ]; then
+              echo "  ${BRANCH}: HEAD matches v${LATEST_TAG}, no new commits"
+              continue
+            fi
+
+            # New commits exist — compute next version
+            PATCH=$(echo ${LATEST_TAG} | cut -d. -f3)
+            NEXT_PATCH=$((PATCH + 1))
+            NEXT_VERSION="v${VERSION_PREFIX}.${NEXT_PATCH}"
+
+            echo "  ${BRANCH}: new commits since v${LATEST_TAG} → ${NEXT_VERSION}"
+
+            # Determine if this branch is the latest release branch
+            RELEASE_AS_LATEST="false"
+            if [ "${VERSION_PREFIX}" = "${LATEST_RELEASE_MINOR}" ]; then
+              RELEASE_AS_LATEST="true"
+              echo "    → will update latest (matches current latest release)"
+            fi
+
+            # Generate UUID for build
+            BUILD_UUID=$(cat /proc/sys/kernel/random/uuid)
+
+            # Trigger EventListener
+            PAYLOAD=$(cat <<EOJSON
+      {
+        "buildUUID": "${BUILD_UUID}",
+        "params": {
+          "release": {
+            "gitRepository": "https://github.com/${REPO}",
+            "releaseBranch": "${BRANCH}",
+            "projectName": "${PROJECT}",
+            "repositoryFullName": "${REPO}",
+            "releaseVersion": "${NEXT_VERSION}",
+            "previousVersion": "v${LATEST_TAG}",
+            "releaseAsLatest": "${RELEASE_AS_LATEST}",
+            "commitSha": "${BRANCH_SHA}"
+          }
+        }
+      }
+      EOJSON
+      )
+
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              -H "Content-Type: application/json" \
+              -d "${PAYLOAD}" \
+              "${EL_URL}" 2>/dev/null || echo "000")
+
+            HTTP_CODE=$(echo "${RESPONSE}" | tail -1)
+
+            if [ "${HTTP_CODE}" = "202" ] || [ "${HTTP_CODE}" = "201" ]; then
+              echo "    ✓ Triggered (Build ID: ${BUILD_UUID})"
+            else
+              echo "    ✗ Failed (HTTP ${HTTP_CODE})"
+            fi
+          done
+
+        echo ""
+      done
+
+      echo "Scan complete"
