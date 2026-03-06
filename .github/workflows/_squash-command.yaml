@@ -1,0 +1,347 @@
+# Squash Command Workflow
+#
+# This workflow is triggered by the /squash slash command from the slash.yml workflow.
+# It squashes all commits on a PR branch into a single commit and force pushes the result.
+#
+# Usage:
+#   /squash                        - squash all commits, use first commit's message
+#   /squash Fix the auth bug       - squash all commits with custom message
+#   /squash --last 3               - squash only the last 3 commits
+#   /squash last=3                 - same as above (named arg format)
+#   /squash --last 3 Fix the bug   - squash last 3 commits with custom message
+#
+#   Multiline: lines after the /squash line become the commit body:
+#     /squash Fix the auth bug
+#
+#     This resolves the token refresh issue that caused
+#     intermittent 401 errors on long-running pipelines.
+#
+# Security Notes:
+# - Only users with "write" permission can trigger this command (enforced in slash.yml)
+# - Supports fork PRs when "Allow edits from maintainers" is enabled
+# - Uses CHATOPS_TOKEN to push to branches
+# - Uses --force-with-lease for safe force pushing
+#
+# To use this in a repo:
+#
+# name: Squash Command
+# on:
+#   repository_dispatch:
+#     types: [squash-command]
+#
+# jobs:
+#   squash:
+#     name: Squash PR
+#     uses: tektoncd/plumbing/.github/workflows/_squash-command.yaml@main
+#     secrets:
+#       CHATOPS_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+
+name: Squash Command
+
+on:
+  workflow_call:
+    secrets:
+      CHATOPS_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  squash:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add reaction to trigger comment
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          reactions: "+1"
+
+      - name: Validate PR state
+        id: validate
+        env:
+          GH_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+          REPO: ${{ github.repository }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          # Get PR information
+          echo "Fetching PR #$PR_NUMBER information..."
+          PR_DATA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json state,headRefName,baseRefName,headRepository,headRepositoryOwner,maintainerCanModify) || {
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=Failed to fetch PR information" >> $GITHUB_OUTPUT
+            exit 0
+          }
+
+          PR_STATE=$(echo "$PR_DATA" | jq -r '.state')
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=PR #$PR_NUMBER is not open (state: $PR_STATE). Can only squash open PRs." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          HEAD_REF=$(echo "$PR_DATA" | jq -r '.headRefName')
+          BASE_REF=$(echo "$PR_DATA" | jq -r '.baseRefName')
+          HEAD_REPO_OWNER=$(echo "$PR_DATA" | jq -r '.headRepositoryOwner.login')
+          HEAD_REPO_NAME=$(echo "$PR_DATA" | jq -r '.headRepository.name')
+          HEAD_REPO_FULL_NAME="${HEAD_REPO_OWNER}/${HEAD_REPO_NAME}"
+
+          # Detect fork PRs and check maintainer push access
+          if [ "$HEAD_REPO_OWNER" != "$REPO_OWNER" ]; then
+            MAINTAINER_CAN_MODIFY=$(echo "$PR_DATA" | jq -r '.maintainerCanModify')
+            if [ "$MAINTAINER_CAN_MODIFY" != "true" ]; then
+              echo "error=true" >> $GITHUB_OUTPUT
+              echo "message=Cannot squash fork PRs unless \"Allow edits from maintainers\" is enabled. Please ask the PR author to enable this option in the PR settings." >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "is_fork=true" >> $GITHUB_OUTPUT
+            echo "Fork PR detected (head: $HEAD_REPO_FULL_NAME). Maintainer push access confirmed."
+          else
+            echo "is_fork=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
+          echo "head_repo_full_name=$HEAD_REPO_FULL_NAME" >> $GITHUB_OUTPUT
+          echo "error=false" >> $GITHUB_OUTPUT
+
+          echo "PR #$PR_NUMBER: squashing '$HEAD_REF' (base: '$BASE_REF')"
+
+      - name: Comment on validation error
+        if: steps.validate.outputs.error == 'true'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            **Squash failed**: ${{ steps.validate.outputs.message }}
+
+      - name: Checkout repository
+        if: steps.validate.outputs.error == 'false'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          fetch-depth: 0
+          repository: ${{ steps.validate.outputs.head_repo_full_name }}
+          ref: ${{ steps.validate.outputs.head_ref }}
+
+      - name: Perform squash
+        if: steps.validate.outputs.error == 'false'
+        id: squash
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.CHATOPS_TOKEN }}
+          HEAD_REF: ${{ steps.validate.outputs.head_ref }}
+          BASE_REF: ${{ steps.validate.outputs.base_ref }}
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+          IS_FORK: ${{ steps.validate.outputs.is_fork }}
+          UPSTREAM_REPO: ${{ github.repository }}
+          CUSTOM_MESSAGE: ${{ github.event.client_payload.slash_command.args.unnamed.all }}
+          LAST_N: ${{ github.event.client_payload.slash_command.args.named.last }}
+          COMMENT_BODY: ${{ github.event.client_payload.github.payload.comment.body }}
+        run: |
+          set -e
+
+          OUTPUT_FILE=$(mktemp)
+
+          {
+            echo "Starting squash process..."
+
+            # Parse --last N from unnamed args if not already set via named arg (last=N)
+            if [ -z "$LAST_N" ] && [[ "$CUSTOM_MESSAGE" =~ --last[[:space:]]+([0-9]+) ]]; then
+              LAST_N="${BASH_REMATCH[1]}"
+              CUSTOM_MESSAGE=$(echo "$CUSTOM_MESSAGE" | sed 's/--last[[:space:]]*[0-9]*//g' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
+            fi
+
+            git config user.name "Tekton Bot"
+            git config user.email "tekton-bot@users.noreply.github.com"
+
+            # Set up base branch access
+            if [ "$IS_FORK" = "true" ]; then
+              echo "Fork PR: adding upstream remote for base branch..."
+              git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+              git fetch upstream "$BASE_REF"
+              BASE_REMOTE="upstream"
+            else
+              git fetch origin "$BASE_REF" || {
+                echo "ERROR: Failed to fetch base branch '$BASE_REF'"
+                exit 1
+              }
+              BASE_REMOTE="origin"
+            fi
+
+            # Find merge base
+            MERGE_BASE=$(git merge-base "${BASE_REMOTE}/${BASE_REF}" HEAD)
+            echo "Merge base: $MERGE_BASE"
+
+            # Count total commits on branch
+            TOTAL_COMMITS=$(git rev-list --count "$MERGE_BASE"..HEAD)
+            echo "Found $TOTAL_COMMITS commit(s) on branch"
+
+            # Determine squash target based on --last N
+            if [ -n "$LAST_N" ]; then
+              if ! [[ "$LAST_N" =~ ^[1-9][0-9]*$ ]]; then
+                echo "ERROR: --last requires a positive integer, got: $LAST_N"
+                exit 1
+              fi
+              if [ "$LAST_N" -ge "$TOTAL_COMMITS" ]; then
+                echo "--last $LAST_N >= total commits ($TOTAL_COMMITS), squashing all."
+                SQUASH_TARGET="$MERGE_BASE"
+                SQUASH_COUNT="$TOTAL_COMMITS"
+              else
+                SQUASH_TARGET="HEAD~${LAST_N}"
+                SQUASH_COUNT="$LAST_N"
+                echo "Squashing last $LAST_N of $TOTAL_COMMITS commits."
+              fi
+              SQUASH_RANGE="${SQUASH_TARGET}..HEAD"
+            else
+              SQUASH_TARGET="$MERGE_BASE"
+              SQUASH_COUNT="$TOTAL_COMMITS"
+              SQUASH_RANGE="${MERGE_BASE}..HEAD"
+            fi
+
+            if [ "$SQUASH_COUNT" -le 1 ]; then
+              echo "already_single_commit=true" >> $GITHUB_OUTPUT
+              echo "Branch already has a single commit. Nothing to squash."
+            else
+              # Check for merge commits (warn but proceed)
+              MERGE_COMMIT_COUNT=$(git rev-list --merges --count "$SQUASH_RANGE")
+              if [ "$MERGE_COMMIT_COUNT" -gt 0 ]; then
+                echo "has_merge_commits=true" >> $GITHUB_OUTPUT
+                echo "WARNING: Branch contains $MERGE_COMMIT_COUNT merge commit(s). The squash will proceed but consider using /rebase first for cleaner history."
+              else
+                echo "has_merge_commits=false" >> $GITHUB_OUTPUT
+              fi
+
+              # Determine commit message
+              # - First line args become the title (CUSTOM_MESSAGE from slash-command-dispatch)
+              # - Lines 2+ from the comment body become the extended description
+              EXTENDED_DESC=""
+              if [ -n "$COMMENT_BODY" ]; then
+                EXTENDED_DESC=$(printf '%s' "$COMMENT_BODY" | tail -n +2 | sed '/./,$!d')
+              fi
+
+              if [ -n "$CUSTOM_MESSAGE" ] || [ -n "$EXTENDED_DESC" ]; then
+                if [ -n "$CUSTOM_MESSAGE" ]; then
+                  TITLE="$CUSTOM_MESSAGE"
+                else
+                  FIRST_COMMIT=$(git rev-list --reverse "$SQUASH_RANGE" | head -1)
+                  TITLE=$(git log -1 --format="%s" "$FIRST_COMMIT")
+                fi
+                if [ -n "$EXTENDED_DESC" ]; then
+                  COMMIT_MSG="${TITLE}"$'\n\n'"${EXTENDED_DESC}"
+                else
+                  COMMIT_MSG="$TITLE"
+                fi
+                echo "Using custom commit message."
+                echo "used_custom_message=true" >> $GITHUB_OUTPUT
+              else
+                FIRST_COMMIT=$(git rev-list --reverse "$SQUASH_RANGE" | head -1)
+                COMMIT_MSG=$(git log -1 --format="%B" "$FIRST_COMMIT")
+                echo "used_custom_message=false" >> $GITHUB_OUTPUT
+              fi
+
+              # Collect unique trailers from commits being squashed
+              # Dedup: skip trailers already present in COMMIT_MSG (from %B)
+              TRAILERS=""
+              for KEY in "Co-authored-by" "Signed-off-by"; do
+                VALS=$(git log --format="%(trailers:key=$KEY,valueonly)" "$SQUASH_RANGE" | sort -u | grep -v '^$' || true)
+                while IFS= read -r val; do
+                  TRAILER_LINE="$KEY: $val"
+                  if [ -n "$val" ] && ! grep -qF "$TRAILER_LINE" <<< "$COMMIT_MSG"; then
+                    TRAILERS="$TRAILERS"$'\n'"$TRAILER_LINE"
+                  fi
+                done <<< "$VALS"
+              done
+
+              # Perform soft reset to squash target
+              git reset --soft "$SQUASH_TARGET"
+
+              # Build final commit message with preserved trailers
+              FULL_MSG="$COMMIT_MSG"
+              if [ -n "$TRAILERS" ]; then
+                FULL_MSG="$FULL_MSG"$'\n'"$TRAILERS"
+              fi
+
+              # Create single squashed commit
+              git commit -m "$FULL_MSG"
+
+              # Force push with lease (safe against concurrent pushes)
+              git push --force-with-lease origin "$HEAD_REF" || {
+                if [ "$IS_FORK" = "true" ]; then
+                  echo "ERROR: Failed to push to fork branch. Ensure 'Allow edits from maintainers' is still enabled and no concurrent pushes occurred."
+                else
+                  echo "ERROR: Failed to push squashed branch. Someone may have pushed new commits."
+                fi
+                exit 1
+              }
+
+              echo "commits_squashed=$SQUASH_COUNT" >> $GITHUB_OUTPUT
+              echo "total_commits=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
+              echo "already_single_commit=false" >> $GITHUB_OUTPUT
+              echo "Squash completed successfully!"
+            fi
+          } 2>&1 | tee "$OUTPUT_FILE"
+
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          # Save output for use in comments
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "output<<$EOF" >> $GITHUB_OUTPUT
+          cat "$OUTPUT_FILE" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+          rm -f "$OUTPUT_FILE"
+          exit $EXIT_CODE
+
+      - name: Comment on success (already single commit)
+        if: steps.validate.outputs.error == 'false' && steps.squash.outcome == 'success' && steps.squash.outputs.already_single_commit == 'true'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            **Already a single commit!**
+
+            The branch `${{ steps.validate.outputs.head_ref }}` already has a single commit. Nothing to squash.
+
+      - name: Comment on success (squashed)
+        if: steps.validate.outputs.error == 'false' && steps.squash.outcome == 'success' && steps.squash.outputs.already_single_commit == 'false'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            **Squash successful!**
+
+            Squashed ${{ steps.squash.outputs.commits_squashed }} commits on branch `${{ steps.validate.outputs.head_ref }}` into a single commit${{ steps.squash.outputs.used_custom_message == 'true' && ' with custom message.' || '.' }}
+
+            ${{ steps.squash.outputs.has_merge_commits == 'true' && '**Note:** The branch contained merge commits. The squashed result may include changes from the base branch. Consider reviewing the diff.' || '' }}
+
+      - name: Comment on failure
+        if: steps.validate.outputs.error == 'false' && steps.squash.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          token: ${{ secrets.CHATOPS_TOKEN }}
+          repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
+          issue-number: ${{ github.event.client_payload.github.payload.issue.number }}
+          body: |
+            **Squash failed!**
+
+            The squash of `${{ steps.validate.outputs.head_ref }}` failed.
+
+            **Output:**
+            ```
+            ${{ steps.squash.outputs.output }}
+            ```
+
+            **Next steps:**
+            - Check the [action logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details
+            ${{ steps.validate.outputs.is_fork == 'true' && '- For fork PRs, ensure "Allow edits from maintainers" is enabled' || '- If there were concurrent pushes, try again with `/squash`' }}
