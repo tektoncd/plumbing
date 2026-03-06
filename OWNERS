@@ -1,19 +1,19 @@
 # The OWNERS file is used by prow to automatically merge approved PRs.
 
 approvers:
-- abayer
 - afrittoli
 - AlanGreene
 - anithapriyanatarajan
-- bobcatfish
-- chitrangpatel
-- dibyom
-- jeromeJu
-- jerop
 - savitaashture
 - vdemeester
-- wlynch
 
 # Alumni ❤️
 # - nikhil-thomas
 # - dlorenc
+# - bobcatfish
+# - chitrangpatel
+# - jeromeJu
+# - jerop
+# - wlynch
+# - abayer
+# - dibyom
