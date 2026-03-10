@@ -66,6 +66,8 @@ plugins:
       - verify-owners
       - wip
       - yuks
+  tektoncd/pipelines-as-code:
+    plugins: []
   tektoncd/pipeline:
     plugins:
       - release-note
