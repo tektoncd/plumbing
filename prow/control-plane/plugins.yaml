@@ -22,6 +22,8 @@ approve:
 
 plugins:
   tektoncd:
+    excluded_repos:
+      - pipelines-as-code
     plugins:
       - approve
       - assign
@@ -66,8 +68,6 @@ plugins:
       - verify-owners
       - wip
       - yuks
-  tektoncd/pipelines-as-code:
-    plugins: []
   tektoncd/pipeline:
     plugins:
       - release-note
