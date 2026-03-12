@@ -5,6 +5,10 @@
 # - kind/bug → Bug, kind/feature → Feature, other kind/* → Task
 # - No kind/* label → clears the type
 #
+# Queries each repository individually to avoid the GitHub Search API's
+# 1000-result cap and the infinite pagination loop that occurs when
+# using `gh --paginate` with GraphQL `search()`.
+#
 # Runs daily and can be triggered manually.
 
 name: Sync Issue Types
@@ -30,49 +34,88 @@ env:
 jobs:
   sync-issue-types:
     name: Sync Issue Types
+    # Only run in the upstream repo, not in forks (secrets won't be available)
+    if: github.repository == 'tektoncd/plumbing'
     runs-on: ubuntu-latest
 
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
           private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
           owner: tektoncd
 
-      - name: Search for open issues
+      - name: Collect open issues from all repos
         id: search_issues
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
-          echo "::group::Searching for open issues"
+          echo "::group::Discovering repos with open issues"
 
-          # Search for all open issues in the org
-          gh api graphql -f query='
+          # Get all repos in the org that have open issues
+          REPOS=$(gh api graphql --paginate -f query='
             query($cursor: String) {
-              search(query: "org:tektoncd is:issue is:open", type: ISSUE, first: 100, after: $cursor) {
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-                nodes {
-                  ... on Issue {
-                    id
-                    number
-                    repository { name }
-                    issueType { id name }
-                    labels(first: 20) {
-                      nodes { name }
-                    }
+              organization(login: "tektoncd") {
+                repositories(first: 100, after: $cursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    name
+                    issues(states: OPEN) { totalCount }
                   }
                 }
               }
-            }' --paginate | jq -s '[.[].data.search.nodes[]] | add // []' > /tmp/issues.json
+            }' --jq '.data.organization.repositories.nodes[] | select(.issues.totalCount > 0) | .name')
+
+          REPO_COUNT=$(echo "$REPOS" | wc -l)
+          echo "Found $REPO_COUNT repos with open issues"
+          echo "::endgroup::"
+
+          echo "::group::Fetching issues per repository"
+
+          # Initialize the output file
+          echo '[]' > /tmp/issues.json
+
+          for REPO in $REPOS; do
+            echo "Fetching issues from $REPO..."
+
+            # Query issues per-repo using repository.issues() which has
+            # proper pagination (no 1000-result cap, no infinite loop)
+            gh api graphql --paginate -f query='
+              query($cursor: String) {
+                repository(owner: "tektoncd", name: "'"$REPO"'") {
+                  issues(states: OPEN, first: 100, after: $cursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      id
+                      number
+                      issueType { id name }
+                      labels(first: 20) {
+                        nodes { name }
+                      }
+                    }
+                  }
+                }
+              }' --jq "[.data.repository.issues.nodes[] | . + {repository: {name: \"$REPO\"}}]" \
+              | jq -s 'add // []' > "/tmp/issues_${REPO}.json"
+
+            REPO_ISSUE_COUNT=$(jq 'length' "/tmp/issues_${REPO}.json")
+            echo "  → $REPO_ISSUE_COUNT issues"
+
+            # Merge into the main file
+            jq -s 'add' /tmp/issues.json "/tmp/issues_${REPO}.json" > /tmp/issues_merged.json
+            mv /tmp/issues_merged.json /tmp/issues.json
+          done
 
           ISSUE_COUNT=$(jq 'length' /tmp/issues.json)
-          echo "Found $ISSUE_COUNT open issues"
+          echo "Total: $ISSUE_COUNT open issues across $REPO_COUNT repos"
           echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+          # Show breakdown by repo
+          echo "::group::Issues by repository"
+          jq -r '.[].repository.name' /tmp/issues.json | sort | uniq -c | sort -rn
           echo "::endgroup::"
 
       - name: Sync issue types based on labels
