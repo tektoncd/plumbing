@@ -1,0 +1,77 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This TriggerTemplate handles release tracking issues only.
+# The actual release PipelineRun is created by per-project TriggerTemplates
+# in overlays/<project>/, which use the git resolver to fetch the release
+# pipeline from the project's own repository and branch.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: release-tracking
+spec:
+  params:
+  - name: buildID
+    description: Build UUID for tracking
+  - name: gitRepository
+    description: Git repository URL
+  - name: gitRevision
+    description: Git revision (branch name)
+  - name: releaseBranch
+    description: Release branch name (e.g., release-v0.50.x)
+  - name: projectName
+    description: Project name (e.g., pipeline, triggers)
+  - name: repositoryFullName
+    description: Full repository name (e.g., tektoncd/pipeline)
+  - name: releaseVersion
+    description: Release version number (e.g., v1.10.0)
+    default: ""
+  - name: previousVersion
+    description: Previous release version tag (e.g., v1.9.0) for changelog generation
+    default: ""
+  - name: triggerSource
+    description: Trigger source (webhook or cron)
+  - name: afterCommitSha
+    description: Commit SHA that triggered the release
+  - name: releaseAsLatest
+    description: Whether to publish this release as latest
+    default: "false"
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: TaskRun
+    metadata:
+      generateName: release-tracking-issue-
+      labels:
+        tekton.dev/kind: release-automation
+        release.tekton.dev/project: $(tt.params.projectName)
+        release.tekton.dev/branch: $(tt.params.releaseBranch)
+        release.tekton.dev/trigger: $(tt.params.triggerSource)
+    spec:
+      taskRef:
+        name: manage-release-tracking-issue
+      params:
+      - name: repositoryFullName
+        value: $(tt.params.repositoryFullName)
+      - name: releaseBranch
+        value: $(tt.params.releaseBranch)
+      - name: buildID
+        value: $(tt.params.buildID)
+      - name: releaseVersion
+        value: $(tt.params.releaseVersion)
+      - name: commitSha
+        value: $(tt.params.afterCommitSha)
+      workspaces:
+      - name: github-secret
+        secret:
+          secretName: github-token

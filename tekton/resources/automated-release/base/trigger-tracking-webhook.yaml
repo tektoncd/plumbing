@@ -1,0 +1,57 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Trigger for creating/updating release tracking issues on webhook push.
+# Fires for all tektoncd projects on release branch pushes.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: release-tracking-webhook
+spec:
+  interceptors:
+    - name: "Validate GitHub payload and filter on eventType"
+      ref:
+        name: "github"
+        kind: ClusterInterceptor
+      params:
+        - name: "secretRef"
+          value:
+            secretName: release-webhook
+            secretKey: secret
+        - name: "eventTypes"
+          value:
+            - "push"
+    - name: "Filter release branches"
+      ref:
+        name: "cel"
+        kind: ClusterInterceptor
+      params:
+        - name: "filter"
+          value: >-
+            body.repository.full_name.startsWith('tektoncd/') &&
+            body.ref.matches('refs/heads/release-v[0-9]+\\.[0-9]+\\.x')
+        - name: "overlays"
+          value:
+            - key: release_branch
+              expression: "body.ref.split('/')[2]"
+            - key: trigger_source
+              expression: "'webhook'"
+    - name: "Add a build ID"
+      ref:
+        name: "build-id"
+        kind: ClusterInterceptor
+  bindings:
+    - ref: release-branch-webhook
+  template:
+    ref: release-tracking
