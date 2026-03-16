@@ -250,6 +250,6 @@ spec:
             script: |
               BASE_URL=$(echo "${RELEASE_BUCKET}/previous/${VERSION_TAG}")
               # If the bucket is in the gs:// return the corresponding public https URL
-              BASE_URL=$(echo ${BASE_URL} | sed 's,gs://,https://storage.googleapis.com/,g')
+              BASE_URL=$(echo ${BASE_URL} | sed 's,gs://,https://infra.tekton.dev/,g')
               echo "${BASE_URL}/release.yaml" > $(results.release.path)
               echo "${BASE_URL}/release.notag.yaml" > $(results.release-no-tag.path)
