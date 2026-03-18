@@ -205,8 +205,8 @@ jobs:
                     }
                   }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1)
 
-                if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
+                if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
                 else
                   ((++UPDATED))
@@ -237,8 +237,8 @@ jobs:
                     }
                   }' -f issueId="$ISSUE_ID" 2>&1)
 
-                if echo "$RESULT" | jq -e '.errors' > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(echo "$RESULT" | jq -r '.errors[0].message')"
+                if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
                 else
                   ((++CLEARED))
