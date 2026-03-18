@@ -6,8 +6,11 @@
 # - No kind/* label → clears the type
 #
 # Queries each repository individually to avoid the GitHub Search API's
-# 1000-result cap and the infinite pagination loop that occurs when
-# using `gh --paginate` with GraphQL `search()`.
+# 1000-result cap.
+#
+# IMPORTANT: gh --paginate requires the cursor variable to be named
+# $endCursor (not $cursor). Using any other name causes gh to never
+# advance the cursor, resulting in an infinite loop.
 #
 # Runs daily and can be triggered manually.
 
@@ -37,6 +40,7 @@ jobs:
     # Only run in the upstream repo, not in forks (secrets won't be available)
     if: github.repository == 'tektoncd/plumbing'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Generate token
@@ -52,13 +56,15 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
+          START_TIME=$(date +%s)
           echo "::group::Discovering repos with open issues"
 
-          # Get all repos in the org that have open issues
+          # gh --paginate requires the cursor variable to be named $endCursor.
+          # Using $cursor causes gh to never substitute it, looping forever.
           REPOS=$(gh api graphql --paginate -f query='
-            query($cursor: String) {
+            query($endCursor: String) {
               organization(login: "tektoncd") {
-                repositories(first: 100, after: $cursor) {
+                repositories(first: 100, after: $endCursor) {
                   pageInfo { hasNextPage endCursor }
                   nodes {
                     name
@@ -70,22 +76,25 @@ jobs:
 
           REPO_COUNT=$(echo "$REPOS" | wc -l)
           echo "Found $REPO_COUNT repos with open issues"
+          echo "Repos: $(echo $REPOS | tr '\n' ' ')"
           echo "::endgroup::"
 
           echo "::group::Fetching issues per repository"
 
           # Initialize the output file
           echo '[]' > /tmp/issues.json
+          REPO_IDX=0
 
           for REPO in $REPOS; do
-            echo "Fetching issues from $REPO..."
+            ((++REPO_IDX))
+            ELAPSED=$(( $(date +%s) - START_TIME ))
+            echo "[$REPO_IDX/$REPO_COUNT] Fetching issues from $REPO... (${ELAPSED}s elapsed)"
 
-            # Query issues per-repo using repository.issues() which has
-            # proper pagination (no 1000-result cap, no infinite loop)
+            # gh --paginate requires $endCursor variable name for cursor injection
             gh api graphql --paginate -f query='
-              query($cursor: String) {
+              query($endCursor: String) {
                 repository(owner: "tektoncd", name: "'"$REPO"'") {
-                  issues(states: OPEN, first: 100, after: $cursor) {
+                  issues(states: OPEN, first: 100, after: $endCursor) {
                     pageInfo { hasNextPage endCursor }
                     nodes {
                       id
@@ -101,15 +110,16 @@ jobs:
               | jq -s 'add // []' > "/tmp/issues_${REPO}.json"
 
             REPO_ISSUE_COUNT=$(jq 'length' "/tmp/issues_${REPO}.json")
-            echo "  → $REPO_ISSUE_COUNT issues"
+            echo "  → $REPO_ISSUE_COUNT issues fetched"
 
             # Merge into the main file
             jq -s 'add' /tmp/issues.json "/tmp/issues_${REPO}.json" > /tmp/issues_merged.json
             mv /tmp/issues_merged.json /tmp/issues.json
           done
 
+          ELAPSED=$(( $(date +%s) - START_TIME ))
           ISSUE_COUNT=$(jq 'length' /tmp/issues.json)
-          echo "Total: $ISSUE_COUNT open issues across $REPO_COUNT repos"
+          echo "Total: $ISSUE_COUNT open issues across $REPO_COUNT repos (fetched in ${ELAPSED}s)"
           echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
           echo "::endgroup::"
 
@@ -133,14 +143,24 @@ jobs:
           CLEARED=0
           SKIPPED=0
           ERRORS=0
+          PROCESSED=0
+          TOTAL=$(jq 'length' /tmp/issues.json)
+          START_TIME=$(date +%s)
 
-          echo "::group::Syncing issue types"
+          echo "::group::Syncing issue types ($TOTAL issues)"
 
           while IFS= read -r issue; do
+            ((++PROCESSED))
             ISSUE_ID=$(echo "$issue" | jq -r '.id')
             ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
             REPO_NAME=$(echo "$issue" | jq -r '.repository.name')
             CURRENT_TYPE=$(echo "$issue" | jq -r '.issueType.name // "none"')
+
+            # Log progress every 100 issues
+            if (( PROCESSED % 100 == 0 )); then
+              ELAPSED=$(( $(date +%s) - START_TIME ))
+              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED cleared=$CLEARED skipped=$SKIPPED errors=$ERRORS) ---"
+            fi
 
             # Get kind/* labels
             KIND_LABELS=$(echo "$issue" | jq -r '[.labels.nodes[].name | select(startswith("kind/"))] | join(",")')
@@ -239,7 +259,9 @@ jobs:
 
           echo "::endgroup::"
 
-          echo "::group::Results"
+          ELAPSED=$(( $(date +%s) - START_TIME ))
+          echo "::group::Results (completed in ${ELAPSED}s)"
+          echo "Processed: $PROCESSED"
           echo "Types set: $UPDATED"
           echo "Types cleared: $CLEARED"
           echo "Skipped: $SKIPPED"
