@@ -192,8 +192,10 @@ jobs:
               echo "UPDATE: $REPO_NAME#$ISSUE_NUMBER - $CURRENT_TYPE → $TARGET_TYPE_NAME (labels: $KIND_LABELS)"
 
               if [ "$DRY_RUN" != "true" ]; then
-                # || true prevents set -e from killing the script on GraphQL errors;
-                # we handle errors ourselves via the jq .errors check below.
+                # Capture stdout only; gh prints its own error messages to
+                # stderr which would corrupt the JSON and break jq parsing.
+                # || true prevents set -e from killing the script on GraphQL
+                # errors; we handle errors ourselves below.
                 RESULT=$(gh api graphql -f query='
                   mutation($issueId: ID!, $typeId: ID!) {
                     updateIssueIssueType(input: {
@@ -205,14 +207,12 @@ jobs:
                         issueType { name }
                       }
                     }
-                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1 || true)
+                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>/dev/null || true)
 
-                # Debug: log the mutation result for the first few updates
-                if [ "$UPDATED" -lt 3 ]; then
-                  echo "DEBUG RESULT for $REPO_NAME#$ISSUE_NUMBER: $RESULT"
-                fi
-
-                if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
                 else
@@ -225,7 +225,7 @@ jobs:
                         node(id: $issueId) {
                           ... on Issue { issueType { name } }
                         }
-                      }' -f issueId="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>&1 || true)
+                      }' -f issueId="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>/dev/null || true)
                     if [ "$VERIFY" != "$TARGET_TYPE_NAME" ]; then
                       echo "::error::Verification failed for $REPO_NAME#$ISSUE_NUMBER: expected type '$TARGET_TYPE_NAME' but got '$VERIFY'. The GitHub App likely lacks the 'Issue Types' organization permission (write). Add it in the App settings → Organization permissions → Issue Types → Read & Write."
                       exit 1
@@ -251,8 +251,7 @@ jobs:
               echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing type $CURRENT_TYPE (no kind/* label)"
 
               if [ "$DRY_RUN" != "true" ]; then
-                # || true prevents set -e from killing the script on GraphQL errors;
-                # we handle errors ourselves via the jq .errors check below.
+                # Capture stdout only; see comment on the set-type mutation.
                 RESULT=$(gh api graphql -f query='
                   mutation($issueId: ID!) {
                     updateIssueIssueType(input: {
@@ -264,9 +263,12 @@ jobs:
                         issueType { name }
                       }
                     }
-                  }' -f issueId="$ISSUE_ID" 2>&1 || true)
+                  }' -f issueId="$ISSUE_ID" 2>/dev/null || true)
 
-                if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
                 else
