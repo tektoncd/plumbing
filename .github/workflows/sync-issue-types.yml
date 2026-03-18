@@ -211,7 +211,27 @@ jobs:
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
                 else
+                  # On the first update, verify the type actually persisted.
+                  # GitHub's API can silently return success without persisting
+                  # when the token lacks "Issue Types" org permission.
+                  if [ "$UPDATED" -eq 0 ]; then
+                    VERIFY=$(gh api graphql -f query='
+                      query($issueId: ID!) {
+                        node(id: $issueId) {
+                          ... on Issue { issueType { name } }
+                        }
+                      }' -f issueId="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>&1 || true)
+                    if [ "$VERIFY" != "$TARGET_TYPE_NAME" ]; then
+                      echo "::error::Verification failed for $REPO_NAME#$ISSUE_NUMBER: expected type '$TARGET_TYPE_NAME' but got '$VERIFY'. The GitHub App likely lacks the 'Issue Types' organization permission (write). Add it in the App settings → Organization permissions → Issue Types → Read & Write."
+                      exit 1
+                    fi
+                    echo "  ✓ Verified first update persisted ($VERIFY)"
+                  fi
                   ((++UPDATED))
+                  # Record sample issue IDs for post-sync verification (up to 5)
+                  if [ "$UPDATED" -le 5 ]; then
+                    echo "$ISSUE_ID|$REPO_NAME#$ISSUE_NUMBER|$TARGET_TYPE_NAME" >> /tmp/verify_samples.txt
+                  fi
                 fi
 
                 sleep 0.3
@@ -297,6 +317,45 @@ jobs:
           echo "| kind/feature | Feature |" >> $GITHUB_STEP_SUMMARY
           echo "| kind/* (other) | Task |" >> $GITHUB_STEP_SUMMARY
           echo "| (no kind/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify types persisted
+        if: steps.sync_types.outputs.updated > 0 && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          echo "::group::Post-sync verification"
+          if [ ! -f /tmp/verify_samples.txt ]; then
+            echo "No samples to verify"
+            exit 0
+          fi
+
+          PASS=0
+          FAIL=0
+          while IFS='|' read -r ISSUE_ID ISSUE_REF EXPECTED_TYPE; do
+            ACTUAL=$(gh api graphql -f query='
+              query($id: ID!) {
+                node(id: $id) {
+                  ... on Issue { issueType { name } }
+                }
+              }' -f id="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>&1 || true)
+
+            if [ "$ACTUAL" = "$EXPECTED_TYPE" ]; then
+              echo "✓ $ISSUE_REF: $ACTUAL (expected $EXPECTED_TYPE)"
+              ((++PASS))
+            else
+              echo "✗ $ISSUE_REF: got '$ACTUAL', expected '$EXPECTED_TYPE'"
+              ((++FAIL))
+            fi
+          done < /tmp/verify_samples.txt
+
+          echo ""
+          echo "Verification: $PASS passed, $FAIL failed (out of $((PASS + FAIL)) samples)"
+          echo "::endgroup::"
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "::error::Post-sync verification failed: $FAIL/$((PASS + FAIL)) sampled issues did not have the expected type. The GitHub App may lack the 'Issue Types' organization permission."
+            exit 1
+          fi
 
       - name: Notify on failure
         if: failure()
