@@ -207,6 +207,11 @@ jobs:
                     }
                   }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1 || true)
 
+                # Debug: log the mutation result for the first few updates
+                if [ "$UPDATED" -lt 3 ]; then
+                  echo "DEBUG RESULT for $REPO_NAME#$ISSUE_NUMBER: $RESULT"
+                fi
+
                 if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
                   ((++ERRORS))
