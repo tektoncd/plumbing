@@ -192,6 +192,8 @@ jobs:
               echo "UPDATE: $REPO_NAME#$ISSUE_NUMBER - $CURRENT_TYPE → $TARGET_TYPE_NAME (labels: $KIND_LABELS)"
 
               if [ "$DRY_RUN" != "true" ]; then
+                # || true prevents set -e from killing the script on GraphQL errors;
+                # we handle errors ourselves via the jq .errors check below.
                 RESULT=$(gh api graphql -f query='
                   mutation($issueId: ID!, $typeId: ID!) {
                     updateIssueIssueType(input: {
@@ -203,7 +205,7 @@ jobs:
                         issueType { name }
                       }
                     }
-                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1)
+                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>&1 || true)
 
                 if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
@@ -224,6 +226,8 @@ jobs:
               echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing type $CURRENT_TYPE (no kind/* label)"
 
               if [ "$DRY_RUN" != "true" ]; then
+                # || true prevents set -e from killing the script on GraphQL errors;
+                # we handle errors ourselves via the jq .errors check below.
                 RESULT=$(gh api graphql -f query='
                   mutation($issueId: ID!) {
                     updateIssueIssueType(input: {
@@ -235,7 +239,7 @@ jobs:
                         issueType { name }
                       }
                     }
-                  }' -f issueId="$ISSUE_ID" 2>&1)
+                  }' -f issueId="$ISSUE_ID" 2>&1 || true)
 
                 if jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
                   echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
