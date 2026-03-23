@@ -23,7 +23,7 @@ RUN cd /go/src/k8s.io/test-infra && \
     git checkout e685556b32c5fb7ab12c3277d41112d47ceac0cd && \
     go install k8s.io/test-infra/kubetest
 
-FROM docker.io/library/ubuntu:24.04@sha256:d1e2e92c075e5ca139d51a140fff46f84315c0fdce203eab2807c7e495eff4f9
+FROM docker.io/library/ubuntu:24.04@sha256:186072bba1b2f436cbb91ef2567abca677337cfc786c86e107d25b7072feef0c
 ARG GO_VERSION
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
