@@ -5,3 +5,12 @@ metadata:
   namespace: pipelines-as-code
 data:
   application-name: "Tekton CI (Pipelines-as-Code)"
+  # Security: scope tokens to only the repo that triggered the event
+  secret-github-app-token-scoped: "true"
+  # Security: do not auto-create repos for new GitHub repos
+  auto-configure-new-github-repo: "false"
+  # Dashboard integration
+  tekton-dashboard-url: "https://tekton.infra.tekton.dev"
+  # Cleanup defaults
+  default-max-keep-runs: "10"
+  max-keep-run-upper-limit: "50"
