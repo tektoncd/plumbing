@@ -8,7 +8,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'images/static-base/**'
+      - 'tekton/images/static-base/**'
 
 permissions:
   contents: read
@@ -18,13 +18,13 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
       - name: Install apko
-        uses: chainguard-dev/actions/setup-apko@main
+        uses: chainguard-dev/actions/setup-apko@9f56ab628c48a2a6412f4b2fa87d0ca5dd19bd50  # main
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2  # v4.0.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -32,7 +32,7 @@ jobs:
 
       - name: Build and publish
         run: |
-          apko publish images/static-base/apko.yaml \
+          apko publish tekton/images/static-base/apko.yaml \
             ghcr.io/tektoncd/plumbing/static-base:latest
 
       - name: Verify multi-arch
