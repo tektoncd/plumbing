@@ -1,4 +1,6 @@
 contents:
+  keyring:
+    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub
   repositories:
     - https://dl-cdn.alpinelinux.org/alpine/v3.21/main
   packages:
