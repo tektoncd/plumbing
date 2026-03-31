@@ -4,5 +4,6 @@ resources:
 - https://github.com/tektoncd/pipelines-as-code/releases/download/v0.43.0/release.k8s.yaml
 - ingress.yaml
 - repositories/pipeline.yaml
+- repositories/operator.yaml
 patches:
 - path: pipelines-as-code-configmap.yaml
