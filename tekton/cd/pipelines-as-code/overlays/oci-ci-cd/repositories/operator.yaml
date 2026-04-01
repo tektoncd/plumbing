@@ -44,6 +44,7 @@ spec:
       pull_request:
         - operator-maintainers
   incoming:
+    # Patch releases — triggered by .github/workflows/patch-release.yaml
     - targets:
         - "release-v*"
       secret:
@@ -52,3 +53,11 @@ spec:
       params:
         - version
         - release_as_latest
+    # Nightly builds — triggered by .github/workflows/nightly-builds.yaml
+    - targets:
+        - "main"
+      secret:
+        name: pac-incoming-secret
+      type: webhook-url
+      params:
+        - version_tag
