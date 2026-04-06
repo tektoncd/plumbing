@@ -6,7 +6,7 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/tektoncd/triggers v0.35.0
 	go.uber.org/zap v1.27.1
-	google.golang.org/grpc v1.79.3
+	google.golang.org/grpc v1.80.0
 	knative.dev/pkg v0.0.0-20260120122510-4a022ed9999a
 )
 
