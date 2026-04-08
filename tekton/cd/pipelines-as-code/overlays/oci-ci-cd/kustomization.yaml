@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- https://github.com/tektoncd/pipelines-as-code/releases/download/v0.43.0/release.k8s.yaml
+- https://github.com/tektoncd/pipelines-as-code/releases/download/v0.45.0/release.k8s.yaml
 - ingress.yaml
 - repositories/pipeline.yaml
 - repositories/operator.yaml
