@@ -7,5 +7,6 @@ resources:
 - repositories/operator.yaml
 - release-rbac.yaml
 - repositories/cli.yaml
+- repositories/pruner.yaml
 patches:
 - path: pipelines-as-code-configmap.yaml
