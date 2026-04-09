@@ -73,10 +73,10 @@ func generateRotationCSV(c config, out io.Writer) error {
 	}
 
 	w := csv.NewWriter(out)
-	w.Write([]string{"Date", "User"})
+	_ = w.Write([]string{"Date", "User"})
 	for iter.Before(end) {
 		if iter.Weekday() == time.Saturday || iter.Weekday() == time.Sunday {
-			w.Write([]string{iter.Format(expectedDateFormat), ""})
+			_ = w.Write([]string{iter.Format(expectedDateFormat), ""})
 			iter = iter.AddDate(0, 0, 1)
 			continue
 		}

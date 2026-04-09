@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -192,8 +192,8 @@ func assertResponseStatus(t *testing.T, resp *http.Response, want int) {
 
 func assertResponsePayload(t *testing.T, resp *http.Response, v interface{}, opts ...cmp.Option) {
 	t.Helper()
-	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

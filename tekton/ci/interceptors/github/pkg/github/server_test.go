@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +23,7 @@ func TestServer(t *testing.T) {
 	srv := httptest.NewServer(New(http.DefaultClient, webhookSecret))
 	defer srv.Close()
 
-	f, err := ioutil.ReadFile("testdata/push.json")
+	f, err := os.ReadFile("testdata/push.json")
 	if err != nil {
 		log.Fatal(err)
 	}

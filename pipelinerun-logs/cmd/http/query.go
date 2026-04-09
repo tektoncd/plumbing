@@ -20,16 +20,16 @@ type Query struct {
 // and returns an error otherwise.
 func (q *Query) Validate() error {
 	if q.Project == "" {
-		return errors.New("Invalid query: missing project")
+		return errors.New("invalid query: missing project")
 	}
 	if q.Cluster == "" {
-		return errors.New("Invalid query: missing cluster")
+		return errors.New("invalid query: missing cluster")
 	}
 	if q.Namespace == "" {
-		return errors.New("Invalid query: missing namespace")
+		return errors.New("invalid query: missing namespace")
 	}
 	if q.BuildID == "" {
-		return errors.New("Invalid query: missing build id")
+		return errors.New("invalid query: missing build id")
 	}
 	return nil
 }

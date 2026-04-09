@@ -23,7 +23,7 @@ func FromURL(url string) GetFile {
 	return func() (io.ReadCloser, error) {
 		resp, err := http.Get(url)
 		if err != nil {
-			return nil, fmt.Errorf("Could not open url %s: %v", url, err)
+			return nil, fmt.Errorf("could not open url %s: %v", url, err)
 		}
 		return resp.Body, nil
 	}
@@ -43,7 +43,7 @@ func (r Rotation) GetBuildCaptain(t time.Time) string {
 		log.Printf("Could not read from build captain rotation: %v", err)
 		return "nobody"
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 	rotation, err := parseRotation(f)
 
 	if err != nil {

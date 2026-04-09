@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -36,7 +36,7 @@ func TestExecute_IssueComment(t *testing.T) {
 	client := github.NewClient(srv.Client())
 	client.BaseURL = mustParseURL(srv.URL + "/")
 	mux.HandleFunc("/repos/tektoncd/results/contents/OWNERS", func(rw http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(rw).Encode(map[string]string{
+		_ = json.NewEncoder(rw).Encode(map[string]string{
 			"type":    "file",
 			"content": ownersFile,
 		})
@@ -59,10 +59,10 @@ func TestExecute_IssueComment(t *testing.T) {
 		},
 	}
 	mux.HandleFunc("/repos/tektoncd/results/pulls/1", func(rw http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(rw).Encode(pr)
+		_ = json.NewEncoder(rw).Encode(pr)
 	})
 
-	f, err := ioutil.ReadFile("testdata/issue_comment.json")
+	f, err := os.ReadFile("testdata/issue_comment.json")
 	if err != nil {
 		log.Fatal(err)
 	}

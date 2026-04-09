@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -61,8 +61,8 @@ func makeAddTeamMembersHandler(orgMembersFetcher, teamMembersFetcher urlToList, 
 
 		// Get the payload
 		if r.Body != nil {
-			defer r.Body.Close()
-			payload, err = ioutil.ReadAll(r.Body)
+			defer r.Body.Close() //nolint:errcheck
+			payload, err = io.ReadAll(r.Body)
 			if err != nil {
 				log.Printf("failed to read request body: %q", err)
 				marshalError(err, w)
@@ -247,14 +247,14 @@ func fetchMembers(membersUrl, token string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close() //nolint:errcheck
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 	decodedBody, err := decodeListBody(body)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding body %v to a list: %q", string(body[:]), err)
+		return nil, fmt.Errorf("error decoding body %v to a list: %q", string(body[:]), err)
 	}
 
 	members := []string{}
