@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -59,8 +59,8 @@ func makeAddPRBodyHandler(urlFetcherDecoder urlToMap, token string) http.Handler
 
 		// Get the payload
 		if r.Body != nil {
-			defer r.Body.Close()
-			payload, err = ioutil.ReadAll(r.Body)
+			defer r.Body.Close() //nolint:errcheck
+			payload, err = io.ReadAll(r.Body)
 			if err != nil {
 				log.Printf("failed to read request body: %q", err)
 				marshalError(err, w)
@@ -184,8 +184,8 @@ func getPrBody(prUrl string, token string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close() //nolint:errcheck
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

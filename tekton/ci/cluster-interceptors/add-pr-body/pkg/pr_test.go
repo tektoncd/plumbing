@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
@@ -27,7 +26,7 @@ func TestInterceptor_Process(t *testing.T) {
 
 	t.Run("without auth token", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			writer.Write([]byte(prBody))
+			_, _ = writer.Write([]byte(prBody))
 		}))
 		i := Interceptor{}
 		req := triggersv1.InterceptorRequest{
@@ -48,7 +47,7 @@ func TestInterceptor_Process(t *testing.T) {
 		wantToken := "token abcde"
 		ts := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			gotToken = request.Header.Get("Authorization")
-			writer.Write([]byte(prBody))
+			_, _ = writer.Write([]byte(prBody))
 		}))
 		i := Interceptor{
 			AuthToken: "abcde",
@@ -166,19 +165,4 @@ func TestInterceptor_Process_Error(t *testing.T) {
 	}
 }
 
-type requestOption func(*http.Request)
 
-// creates a GitHub hook type request - no secret is provided in testing.
-func createRequest(method, url, event, token string, body []byte, opts ...requestOption) *http.Request {
-	req := httptest.NewRequest(method, url, bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Github-Event", event)
-	req.Header.Set("X-Github-Delivery", "testing-123")
-	if token != "" {
-		req.Header.Add("Authorization", "token "+token)
-	}
-	for _, o := range opts {
-		o(req)
-	}
-	return req
-}

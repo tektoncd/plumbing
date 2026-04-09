@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"log"
 	"testing"
 
@@ -18,7 +18,7 @@ func TestExecute_PullRequest(t *testing.T) {
 	ctx := context.Background()
 	h := &PullRequest{}
 
-	f, err := ioutil.ReadFile("testdata/pull_request.json")
+	f, err := os.ReadFile("testdata/pull_request.json")
 	if err != nil {
 		log.Fatal(err)
 	}

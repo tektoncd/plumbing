@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -27,7 +27,7 @@ func TestExecute_Push(t *testing.T) {
 	ctx := context.Background()
 	h := &Push{}
 
-	f, err := ioutil.ReadFile("testdata/push.json")
+	f, err := os.ReadFile("testdata/push.json")
 	if err != nil {
 		log.Fatal(err)
 	}

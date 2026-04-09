@@ -1,3 +1,4 @@
+// Package main is the entrypoint for the PR commenter custom task.
 package main
 
 import (

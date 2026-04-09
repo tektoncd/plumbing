@@ -165,7 +165,7 @@ func getNextTickDuration() time.Duration {
 	if nextTick.Before(now) {
 		nextTick = nextTick.Add(24 * time.Hour)
 	}
-	return nextTick.Sub(time.Now())
+	return time.Until(nextTick)
 }
 
 func NewJobTicker() jobTicker {

@@ -1,3 +1,4 @@
+// Package reconciler contains the reconciler for the PR status updater custom task.
 package reconciler
 
 import (
@@ -19,22 +20,24 @@ const (
 
 // NewController instantiates a new controller
 func NewController(scmClient *scm.Client, botUser string) func(context.Context, configmap.Watcher) *controller.Impl {
-	return func(ctx context.Context, cmw configmap.Watcher) *controller.Impl {
+	return func(ctx context.Context, _ configmap.Watcher) *controller.Impl {
 		r := &Reconciler{
 			SCMClient: scmClient,
 			BotUser:   botUser,
 		}
 
-		impl := runreconciler.NewImpl(ctx, r, func(impl *controller.Impl) controller.Options {
+		impl := runreconciler.NewImpl(ctx, r, func(_ *controller.Impl) controller.Options {
 			return controller.Options{
 				AgentName: ControllerName,
 			}
 		})
 
-		runinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		if _, err := runinformer.Get(ctx).Informer().AddEventHandler(cache.FilteringResourceEventHandler{
 			FilterFunc: tkncontroller.FilterCustomRunRef("custom.tekton.dev/v0", "PRStatusUpdater"),
 			Handler:    controller.HandleAll(impl.Enqueue),
-		})
+		}); err != nil {
+			panic(err)
+		}
 
 		return impl
 	}

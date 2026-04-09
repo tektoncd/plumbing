@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
-	"io/ioutil"
+	"os"
 	"log"
 	"net/http"
 
@@ -20,12 +20,12 @@ func main() {
 	var webhookSecret []byte
 	if *webhookSecretPath != "" {
 		var err error
-		webhookSecret, err = ioutil.ReadFile(*webhookSecretPath)
+		webhookSecret, err = os.ReadFile(*webhookSecretPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 	s := github.New(http.DefaultClient, bytes.TrimSpace(webhookSecret))
 
-	http.ListenAndServe(":8080", s)
+	log.Fatal(http.ListenAndServe(":8080", s))
 }

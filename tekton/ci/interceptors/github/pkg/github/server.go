@@ -59,7 +59,7 @@ func (s *Server) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(rw).Encode(resp); err != nil {
 		fmt.Println(err)
 		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(rw, "error writing response:", err)
+		fmt.Fprint(rw, "error writing response:", err) //nolint:errcheck // best-effort error response
 		return
 	}
 }
