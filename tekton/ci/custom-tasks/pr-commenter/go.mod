@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/jenkins-x/go-scm v1.15.17
+	github.com/jenkins-x/go-scm v1.15.21
 	github.com/tektoncd/pipeline v1.11.0
 	go.uber.org/zap v1.27.1
 	k8s.io/apimachinery v0.35.3
