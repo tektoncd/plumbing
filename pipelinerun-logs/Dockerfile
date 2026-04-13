@@ -1,4 +1,4 @@
-FROM golang:1.26.1-alpine
+FROM golang:1.26.2-alpine
 WORKDIR /go/src/pipelinerun-logs
 COPY . .
 RUN go build -o ./pipelinerun-logs ./cmd/http
