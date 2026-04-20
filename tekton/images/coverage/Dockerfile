@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.26.2@sha256:fcdb3e42c5544e9682a635771eac76a698b66de79b1b50ec5b9ce5c5f14ad775 as buildcoverage
+FROM golang:1.26.2@sha256:5f3787b7f902c07c7ec4f3aa91a301a3eda8133aa32661a3b3a3a86ab3a68a36 as buildcoverage
 RUN git clone https://github.com/knative/test-infra /go/src/knative.dev/test-infra
 RUN git -C /go/src/knative.dev/test-infra checkout ba4c2c3e061a59ac4b167da84924e9fa55475ad9 # Last commit before removal of tools/coverage
 RUN make -C /go/src/knative.dev/test-infra/tools/coverage
 
-FROM golang:1.26.2@sha256:fcdb3e42c5544e9682a635771eac76a698b66de79b1b50ec5b9ce5c5f14ad775
+FROM golang:1.26.2@sha256:5f3787b7f902c07c7ec4f3aa91a301a3eda8133aa32661a3b3a3a86ab3a68a36
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for testing Coverage"
