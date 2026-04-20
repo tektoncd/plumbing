@@ -33,8 +33,16 @@ info() {
   echo -e "[\e[93mINFO\e[0m] $1"
 }
 
+show-usage() {
+  echo "Usage:"
+  echo "    tekton_in_kind.sh [-c cluster-name] [-p pipeline-version] [-t triggers-version] [-d dashboard-version] [-k]"
+  echo "    tekton_in_kind.sh -h"
+  echo "        The -k option tells Kind to use the Docker container runtime instead of Podman."
+  echo "        The -h option prints this help message then exits."
+}
+
 # Read command line options
-while getopts ":c:p:t:d:k" opt; do
+while getopts ":c:p:t:d:kh" opt; do
   case ${opt} in
     c )
       CLUSTER_NAME=$OPTARG
@@ -51,13 +59,20 @@ while getopts ":c:p:t:d:k" opt; do
     k )
       CONTAINER_RUNTIME="docker"
       ;;
+    h )
+      show-usage
+      exit
+      ;;
     \? )
       echo "Invalid option: $OPTARG" 1>&2
       echo 1>&2
-      echo "Usage: tekton_in_kind.sh [-c cluster-name -p pipeline-version -t triggers-version -d dashboard-version [-k]"
+      show-usage
+      exit 1
       ;;
     : )
       echo "Invalid option: $OPTARG requires an argument" 1>&2
+      show-usage
+      exit 1
       ;;
   esac
 done
