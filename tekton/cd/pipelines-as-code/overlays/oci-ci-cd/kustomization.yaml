@@ -5,6 +5,7 @@ resources:
 - ingress.yaml
 - repositories/pipeline.yaml
 - repositories/operator.yaml
+- release-rbac.yaml
 - repositories/cli.yaml
 patches:
 - path: pipelines-as-code-configmap.yaml
