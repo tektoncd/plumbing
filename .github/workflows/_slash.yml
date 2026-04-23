@@ -20,7 +20,7 @@
 # When a command is recognised, the rocket and eyes emojis are added
 #
 # To use this in a repo:
-# 
+#
 # name: Slash Command Routing
 # on:
 #   issue_comment:
@@ -28,7 +28,7 @@
 #
 # jobs:
 #   check_comments:
-#     uses: tektoncd/plumbing/.github/actions/_slash.yml@main
+#     uses: tektoncd/plumbing/.github/workflows/_slash.yml@main
 
 name: Slash Command Routing
 on:
