@@ -18,7 +18,7 @@ approve:
   - tektoncd-catalog
   require_self_approval: true
   ignore_review_state: false
-  commandHelpLink: https://prow.tekton.dev/command-help
+  commandHelpLink: https://prow.infra.tekton.dev/command-help
 
 plugins:
   tektoncd:
