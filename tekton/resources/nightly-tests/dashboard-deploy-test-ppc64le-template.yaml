@@ -1,4 +1,4 @@
-# Copyright 2021 The Tekton Authors
+# Copyright 2021-2026 The Tekton Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -178,12 +178,16 @@ spec:
               volumeMounts:
               - mountPath: /certs/client
                 name: dind-certs
+              - mountPath: /var/lib/docker
+                name: dind-storage
               readinessProbe:
                 periodSeconds: 1
                 exec:
                   command: ['ls', '/certs/client/ca.pem']
             volumes:
             - name: dind-certs
+              emptyDir: {}
+            - name: dind-storage
               emptyDir: {}
           params:
           - name: container-registry
