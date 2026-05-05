@@ -1,0 +1,46 @@
+name: Build static base image
+
+on:
+  schedule:
+    # Weekly on Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - 'tekton/images/static-base/**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Install apko
+        uses: chainguard-dev/actions/setup-apko@9f56ab628c48a2a6412f4b2fa87d0ca5dd19bd50  # main
+
+      - name: Login to GHCR
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2  # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish
+        run: |
+          apko publish tekton/images/static-base/apko.yaml \
+            ghcr.io/tektoncd/plumbing/static-base:latest
+
+      - name: Verify multi-arch
+        run: |
+          for arch in amd64 arm64 s390x ppc64le; do
+            echo "Checking ${arch}..."
+            docker manifest inspect ghcr.io/tektoncd/plumbing/static-base:latest \
+              | jq -e ".manifests[] | select(.platform.architecture == \"${arch}\")" \
+              || { echo "Missing architecture: ${arch}"; exit 1; }
+          done
+          echo "All 4 architectures present."
