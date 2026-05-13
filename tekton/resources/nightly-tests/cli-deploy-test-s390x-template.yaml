@@ -30,6 +30,8 @@ spec:
     metadata:
       generateName: tekton-cli-$(tt.params.targetArch)-nightly-run-
       namespace: $(tt.params.namespace)
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       timeout: 2h
       workspaces:

@@ -114,6 +114,8 @@ spec:
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         plumbing.tekton.dev/image: $(tt.params.imageName)
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       pipelineRef:
         name: ko-multi-arch-build-and-push

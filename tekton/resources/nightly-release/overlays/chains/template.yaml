@@ -7,6 +7,8 @@
         generateName: chains-release-nightly-
         labels:
           tekton.dev/kind: release
+        annotations:
+          tekton.dev/auto-cleanup-pvc: "true"
       spec:
         pipelineRef:
           name: chains-release

@@ -48,6 +48,8 @@ spec:
     kind: PipelineRun
     metadata:
       generateName: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       pipelineRef:
         name: install-tekton-release
