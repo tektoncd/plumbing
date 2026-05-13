@@ -15,6 +15,7 @@
       annotations:
         tekton.dev/gitRevision: "$(tt.params.gitRevision)"
         tekton.dev/gitURL: "$(tt.params.gitRepository)"
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       serviceAccountName: tekton-ci-jobs
       timeout: 10m

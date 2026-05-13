@@ -148,6 +148,8 @@ spec:
       generateName: build-and-push-
       labels:
         mario.bot/pull-request-id: $(tt.params.pullRequestID)
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       serviceAccountName: mario-releaser
       pipelineSpec:

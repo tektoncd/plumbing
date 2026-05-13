@@ -33,6 +33,8 @@ spec:
       labels:
         tekton.dev/pipeline: terraform-branch-protection-sync
         pipelinesascode.tekton.dev/event-type: push
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
     spec:
       pipelineRef:
         name: terraform-branch-protection-sync
