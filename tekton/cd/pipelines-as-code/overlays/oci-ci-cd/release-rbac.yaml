@@ -9,6 +9,8 @@ kind: ServiceAccount
 metadata:
   name: release
   namespace: releases-operator
+secrets:
+- name: ghcr-chains-auth
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -41,6 +43,8 @@ kind: ServiceAccount
 metadata:
   name: release
   namespace: releases-pipeline
+secrets:
+- name: ghcr-chains-auth
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -73,6 +77,8 @@ kind: ServiceAccount
 metadata:
   name: release
   namespace: releases-cli
+secrets:
+- name: ghcr-chains-auth
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -105,6 +111,8 @@ kind: ServiceAccount
 metadata:
   name: release
   namespace: releases-pruner
+secrets:
+- name: ghcr-chains-auth
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -137,6 +145,8 @@ kind: ServiceAccount
 metadata:
   name: release
   namespace: releases-chains
+secrets:
+- name: ghcr-chains-auth
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
