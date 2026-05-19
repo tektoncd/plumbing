@@ -6,5 +6,7 @@ resources:
 - peribolos.yaml
 - peribolos-trigger.yaml
 - peribolos-sync.yaml
+- terraform-org-management.yaml
+- terraform-org-sync.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
