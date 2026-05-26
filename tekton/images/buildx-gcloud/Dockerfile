@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine@sha256:e4ccce8a6c9b7480ef1510f736def23340958c79c5c96a31de0876bbf2764cf7
+FROM gcr.io/google.com/cloudsdktool/cloud-sdk:alpine@sha256:5e117e979b5d3473522ba135f54c28a8f4b6a8abcd87617b085ec99ae76b685a
 LABEL maintainer "Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for Buildx"
