@@ -40,7 +40,7 @@ jobs:
       env:
         COMMITS: ${{ github.event.pull_request.commits }}
       run: echo "base-depth=$(( COMMITS + 1 ))" >> $GITHUB_OUTPUT
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
         fetch-depth: ${{ steps.base-depth.outputs.base-depth || 0 }}
@@ -57,7 +57,7 @@ jobs:
     name: Verify Tide context_options
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b  # v8.1.0
       - run: make verify-tide-contexts
 
@@ -73,7 +73,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.changes.outputs.go-matrix) }}
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       with:
         fetch-depth: 0
         persist-credentials: false
@@ -109,7 +109,7 @@ jobs:
     needs: [changes]
     if: ${{ needs.changes.outputs.yaml == 'true' }}
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
     - name: yamllint
       run: |
         sudo apt update && sudo apt install -y yamllint
@@ -127,7 +127,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.changes.outputs.images-matrix) }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       - name: Log in to the Container registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
         with:
