@@ -32,3 +32,16 @@ output "release_branch_protections" {
     repo => github_branch_protection.releases[repo].id
   }
 }
+
+output "catalog_protected_repos" {
+  description = "List of tektoncd-catalog repositories with branch protection applied"
+  value       = local.catalog_repos
+}
+
+output "catalog_main_branch_protections" {
+  description = "tektoncd-catalog main branch protection resource IDs"
+  value = {
+    for repo in local.catalog_repos :
+    repo => github_branch_protection.catalog_main[repo].id
+  }
+}

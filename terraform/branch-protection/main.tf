@@ -72,3 +72,24 @@ resource "github_branch_protection" "releases" {
     required_approving_review_count = var.required_approving_review_count_releases
   }
 }
+
+# Main branch protection for tektoncd-catalog repositories
+resource "github_branch_protection" "catalog_main" {
+  provider = github.catalog
+  for_each = toset(local.catalog_repos)
+
+  repository_id = each.key
+  pattern       = "main"
+
+  enforce_admins                  = var.enforce_admins
+  require_signed_commits          = var.require_signed_commits
+  required_linear_history         = var.required_linear_history
+  allows_deletions                = var.allow_deletions
+  allows_force_pushes             = var.allow_force_pushes
+  require_conversation_resolution = var.require_conversation_resolution
+
+  required_status_checks {
+    strict   = false
+    contexts = local.catalog_repos_config[each.key]
+  }
+}

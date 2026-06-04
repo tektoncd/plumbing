@@ -36,4 +36,10 @@ locals {
       lookup(local.repo_specific_checks, repo, [])
     )
   }
+
+  # tektoncd-catalog org repos
+  # Each repo defines its full list of required checks (no shared base_checks,
+  # since not all catalog repos use Prow/Tide).
+  catalog_repos_config = try(local.repo_checks.catalog_repos, {})
+  catalog_repos        = keys(local.catalog_repos_config)
 }

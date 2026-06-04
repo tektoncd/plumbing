@@ -52,3 +52,15 @@ repos:
     - "CI summary"
   triggers:
     - "CI summary"
+
+# tektoncd-catalog org repos
+# Full list of required checks per repo (no shared base_checks,
+# since not all catalog repos use Prow/Tide).
+catalog_repos:
+  golang:
+    - "EasyCLA"
+    - "tide"
+    - "CI summary"
+  git-clone:
+    - "EasyCLA"
+    - "CI summary"
