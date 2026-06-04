@@ -36,3 +36,8 @@ terraform {
 provider "github" {
   owner = "tektoncd"
 }
+
+provider "github" {
+  alias = "catalog"
+  owner = "tektoncd-catalog"
+}
