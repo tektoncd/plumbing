@@ -30,6 +30,8 @@ base_checks:
   - "EasyCLA"
 
 repos:
+  catalog:
+    - "CI summary"
   chains:
     - "CI summary"
   cli:
