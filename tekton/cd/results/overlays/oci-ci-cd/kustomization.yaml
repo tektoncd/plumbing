@@ -7,3 +7,5 @@ kind: Kustomization
 patches:
 - path: service.yaml
 - path: patch-postgres-image.yaml
+# TEMPORARY: Results is broken (postgres image gone), disable it. See patch header.
+- path: patch-disable-results.yaml
