@@ -36,6 +36,9 @@ tide:
     orgs:
       tektoncd:
         repos:
+          catalog:
+            required-contexts:
+            - "CI summary"
           chains:
             required-contexts:
             - "CI summary"
