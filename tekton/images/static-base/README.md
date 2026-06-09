@@ -29,6 +29,15 @@ apko build apko.yaml tekton-static-base:latest output.tar
 apko publish apko.yaml ghcr.io/tektoncd/plumbing/static-base:latest
 ```
 
+## CI
+
+This image is built and published by the repository's `ci` workflow
+(`.github/workflows/ci.yaml`), like every other image under `tekton/images/`.
+The `build-image` job detects the `apko.yaml` file and builds with apko instead
+of a `Dockerfile`. It validates the build on pull requests and publishes to
+`ghcr.io/tektoncd/plumbing/static-base` on push to `main` and on the daily
+schedule.
+
 ## Consumers
 
 - `tektoncd/pipeline` (.ko.yaml defaultBaseImage)
