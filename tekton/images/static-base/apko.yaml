@@ -1,6 +1,12 @@
 contents:
   keyring:
-    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub
+    # One signing key per target architecture (Alpine signs each arch's
+    # APKINDEX with a different key). All four are required so the build is
+    # reproducible in a clean CI environment.
+    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub  # x86_64
+    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub  # aarch64
+    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub  # s390x
+    - https://alpinelinux.org/keys/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub  # ppc64le
   repositories:
     - https://dl-cdn.alpinelinux.org/alpine/v3.21/main
   packages:

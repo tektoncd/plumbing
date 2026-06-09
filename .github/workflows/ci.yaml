@@ -128,17 +128,29 @@ jobs:
       matrix: ${{ fromJSON(needs.changes.outputs.images-matrix) }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
+      - name: Determine build type
+        id: buildtype
+        run: |
+          if [[ -f "tekton/images/${{ matrix.name }}/apko.yaml" ]]; then
+            echo "type=apko" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=docker" >> "$GITHUB_OUTPUT"
+          fi
       - name: Log in to the Container registry
         uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # --- Dockerfile-based images ---
       - name: Set up QEMU
+        if: steps.buildtype.outputs.type == 'docker'
         uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3  # v4.1.0
       - name: Set up Docker Buildx
+        if: steps.buildtype.outputs.type == 'docker'
         uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
       - name: Extract metadata (tags, labels) for Docker
+        if: steps.buildtype.outputs.type == 'docker'
         id: meta
         uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9  # v6.1.0
         with:
@@ -149,6 +161,7 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
       - name: Build and push Docker image
+        if: steps.buildtype.outputs.type == 'docker'
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
         with:
           platforms: ${{ matrix.platforms }}
@@ -156,6 +169,22 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      # --- apko-based images ---
+      - name: Set up apko
+        if: steps.buildtype.outputs.type == 'apko'
+        uses: chainguard-dev/actions/setup-apko@3b7bbeebc3a5d2bc37aa008350202651c32a26e1  # v1.6.22
+      - name: Build and push apko image
+        if: steps.buildtype.outputs.type == 'apko'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          CONFIG: tekton/images/${{ matrix.name }}/apko.yaml
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Validate the build on PRs without pushing.
+            apko build "${CONFIG}" "${IMAGE}:latest" output.tar
+          else
+            apko publish "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
+          fi
 
   ci-summary:
     name: CI summary
