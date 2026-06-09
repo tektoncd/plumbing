@@ -22,7 +22,8 @@ Run from the repository root so the vendored keyring paths in `apko.yaml`
 resolve correctly:
 
 ```bash
-# Install apko: go install chainguard.dev/apko@latest
+# Install apko (pin to the version CI uses, see APKO_VERSION in ci.yaml):
+#   go install chainguard.dev/apko@v1.2.16
 apko build tekton/images/static-base/apko.yaml \
   ghcr.io/tektoncd/plumbing/static-base:latest output.tar
 ```
