@@ -174,16 +174,18 @@ jobs:
       # --- apko-based images ---
       # apko is installed inside this run step (not via a Marketplace action)
       # so the docker matrix entries skip it entirely, and the version and
-      # checksum are pinned for supply-chain safety. VCS detection is left on
-      # (the default) so the published image gets an
-      # org.opencontainers.image.source annotation, matching the Dockerfile
-      # images built by this workflow.
+      # checksum are pinned for supply-chain safety. OCI annotations (source,
+      # license, description, ...) are set declaratively in apko.yaml so they
+      # match the Dockerfile images without relying on apko's best-effort VCS
+      # detection; VCS detection is left on (the default) only to add the
+      # revision annotation.
       - name: Build and push apko image
         if: steps.buildtype.outputs.type == 'apko'
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
           CONFIG: tekton/images/${{ matrix.name }}/apko.yaml
           EVENT_NAME: ${{ github.event_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           APKO_VERSION: "1.2.16"
           APKO_SHA256: "d5ac99bd37c0e00e1f732ecf2f5e83e8b3f93b748ec692b30cd848ac2160f726"
         run: |
@@ -198,7 +200,16 @@ jobs:
             # Validate the build on PRs without pushing.
             "${apko}" build "${CONFIG}" "${IMAGE}:latest" output.tar
           else
-            "${apko}" publish "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
+            # Mirror the tag scheme docker/metadata-action gives the Dockerfile
+            # images: branch name, sha-<short>, and latest on the default branch.
+            tags=(
+              "${IMAGE}:${GITHUB_REF_NAME}"
+              "${IMAGE}:sha-${GITHUB_SHA:0:7}"
+            )
+            if [[ "${GITHUB_REF_NAME}" == "${DEFAULT_BRANCH}" ]]; then
+              tags+=("${IMAGE}:latest")
+            fi
+            "${apko}" publish "${CONFIG}" "${tags[@]}"
           fi
 
   ci-summary:
