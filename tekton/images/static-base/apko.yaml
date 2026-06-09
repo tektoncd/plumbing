@@ -39,3 +39,14 @@ archs:
 environment:
   PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
+# OCI annotations, set declaratively so they land deterministically on both the
+# image index and every per-arch manifest. This does not rely on apko's
+# best-effort VCS detection, and mirrors the labels the Dockerfile-based images
+# in this repo get from docker/metadata-action.
+annotations:
+  org.opencontainers.image.source: https://github.com/tektoncd/plumbing
+  org.opencontainers.image.url: https://github.com/tektoncd/plumbing
+  org.opencontainers.image.title: static-base
+  org.opencontainers.image.description: Multi-arch static base image for Tekton Go binaries
+  org.opencontainers.image.licenses: Apache-2.0
