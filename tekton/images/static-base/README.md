@@ -18,16 +18,29 @@ amd64, arm64, s390x, ppc64le
 
 ## Build locally
 
+Run from the repository root so the vendored keyring paths in `apko.yaml`
+resolve correctly:
+
 ```bash
 # Install apko: go install chainguard.dev/apko@latest
-apko build apko.yaml tekton-static-base:latest output.tar
+apko build tekton/images/static-base/apko.yaml \
+  ghcr.io/tektoncd/plumbing/static-base:latest output.tar
 ```
 
 ## Publish
 
 ```bash
-apko publish apko.yaml ghcr.io/tektoncd/plumbing/static-base:latest
+apko publish --vcs=false tekton/images/static-base/apko.yaml \
+  ghcr.io/tektoncd/plumbing/static-base:latest
 ```
+
+## Signing keys
+
+Alpine signs each architecture's `APKINDEX` with a different key, so all four
+target-arch keys live under `keys/` and are referenced from `apko.yaml`. They
+are vendored (committed) rather than fetched at build time so the build does
+not depend on `alpinelinux.org` being reachable and the trusted keys are
+pinned by git.
 
 ## CI
 
