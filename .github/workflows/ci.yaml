@@ -130,8 +130,10 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
       - name: Determine build type
         id: buildtype
+        env:
+          IMAGE_NAME: ${{ matrix.name }}
         run: |
-          if [[ -f "tekton/images/${{ matrix.name }}/apko.yaml" ]]; then
+          if [[ -f "tekton/images/${IMAGE_NAME}/apko.yaml" ]]; then
             echo "type=apko" >> "$GITHUB_OUTPUT"
           else
             echo "type=docker" >> "$GITHUB_OUTPUT"
@@ -170,20 +172,30 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       # --- apko-based images ---
-      - name: Set up apko
-        if: steps.buildtype.outputs.type == 'apko'
-        uses: chainguard-dev/actions/setup-apko@3b7bbeebc3a5d2bc37aa008350202651c32a26e1  # v1.6.22
+      # apko is installed inside this run step (not via a Marketplace action)
+      # so the docker matrix entries skip it entirely, and the version and
+      # checksum are pinned for supply-chain safety.
       - name: Build and push apko image
         if: steps.buildtype.outputs.type == 'apko'
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
           CONFIG: tekton/images/${{ matrix.name }}/apko.yaml
+          EVENT_NAME: ${{ github.event_name }}
+          APKO_VERSION: "1.2.16"
+          APKO_SHA256: "d5ac99bd37c0e00e1f732ecf2f5e83e8b3f93b748ec692b30cd848ac2160f726"
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          set -euo pipefail
+          tarball="apko_${APKO_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "${tarball}" \
+            "https://github.com/chainguard-dev/apko/releases/download/v${APKO_VERSION}/${tarball}"
+          echo "${APKO_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}"
+          apko="$(pwd)/apko_${APKO_VERSION}_linux_amd64/apko"
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
             # Validate the build on PRs without pushing.
-            apko build "${CONFIG}" "${IMAGE}:latest" output.tar
+            "${apko}" build --vcs=false "${CONFIG}" "${IMAGE}:latest" output.tar
           else
-            apko publish "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
+            "${apko}" publish --vcs=false "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
           fi
 
   ci-summary:
