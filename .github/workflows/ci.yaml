@@ -174,7 +174,10 @@ jobs:
       # --- apko-based images ---
       # apko is installed inside this run step (not via a Marketplace action)
       # so the docker matrix entries skip it entirely, and the version and
-      # checksum are pinned for supply-chain safety.
+      # checksum are pinned for supply-chain safety. VCS detection is left on
+      # (the default) so the published image gets an
+      # org.opencontainers.image.source annotation, matching the Dockerfile
+      # images built by this workflow.
       - name: Build and push apko image
         if: steps.buildtype.outputs.type == 'apko'
         env:
@@ -193,9 +196,9 @@ jobs:
           apko="$(pwd)/apko_${APKO_VERSION}_linux_amd64/apko"
           if [[ "${EVENT_NAME}" == "pull_request" ]]; then
             # Validate the build on PRs without pushing.
-            "${apko}" build --vcs=false "${CONFIG}" "${IMAGE}:latest" output.tar
+            "${apko}" build "${CONFIG}" "${IMAGE}:latest" output.tar
           else
-            "${apko}" publish --vcs=false "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
+            "${apko}" publish "${CONFIG}" "${IMAGE}:latest" "${IMAGE}:${GITHUB_SHA}"
           fi
 
   ci-summary:

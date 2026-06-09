@@ -30,7 +30,7 @@ apko build tekton/images/static-base/apko.yaml \
 ## Publish
 
 ```bash
-apko publish --vcs=false tekton/images/static-base/apko.yaml \
+apko publish tekton/images/static-base/apko.yaml \
   ghcr.io/tektoncd/plumbing/static-base:latest
 ```
 
