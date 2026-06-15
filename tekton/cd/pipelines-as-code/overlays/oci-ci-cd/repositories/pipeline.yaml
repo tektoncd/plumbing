@@ -28,6 +28,7 @@ metadata:
   name: tektoncd-pipeline
   namespace: releases-pipeline
 spec:
+  concurrency_limit: 2
   url: "https://github.com/tektoncd/pipeline"
   settings:
     # Fetch .tekton/ from the default branch (main), not from the PR branch.
