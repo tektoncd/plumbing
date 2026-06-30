@@ -69,8 +69,8 @@ spec:
         # 🎉 [Tag Line - to be done] 🎉
         -->
 
-        -[Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
-        -[Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
+        - [Docs @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/docs)
+        - [Examples @ ${VERSION}](https://github.com/${PROJECT}/tree/${VERSION}/examples)
 
         ## Installation one-liner
 
