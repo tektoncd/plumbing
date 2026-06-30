@@ -171,7 +171,7 @@ spec:
         cat $HOME/pr-notes-tmp.csv | while read pr; do
           PR_NUM=$(echo $pr | cut -d';' -f2)
           PR_RELEASE_NOTES_B64=$(wget -O- https://api.github.com/repos/${PROJECT}/issues/${PR_NUM:1} | \
-            jq .body -r | grep -oPz '(?s)(?<=```release-note..)(.+?)(?=```)' | \
+            jq .body -r | tr -d '\r' | awk '/^```release-note/{flag=1;next} /^```/{flag=0} flag' | \
             grep -avP '\W*(Your release note here|action required: your release note here|NONE)\W*' | base64 -w0)
           echo "$pr;$PR_RELEASE_NOTES_B64" >> $HOME/pr-notes.csv
           # Avoid rate limiting
