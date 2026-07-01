@@ -58,7 +58,7 @@ runs:
 
     # Step 2: Install Tekton Pipelines
     - name: Set up Tekton
-      uses: tektoncd/actions/setup-tektoncd@dd92514472167b361de1c95fd31fc2ef83c282ec
+      uses: tektoncd/actions/setup-tektoncd@f163fb3432ae7767d14bfa9b17e3975c7bd9ea06
       with:
         pipeline_version: v1.4.0
         setup_registry: "true"
