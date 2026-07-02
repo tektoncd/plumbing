@@ -17,6 +17,10 @@ metadata:
   name: deploy-from-folder
 spec:
   params:
+    - name: gitRepository
+      description: URL of the repository that holds the folder
+    - name: gitRevision
+      description: Git revision
     - name: folderPath
       description: folder within the workspace to deploy from
     - name: namespace
@@ -45,6 +49,23 @@ spec:
     - name: IS_OVERLAY
       value: $(params.isOverlay)
   steps:
+  - name: clone-repo
+    ref:
+      resolver: git
+      params:
+      - name: url
+        value: https://github.com/tektoncd-catalog/git-clone.git
+      - name: revision
+        value: v1.7.0
+      - name: pathInRepo
+        value: stepaction/git-clone/git-clone.yaml
+    params:
+    - name: url
+      value: $(params.gitRepository)
+    - name: revision
+      value: $(params.gitRevision)
+    - name: output-path
+      value: $(workspaces.resources.path)
   - name: deploy-from-folder
     image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
@@ -125,67 +146,6 @@ spec:
       [ -s ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml ] && kubectl apply ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_sa.yaml
       [ -s ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml ] && kubectl "${DEPLOY_METHOD}" ${NAMESPACE_PARAM} -f ${RESOURCES_PATH}/DEPLOYABLE_not_sa.yaml
 ---
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
-  name: deploy-from-folder
-spec:
-  params:
-    - name: gitRepository
-      description: URL of the repository that holds the folder
-    - name: gitRevision
-      description: Git revision
-    - name: folderPath
-      description: folder within the workspace to deploy from
-    - name: namespace
-      description: target namespace
-    - name: deployMethod
-      description: One of "apply", "create" or "replace"
-    - name: isOverlay
-      description: Whether the folder is a kustomize overlay "true" or "false"
-  workspaces:
-    - name: resources
-      description: resources to deploy
-    - name: targetCluster
-      description: kubeconfig of the target Cluster/ServiceAccount
-  tasks:
-    - name: git-clone
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
-          - name: name
-            value: git-clone
-          - name: kind
-            value: task
-      params:
-        - name: url
-          value: $(params.gitRepository)
-        - name: revision
-          value: $(params.gitRevision)
-      workspaces:
-        - name: output
-          workspace: resources
-    - name: deploy
-      runAfter: ["git-clone"]
-      taskRef:
-        name: deploy-from-folder
-      params:
-        - name: folderPath
-          value: $(params.folderPath)
-        - name: namespace
-          value: $(params.namespace)
-        - name: deployMethod
-          value: $(params.deployMethod)
-        - name: isOverlay
-          value: $(params.isOverlay)
-      workspaces:
-        - name: resources
-          workspace: resources
-        - name: targetCluster
-          workspace: targetCluster
----
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
@@ -212,13 +172,11 @@ spec:
     default: "false"
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       generateName: deploy-resources-$(tt.params.folderDescription)-
-      annotations:
-        tekton.dev/auto-cleanup-pvc: "true"
     spec:
-      pipelineRef:
+      taskRef:
         name: deploy-from-folder
       params:
         - name: gitRepository
@@ -235,13 +193,7 @@ spec:
           value: $(tt.params.isOverlay)
       workspaces:
         - name: resources
-          volumeClaimTemplate:
-            spec:
-              accessModes:
-                - ReadWriteOnce
-              resources:
-                requests:
-                  storage: 1Gi
+          emptyDir: {}
         - name: targetCluster
           secret:
             secretName: tektoncd-$(tt.params.clusterResource)

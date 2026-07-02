@@ -17,6 +17,10 @@ metadata:
   name: deploy-configmap
 spec:
   params:
+    - name: gitRepository
+      description: URL of the repository that holds the folder
+    - name: gitRevision
+      description: Git revision
     - name: configPath
       description: Path in the git repo that holds configs
     - name: namespace
@@ -45,6 +49,23 @@ spec:
     - name: CONFIG_MAP_KEY
       value: $(params.configMapKey)
   steps:
+  - name: clone-repo
+    ref:
+      resolver: git
+      params:
+      - name: url
+        value: https://github.com/tektoncd-catalog/git-clone.git
+      - name: revision
+        value: v1.7.0
+      - name: pathInRepo
+        value: stepaction/git-clone/git-clone.yaml
+    params:
+    - name: url
+      value: $(params.gitRepository)
+    - name: revision
+      value: $(params.gitRevision)
+    - name: output-path
+      value: $(workspaces.resources.path)
   - name: fetch-current-config
     image: ghcr.io/tektoncd/plumbing/kubectl
     script: |
@@ -81,67 +102,6 @@ spec:
         --dry-run -o yaml | \
         kubectl replace configmap ${CONFIG_MAP_NAME} -n ${NAMESPACE} -f -
 ---
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
-  name: deploy-configmap
-spec:
-  params:
-    - name: gitRepository
-      description: URL of the repository that holds the folder
-    - name: gitRevision
-      description: Git revision
-    - name: configPath
-      description: Path in the git repo that holds configs
-    - name: namespace
-      description: target namespace
-    - name: configMapName
-      description: Name of the configmap resource
-    - name: configMapKey
-      description: Name of the configmap key where the data is stored
-  workspaces:
-    - name: resources
-      description: resources to deploy
-    - name: targetCluster
-      description: kubeconfig of the target Cluster/ServiceAccount
-  tasks:
-    - name: git-clone
-      taskRef:
-        resolver: bundles
-        params:
-          - name: bundle
-            value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
-          - name: name
-            value: git-clone
-          - name: kind
-            value: task
-      params:
-        - name: url
-          value: $(params.gitRepository)
-        - name: revision
-          value: $(params.gitRevision)
-      workspaces:
-        - name: output
-          workspace: resources
-    - name: deploy
-      runAfter: ["git-clone"]
-      taskRef:
-        name: deploy-configmap
-      params:
-        - name: configPath
-          value: $(params.configPath)
-        - name: namespace
-          value: $(params.namespace)
-        - name: configMapName
-          value: $(params.configMapName)
-        - name: configMapKey
-          value: $(params.configMapKey)
-      workspaces:
-        - name: resources
-          workspace: resources
-        - name: targetCluster
-          workspace: targetCluster
----
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
@@ -166,13 +126,11 @@ spec:
     description: Used for a descriptive TaskRun name
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       generateName: deploy-configmap-$(tt.params.configMapDescription)-
-      annotations:
-        tekton.dev/auto-cleanup-pvc: "true"
     spec:
-      pipelineRef:
+      taskRef:
         name: deploy-configmap
       params:
         - name: gitRepository
@@ -189,13 +147,7 @@ spec:
           value: $(tt.params.configMapKey)
       workspaces:
         - name: resources
-          volumeClaimTemplate:
-            spec:
-              accessModes:
-                - ReadWriteOnce
-              resources:
-                requests:
-                  storage: 1Gi
+          emptyDir: {}
         - name: targetCluster
           secret:
             secretName: tektoncd-$(tt.params.clusterResource)
