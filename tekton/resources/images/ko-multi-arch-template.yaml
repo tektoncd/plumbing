@@ -1,5 +1,5 @@
 apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: Task
 metadata:
   name: "ko-multi-arch-build-and-push"
 spec:
@@ -21,10 +21,17 @@ spec:
   workspaces:
     - name: source
     - name: secret
-  tasks:
+  steps:
     - name: git-clone
-      taskRef:
-        name: git-clone
+      ref:
+        resolver: git
+        params:
+        - name: url
+          value: https://github.com/tektoncd-catalog/git-clone.git
+        - name: revision
+          value: v1.7.0
+        - name: pathInRepo
+          value: stepaction/git-clone/git-clone.yaml
       params:
         - name: url
           value: $(params.gitRepository)
@@ -32,55 +39,28 @@ spec:
           value: $(params.gitRevision)
         - name: depth
           value: $(params.gitCloneDepth)
-      workspaces:
-        - name: output
-          workspace: source
-    - name: build-and-push
-      runAfter: [git-clone]
-      params:
-        - name: contextPath
-          value: $(params.contextPath)
-        - name: imageBaseUrl
-          value: $(params.imageBaseUrl)
-        - name: tags
-          value: $(params.tags)
-        - name: platforms
-          value: $(params.platforms)
-      workspaces:
-        - name: source
-          workspace: source
-        - name: secret
-          workspace: secret
-      taskSpec:
-        params:
-          - name: contextPath
-          - name: imageBaseUrl
-          - name: tags
-          - name: platforms
-        workspaces:
-          - name: source
-          - name: secret
-        steps:
-        - env:
-          - name: IMAGE_REGISTRY_CREDENTIALS
-            value: $(workspaces.secret.path)/credentials
-          - name: KO_DOCKER_REPO
-            value: $(params.imageBaseUrl)
-          - name: PLATFORMS
-            value: $(params.platforms)
-          - name: IMAGE_TAGS
-            value: $(params.tags)
-          - name: CONTEXT_PATH
-            value: $(params.contextPath)
-          image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
-          name: build-image-multi-arch
-          script: |
-            #!/usr/bin/env sh
-            IMAGE_REGISTRY_USER=tekton-robot
-            docker login ghcr.io -u ${IMAGE_REGISTRY_USER} --password-stdin <"${IMAGE_REGISTRY_CREDENTIALS}"
+        - name: output-path
+          value: $(workspaces.source.path)
+    - env:
+      - name: IMAGE_REGISTRY_CREDENTIALS
+        value: $(workspaces.secret.path)/credentials
+      - name: KO_DOCKER_REPO
+        value: $(params.imageBaseUrl)
+      - name: PLATFORMS
+        value: $(params.platforms)
+      - name: IMAGE_TAGS
+        value: $(params.tags)
+      - name: CONTEXT_PATH
+        value: $(params.contextPath)
+      image: ghcr.io/tektoncd/plumbing/ko-gcloud:latest
+      name: build-image-multi-arch
+      script: |
+        #!/usr/bin/env sh
+        IMAGE_REGISTRY_USER=tekton-robot
+        docker login ghcr.io -u ${IMAGE_REGISTRY_USER} --password-stdin <"${IMAGE_REGISTRY_CREDENTIALS}"
 
-            cd $(workspaces.source.path)
-            ko publish --platform ${PLATFORMS} --base-import-paths --tags ${IMAGE_TAGS} ${CONTEXT_PATH}
+        cd $(workspaces.source.path)
+        ko publish --platform ${PLATFORMS} --base-import-paths --tags ${IMAGE_TAGS} ${CONTEXT_PATH}
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -108,26 +88,18 @@ spec:
     description: Platforms for multi-arch build in form of `linux/amd64,linux/s390x`
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       generateName: build-and-push-$(tt.params.imageName)-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         plumbing.tekton.dev/image: $(tt.params.imageName)
-      annotations:
-        tekton.dev/auto-cleanup-pvc: "true"
     spec:
-      pipelineRef:
+      taskRef:
         name: ko-multi-arch-build-and-push
       workspaces:
       - name: source
-        volumeClaimTemplate:
-          spec:
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
+        emptyDir: {}
       - name: secret
         secret:
           secretName: ghcr-creds

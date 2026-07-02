@@ -1,5 +1,5 @@
 apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: Task
 metadata:
   name: "single-arch-build-and-push"
 spec:
@@ -19,10 +19,17 @@ spec:
   workspaces:
     - name: source
     - name: secret
-  tasks:
+  steps:
     - name: git-clone
-      taskRef:
-        name: git-clone
+      ref:
+        resolver: git
+        params:
+        - name: url
+          value: https://github.com/tektoncd-catalog/git-clone.git
+        - name: revision
+          value: v1.7.0
+        - name: pathInRepo
+          value: stepaction/git-clone/git-clone.yaml
       params:
         - name: url
           value: $(params.gitRepository)
@@ -30,63 +37,39 @@ spec:
           value: $(params.gitRevision)
         - name: depth
           value: $(params.gitCloneDepth)
-      workspaces:
-        - name: output
-          workspace: source
+        - name: output-path
+          value: $(workspaces.source.path)
     - name: build-and-push
-      runAfter: [git-clone]
-      params:
-        - name: contextPath
+      workingDir: $(workspaces.source.path)
+      image: gcr.io/kaniko-project/executor:v1.23.2-debug
+      env:
+        - name: IMAGE_REGISTRY_CREDENTIALS
+          value: $(workspaces.secret.path)/credentials
+        - name: CONTEXT_PATH
           value: $(params.contextPath)
-        - name: imageUrl
-          value: $(params.imageUrl)
-        - name: tags
+        - name: TAGS
           value: $(params.tags)
-      workspaces:
-        - name: source
-          workspace: source
-        - name: secret
-          workspace: secret
-      taskSpec:
-        params:
-          - name: contextPath
-          - name: imageUrl
-          - name: tags
-        workspaces:
-          - name: source
-          - name: secret
-        steps:
-          - name: build-and-push
-            workingDir: $(workspaces.source.path)
-            image: gcr.io/kaniko-project/executor:v1.23.2-debug
-            env:
-              - name: IMAGE_REGISTRY_CREDENTIALS
-                value: $(workspaces.secret.path)/credentials
-              - name: CONTEXT_PATH
-                value: $(params.contextPath)
-              - name: TAGS
-                value: $(params.tags)
-              - name: IMAGE_URL
-                value: $(params.imageUrl)
-            script: |
-              #!/busybox/sh
-              # Setup the destination parameters
-              OIFS=$IFS
-              IFS=","
-              DESTINATIONS=""
-              for tag in ${TAGS}; do DESTINATIONS="${DESTINATIONS} --destination ${IMAGE_URL}:${tag}"; done
-              IFS=$OIFS
+        - name: IMAGE_URL
+          value: $(params.imageUrl)
+      script: |
+        #!/busybox/sh
+        # Setup the destination parameters
+        OIFS=$IFS
+        IFS=","
+        DESTINATIONS=""
+        for tag in ${TAGS}; do DESTINATIONS="${DESTINATIONS} --destination ${IMAGE_URL}:${tag}"; done
+        IFS=$OIFS
 
-              IMAGE_REGISTRY_USER=tekton-robot
-              IMAGE_REGISTRY_TOKEN=$(cat "$IMAGE_REGISTRY_CREDENTIALS")
-              AUTH=$(echo -n ${IMAGE_REGISTRY_USER}:${IMAGE_REGISTRY_TOKEN} | base64)
-              echo "{\"auths\": {\"ghcr.io\": {\"auth\": \"${AUTH}\"}}}" > /kaniko/.docker/config.json
+        IMAGE_REGISTRY_USER=tekton-robot
+        IMAGE_REGISTRY_TOKEN=$(cat "$IMAGE_REGISTRY_CREDENTIALS")
+        AUTH=$(echo -n ${IMAGE_REGISTRY_USER}:${IMAGE_REGISTRY_TOKEN} | base64)
+        echo "{\"auths\": {\"ghcr.io\": {\"auth\": \"${AUTH}\"}}}" > /kaniko/.docker/config.json
 
-              # Run the build
-              /kaniko/executor \
-                --dockerfile=Dockerfile \
-                --context=$(params.contextPath) \
-                $DESTINATIONS
+        # Run the build
+        /kaniko/executor \
+          --dockerfile=Dockerfile \
+          --context=$(params.contextPath) \
+          $DESTINATIONS
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
@@ -112,26 +95,18 @@ spec:
     description: The build UUID is used for log collection
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       generateName: build-and-push-$(tt.params.imageName)-
       labels:
         prow.k8s.io/build-id: $(tt.params.buildUUID)
         plumbing.tekton.dev/image: $(tt.params.imageName)
-      annotations:
-        tekton.dev/auto-cleanup-pvc: "true"
     spec:
-      pipelineRef:
+      taskRef:
         name: single-arch-build-and-push
       workspaces:
       - name: source
-        volumeClaimTemplate:
-          spec:
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
+        emptyDir: {}
       - name: secret
         secret:
           secretName: ghcr-creds
