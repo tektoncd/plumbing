@@ -1,41 +1,48 @@
 apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: Task
 metadata:
   name: peribolos-sync
 spec:
-  workspaces:
-  - name: shared-workspace
-  - name: github-oauth
   params:
   - name: url
     default: https://github.com/tektoncd/community.git
   - name: revision
     default: main
-  tasks:
+  - name: configPath
+    default: org/org.yaml
+  workspaces:
+  - name: source
+  - name: github-oauth
+    mountPath: /etc/github
+  steps:
   - name: clone-repo
-    taskRef:
-      resolver: bundles
+    ref:
+      resolver: git
       params:
-      - name: bundle
-        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
-      - name: name
-        value: git-clone
-      - name: kind
-        value: task
+      - name: url
+        value: https://github.com/tektoncd-catalog/git-clone.git
+      - name: revision
+        value: v1.7.0
+      - name: pathInRepo
+        value: stepaction/git-clone/git-clone.yaml
     params:
     - name: url
       value: $(params.url)
     - name: revision
       value: $(params.revision)
-    workspaces:
-    - name: output
-      workspace: shared-workspace
+    - name: output-path
+      value: $(workspaces.source.path)
   - name: peribolos
-    runAfter: [clone-repo]
-    taskRef:
-      name: peribolos
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-    - name: github-oauth
-      workspace: github-oauth
+    image: gcr.io/k8s-prow/peribolos:v20220203-9315ecd1a0
+    command:
+    - /bin/sh
+    env:
+    - name: WORKSPACE_SOURCE_PATH
+      value: $(workspaces.source.path)
+    - name: PARAM_CONFIG_PATH
+      value: $(params.configPath)
+    args:
+    - -c
+    - |
+      set -ex
+      /peribolos -config-path ${WORKSPACE_SOURCE_PATH}/${PARAM_CONFIG_PATH} -fix-org -fix-org-members -fix-teams -fix-team-repos -fix-team-members -github-token-path /etc/github/bot-token -confirm=true
