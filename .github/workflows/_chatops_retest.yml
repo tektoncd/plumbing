@@ -23,6 +23,10 @@
 name: Rerun Failed Actions
 on:
   workflow_call:
+    secrets:
+      CHATOPS_TOKEN:
+        description: 'The GitHub token used for chatops operations'
+        required: true
 
 jobs:
   retest:
