@@ -10,13 +10,11 @@ spec:
       description: The git revision
   resourcetemplates:
     - apiVersion: tekton.dev/v1beta1
-      kind: PipelineRun
+      kind: TaskRun
       metadata:
         generateName: peribolos-run-
-        annotations:
-          tekton.dev/auto-cleanup-pvc: "true"
       spec:
-        pipelineRef:
+        taskRef:
           name: peribolos-sync  # Defined in the org-permissions folder
         params:
           - name: url
@@ -27,11 +25,5 @@ spec:
           - name: github-oauth
             secret:
               secretName: peribolos-token-github
-          - name: shared-workspace
-            volumeClaimTemplate:
-              spec:
-                accessModes:
-                  - ReadWriteOnce
-                resources:
-                  requests:
-                    storage: 1Gi
+          - name: source
+            emptyDir: {}
