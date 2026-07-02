@@ -12,49 +12,82 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 apiVersion: tekton.dev/v1beta1
-kind: Pipeline
+kind: Task
 metadata:
   name: terraform-branch-protection-sync
 spec:
-  workspaces:
-  - name: shared-workspace
-  - name: github-oauth
   params:
   - name: url
     default: https://github.com/tektoncd/plumbing.git
   - name: revision
     default: main
-  - name: terraformCommand
+  - name: terraformDir
+    default: terraform/branch-protection
+    description: Path to terraform configuration directory
+  - name: command
     default: apply
-    description: Terraform command (plan or apply)
-  tasks:
+    description: Terraform command to run (plan, apply, destroy)
+  workspaces:
+  - name: source
+    description: The plumbing repository workspace
+  - name: github-oauth
+    mountPath: /etc/github
+    description: GitHub token for terraform provider authentication
+  steps:
   - name: clone-repo
-    taskRef:
-      resolver: bundles
+    ref:
+      resolver: git
       params:
-      - name: bundle
-        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
-      - name: name
-        value: git-clone
-      - name: kind
-        value: task
+      - name: url
+        value: https://github.com/tektoncd-catalog/git-clone.git
+      - name: revision
+        value: v1.7.0
+      - name: pathInRepo
+        value: stepaction/git-clone/git-clone.yaml
     params:
     - name: url
       value: $(params.url)
     - name: revision
       value: $(params.revision)
-    workspaces:
-    - name: output
-      workspace: shared-workspace
-  - name: terraform-branch-protection
-    runAfter: [clone-repo]
-    taskRef:
-      name: terraform-branch-protection
-    params:
-    - name: command
-      value: $(params.terraformCommand)
-    workspaces:
-    - name: source
-      workspace: shared-workspace
-    - name: github-oauth
-      workspace: github-oauth
+    - name: output-path
+      value: $(workspaces.source.path)
+  - name: terraform-init
+    image: docker.io/hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      # -input=false prevents interactive prompts in CI
+      # -migrate-state handles backend transitions (no-op when backend is unchanged)
+      terraform init -input=false -migrate-state
+  - name: terraform-validate
+    image: docker.io/hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      terraform validate
+  - name: terraform-plan
+    image: docker.io/hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      export GITHUB_TOKEN=$(cat /etc/github/bot-token)
+      terraform plan -out=tfplan
+  - name: terraform-execute
+    image: docker.io/hashicorp/terraform:1.7
+    workingDir: $(workspaces.source.path)/$(params.terraformDir)
+    script: |
+      #!/bin/sh
+      set -ex
+      export GITHUB_TOKEN=$(cat /etc/github/bot-token)
+
+      if [ "$(params.command)" = "apply" ]; then
+        terraform apply -auto-approve tfplan
+      elif [ "$(params.command)" = "plan" ]; then
+        echo "Plan only mode - skipping apply"
+      else
+        echo "Unknown command: $(params.command)"
+        exit 1
+      fi

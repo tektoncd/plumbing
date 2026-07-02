@@ -27,33 +27,25 @@ spec:
     default: apply
   resourcetemplates:
   - apiVersion: tekton.dev/v1beta1
-    kind: PipelineRun
+    kind: TaskRun
     metadata:
       generateName: terraform-branch-protection-run-
       labels:
-        tekton.dev/pipeline: terraform-branch-protection-sync
+        tekton.dev/task: terraform-branch-protection-sync
         pipelinesascode.tekton.dev/event-type: push
-      annotations:
-        tekton.dev/auto-cleanup-pvc: "true"
     spec:
-      pipelineRef:
+      taskRef:
         name: terraform-branch-protection-sync
       params:
       - name: url
         value: $(tt.params.gitRepository)
       - name: revision
         value: $(tt.params.gitRevision)
-      - name: terraformCommand
+      - name: command
         value: $(tt.params.terraformCommand)
       workspaces:
-      - name: shared-workspace
-        volumeClaimTemplate:
-          spec:
-            accessModes:
-              - ReadWriteOnce
-            resources:
-              requests:
-                storage: 1Gi
+      - name: source
+        emptyDir: {}
       - name: github-oauth
         secret:
           secretName: peribolos-token-github
