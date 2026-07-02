@@ -29,10 +29,13 @@
 # jobs:
 #   check_comments:
 #     uses: tektoncd/plumbing/.github/actions/_slash.yml@main
-
 name: Slash Command Routing
 on:
   workflow_call:
+    secrets:
+      CHATOPS_TOKEN:
+        description: 'The GitHub token used for chatops operations'
+        required: true
 
 jobs:
   check_comments:
