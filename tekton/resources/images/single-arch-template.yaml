@@ -68,7 +68,7 @@ spec:
         # Run the build
         /kaniko/executor \
           --dockerfile=Dockerfile \
-          --context=$(params.contextPath) \
+          --context=${CONTEXT_PATH} \
           $DESTINATIONS
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
