@@ -1,0 +1,7 @@
+resources:
+- labels-sync-hourly
+- prow-labels-sync-hourly
+- prow-config-hourly
+- prow-plugins-hourly
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

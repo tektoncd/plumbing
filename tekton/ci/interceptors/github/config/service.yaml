@@ -1,0 +1,90 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-triggers-interceptor-github
+  namespace: tekton-ci
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-triggers-interceptor-github
+  labels:
+    app.kubernetes.io/name: github-simple
+    app.kubernetes.io/component: tekton-interceptors
+  namespace: tekton-ci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: github-simple
+      app.kubernetes.io/component: tekton-interceptors
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: github-simple
+        app.kubernetes.io/component: tekton-interceptors
+    spec:
+      serviceAccountName: tekton-triggers-interceptor-github
+      containers:
+        - name: tekton-triggers-interceptor-github
+          image: "ko://github.com/tektoncd/plumbing/tekton/ci/interceptors/github"
+          args:
+            - "--webhook_secret_path=/etc/webhook-secret/secret"
+          securityContext:
+            allowPrivilegeEscalation: false
+            # User 65532 is the distroless nonroot user ID
+            runAsUser: 65532
+            runAsGroup: 65532
+            capabilities:
+              drop:
+                - all
+          volumeMounts:
+          - name: webhook-secret
+            mountPath: "/etc/webhook-secret"
+            readOnly: true
+      volumes:
+      - name: webhook-secret
+        secret:
+          secretName: ci-webhook
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: github-simple
+    app.kubernetes.io/component: tekton-interceptors
+  name: tekton-triggers-interceptor-github
+  namespace: tekton-ci
+spec:
+  ports:
+    - name: "http"
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: github-simple
+    app.kubernetes.io/component: tekton-interceptors
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: ClusterInterceptor
+metadata:
+  # Don't use "github" to not conflict with existing GitHub core interceptor.
+  name: github-simple
+spec:
+  clientConfig:
+    service:
+      name: tekton-triggers-interceptor-github
+      namespace: tekton-ci

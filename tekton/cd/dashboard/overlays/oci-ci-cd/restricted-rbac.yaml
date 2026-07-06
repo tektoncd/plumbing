@@ -1,0 +1,25 @@
+# New role for the potentially sensitive stuff - pods, logs, events
+# It does not include namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-dashboard-tenant-view-restricted
+rules:
+- apiGroups:
+  - dashboard.tekton.dev
+  resources:
+  - extensions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - pods
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch

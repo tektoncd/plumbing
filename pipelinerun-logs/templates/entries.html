@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+  <title>Build "{{.BuildID}}" (Pipeline "{{.PipelineName}}")</title>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|Roboto&display=swap" rel="stylesheet" />
+  <style type="text/css">
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    background-color: white;
+  }
+  h1 {
+	  color: white;
+	  background: #3f51b5;
+	  padding: 1em 0.3em;
+    margin-top: 0;
+  }
+  #entries {
+    padding: 0 1em 1em;
+    font-family: 'Ubuntu Mono', monospace;
+	    line-height: 1.2;
+  }
+  .entry {
+    margin: 0.2em 0;
+    cursor: default;
+  }
+  </style>
+  <script>
+    const logEntries = {{.LogsJSON}};
+
+    const toString = o => (String(o) || '').trim();
+
+    class LogEntry {
+      constructor(json) {
+        this.message = toString(json.msg);
+        this.logName = toString(json.log);
+        this.task = toString(json.task);
+        this.container = toString(json.container);
+        this.caller = toString(json.caller);
+        this.timestamp = toString(json.ts);
+      }
+
+      renderStepTooltip() {
+        const { task, container } = this;
+        let step = '';
+        if (task && container) {
+          step = `Task: ${task}\nContainer: ${container}`;
+        } else if (task) {
+          step = `Task: ${task}`;
+        } else if (container) {
+          step = `Container: ${container}`;
+        }
+        return step;
+      }
+
+      render() {
+        const el = document.createElement('div');
+        el.classList.add('entry');
+        const {message, caller, timestamp} = this;
+        el.appendChild(document.createTextNode(`[${timestamp}] `));
+        const tooltip = this.renderStepTooltip();
+        if (tooltip) {
+          el.title = tooltip;
+        }
+        if (caller) {
+          el.appendChild(document.createTextNode(` (${caller}) `));
+        }
+        el.appendChild(document.createTextNode(message));
+        return el;
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>Build "{{.BuildID}}" (Pipeline "{{.PipelineName}}")</h1>
+  <div id="entries">
+  </div>
+  <script>
+    const frag = document.createDocumentFragment();
+    logEntries.forEach(entry => {
+      const logEntry = new LogEntry(entry);
+      frag.appendChild(logEntry.render());
+    });
+    entries.appendChild(frag);
+  </script>
+</body>
+</html>

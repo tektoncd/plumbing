@@ -1,0 +1,213 @@
+# Copyright 2021 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: catalog-publish
+spec:
+  params:
+  - name: gitRepository
+    description: The git URL of the catalog to publish
+    type: string
+    default: https://github.com/tektoncd/catalog
+  - name: gitRevision
+    description: The git revision of the catalog to publish
+    type: string
+    default: main
+  - name: registry
+    description: The registry to publish to
+    type: string
+  - name: registryPath
+    description: The base path in the registry
+  - name: registryUser
+    description: The user to authenticate to the registry
+    type: string
+  - name: registryCredentialsFilename
+    description: The path to the container registry credentials in the workspace
+    type: string
+  workspaces:
+  - name: shared
+    description: Shared workspace for tasks
+  - name: registryCredentials
+    description: Hosts credentials for the container registry
+  tasks:
+  - name: clone-and-publish
+    params:
+    - name: url
+      value: "$(params.gitRepository)"
+    - name: revision
+      value: "$(params.gitRevision)"
+    - name: registry
+      value: "$(params.registry)"
+    - name: registryPath
+      value: "$(params.registryPath)"
+    - name: registryUser
+      value: "$(params.registryUser)"
+    - name: registryCredentialsFilename
+      value: "$(params.registryCredentialsFilename)"
+    workspaces:
+      - name: shared
+        workspace: shared
+      - name: registryCredentials
+        workspace: registryCredentials
+    taskSpec:
+      params:
+        - name: url
+        - name: revision
+        - name: registry
+        - name: registryPath
+        - name: registryUser
+        - name: registryCredentialsFilename
+      workspaces:
+        - name: shared
+        - name: registryCredentials
+      steps:
+        - name: fetch-repo
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/git-clone/0.1/git-clone.yaml
+          params:
+          - name: url
+            value: $(params.url)
+          - name: revision
+            value: $(params.revision)
+          - name: output-path
+            value: $(workspaces.shared.path)
+        - name: container-registry-auth
+          image: cgr.dev/chainguard/crane:latest-dev@sha256:cdb799cd2e649a2c9a52e1115453b9e2fce6546505f3836628816bf5c6ce8f6e
+          script: |
+            #!/bin/bash
+            set -ex
+
+            # Login to the container registry
+            DOCKER_CONFIG=$(cat ${CONTAINER_REGISTRY_CREDENTIALS} | \
+              crane auth login -u ${CONTAINER_REGISTRY_USER} --password-stdin ${REGISTRY} 2>&1 | \
+              sed 's,^.*logged in via \(.*\)$,\1,g')
+
+            cp ${DOCKER_CONFIG} ${DOCKER_CONFIG_FOLDER}/config.json
+          env:
+            - name: DOCKER_CONFIG_FOLDER
+              value: "$(workspaces.shared.path)"
+            - name: CONTAINER_REGISTRY_CREDENTIALS
+              value: "$(workspaces.registryCredentials.path)/$(params.registryCredentialsFilename)"
+            - name: REGISTRY
+              value: "$(params.registry)"
+            - name: CONTAINER_REGISTRY_USER
+              value: "$(params.registryUser)"
+        - name: publish-tasks
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/tekton-catalog-publish/0.2/tekton-catalog-publish.yaml
+          params:
+            - name: catalogPath
+              value: $(workspaces.shared.path)
+            - name: dockerconfigPath
+              value: $(workspaces.shared.path)
+            - name: RESOURCE
+              value: "task"
+            - name: REGISTRY
+              value: "$(params.registry)"
+            - name: PATH
+              value: "$(params.registryPath)/tasks"
+            - name: TAG
+              value: "$(steps.fetch-repo.results.commit)"
+            - name: TKN_ARGS
+              value: "--label org.opencontainers.image.source=$(params.url)"
+        - name: publish-steps
+          ref:
+            resolver: git
+            params:
+              - name: url
+                value: https://github.com/tektoncd/catalog.git
+              - name: revision
+                value: main
+              - name: pathInRepo
+                value: stepaction/tekton-catalog-publish/0.2/tekton-catalog-publish.yaml
+          params:
+            - name: catalogPath
+              value: $(workspaces.shared.path)
+            - name: dockerconfigPath
+              value: $(workspaces.shared.path)
+            - name: RESOURCE
+              value: "stepaction"
+            - name: REGISTRY
+              value: "$(params.registry)"
+            - name: PATH
+              value: "$(params.registryPath)/stepactions"
+            - name: TAG
+              value: "$(steps.fetch-repo.results.commit)"
+            - name: TKN_ARGS
+              value: "--label org.opencontainers.image.source=github.com/tektoncd/catalog"
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: publish-catalog
+spec:
+  params:
+  - name: gitRepository
+    description: URL of the repository that holds the catalog
+  - name: gitRevision
+    description: Git revision
+  - name: registry
+    description: The registry to publish to
+  - name: registryPath
+    description: The base path in the registry
+  - name: registryUser
+    description: The user to authenticate to the registry
+  - name: catalogDescription
+    description: A descriptive name for the catalog
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: publish-catalog-$(tt.params.catalogDescription)-
+    spec:
+      pipelineRef:
+        name: catalog-publish
+      podTemplate:
+        securityContext:
+          fsGroup: 65532
+      params:
+        - name: gitRepository
+          value: "$(tt.params.gitRepository)"
+        - name: gitRevision
+          value: "$(tt.params.gitRevision)"
+        - name: registry
+          value: "$(tt.params.registry)"
+        - name: registryPath
+          value: "$(tt.params.registryPath)"
+        - name: registryUser
+          value: "$(tt.params.registryUser)"
+        - name: registryCredentialsFilename
+          value: "credentials"
+      workspaces:
+        - name: shared
+          emptyDir: {}
+        - name: registryCredentials
+          secret:
+            secretName: "ghcr-creds"

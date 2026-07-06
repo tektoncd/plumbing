@@ -1,0 +1,52 @@
+contents:
+  keyring:
+    # Alpine signs each architecture's APKINDEX with a different key, so all
+    # four are required for the build to succeed in a clean CI environment.
+    # Keys are vendored under keys/ (committed to the repo) rather than fetched
+    # over the network at build time, so the build does not depend on
+    # alpinelinux.org availability and the trusted keys are pinned by git.
+    # Paths are resolved relative to the working directory; CI and the README
+    # both invoke apko from the repository root.
+    - tekton/images/static-base/keys/alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub  # x86_64
+    - tekton/images/static-base/keys/alpine-devel@lists.alpinelinux.org-616ae350.rsa.pub  # aarch64
+    - tekton/images/static-base/keys/alpine-devel@lists.alpinelinux.org-616ac3bc.rsa.pub  # s390x
+    - tekton/images/static-base/keys/alpine-devel@lists.alpinelinux.org-58cbb476.rsa.pub  # ppc64le
+  repositories:
+    - https://dl-cdn.alpinelinux.org/alpine/v3.21/main
+  packages:
+    - ca-certificates-bundle
+    - tzdata
+    - alpine-baselayout-data
+
+accounts:
+  groups:
+    - groupname: nonroot
+      gid: 65532
+  users:
+    - username: nonroot
+      uid: 65532
+      gid: 65532
+  run-as: 65532
+
+# Architectures. Keep this list in sync with DEFAULT_PLATFORMS in
+# tekton/images/generate-matrix.py, which drives the CI build matrix.
+archs:
+  - amd64
+  - arm64
+  - s390x
+  - ppc64le
+
+environment:
+  PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+
+# OCI annotations, set declaratively so they land deterministically on both the
+# image index and every per-arch manifest. This does not rely on apko's
+# best-effort VCS detection, and mirrors the labels the Dockerfile-based images
+# in this repo get from docker/metadata-action.
+annotations:
+  org.opencontainers.image.source: https://github.com/tektoncd/plumbing
+  org.opencontainers.image.url: https://github.com/tektoncd/plumbing
+  org.opencontainers.image.title: static-base
+  org.opencontainers.image.description: Multi-arch static base image for Tekton Go binaries
+  org.opencontainers.image.licenses: Apache-2.0

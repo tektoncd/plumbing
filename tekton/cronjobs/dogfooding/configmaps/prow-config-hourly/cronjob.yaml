@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: configmap-cd-trigger
+spec:
+  schedule: "12 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: GIT_REPOSITORY
+                value: "github.com/tektoncd/plumbing"
+              - name: GIT_REVISION
+                value: "main"
+              - name: CONFIG_PATH
+                value: "prow/config.yaml"
+              - name: NAMESPACE
+                value: "default"
+              - name: CLUSTER_RESOURCE
+                value: "prow-cluster-config-bot"
+              - name: CONFIGMAP_NAME
+                value: "config"
+              - name: CONFIGMAP_KEY
+                value: "config.yaml"
+              - name: CONFIGMAP_DESCRIPTION
+                value: "prow-config"

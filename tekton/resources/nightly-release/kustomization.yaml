@@ -1,0 +1,17 @@
+namespace: tekton-nightly
+resources:
+- serviceaccount.yaml
+- bindings.yaml
+- eventlistener.yaml
+- overlays/dashboard
+- overlays/pipeline
+- overlays/triggers
+- overlays/add-pr-body-ci
+- overlays/add-team-members
+- overlays/build-id-ci
+- overlays/operator
+- overlays/chains
+- overlays/pr-commenter
+- overlays/pr-status-updater
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

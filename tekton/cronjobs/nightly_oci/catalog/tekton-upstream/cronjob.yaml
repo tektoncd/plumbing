@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: catalog-publish-trigger
+spec:
+  schedule: "30 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: trigger
+            env:
+              - name: GIT_REPOSITORY
+                value: "https://github.com/tektoncd/catalog"
+              - name: GIT_REVISION
+                value: "main"
+              - name: REGISTRY_URL
+                value: "ghcr.io"
+              - name: REGISTRY_PATH
+                value: "tektoncd/catalog/upstream"
+              - name: REGISTRY_USER
+                value: "tekton-robot"
+              - name: CATALOG_DESCRIPTION
+                value: "tekton"

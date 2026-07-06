@@ -1,0 +1,149 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-github-check-start
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: shortSourceEventID
+    description: A truncated version of the sourceEventId
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
+    description: A description to be displayed for the status of the check
+  - name: taskRunName
+    description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
+      namespace: tekton-ci
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+    spec:
+      pipelineSpec:
+        tasks:
+        - name: set-status
+          taskRef:
+            apiVersion: custom.tekton.dev/v0
+            kind: PRStatusUpdater
+          params:
+          - name: repo
+            value: $(tt.params.gitHubRepo)
+          - name: sha
+            value: $(tt.params.gitRevision)
+          - name: jobName
+            value: $(tt.params.checkName)
+          - name: state
+            value: $(tt.params.gitHubCheckStatus)
+          - name: description
+            value: $(tt.params.gitHubCheckDescription)
+          - name: targetURL
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)?pipelineTask=$(tt.params.parentPipelineRunTaskName)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: tekton-ci-github-check-end
+spec:
+  params:
+  - name: pullRequestNumber
+    description: The pullRequestID to comment to
+  - name: buildUUID
+    description: The buildUUID for the logs link
+  - name: shortSourceEventID
+    description: A truncated version of the sourceEventId
+  - name: gitHubRepo
+    description: The gitHubRepo (org/repo)
+  - name: gitHubRepoUnderscore
+    description: The gitHubRepoUnderscore (org_repo)
+  - name: gitRevision
+    description: The sha of the HEAD commit in the PR
+  - name: checkName
+    description: Name of the CI Job (GitHub Check)
+  - name: gitHubCheckStatus
+    description: Can be 'pending', 'success' or 'failure'
+  - name: gitHubCheckDescription
+    description: A description to be displayed for the status of the check
+  - name: taskRunName
+    description: The name of the task run that triggered this
+  - name: taskRunNamespace
+    description: The namespace where the CI job was executed
+  - name: parentPipelineRunName
+    description: The name of the parent pipeline run - if any
+    default: ""
+  - name: parentPipelineRunTaskName
+    description: The name of the task in the parent pipeline run - if any
+    default: ""
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      name: $(tt.params.shortSourceEventID)-$(tt.params.checkName)-$(tt.params.gitHubCheckStatus)
+      namespace: tekton-ci
+      labels:
+        prow.k8s.io/build-id: $(tt.params.buildUUID)
+        ci.tekton.dev/source-taskrun-namespace: $(tt.params.taskRunNamespace)
+        ci.tekton.dev/source-taskrun-name: $(tt.params.taskRunName)
+        tekton.dev/pr-number: $(tt.params.pullRequestNumber)
+    spec:
+      pipelineSpec:
+        tasks:
+        - name: set-status
+          taskRef:
+            apiVersion: custom.tekton.dev/v0
+            kind: PRStatusUpdater
+          params:
+          - name: repo
+            value: $(tt.params.gitHubRepo)
+          - name: sha
+            value: $(tt.params.gitRevision)
+          - name: jobName
+            value: $(tt.params.checkName)
+          - name: state
+            value: $(tt.params.gitHubCheckStatus)
+          - name: description
+            value: $(tt.params.gitHubCheckDescription)
+          - name: targetURL
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)
+        - name: comment-on-pr
+          taskRef:
+            apiVersion: custom.tekton.dev/v0
+            kind: PRCommenter
+          params:
+          - name: repo
+            value: $(tt.params.gitHubRepo)
+          - name: prNumber
+            value: $(tt.params.pullRequestNumber)
+          - name: sha
+            value: $(tt.params.gitRevision)
+          - name: jobName
+            value: $(tt.params.checkName)
+          - name: result
+            value: $(tt.params.gitHubCheckStatus)
+          - name: isOptional
+            value: "false"
+          - name: logURL
+            value: https://tekton.infra.tekton.dev/#/namespaces/$(tt.params.taskRunNamespace)/pipelineruns/$(tt.params.parentPipelineRunName)

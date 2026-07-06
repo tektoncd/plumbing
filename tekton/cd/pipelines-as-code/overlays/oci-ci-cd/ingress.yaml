@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: 'pac.infra.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
+  name: pipelines-as-code-controller
+  namespace: pipelines-as-code
+spec:
+  ingressClassName: nginx
+  tls:
+  - secretName: pac-infra-tekton-dev-tls
+    hosts:
+    - pac.infra.tekton.dev
+  rules:
+  - host: pac.infra.tekton.dev
+    http:
+      paths:
+      - backend:
+          service:
+            name: pipelines-as-code-controller
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix

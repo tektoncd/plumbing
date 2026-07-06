@@ -1,0 +1,35 @@
+commonAnnotations:
+  managed-by: Tekton
+
+patches:
+- patch: |-
+    - op: replace
+      path: /metadata/namespace
+      value: default
+  target:
+    kind: ServiceAccount|Deployment|EventListener|TriggerBinding|TriggerTemplate
+- patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: default
+  target:
+    kind: RoleBinding|ClusterRoleBinding
+
+resources:
+- bindings.yaml
+- configmap-template.yaml
+- eventlistener.yaml
+- folder-template.yaml
+- helm-template.yaml
+- tekton-template.yaml
+- cleanup-template.yaml
+- notification-template.yaml
+- catalog-template.yaml
+- serviceaccount.yaml
+- notification-triggers.yaml
+- ci-triggers.yaml
+- peribolos-template.yaml
+- terraform-branch-protection-template.yaml
+- install-tekton-release.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

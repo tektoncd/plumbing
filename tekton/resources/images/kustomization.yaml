@@ -1,0 +1,12 @@
+namespace: default
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bindings.yaml
+- single-arch-template.yaml
+- eventlistener.yaml
+- docker-multi-arch-template.yaml
+- ko-multi-arch-template.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

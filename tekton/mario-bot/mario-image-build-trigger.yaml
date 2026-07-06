@@ -1,0 +1,295 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: triggers-minimal
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "interceptors"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["impersonate"]
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: triggers-mario
+rules:
+# EventListeners need to be able to fetch any clustertriggerbindings
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["clustertriggerbindings", "clusterinterceptors", "interceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mario-listener
+secrets:
+- name: mario-github-secret
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mario-releaser
+secrets:
+- name: release-secret
+- name: mario-github-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mario-releaser-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: mario-releaser
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: mario-listener-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: mario-listener
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mario-listener-triggers-mario
+subjects:
+- kind: ServiceAccount
+  name: mario-listener
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: triggers-mario
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: mario-trigger-to-build-and-push-image
+spec:
+  params:
+  - name: gitRepository
+    value: $(body.gitRepository)
+  - name: gitRevision
+    value: $(body.gitRevision)
+  - name: contextPath
+    value: $(body.contextPath)
+  - name: targetImage
+    value: $(body.targetImage)
+  - name: pullRequestID
+    value: $(body.pullRequestID)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: mario-image-builder
+spec:
+  serviceAccountName: mario-listener
+  triggers:
+    - name: trigger
+      interceptors:
+        - ref:
+            name: github
+            kind: ClusterInterceptor
+          params:
+            - name: secretRef
+              value:
+                secretName: mario-github-secret
+                secretKey: secret-token
+            - name: eventTypes
+              value:
+                - "issue_comment"
+        - webhook:
+            objectRef:
+              kind: Service
+              name: mario
+              apiVersion: v1
+              namespace: mario
+      bindings:
+        - ref: mario-trigger-to-build-and-push-image
+      template:
+        ref: mario-build-and-push-image
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: mario-build-and-push-image
+spec:
+  params:
+  - name: pullRequestID
+    description: The pullRequestID
+  - name: gitRepository
+    description: The git repository that hosts context and Dockerfile
+  - name: gitRevision
+    description: The Git revision to be used.
+  - name: contextPath
+    description: The path to the context within 'gitRepository'
+  - name: targetImage
+    description: The fully qualified image target e.g. repo/name:tag.
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: build-and-push-
+      labels:
+        mario.bot/pull-request-id: $(tt.params.pullRequestID)
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
+    spec:
+      serviceAccountName: mario-releaser
+      pipelineSpec:
+        workspaces:
+        - name: source-code
+        - name: gcp-secret
+        params:
+        - name: contextPath
+        - name: gitRepository
+        - name: gitRevision
+        - name: targetImage
+        - name: contextPath
+        - name: pullRequestID
+        - name: cloudEventSink
+          default: http://el-github-feedback-trigger.mario:8080
+        tasks:
+        - name: clone-and-build
+          taskRef:
+            apiVersion: tekton.dev/v1alpha1
+            kind: PipelineToTaskRun
+            name: clone-and-build
+          params:
+          - name: gitRepository
+            value: $(params.gitRepository)
+          - name: gitRevision
+            value: $(params.gitRevision)
+          - name: targetImage
+            value: $(params.targetImage)
+          - name: contextPath
+            value: $(params.contextPath)
+          - name: pullRequestID
+            value: $(params.pullRequestID)
+          workspaces:
+          - name: source-code
+            workspace: source-code
+          - name: gcp-secret
+            workspace: gcp-secret
+        finally:
+        - name: publish-event
+          params:
+          - name: sink
+            value: $(params.cloudEventSink)
+          - name: eventID
+            value: $(context.taskRun.name)
+          - name: eventType
+            value: "dev.tekton.event.task.$(tasks.clone-and-build.status)"
+          - name: data
+            value: '{"pull-request-id": "$(params.pullRequestID)", "build-pipelinerun": "$(context.pipelineRun.name)", "git-url": "https://$(params.gitRepository)", "git-revision": "$(params.gitRevision)", "target-image": "$(params.targetImage)", "status": "$(tasks.clone-and-build.status)"}'
+          taskRef:
+            resolver: bundles
+            params:
+            - name: bundle
+              value: ghcr.io/tektoncd/catalog/upstream/tasks/cloudevent:0.1
+            - name: name
+              value: cloudevent
+            - name: kind
+              value: task
+      params:
+      - name: pullRequestID
+        value: $(tt.params.pullRequestID)
+      - name: gitRepository
+        value: $(tt.params.gitRepository)
+      - name: gitRevision
+        value: $(tt.params.gitRevision)
+      - name: contextPath
+        value: $(tt.params.contextPath)
+      - name: targetImage
+        value: $(tt.params.targetImage)
+      workspaces:
+      - name: source-code
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: 50Mi
+      - name: gcp-secret
+        secret:
+          secretName: release-secret
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: clone-and-build
+spec:
+  params:
+  - name: gitRepository
+  - name: gitRevision
+  - name: gitCloneDepth
+    default: "10"
+  - name: targetImage
+  - name: contextPath
+  - name: pullRequestID
+  workspaces:
+  - name: source-code
+  - name: gcp-secret
+  tasks:
+  - name: clone
+    taskRef:
+      name: git-clone
+    params:
+    - name: url
+      value: https://$(params.gitRepository)
+    - name: revision
+      value: $(params.gitRevision)
+    - name: depth
+      value: $(params.gitCloneDepth)
+    workspaces:
+    - name: output
+      workspace: source-code
+  - name: build
+    runAfter:
+      - clone
+    params:
+    - name: contextPath
+      value: $(params.contextPath)
+    - name: targetImage
+      value: $(params.targetImage)
+    workspaces:
+    - name: source-code
+      workspace: source-code
+    - name: gcp-secret
+      workspace: gcp-secret
+    taskSpec:
+      params:
+      - name: contextPath
+      - name: targetImage
+      workspaces:
+      - name: source-code
+      - name: gcp-secret
+      steps:
+      - name: build-and-push
+        workingDir: $(workspaces.source-code.path)
+        image: gcr.io/kaniko-project/executor:v0.13.0
+        env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: $(workspaces.gcp-secret.path)/release.json
+        command:
+        - /kaniko/executor
+        - --dockerfile=Dockerfile
+        - --context=$(params.contextPath)
+        - --destination=$(params.targetImage)

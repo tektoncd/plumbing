@@ -1,0 +1,88 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: deploy-tekton-release
+spec:
+  params:
+  - name: clusterResource
+    description: Name of the cluster resource that points to the target cluster
+  - name: targetCluster
+    description: Name of the target cluster, used for the overlay
+  - name: releaseBucket
+    description: Base URL of the bucket where the release file is stored
+    default: gs://tekton-releases
+  - name: releaseFile
+    description: Name of the release file
+    default: release.yaml
+  - name: postReleaseFile
+    description: Name of the extra release file to install once pods and CRDs are ready
+    default: ""
+  - name: releaseExtraPath
+    description: Any extra path after bucket/project, starting with a "/"
+    default: ""
+  - name: tektonProject
+    description: Name of the project to deploy (pipeline, triggers, dashboard)
+  - name: tektonVersion
+    description: Version of the project to deploy
+  - name: namespace
+    description: Target namespace. Not enforeced, for verification.
+  - name: plumbingRepository
+    description: URL of the repository that holds plumbing scripts
+  - name: plumbingRevision
+    description: Git revision of the repository that holds plumbing scripts
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: deploy-$(tt.params.tektonProject)-release-$(tt.params.targetCluster)-
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
+    spec:
+      pipelineRef:
+        name: install-tekton-release
+      params:
+        - name: gitRepository
+          value: $(tt.params.plumbingRepository)
+        - name: gitRevision
+          value: $(tt.params.plumbingRevision)
+        - name: projectName
+          value: $(tt.params.tektonProject)
+        - name: namespace
+          value: $(tt.params.namespace)
+        - name: version
+          value: $(tt.params.tektonVersion)
+        - name: environment
+          value: $(tt.params.targetCluster)
+        - name: releaseFile
+          value: $(tt.params.releaseFile)
+        - name: postReleaseFile
+          value: $(tt.params.postReleaseFile)
+        - name: releaseBucket
+          value: $(tt.params.releaseBucket)/$(tt.params.tektonProject)$(tt.params.releaseExtraPath)
+      workspaces:
+        - name: resources
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 1Gi
+        - name: targetCluster
+          secret:
+            secretName: tektoncd-$(tt.params.clusterResource)
+        - name: credentials
+          emptyDir: {}

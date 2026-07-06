@@ -1,0 +1,66 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Single source of truth for required status checks per repository.
+#
+# Consumed by:
+# - Terraform branch protection (terraform/branch-protection/)
+# - Prow Tide context_options (prow/control-plane/config.yaml)
+#
+# "base_checks" are required for ALL repos in branch protection only.
+# Tide does not need to require "tide" or "EasyCLA" on itself.
+#
+# "repos" lists per-repo CI checks that must pass before merge.
+# Repos with empty lists still get branch protection with base_checks
+# but have no repo-specific required contexts for Tide.
+
+base_checks:
+  - "tide"
+  - "EasyCLA"
+
+repos:
+  catalog:
+    - "CI summary"
+  chains:
+    - "CI summary"
+  cli:
+    - "CI summary"
+  dashboard:
+    - "CI summary"
+  mcp-server:
+    - "CI summary"
+  operator:
+    - "CI summary"
+  pipeline:
+    - "CI summary"
+  plumbing:
+    - "CI summary"
+  pruner:
+    - "CI summary"
+  results:
+    - "CI summary"
+  triggers:
+    - "CI summary"
+
+# tektoncd-catalog org repos
+# Full list of required checks per repo (no shared base_checks,
+# since not all catalog repos use Prow/Tide).
+catalog_repos:
+  golang:
+    - "EasyCLA"
+    - "tide"
+    - "CI summary"
+  git-clone:
+    - "EasyCLA"
+    - "CI summary"

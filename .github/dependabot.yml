@@ -1,0 +1,345 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/bots/buildcaptain"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/bots/mariobot"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/pipelinerun-logs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/add-team-members"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/github"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/interceptors/add-pr-body"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-status-updater"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-status-updater/tools"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-commenter"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/custom-tasks/pr-commenter/tools"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/cluster-interceptors/build-id"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/tekton/ci/cluster-interceptors/add-pr-body"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/pipelinerun-logs"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/koparse"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/ko-gcloud"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/alpine-git-nonroot"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kind-e2e"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kind"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/test-runner"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/ko"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/kubectl"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/tkn"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/hub"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/coverage"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/tekton/images/buildx-gcloud"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+    - "ok-to-test"
+    - "dependencies"
+    - "release-note-none"
+    - "kind/misc"

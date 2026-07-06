@@ -1,0 +1,54 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: cd-pipeline-failed-slack
+spec:
+  params:
+  - name: runName
+    description: The name of the TaskRun
+  - name: runNamespace
+    description: The namespace of the TaskRun
+  - name: runKind
+    description: The kind of Run (taskrun or pipelinerun)
+  - name: dashboardBaseURL
+    description: The base URL of the Tekton dashboard
+  - name: cdPipelineType
+    description: The type of CD pipeline
+  - name: nameAndNamespace
+    description: runName + runNamespace truncated to 57 chars
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: TaskRun
+    metadata:
+      name: $(tt.params.nameAndNamespace)-slack
+    spec:
+      taskRef:
+        resolver: bundles
+        params:
+          - name: bundle
+            value: ghcr.io/tektoncd/catalog/upstream/tasks/send-to-webhook-slack:0.1
+          - name: name
+            value: send-to-webhook-slack
+          - name: kind
+            value: task
+      params:
+        - name: webhook-secret
+          value: robocat-slack-app-webhook
+        - name: message
+          value: >-
+            :boom: $(tt.params.cdPipelineType) CD Pipeline failed.
+            See the <$(tt.params.dashboardBaseURL)/#/namespaces/$(tt.params.runNamespace)/$(tt.params.runKind)s/$(tt.params.runName)|$(tt.params.runNamespace)/$(tt.params.runName)>
+            for logs and details.

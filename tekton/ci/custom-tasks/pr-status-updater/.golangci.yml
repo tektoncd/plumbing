@@ -1,0 +1,50 @@
+version: "2"
+run:
+  build-tags:
+    - e2e
+  issues-exit-code: 1
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gocritic
+    - gomodguard
+    - gosec
+    - misspell
+    - revive
+    - unconvert
+  settings:
+    gomodguard:
+      blocked:
+        modules:
+          - github.com/ghodss/yaml:
+              recommendations:
+                - sigs.k8s.io/yaml
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

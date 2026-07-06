@@ -1,0 +1,87 @@
+apiVersion: tekton.dev/v1
+kind: TaskRun
+metadata:
+  generateName: skopeo-sync-gcr-ghcr
+spec:
+  timeout: 10h
+  workspaces:
+  - name: gcp
+    secret:
+      secretName: release-secret
+  - name: ghcr
+    secret:
+      secretName: ghcr-creds
+  - name: workarea
+    emptyDir: {}
+  taskSpec:
+    description: Sync images from gcr.io to ghcr.io
+    workspaces:
+    - name: gcp
+    - name: ghcr
+    - name: workarea
+    stepTemplate:
+      env:
+      - name: GHCR_CREDS
+        value: $(workspaces.ghcr.path)/credentials
+      - name: GCR_CREDS
+        value: $(workspaces.gcp.path)/release.json
+      - name: CATALOG
+        value: $(workspaces.workarea.path)/catalog
+      - name: DOCKER_CONFIG
+        value: $(workspaces.workarea.path)/.docker
+    steps:
+    - name: authenticate
+      image: cgr.dev/chainguard/crane:latest-dev@sha256:6fc6fcdeb173c7951f038e6a7b230f586c1be05a011d9e6f9db6c614ec412c2f
+      script: |
+        #!/usr/bin/env sh
+        set -ex
+        mkdir -p ${DOCKER_CONFIG}
+
+        # Login to gcr.io
+        echo "Login to GCR"
+        cat ${GCR_CREDS} | \
+          crane auth login -u _json_key --password-stdin gcr.io
+
+        # Login to ghcr.io
+        echo "Login to GHCR"
+        cat ${GHCR_CREDS} | \
+          crane auth login -u tekton-robot --password-stdin ghcr.io
+
+    - name: list-images
+      image: cgr.dev/chainguard/crane:latest-dev@sha256:6fc6fcdeb173c7951f038e6a7b230f586c1be05a011d9e6f9db6c614ec412c2f
+      script: |
+        #!/usr/bin/env sh
+        set -ex
+
+        # List images from the tekton-releases project
+        echo "Copy images for $TEKTON_PROJECT"
+        crane catalog gcr.io | \
+          grep tekton-releases/github.com/tektoncd/ > ${CATALOG}
+
+    - name: sync-images
+      image: quay.io/skopeo/stable:latest
+      script: |
+        #!/usr/bin/env sh
+        set -ex
+
+        errors=0
+
+        # Copy all images from the tekton-releases project
+        echo "Sync gcr.io/tekton-releases to ghcr.io/tektoncd"
+        cat ${CATALOG} | while read image; do
+          echo '=======================> '${image}
+          skopeo sync \
+            --authfile ${DOCKER_CONFIG}/config.json \
+            --src docker \
+            --dest docker \
+            --preserve-digests \
+            --keep-going \
+            --retry-times 10 \
+            --all \
+            gcr.io/${image} \
+            ghcr.io/$(dirname ${image/tekton-releases/tektoncd}) || errors=$(( errors + 1 ))
+        done
+
+        echo "All images synced. ${errors} error(s) encountered."
+
+        exit ${errors}

@@ -1,0 +1,26 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: release-details
+spec:
+  params:
+  - name: buildID
+    value: $(body.buildUUID)
+  - name: gitrevision
+    value: $(body.params.release.gitRevision)
+  - name: gitrepository
+    value: $(body.params.release.gitRepository)
+  - name: versionTag
+    value: $(body.params.release.versionTag)
+  - name: projectName
+    value: $(body.params.release.projectName)
+  - name: runTests
+    value: $(body.params.release.runTests)
+  - name: imageRegistry
+    value: $(body.params.registry.baseUri)
+  - name: imageRegistryPath
+    value: $(body.params.registry.path)
+  - name: imageRegistryRegions
+    value: $(body.params.registry.regions)
+  - name: imageRegistryUser
+    value: $(body.params.registry.user)

@@ -1,0 +1,22 @@
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bastion-z
+- bastion-p
+- eventlistener.yaml
+- pipeline-deploy-test-s390x-template.yaml
+- triggers-deploy-test-s390x-template.yaml
+- cli-deploy-test-s390x-template.yaml
+- operator-deploy-test-s390x-template.yaml
+- dashboard-deploy-test-s390x-template.yaml
+- catalog-deploy-test-s390x-template.yaml
+- pipeline-deploy-test-ppc64le-template.yaml
+- serviceaccount.yaml
+- triggers-deploy-test-ppc64le-template.yaml
+- cli-deploy-test-ppc64le-template.yaml
+- operator-deploy-test-ppc64le-template.yaml
+- dashboard-deploy-test-ppc64le-template.yaml
+- catalog-deploy-test-ppc64le-template.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

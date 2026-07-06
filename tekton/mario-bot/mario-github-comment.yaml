@@ -1,0 +1,209 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: trigger-to-comment-github
+spec:
+  params:
+  - name: pullRequestID
+    value: $(body.pull-request-id)
+  - name: gitURL
+    value: $(body.git-url)
+  - name: gitRevision
+    value: $(body.git-revision)
+  - name: targetImage
+    value: $(body.target-image)
+  - name: passedOrFailed
+    value: $(body.status)
+  - name: buildPipelineRun
+    value: $(body.build-pipelinerun)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: github-feedback-trigger
+spec:
+  serviceAccountName: mario-listener
+  triggers:
+    - name: trigger
+      bindings:
+        - ref: trigger-to-comment-github
+      template:
+        ref: mario-comment-github
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: mario-comment-github
+spec:
+  params:
+  - name: pullRequestID
+    description: The pullRequestID to comment to
+  - name: gitURL
+    description: The URL of the git repo
+  - name: targetImage
+    description: The fully qualified image target e.g. repo/name:tag
+  - name: passedOrFailed
+    description: Whether the triggering event was successful or not
+  - name: buildPipelineRun
+    description: The name of the image build PipelineRun for the logs link
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: mario-comment-github-
+      annotations:
+        tekton.dev/auto-cleanup-pvc: "true"
+    spec:
+      pipelineSpec:
+        tasks:
+        - name: comment
+          taskRef:
+            apiVersion: tekton.dev/v1alpha1
+            kind: PipelineToTaskRun
+            name: mario-comment-github
+          params:
+          - name: pullRequestID
+            value: $(tt.params.pullRequestID)
+          - name: gitURL
+            value: $(tt.params.gitURL)
+          - name: targetImage
+            value: $(tt.params.targetImage)
+          - name: passedOrFailed
+            value: $(tt.params.passedOrFailed)
+          - name: buildPipelineRun
+            value: $(tt.params.buildPipelineRun)
+          workspaces:
+          - name: pr
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 10Mi
+      serviceAccountName: mario-listener
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: mario-comment-github
+spec:
+  params:
+  - name: pullRequestID
+  - name: gitURL
+  - name: targetImage
+  - name: passedOrFailed
+  - name: buildPipelineRun
+  workspaces:
+  - name: pr
+  tasks:
+  # TODO: Replace this task with custom interceptor that extends event payload with PR data
+  # example usage: https://github.com/tektoncd/plumbing/blob/def914a109d482355453d7f6dc766e476a371705/tekton/ci-workspace/plumbing/trigger.yaml#L48-L56
+  - name: download-pr-info
+    taskRef:
+      name: pull-request
+    workspaces:
+    - name: pr
+      workspace: pr
+    params:
+    - name: mode
+      value: download
+    - name: url
+      value: $(params.gitURL)/pull/$(params.pullRequestID)
+    - name: provider
+      value: github
+    - name: secret-key-ref
+      value: mario-github-token
+  - name: setup-comment
+    runAfter:
+    - download-pr-info
+    params:
+    - name: passedOrFailed
+      value: $(params.passedOrFailed)
+    - name: targetImage
+      value: $(params.targetImage)
+    - name: buildPipelineRun
+      value: $(params.buildPipelineRun)
+    workspaces:
+    - name: pr
+      workspace: pr
+    taskSpec:
+      params:
+      - name: passedOrFailed
+      - name: targetImage
+      - name: buildPipelineRun
+      workspaces:
+      - name: pr
+      steps:
+      - name: setup-comment
+        image: docker.io/library/python:3-alpine
+        env:
+        - name: PASSED_OR_FAILED
+          value: $(params.passedOrFailed)
+        - name: TARGET_IMAGE
+          value: $(params.targetImage)
+        - name: BUILD_PIPELINERUN
+          value: $(params.buildPipelineRun)
+        script: |
+          #!/usr/bin/env python
+          import json
+          import random
+
+          marios_pics_root = 'https://storage.googleapis.com/mario-bot/pics'
+          ok_pics = ['mario', 'luigi', 'tekton']
+          failed_pics = ['goomba']
+          logs_url = 'http://35.222.249.224/?buildid=%s&namespace=mario'
+          successful = ("${PASSED_OR_FAILED}" == "Succeeded")
+          print("PassedOrFailed: {}".format("${PASSED_OR_FAILED}"))
+
+          # Service Image
+          comment_template = (
+          '<img width="200" alt="{pic_alt}" src="{pic_src}">'
+          ' at your service! </p>'
+          )
+
+          if successful:
+            chosen_pic = random.choice(ok_pics)
+          else:
+            chosen_pic = random.choice(failed_pics)
+          pic_url = "/".join([marios_pics_root, chosen_pic]) + '.png'
+          comment_params = dict(pic_alt=chosen_pic, pic_src=pic_url)
+
+          if successful:
+            comment_template += (
+            'Here is the image you requested: '
+            '<a href="https://{imageurl}">built image</a>|'
+            )
+            comment_params['imageurl'] = '${TARGET_IMAGE}'
+          else:
+            comment_template += (
+            'Could not build the requested image. Please check the '
+            )
+
+          comment_template += (
+            '<a href="http://tekton.infra.tekton.dev/#/namespaces/mario/pipelineruns/{buildpipelinerun}?pipelineTask=build&step=build-and-push&'
+            'namespace=mario">build logs</a>'
+          )
+          comment_params['buildpipelinerun'] = '${BUILD_PIPELINERUN}'
+
+          new_comment_path = "$(workspaces.pr.path)/comments/new.json"
+          comment_body = dict(body=comment_template.format(**comment_params))
+          with open(new_comment_path, "w") as comment:
+            json.dump(comment_body, comment)
+  - name: publish-comment
+    runAfter:
+    - setup-comment
+    taskRef:
+      name: pull-request
+    params:
+    - name: mode
+      value: upload
+    - name: url
+      value: $(params.gitURL)/pull/$(params.pullRequestID)
+    - name: provider
+      value: github
+    - name: secret-key-ref
+      value: mario-github-token
+    workspaces:
+    - name: pr
+      workspace: pr

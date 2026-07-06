@@ -1,0 +1,238 @@
+# Copyright 2020 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: tekton-cd
+spec:
+  serviceAccountName: tektoncd
+  triggers:
+    - name: configmaps
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'configmap'
+      bindings:
+        - ref: deploy-target-details
+        - ref: deploy-source-git
+        - ref: configmap-details
+      template:
+        ref: deploy-configmap
+    - name: folders
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'folders'
+      bindings:
+        - ref: deploy-target-details
+        - ref: deploy-source-git
+        - ref: folder-details
+      template:
+        ref: deploy-from-folder
+    - name: helm
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'helm'
+      bindings:
+        - ref: deploy-target-details
+        - ref: helm-details
+      template:
+        ref: deploy-helm-chart
+    - name: tekton
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'tekton'
+      bindings:
+        - ref: deploy-target-details
+        - ref: tekton-details
+        - ref: plumbing-git
+      template:
+        ref: deploy-tekton-release
+    - name: cleanup
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'cleanup'
+      bindings:
+        - ref: deploy-target-details
+        - ref: cleanup-details
+      template:
+        ref: cleanup-runs
+    - name: catalog
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'catalog'
+      bindings:
+        - ref: deploy-source-git
+        - name: registry
+          value: "$(body.params.catalog.registry)"
+        - name: registryPath
+          value: "$(body.params.catalog.registryPath)"
+        - name: registryUser
+          value: "$(body.params.catalog.registryUser)"
+        - name: catalogDescription
+          value: "$(body.params.catalog.description)"
+      template:
+        ref: publish-catalog
+    - name: peribolos
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'peribolos'
+      bindings:
+        - ref: deploy-source-git
+      template:
+        ref: peribolos
+    - name: terraform-branch-protection
+      interceptors:
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                'trigger-template' in body &&
+                body['trigger-template'] == 'terraform-branch-protection'
+      bindings:
+        - ref: deploy-source-git
+      template:
+        ref: terraform-branch-protection
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: tekton-events
+spec:
+  serviceAccountName: tektoncd
+  resources:
+    kubernetesResource:
+      replicas: 3
+  triggerGroups:
+    - name: cd-taskrun-failed
+      interceptors:
+        - name: "Failed TaskRuns"
+          ref:
+            name: "cel"
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                header.match('ce_type', 'dev.tekton.event.taskrun.failed.v1')
+            - name: "overlay"
+              value:
+              - key: nameAndNamespace
+                expression: >-
+                  (body.taskRun.metadata.name + "-" +
+                   body.taskRun.metadata.namespace).truncate(57)
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            cd.tekton.dev/trigger-type: failure-notification
+    - name: ci-job-triggers
+      interceptors:
+        - name: "Tekton CI Jobs"
+          ref:
+            name: "cel"
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                body.taskRun.metadata.labels['tekton.dev/kind'] == 'ci' &&
+                body.taskRun.metadata.labels['triggers.tekton.dev/eventlistener'] == 'tekton-ci' &&
+                !('ci.tekton.dev/condition' in body.taskRun.metadata.annotations) &&
+                (body.taskRun.metadata.name.indexOf('-check-') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-clone-repo') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-git-clone') == -1) &&
+                (body.taskRun.metadata.name.indexOf('-post-comment') == -1) &&
+                'ownerReferences' in body.taskRun.metadata
+            - name: "overlays"
+              value:
+                - key: repo
+                  expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1)
+                - key: repoUnderscore
+                  expression: body.taskRun.metadata.annotations['tekton.dev/gitURL'].parseURL().path.substring(1).split('/').join('_')
+                - key: shortSourceEventID
+                  expression: body.taskRun.metadata.labels['tekton.dev/source-event-id'].truncate(13)
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: ci-job.triggered
+    - name: release-job-triggers
+      interceptors:
+        - name: "Release Job Triggers"
+          ref:
+            name: "cel"
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                header.match('ce_type', 'dev.tekton.event.pipelinerun.successful.v1') &&
+                (body.pipelineRun.metadata.labels['tekton.dev/kind'] == 'release' ||
+                 body.pipelineRun.metadata.labels['tekton.dev/pipeline'].endsWith('-release'))
+            - name: "overlays"
+              value:
+                - key: bucketBasePath
+                  expression: |-
+                    body.pipelineRun.status.pipelineResults.filter(x, x.name == 'release-file')[0].value.replace('https://storage.googleapis.com/', 'gs://').replace('/release.yaml\n', '')
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - default
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: release.triggered

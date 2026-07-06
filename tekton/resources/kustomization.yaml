@@ -1,0 +1,14 @@
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- images
+- org-permissions
+- release
+- cd
+- ci
+- nightly-release
+- nightly-tests
+- branch-protection
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

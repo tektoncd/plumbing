@@ -1,0 +1,244 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  changes:
+    name: categorize changes
+    runs-on: ubuntu-latest
+    outputs:
+      go-matrix: ${{ steps.detect.outputs.go-matrix }}
+      images-matrix: ${{ steps.detect.outputs.images-matrix }}
+      yaml: ${{ steps.detect.outputs.yaml }}
+    steps:
+    - name: Get base depth
+      if: github.event_name == 'pull_request'
+      id: base-depth
+      env:
+        COMMITS: ${{ github.event.pull_request.commits }}
+      run: echo "base-depth=$(( COMMITS + 1 ))" >> $GITHUB_OUTPUT
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+        fetch-depth: ${{ steps.base-depth.outputs.base-depth || 0 }}
+    - name: detect
+      id: detect
+      run: >-
+        ./hack/detect-changes.sh
+        "${{ github.event_name }}"
+        "${{ github.base_ref }}"
+        "${{ github.event.pull_request.base.sha }}"
+        "${{ github.event.pull_request.head.sha }}"
+
+  verify-tide-contexts:
+    name: Verify Tide context_options
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
+      - run: make verify-tide-contexts
+
+  build:
+    name: build-lint-and-test (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.go-matrix != '' }}
+    permissions:
+      contents: read
+      checks: write  # Used to annotate code in the PR
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.go-matrix) }}
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
+      with:
+        go-version-file: "${{ matrix.project }}/go.mod"
+    - name: build
+      working-directory: ${{ matrix.project }}
+      run: |
+        go build -v ./...
+    - name: gofmt
+      working-directory: ${{ matrix.project }}
+      run: |
+        gofmt_out=$(gofmt -d $(find * -name '*.go' ! -path 'vendor/*' ! -path 'third_party/*'))
+        if [[ -n "$gofmt_out" ]]; then
+            failed=1
+        fi
+        echo "$gofmt_out"
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a  # v9.3.0
+      with:
+        version: v2.10.1
+        args: --new-from-merge-base=origin/${{ github.base_ref }} --timeout=10m
+        working-directory: ${{ matrix.project }}
+    - name: test
+      working-directory: ${{ matrix.project }}
+      run: |
+        go test -v ./...
+
+  yamllint:
+    name: yamllint
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.yaml == 'true' }}
+    steps:
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+    - name: yamllint
+      run: |
+        sudo apt update && sudo apt install -y yamllint
+        yamllint -c .yamllint $(find . -path ./vendor -prune -o -type f -regex ".*y[a]ml" -print | tr '\n' ' ')
+
+  build-image:
+    name: build-image (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.images-matrix != '' }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.images-matrix) }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      - name: Determine build type
+        id: buildtype
+        env:
+          IMAGE_NAME: ${{ matrix.name }}
+        run: |
+          if [[ -f "tekton/images/${IMAGE_NAME}/apko.yaml" ]]; then
+            echo "type=apko" >> "$GITHUB_OUTPUT"
+          else
+            echo "type=docker" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Log in to the Container registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee  # v4.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # --- Dockerfile-based images ---
+      - name: Set up QEMU
+        if: steps.buildtype.outputs.type == 'docker'
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3  # v4.1.0
+      - name: Set up Docker Buildx
+        if: steps.buildtype.outputs.type == 'docker'
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5  # v4.1.0
+      - name: Extract metadata (tags, labels) for Docker
+        if: steps.buildtype.outputs.type == 'docker'
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9  # v6.1.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          tags: |
+            # set latest tag for default branch
+            type=ref,event=branch
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Build and push Docker image
+        if: steps.buildtype.outputs.type == 'docker'
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf  # v7.2.0
+        with:
+          platforms: ${{ matrix.platforms }}
+          context: tekton/images/${{ matrix.name }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      # --- apko-based images ---
+      # apko is installed inside this run step (not via a Marketplace action)
+      # so the docker matrix entries skip it entirely, and the version and
+      # checksum are pinned for supply-chain safety. OCI annotations (source,
+      # license, description, ...) are set declaratively in apko.yaml so they
+      # match the Dockerfile images without relying on apko's best-effort VCS
+      # detection; VCS detection is left on (the default) only to add the
+      # revision annotation.
+      - name: Build and push apko image
+        if: steps.buildtype.outputs.type == 'apko'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.name }}
+          CONFIG: tekton/images/${{ matrix.name }}/apko.yaml
+          EVENT_NAME: ${{ github.event_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          APKO_VERSION: "1.2.16"
+          APKO_SHA256: "d5ac99bd37c0e00e1f732ecf2f5e83e8b3f93b748ec692b30cd848ac2160f726"
+        run: |
+          set -euo pipefail
+          tarball="apko_${APKO_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "${tarball}" \
+            "https://github.com/chainguard-dev/apko/releases/download/v${APKO_VERSION}/${tarball}"
+          echo "${APKO_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "${tarball}"
+          apko="$(pwd)/apko_${APKO_VERSION}_linux_amd64/apko"
+          if [[ "${EVENT_NAME}" == "pull_request" ]]; then
+            # Validate the build on PRs without pushing.
+            "${apko}" build "${CONFIG}" "${IMAGE}:latest" output.tar
+          else
+            # Mirror the tag scheme docker/metadata-action gives the Dockerfile
+            # images: branch name, sha-<short>, and latest on the default branch.
+            tags=(
+              "${IMAGE}:${GITHUB_REF_NAME}"
+              "${IMAGE}:sha-${GITHUB_SHA:0:7}"
+            )
+            if [[ "${GITHUB_REF_NAME}" == "${DEFAULT_BRANCH}" ]]; then
+              tags+=("${IMAGE}:latest")
+            fi
+            "${apko}" publish "${CONFIG}" "${tags[@]}"
+          fi
+
+  ci-summary:
+    name: CI summary
+    needs: [verify-tide-contexts, build, yamllint, build-image]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Check CI results
+      run: |
+        results=(
+          "verify-tide-contexts=${{ needs.verify-tide-contexts.result }}"
+          "build=${{ needs.build.result }}"
+          "yamllint=${{ needs.yamllint.result }}"
+          "build-image=${{ needs.build-image.result }}"
+        )
+        failed=0
+        for r in "${results[@]}"; do
+          name="${r%%=*}"
+          result="${r#*=}"
+          echo "${name}: ${result}"
+          if [ "$result" != "success" ] && [ "$result" != "skipped" ] && [ "$result" != "cancelled" ]; then
+            failed=1
+          fi
+        done
+        if [ "$failed" -eq 1 ]; then
+          echo ""
+          echo "Some CI jobs failed"
+          exit 1
+        fi
+        echo ""
+        echo "All CI checks passed"

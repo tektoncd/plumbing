@@ -1,0 +1,12 @@
+resources:
+- build-id-ci-nightly
+- dashboard-nightly
+- triggers-nightly
+- add-pr-body-ci-nightly
+- add-team-members-nightly
+- operator-nightly
+- chains-nightly
+- pr-commenter-nightly
+- pr-status-updater-nightly
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

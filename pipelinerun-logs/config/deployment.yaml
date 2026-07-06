@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipelinerun-logs-deployment
+  labels:
+    app: pipelinerun-logs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pipelinerun-logs
+  template:
+    metadata:
+      labels:
+        app: pipelinerun-logs
+    spec:
+      # this service account has access to the stackdriver API
+      # via workload identity
+      serviceAccountName: pipelinerun-logs-viewer
+      containers:
+      - name: pipelinerun-logs
+        image: github.com/tektoncd/plumbing/pipelinerun-logs/cmd/http
+        args:
+        - "--project"
+        - "tekton-releases"
+        - "--cluster"
+        - "dogfooding"
+        - "--namespace"
+        - "default"
+        - "--namespace"
+        - "mario"
+        - "--namespace"
+        - "tektonci"
+        - "--hostname"
+        - "0.0.0.0"
+        - "--port"
+        - "9999"
+        ports:
+        - containerPort: 9999
+      nodeSelector:
+        # Schedule this deployment onto nodes with workload identity enabled
+        iam.gke.io/gke-metadata-server-enabled: "true"

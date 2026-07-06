@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: peribolos-run-
+  annotations:
+    tekton.dev/auto-cleanup-pvc: "true"
+spec:
+  pipelineRef:
+    name: peribolos-sync
+  params:
+  - name: url
+    value: https://github.com/tektoncd/community.git
+  - name: revision
+    value: main
+  workspaces:
+    - name: github-oauth
+      secret:
+        secretName: bot-token-github
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi

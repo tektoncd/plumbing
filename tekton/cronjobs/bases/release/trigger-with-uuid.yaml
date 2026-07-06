@@ -1,0 +1,118 @@
+# Copyright 2019 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly-cron-trigger
+spec:
+  schedule: "0 2 * * *"  # Daily at 2am
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 300
+      template:
+        spec:
+          volumes:
+          - name: shared-volume
+            emptyDir: {}
+          initContainers:
+          - name: git
+            image: docker.io/alpine/git
+            command:
+            - /bin/sh
+            args:
+              - -ce
+              - |
+                GIT_SHA=$(git ls-remote --heads https://${GIT_REPO} | \
+                  awk '/refs\/heads\/main$/{ print $1 }')
+                if [ "${GIT_SHA}" == "" ]; then
+                  GIT_SHA=$(git ls-remote --heads https://${GIT_REPO} | \
+                  awk '/refs\/heads\/master$/{ print $1 }')
+                fi
+                VERSION_TAG="v$(date +"%Y%m%d")-$(echo $GIT_SHA | cut -c 1-10)"
+                cat <<EOF > /shared/git
+                export GIT_SHA=$GIT_SHA
+                export GIT_REPO=$GIT_REPO
+                export VERSION_TAG=$VERSION_TAG
+                EOF
+            volumeMounts:
+            - mountPath: /shared
+              name: shared-volume
+            env:
+              - name: GIT_REPO
+                value: "github.com/tektoncd/pipeline"
+          - name: uuid
+            image: docker.io/library/python:3.6-alpine3.9
+            command:
+            - /bin/sh
+            args:
+              - -ce
+              - |
+                TRIGGER_UUID=$(python -c 'import uuid; print(uuid.uuid4())')
+                cat <<EOF > /shared/uuid
+                export TRIGGER_UUID=$TRIGGER_UUID
+                EOF
+            volumeMounts:
+            - mountPath: /shared
+              name: shared-volume
+          containers:
+          - name: trigger
+            image: docker.io/curlimages/curl
+            command:
+              - /bin/sh
+            args:
+              - -ce
+              - |
+                . /shared/git
+                . /shared/uuid
+                cat <<EOF > /shared/post-body.json
+                {
+                  "buildUUID": "$TRIGGER_UUID",
+                  "trigger-template": "nightly-release",
+                  "params": {
+                    "release": {
+                      "gitRevision": "$GIT_SHA",
+                      "gitRepository": "$GIT_REPO",
+                      "versionTag": "$VERSION_TAG",
+                      "projectName": "$PROJECT_NAME",
+                      "runTests": "$RUN_TESTS"
+                    },
+                    "registry": {
+                      "baseUri": "$CR_URI",
+                      "path": "$CR_PATH",
+                      "regions": "$CR_REGIONS",
+                      "user": "$CR_USER"
+                    }
+                  }
+                }
+                EOF
+                curl -d @/shared/post-body.json $SINK_URL
+            env:
+              - name: SINK_URL
+                value: "el-tekton-nightly.tekton-nightly.svc.cluster.local:8080"
+              - name: CR_URI
+                value: gcr.io
+              - name: CR_PATH
+                value: tekton-nightly
+              - name: CR_REGIONS
+                value: "us eu asia"
+              - name: CR_USER
+                value: _json_key
+              - name: PROJECT_NAME
+                value: "project-name"
+              - name: RUN_TESTS
+                value: "false"
+            volumeMounts:
+            - mountPath: /shared
+              name: shared-volume
+          restartPolicy: Never

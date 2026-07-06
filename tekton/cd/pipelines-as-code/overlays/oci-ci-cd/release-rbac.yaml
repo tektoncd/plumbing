@@ -1,0 +1,241 @@
+# ServiceAccount and RBAC for PAC-triggered release pipelines.
+# The wait-for-chains task needs to list/get TaskRuns to check
+# Tekton Chains signing status on publish-images tasks.
+
+# --- releases-operator ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-operator
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-operator
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-operator
+
+# --- releases-pipeline ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-pipeline
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-pipeline
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-pipeline
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-pipeline
+
+# --- releases-cli ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-cli
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-cli
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-cli
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-cli
+
+# --- releases-pruner ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-pruner
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-pruner
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-pruner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-pruner
+
+# --- releases-chains ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-chains
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-chains
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-chains
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-chains
+
+# --- releases-triggers ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-triggers
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-triggers
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-triggers
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-triggers
+
+# --- releases-results ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-results
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-results
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-results
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-results

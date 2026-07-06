@@ -1,0 +1,443 @@
+# .github/workflows/sync-priority.yml
+#
+# Syncs GitHub's built-in Priority field based on priority/* labels
+# for all tektoncd repos.
+# Labels are the source of truth:
+# - priority/urgent → Urgent, priority/high → High,
+#   priority/medium → Medium, priority/low → Low
+# - No priority/* label → clears the field
+#
+# Uses the setIssueFieldValue mutation (Issue Fields API, public preview).
+#
+# Queries each repository individually to avoid the GitHub Search API's
+# 1000-result cap.
+#
+# IMPORTANT: gh --paginate requires the cursor variable to be named
+# $endCursor (not $cursor). Using any other name causes gh to never
+# advance the cursor, resulting in an infinite loop.
+#
+# Runs daily and can be triggered manually.
+
+name: Sync Priority
+
+on:
+  schedule:
+    # Run daily at 8am UTC (offset from issue-types sync at 7am)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - log actions without making changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  # Priority field ID for tektoncd org (IssueFieldSingleSelect)
+  PRIORITY_FIELD_ID: "IFSS_kgDOAMZ_Zg"
+  # Priority option IDs
+  PRIORITY_URGENT: "IFSSO_kgDOAVtJvA"
+  PRIORITY_HIGH: "IFSSO_kgDOAVtJvQ"
+  PRIORITY_MEDIUM: "IFSSO_kgDOAVtJvg"
+  PRIORITY_LOW: "IFSSO_kgDOAVtJvw"
+
+jobs:
+  sync-priority:
+    name: Sync Priority
+    # Only run in the upstream repo, not in forks (secrets won't be available)
+    if: github.repository == 'tektoncd/plumbing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
+          private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
+          owner: tektoncd
+
+      - name: Collect open issues from all repos
+        id: search_issues
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          START_TIME=$(date +%s)
+          echo "::group::Discovering repos with open issues"
+
+          # gh --paginate requires the cursor variable to be named $endCursor.
+          # Using $cursor causes gh to never substitute it, looping forever.
+          REPOS=$(gh api graphql --paginate -f query='
+            query($endCursor: String) {
+              organization(login: "tektoncd") {
+                repositories(first: 100, after: $endCursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    name
+                    issues(states: OPEN) { totalCount }
+                  }
+                }
+              }
+            }' --jq '.data.organization.repositories.nodes[] | select(.issues.totalCount > 0) | .name')
+
+          REPO_COUNT=$(echo "$REPOS" | wc -l)
+          echo "Found $REPO_COUNT repos with open issues"
+          echo "Repos: $(echo $REPOS | tr '\n' ' ')"
+          echo "::endgroup::"
+
+          echo "::group::Fetching issues per repository"
+
+          # Initialize the output file
+          echo '[]' > /tmp/issues.json
+          REPO_IDX=0
+
+          for REPO in $REPOS; do
+            ((++REPO_IDX))
+            ELAPSED=$(( $(date +%s) - START_TIME ))
+            echo "[$REPO_IDX/$REPO_COUNT] Fetching issues from $REPO... (${ELAPSED}s elapsed)"
+
+            # gh --paginate requires $endCursor variable name for cursor injection
+            gh api graphql --paginate -f query='
+              query($endCursor: String) {
+                repository(owner: "tektoncd", name: "'"$REPO"'") {
+                  issues(states: OPEN, first: 100, after: $endCursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      id
+                      number
+                      issueFieldValues(first: 10) {
+                        nodes {
+                          ... on IssueFieldSingleSelectValue {
+                            name
+                            value
+                            optionId
+                            field { ... on IssueFieldSingleSelect { id name } }
+                          }
+                        }
+                      }
+                      labels(first: 20) {
+                        nodes { name }
+                      }
+                    }
+                  }
+                }
+              }' --jq "[.data.repository.issues.nodes[] | . + {repository: {name: \"$REPO\"}}]" \
+              | jq -s 'add // []' > "/tmp/issues_${REPO}.json"
+
+            REPO_ISSUE_COUNT=$(jq 'length' "/tmp/issues_${REPO}.json")
+            echo "  → $REPO_ISSUE_COUNT issues fetched"
+
+            # Merge into the main file
+            jq -s 'add' /tmp/issues.json "/tmp/issues_${REPO}.json" > /tmp/issues_merged.json
+            mv /tmp/issues_merged.json /tmp/issues.json
+          done
+
+          ELAPSED=$(( $(date +%s) - START_TIME ))
+          ISSUE_COUNT=$(jq 'length' /tmp/issues.json)
+          echo "Total: $ISSUE_COUNT open issues across $REPO_COUNT repos (fetched in ${ELAPSED}s)"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+          # Show breakdown by repo
+          echo "::group::Issues by repository"
+          jq -r '.[].repository.name' /tmp/issues.json | sort | uniq -c | sort -rn
+          echo "::endgroup::"
+
+      - name: Sync priority based on labels
+        id: sync_priority
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          echo "::group::Sync configuration"
+          echo "Issues found: ${{ steps.search_issues.outputs.issue_count }}"
+          echo "Dry run: $DRY_RUN"
+          echo "::endgroup::"
+
+          UPDATED=0
+          CLEARED=0
+          SKIPPED=0
+          ERRORS=0
+          PROCESSED=0
+          TOTAL=$(jq 'length' /tmp/issues.json)
+          START_TIME=$(date +%s)
+
+          # Helper: extract current Priority field value from issue JSON.
+          # Returns the option name (Urgent/High/Medium/Low) or "none".
+          get_current_priority() {
+            echo "$1" | jq -r '
+              [.issueFieldValues.nodes[]
+               | select(.field.id == "'"$PRIORITY_FIELD_ID"'")
+               | .value] | first // "none"'
+          }
+
+          echo "::group::Syncing priority ($TOTAL issues)"
+
+          while IFS= read -r issue; do
+            ((++PROCESSED))
+            ISSUE_ID=$(echo "$issue" | jq -r '.id')
+            ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
+            REPO_NAME=$(echo "$issue" | jq -r '.repository.name')
+            CURRENT_PRIORITY=$(get_current_priority "$issue")
+
+            # Log progress every 100 issues
+            if (( PROCESSED % 100 == 0 )); then
+              ELAPSED=$(( $(date +%s) - START_TIME ))
+              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED cleared=$CLEARED skipped=$SKIPPED errors=$ERRORS) ---"
+            fi
+
+            # Get priority/* labels
+            PRIORITY_LABELS=$(echo "$issue" | jq -r '[.labels.nodes[].name | select(startswith("priority/"))] | join(",")')
+
+            # Determine target priority based on labels
+            TARGET_OPTION_ID=""
+            TARGET_PRIORITY_NAME=""
+
+            if echo "$PRIORITY_LABELS" | grep -q "priority/urgent"; then
+              TARGET_OPTION_ID="${{ env.PRIORITY_URGENT }}"
+              TARGET_PRIORITY_NAME="Urgent"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/critical-urgent"; then
+              # Support legacy label during transition
+              TARGET_OPTION_ID="${{ env.PRIORITY_URGENT }}"
+              TARGET_PRIORITY_NAME="Urgent"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/high"; then
+              TARGET_OPTION_ID="${{ env.PRIORITY_HIGH }}"
+              TARGET_PRIORITY_NAME="High"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/important-soon"; then
+              # Support legacy label during transition
+              TARGET_OPTION_ID="${{ env.PRIORITY_HIGH }}"
+              TARGET_PRIORITY_NAME="High"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/medium"; then
+              TARGET_OPTION_ID="${{ env.PRIORITY_MEDIUM }}"
+              TARGET_PRIORITY_NAME="Medium"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/important-longterm"; then
+              # Support legacy label during transition
+              TARGET_OPTION_ID="${{ env.PRIORITY_MEDIUM }}"
+              TARGET_PRIORITY_NAME="Medium"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/low"; then
+              TARGET_OPTION_ID="${{ env.PRIORITY_LOW }}"
+              TARGET_PRIORITY_NAME="Low"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/backlog"; then
+              # Support legacy label during transition
+              TARGET_OPTION_ID="${{ env.PRIORITY_LOW }}"
+              TARGET_PRIORITY_NAME="Low"
+            elif echo "$PRIORITY_LABELS" | grep -q "priority/awaiting-more-evidence"; then
+              # Support legacy label during transition
+              TARGET_OPTION_ID="${{ env.PRIORITY_LOW }}"
+              TARGET_PRIORITY_NAME="Low"
+            fi
+
+            # Case 1: Has priority label — set field based on label
+            if [ -n "$TARGET_OPTION_ID" ]; then
+              if [ "$CURRENT_PRIORITY" = "$TARGET_PRIORITY_NAME" ]; then
+                echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - already $CURRENT_PRIORITY"
+                ((++SKIPPED))
+                continue
+              fi
+
+              echo "UPDATE: $REPO_NAME#$ISSUE_NUMBER - $CURRENT_PRIORITY → $TARGET_PRIORITY_NAME (labels: $PRIORITY_LABELS)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!, $fieldId: ID!, $optionId: ID!) {
+                    setIssueFieldValue(input: {
+                      issueId: $issueId
+                      issueFields: [{
+                        fieldId: $fieldId
+                        singleSelectOptionId: $optionId
+                      }]
+                    }) {
+                      issue { id }
+                    }
+                  }' -f issueId="$ISSUE_ID" \
+                     -f fieldId="${{ env.PRIORITY_FIELD_ID }}" \
+                     -f optionId="$TARGET_OPTION_ID" 2>/dev/null || true)
+
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
+                  ((++ERRORS))
+                else
+                  # On the first update, verify the priority actually persisted.
+                  if [ "$UPDATED" -eq 0 ]; then
+                    VERIFY=$(gh api graphql -f query='
+                      query($issueId: ID!) {
+                        node(id: $issueId) {
+                          ... on Issue {
+                            issueFieldValues(first: 10) {
+                              nodes {
+                                ... on IssueFieldSingleSelectValue {
+                                  value
+                                  field { ... on IssueFieldSingleSelect { id } }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }' -f issueId="$ISSUE_ID" \
+                      --jq '[.data.node.issueFieldValues.nodes[] | select(.field.id == "'"$PRIORITY_FIELD_ID"'") | .value] | first // "none"' 2>/dev/null || true)
+                    if [ "$VERIFY" != "$TARGET_PRIORITY_NAME" ]; then
+                      echo "::error::Verification failed for $REPO_NAME#$ISSUE_NUMBER: expected priority '$TARGET_PRIORITY_NAME' but got '$VERIFY'. The GitHub App may lack the 'Issue Fields' organization permission (write)."
+                      exit 1
+                    fi
+                    echo "  ✓ Verified first update persisted ($VERIFY)"
+                  fi
+                  ((++UPDATED))
+                  # Record sample issue IDs for post-sync verification (up to 5)
+                  if [ "$UPDATED" -le 5 ]; then
+                    echo "$ISSUE_ID|$REPO_NAME#$ISSUE_NUMBER|$TARGET_PRIORITY_NAME" >> /tmp/verify_samples.txt
+                  fi
+                fi
+
+                sleep 0.3
+              else
+                ((++UPDATED))
+              fi
+              continue
+            fi
+
+            # Case 2: No priority label but has priority field — clear it
+            if [ "$CURRENT_PRIORITY" != "none" ]; then
+              echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing priority $CURRENT_PRIORITY (no priority/* label)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!, $fieldId: ID!) {
+                    setIssueFieldValue(input: {
+                      issueId: $issueId
+                      issueFields: [{
+                        fieldId: $fieldId
+                        delete: true
+                      }]
+                    }) {
+                      issue { id }
+                    }
+                  }' -f issueId="$ISSUE_ID" \
+                     -f fieldId="${{ env.PRIORITY_FIELD_ID }}" 2>/dev/null || true)
+
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
+                  ((++ERRORS))
+                else
+                  ((++CLEARED))
+                fi
+
+                sleep 0.3
+              else
+                ((++CLEARED))
+              fi
+              continue
+            fi
+
+            # Case 3: No priority label and no priority field — already correct
+            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no priority/* label and no priority field"
+            ((++SKIPPED))
+
+          done < <(jq -c '.[]' /tmp/issues.json)
+
+          echo "::endgroup::"
+
+          ELAPSED=$(( $(date +%s) - START_TIME ))
+          echo "::group::Results (completed in ${ELAPSED}s)"
+          echo "Processed: $PROCESSED"
+          echo "Priority set: $UPDATED"
+          echo "Priority cleared: $CLEARED"
+          echo "Skipped: $SKIPPED"
+          echo "Errors: $ERRORS"
+          echo "::endgroup::"
+
+          # Set outputs for summary
+          echo "updated=$UPDATED" >> $GITHUB_OUTPUT
+          echo "cleared=$CLEARED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      - name: Job summary
+        run: |
+          echo "## Priority Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Priority set | ${{ steps.sync_priority.outputs.updated || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Priority cleared | ${{ steps.sync_priority.outputs.cleared || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | ${{ steps.sync_priority.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | ${{ steps.sync_priority.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Label → Priority Mapping" >> $GITHUB_STEP_SUMMARY
+          echo "| Label | Priority |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/urgent | Urgent |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/high | High |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/medium | Medium |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/low | Low |" >> $GITHUB_STEP_SUMMARY
+          echo "| (no priority/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Legacy Labels (supported during transition)" >> $GITHUB_STEP_SUMMARY
+          echo "| Legacy Label | Maps to |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/critical-urgent | Urgent |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/important-soon | High |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/important-longterm | Medium |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/backlog | Low |" >> $GITHUB_STEP_SUMMARY
+          echo "| priority/awaiting-more-evidence | Low |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify priority persisted
+        if: steps.sync_priority.outputs.updated > 0 && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          echo "::group::Post-sync verification"
+          if [ ! -f /tmp/verify_samples.txt ]; then
+            echo "No samples to verify"
+            exit 0
+          fi
+
+          PASS=0
+          FAIL=0
+          while IFS='|' read -r ISSUE_ID ISSUE_REF EXPECTED_PRIORITY; do
+            ACTUAL=$(gh api graphql -f query='
+              query($id: ID!) {
+                node(id: $id) {
+                  ... on Issue {
+                    issueFieldValues(first: 10) {
+                      nodes {
+                        ... on IssueFieldSingleSelectValue {
+                          value
+                          field { ... on IssueFieldSingleSelect { id } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }' -f id="$ISSUE_ID" \
+              --jq '[.data.node.issueFieldValues.nodes[] | select(.field.id == "'"$PRIORITY_FIELD_ID"'") | .value] | first // "none"' 2>&1 || true)
+
+            if [ "$ACTUAL" = "$EXPECTED_PRIORITY" ]; then
+              echo "✓ $ISSUE_REF: $ACTUAL (expected $EXPECTED_PRIORITY)"
+              ((++PASS))
+            else
+              echo "✗ $ISSUE_REF: got '$ACTUAL', expected '$EXPECTED_PRIORITY'"
+              ((++FAIL))
+            fi
+          done < /tmp/verify_samples.txt
+
+          echo ""
+          echo "Verification: $PASS passed, $FAIL failed (out of $((PASS + FAIL)) samples)"
+          echo "::endgroup::"
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "::error::Post-sync verification failed: $FAIL/$((PASS + FAIL)) sampled issues did not have the expected priority. The GitHub App may lack the 'Issue Fields' organization permission."
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Priority sync failed. Check the logs for details."

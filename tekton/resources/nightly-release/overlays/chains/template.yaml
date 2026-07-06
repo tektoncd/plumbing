@@ -1,0 +1,54 @@
+- op: add
+  path: /spec/resourcetemplates
+  value:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: chains-release-nightly-
+        labels:
+          tekton.dev/kind: release
+        annotations:
+          tekton.dev/auto-cleanup-pvc: "true"
+      spec:
+        pipelineRef:
+          name: chains-release
+        params:
+        - name: package
+          value: $(tt.params.gitrepository)
+        - name: gitRevision
+          value: $(tt.params.gitrevision)
+        - name: imageRegistry
+          value: $(tt.params.imageRegistry)
+        - name: imageRegistryPath
+          value: $(tt.params.imageRegistryPath)
+        - name: imageRegistryUser
+          value: $(tt.params.imageRegistryUser)
+        - name: imageRegistryRegions
+          value: $(tt.params.imageRegistryRegions)
+        - name: versionTag
+          value: $(tt.params.versionTag)
+        - name: serviceAccountPath
+          value: release.json
+        - name: releaseBucket
+          value: gs://tekton-releases-nightly/chains
+        - name: serviceAccountImagesPath
+          value: credentials
+        - name: koExtraArgs
+          value: ""
+        - name: runTests
+          value: $(tt.params.runTests)
+        workspaces:
+          - name: workarea
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 1Gi
+          - name: release-secret
+            secret:
+              secretName: release-secret
+          - name: release-images-secret
+            secret:
+              secretName: ghcr-creds

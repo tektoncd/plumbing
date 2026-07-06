@@ -1,0 +1,11 @@
+resources:
+- ingress.yaml
+- rbac.yaml
+- ../../base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: service.yaml
+- path: patch-postgres-image.yaml
+# TEMPORARY: Results is broken (postgres image gone), disable it. See patch header.
+- path: patch-disable-results.yaml

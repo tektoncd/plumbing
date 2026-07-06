@@ -1,0 +1,57 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Repository CR for tektoncd/cli.
+# PAC matches incoming events (push, incoming webhook) to PipelineRuns
+# defined in the repository's .tekton/ directory.
+# PipelineRuns are executed in the releases-cli namespace.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: releases-cli
+---
+apiVersion: "pipelinesascode.tekton.dev/v1alpha1"
+kind: Repository
+metadata:
+  name: tektoncd-cli
+  namespace: releases-cli
+spec:
+  url: "https://github.com/tektoncd/cli"
+  settings:
+    # Fetch .tekton/ from the default branch (main), not from the PR branch.
+    # This prevents PR authors from modifying release pipelines — only merged
+    # changes to main take effect.
+    pipelinerun_provenance: "default_branch"
+    policy:
+      # Only cli maintainers and plumbing maintainers can approve
+      # external PRs with /ok-to-test
+      ok_to_test:
+        - cli-maintainers
+        - plumbing-maintainers
+      # Only cli maintainers can trigger CI on their own PRs
+      pull_request:
+        - cli-maintainers
+  incoming:
+    # Patch releases — triggered by .github/workflows/patch-release.yaml
+    - targets:
+        - "release-v*"
+      secret:
+        name: pac-incoming-secret
+      type: webhook-url
+      params:
+        - version
+        - release_as_latest
+        - go_version
+        - golangci_lint_version

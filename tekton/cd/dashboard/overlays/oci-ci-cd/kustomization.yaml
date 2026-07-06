@@ -1,0 +1,54 @@
+resources:
+- restricted-rbac.yaml
+- namespaced-rolebindings.yaml
+- ingress.yaml
+- extensions.yaml
+- https://github.com/tektoncd/dashboard/releases/download/v0.69.0/release.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+patches:
+- path: tekton-dashboard-service.yaml
+- target:
+    kind: Deployment
+    name: tekton-dashboard
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/1
+      value: --external-logs=https://logs.infra.tekton.dev/logs
+- target:
+    kind: Deployment
+    name: tekton-dashboard
+  patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/args/5
+      value: --namespaces=tekton-ci,tekton-nightly,bastion-p,bastion-z,releases-pipeline,releases-operator,releases-pruner,releases-chains
+- patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: tekton-dashboard-tenant-view
+- patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: tekton-dashboard-backend-view
+- patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: tekton-dashboard-triggers-view
+- patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: tekton-dashboard-cronjobs-extension
+- patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: tekton-dashboard-pipelines-view

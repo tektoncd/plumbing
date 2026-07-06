@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    dns.gardener.cloud/dnsnames: 'mario.dogfooding.tekton.dev'
+    dns.gardener.cloud/ttl: "3600"
+  name: ing
+  namespace: mario
+spec:
+  tls:
+  - secretName: mario-dogfooding-tekton-dev-tls
+    hosts:
+    - mario.dogfooding.tekton.dev
+  rules:
+  - host: mario.dogfooding.tekton.dev
+    http:
+      paths:
+      - backend:
+          service:
+            name: el-mario-image-builder
+            port:
+              number: 8080
+        path: /*
+        pathType: ImplementationSpecific

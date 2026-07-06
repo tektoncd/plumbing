@@ -1,0 +1,88 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tekton-yamllint
+  namespace: tekton-ci
+spec:
+  params:
+    - name: gitRepository
+      description: The git repository that hosts context and Dockerfile
+    - name: gitRevision
+      description: The Git revision to be used.
+    - name: gitCloneDepth
+      description: Number of commits in the change + 1
+    - name: fileFilterRegex
+      description: Names regex to be matched in the list of modified files
+    - name: checkName
+      description: The name of the GitHub check that this pipeline is used for
+    - name: gitHubCommand
+      description: The command that was used to trigger testing
+    - name: args
+      type: array
+      description: The list of args to be passed to yamllint
+  workspaces:
+  - name: source
+  tasks:
+  - name: git-clone
+    taskRef:
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+    params:
+      - name: url
+        value: $(params.gitRepository)
+      - name: revision
+        value: $(params.gitRevision)
+      - name: depth
+        value: $(params.gitCloneDepth)
+    workspaces:
+      - name: output
+        workspace: source
+  - name: check-name-matches
+    taskRef:
+      name: check-name-matches
+    params:
+      - name: gitHubCommand
+        value: $(params.gitHubCommand)
+      - name: checkName
+        value: $(params.checkName)
+  - name: check-git-files-changed
+    runAfter: [git-clone]  # expects source to be populated by git-clone (TEP-0063)
+    taskRef:
+      name: check-git-files-changed
+    params:
+      - name: gitCloneDepth
+        value: $(params.gitCloneDepth)
+      - name: regex
+        value: $(params.fileFilterRegex)
+    workspaces:
+      - name: input
+        workspace: source
+  - name: lint
+    when:
+      - input: $(tasks.check-name-matches.results.check)
+        operator: in
+        values: ["passed"]
+      - input: $(tasks.check-git-files-changed.results.check)
+        operator: in
+        values: ["passed"]              # In cases triggered not by specific github comments
+    taskRef:
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/yaml-lint:0.1
+      - name: name
+        value: yaml-lint
+      - name: kind
+        value: task
+    params:
+    - name: args
+      value: ["$(params.args[*])"]
+    workspaces:
+      - name: shared-workspace
+        workspace: source

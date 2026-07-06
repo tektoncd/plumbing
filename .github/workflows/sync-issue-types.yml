@@ -1,0 +1,370 @@
+# .github/workflows/sync-issue-types.yml
+#
+# Syncs GitHub Issue Types based on kind/* labels for all tektoncd repos.
+# Labels are the source of truth:
+# - kind/bug → Bug, kind/feature → Feature, other kind/* → Task
+# - No kind/* label → clears the type
+#
+# Queries each repository individually to avoid the GitHub Search API's
+# 1000-result cap.
+#
+# IMPORTANT: gh --paginate requires the cursor variable to be named
+# $endCursor (not $cursor). Using any other name causes gh to never
+# advance the cursor, resulting in an infinite loop.
+#
+# Runs daily and can be triggered manually.
+
+name: Sync Issue Types
+
+on:
+  schedule:
+    # Run daily at 7am UTC
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - log actions without making changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  # Issue Type IDs for tektoncd org
+  TYPE_TASK: "IT_kwDOAtZbZc4Almgp"
+  TYPE_BUG: "IT_kwDOAtZbZc4Almgr"
+  TYPE_FEATURE: "IT_kwDOAtZbZc4Almgt"
+
+jobs:
+  sync-issue-types:
+    name: Sync Issue Types
+    # Only run in the upstream repo, not in forks (secrets won't be available)
+    if: github.repository == 'tektoncd/plumbing'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.PROJECT_SYNC_APP_ID }}
+          private-key: ${{ secrets.PROJECT_SYNC_PRIVATE_KEY }}
+          owner: tektoncd
+
+      - name: Collect open issues from all repos
+        id: search_issues
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          START_TIME=$(date +%s)
+          echo "::group::Discovering repos with open issues"
+
+          # gh --paginate requires the cursor variable to be named $endCursor.
+          # Using $cursor causes gh to never substitute it, looping forever.
+          REPOS=$(gh api graphql --paginate -f query='
+            query($endCursor: String) {
+              organization(login: "tektoncd") {
+                repositories(first: 100, after: $endCursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    name
+                    issues(states: OPEN) { totalCount }
+                  }
+                }
+              }
+            }' --jq '.data.organization.repositories.nodes[] | select(.issues.totalCount > 0) | .name')
+
+          REPO_COUNT=$(echo "$REPOS" | wc -l)
+          echo "Found $REPO_COUNT repos with open issues"
+          echo "Repos: $(echo $REPOS | tr '\n' ' ')"
+          echo "::endgroup::"
+
+          echo "::group::Fetching issues per repository"
+
+          # Initialize the output file
+          echo '[]' > /tmp/issues.json
+          REPO_IDX=0
+
+          for REPO in $REPOS; do
+            ((++REPO_IDX))
+            ELAPSED=$(( $(date +%s) - START_TIME ))
+            echo "[$REPO_IDX/$REPO_COUNT] Fetching issues from $REPO... (${ELAPSED}s elapsed)"
+
+            # gh --paginate requires $endCursor variable name for cursor injection
+            gh api graphql --paginate -f query='
+              query($endCursor: String) {
+                repository(owner: "tektoncd", name: "'"$REPO"'") {
+                  issues(states: OPEN, first: 100, after: $endCursor) {
+                    pageInfo { hasNextPage endCursor }
+                    nodes {
+                      id
+                      number
+                      issueType { id name }
+                      labels(first: 20) {
+                        nodes { name }
+                      }
+                    }
+                  }
+                }
+              }' --jq "[.data.repository.issues.nodes[] | . + {repository: {name: \"$REPO\"}}]" \
+              | jq -s 'add // []' > "/tmp/issues_${REPO}.json"
+
+            REPO_ISSUE_COUNT=$(jq 'length' "/tmp/issues_${REPO}.json")
+            echo "  → $REPO_ISSUE_COUNT issues fetched"
+
+            # Merge into the main file
+            jq -s 'add' /tmp/issues.json "/tmp/issues_${REPO}.json" > /tmp/issues_merged.json
+            mv /tmp/issues_merged.json /tmp/issues.json
+          done
+
+          ELAPSED=$(( $(date +%s) - START_TIME ))
+          ISSUE_COUNT=$(jq 'length' /tmp/issues.json)
+          echo "Total: $ISSUE_COUNT open issues across $REPO_COUNT repos (fetched in ${ELAPSED}s)"
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          echo "::endgroup::"
+
+          # Show breakdown by repo
+          echo "::group::Issues by repository"
+          jq -r '.[].repository.name' /tmp/issues.json | sort | uniq -c | sort -rn
+          echo "::endgroup::"
+
+      - name: Sync issue types based on labels
+        id: sync_types
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          echo "::group::Sync configuration"
+          echo "Issues found: ${{ steps.search_issues.outputs.issue_count }}"
+          echo "Dry run: $DRY_RUN"
+          echo "::endgroup::"
+
+          UPDATED=0
+          CLEARED=0
+          SKIPPED=0
+          ERRORS=0
+          PROCESSED=0
+          TOTAL=$(jq 'length' /tmp/issues.json)
+          START_TIME=$(date +%s)
+
+          echo "::group::Syncing issue types ($TOTAL issues)"
+
+          while IFS= read -r issue; do
+            ((++PROCESSED))
+            ISSUE_ID=$(echo "$issue" | jq -r '.id')
+            ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
+            REPO_NAME=$(echo "$issue" | jq -r '.repository.name')
+            CURRENT_TYPE=$(echo "$issue" | jq -r '.issueType.name // "none"')
+
+            # Log progress every 100 issues
+            if (( PROCESSED % 100 == 0 )); then
+              ELAPSED=$(( $(date +%s) - START_TIME ))
+              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED cleared=$CLEARED skipped=$SKIPPED errors=$ERRORS) ---"
+            fi
+
+            # Get kind/* labels
+            KIND_LABELS=$(echo "$issue" | jq -r '[.labels.nodes[].name | select(startswith("kind/"))] | join(",")')
+
+            # Determine target type based on labels
+            TARGET_TYPE_ID=""
+            TARGET_TYPE_NAME=""
+
+            if echo "$KIND_LABELS" | grep -q "kind/bug"; then
+              TARGET_TYPE_ID="${{ env.TYPE_BUG }}"
+              TARGET_TYPE_NAME="Bug"
+            elif echo "$KIND_LABELS" | grep -q "kind/feature"; then
+              TARGET_TYPE_ID="${{ env.TYPE_FEATURE }}"
+              TARGET_TYPE_NAME="Feature"
+            elif [ -n "$KIND_LABELS" ]; then
+              # All other kind/* labels map to Task
+              TARGET_TYPE_ID="${{ env.TYPE_TASK }}"
+              TARGET_TYPE_NAME="Task"
+            fi
+
+            # Case 1: Has kind label - set type based on label
+            if [ -n "$TARGET_TYPE_ID" ]; then
+              if [ "$CURRENT_TYPE" = "$TARGET_TYPE_NAME" ]; then
+                echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - already $CURRENT_TYPE"
+                ((++SKIPPED))
+                continue
+              fi
+
+              echo "UPDATE: $REPO_NAME#$ISSUE_NUMBER - $CURRENT_TYPE → $TARGET_TYPE_NAME (labels: $KIND_LABELS)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                # Capture stdout only; gh prints its own error messages to
+                # stderr which would corrupt the JSON and break jq parsing.
+                # || true prevents set -e from killing the script on GraphQL
+                # errors; we handle errors ourselves below.
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!, $typeId: ID!) {
+                    updateIssueIssueType(input: {
+                      issueId: $issueId
+                      issueTypeId: $typeId
+                    }) {
+                      issue {
+                        id
+                        issueType { name }
+                      }
+                    }
+                  }' -f issueId="$ISSUE_ID" -f typeId="$TARGET_TYPE_ID" 2>/dev/null || true)
+
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
+                  ((++ERRORS))
+                else
+                  # On the first update, verify the type actually persisted.
+                  # GitHub's API can silently return success without persisting
+                  # when the token lacks "Issue Types" org permission.
+                  if [ "$UPDATED" -eq 0 ]; then
+                    VERIFY=$(gh api graphql -f query='
+                      query($issueId: ID!) {
+                        node(id: $issueId) {
+                          ... on Issue { issueType { name } }
+                        }
+                      }' -f issueId="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>/dev/null || true)
+                    if [ "$VERIFY" != "$TARGET_TYPE_NAME" ]; then
+                      echo "::error::Verification failed for $REPO_NAME#$ISSUE_NUMBER: expected type '$TARGET_TYPE_NAME' but got '$VERIFY'. The GitHub App likely lacks the 'Issue Types' organization permission (write). Add it in the App settings → Organization permissions → Issue Types → Read & Write."
+                      exit 1
+                    fi
+                    echo "  ✓ Verified first update persisted ($VERIFY)"
+                  fi
+                  ((++UPDATED))
+                  # Record sample issue IDs for post-sync verification (up to 5)
+                  if [ "$UPDATED" -le 5 ]; then
+                    echo "$ISSUE_ID|$REPO_NAME#$ISSUE_NUMBER|$TARGET_TYPE_NAME" >> /tmp/verify_samples.txt
+                  fi
+                fi
+
+                sleep 0.3
+              else
+                ((++UPDATED))
+              fi
+              continue
+            fi
+
+            # Case 2: No kind label but has type - clear the type
+            if [ "$CURRENT_TYPE" != "none" ]; then
+              echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing type $CURRENT_TYPE (no kind/* label)"
+
+              if [ "$DRY_RUN" != "true" ]; then
+                # Capture stdout only; see comment on the set-type mutation.
+                RESULT=$(gh api graphql -f query='
+                  mutation($issueId: ID!) {
+                    updateIssueIssueType(input: {
+                      issueId: $issueId
+                      issueTypeId: null
+                    }) {
+                      issue {
+                        id
+                        issueType { name }
+                      }
+                    }
+                  }' -f issueId="$ISSUE_ID" 2>/dev/null || true)
+
+                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
+                  ((++ERRORS))
+                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
+                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
+                  ((++ERRORS))
+                else
+                  ((++CLEARED))
+                fi
+
+                sleep 0.3
+              else
+                ((++CLEARED))
+              fi
+              continue
+            fi
+
+            # Case 3: No kind label and no type - already correct
+            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no kind/* label and no type"
+            ((++SKIPPED))
+
+          done < <(jq -c '.[]' /tmp/issues.json)
+
+          echo "::endgroup::"
+
+          ELAPSED=$(( $(date +%s) - START_TIME ))
+          echo "::group::Results (completed in ${ELAPSED}s)"
+          echo "Processed: $PROCESSED"
+          echo "Types set: $UPDATED"
+          echo "Types cleared: $CLEARED"
+          echo "Skipped: $SKIPPED"
+          echo "Errors: $ERRORS"
+          echo "::endgroup::"
+
+          # Set outputs for summary
+          echo "updated=$UPDATED" >> $GITHUB_OUTPUT
+          echo "cleared=$CLEARED" >> $GITHUB_OUTPUT
+          echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+      - name: Job summary
+        run: |
+          echo "## Issue Type Sync" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Types set | ${{ steps.sync_types.outputs.updated || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Types cleared | ${{ steps.sync_types.outputs.cleared || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped | ${{ steps.sync_types.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | ${{ steps.sync_types.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Label → Type Mapping" >> $GITHUB_STEP_SUMMARY
+          echo "| Label | Type |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/bug | Bug |" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/feature | Feature |" >> $GITHUB_STEP_SUMMARY
+          echo "| kind/* (other) | Task |" >> $GITHUB_STEP_SUMMARY
+          echo "| (no kind/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify types persisted
+        if: steps.sync_types.outputs.updated > 0 && inputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          echo "::group::Post-sync verification"
+          if [ ! -f /tmp/verify_samples.txt ]; then
+            echo "No samples to verify"
+            exit 0
+          fi
+
+          PASS=0
+          FAIL=0
+          while IFS='|' read -r ISSUE_ID ISSUE_REF EXPECTED_TYPE; do
+            ACTUAL=$(gh api graphql -f query='
+              query($id: ID!) {
+                node(id: $id) {
+                  ... on Issue { issueType { name } }
+                }
+              }' -f id="$ISSUE_ID" --jq '.data.node.issueType.name // "none"' 2>&1 || true)
+
+            if [ "$ACTUAL" = "$EXPECTED_TYPE" ]; then
+              echo "✓ $ISSUE_REF: $ACTUAL (expected $EXPECTED_TYPE)"
+              ((++PASS))
+            else
+              echo "✗ $ISSUE_REF: got '$ACTUAL', expected '$EXPECTED_TYPE'"
+              ((++FAIL))
+            fi
+          done < /tmp/verify_samples.txt
+
+          echo ""
+          echo "Verification: $PASS passed, $FAIL failed (out of $((PASS + FAIL)) samples)"
+          echo "::endgroup::"
+
+          if [ "$FAIL" -gt 0 ]; then
+            echo "::error::Post-sync verification failed: $FAIL/$((PASS + FAIL)) sampled issues did not have the expected type. The GitHub App may lack the 'Issue Types' organization permission."
+            exit 1
+          fi
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Issue type sync failed. Check the logs for details."

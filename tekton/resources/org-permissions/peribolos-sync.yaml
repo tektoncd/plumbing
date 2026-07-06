@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: peribolos-sync
+spec:
+  workspaces:
+  - name: shared-workspace
+  - name: github-oauth
+  params:
+  - name: url
+    default: https://github.com/tektoncd/community.git
+  - name: revision
+    default: main
+  tasks:
+  - name: clone-repo
+    taskRef:
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+    params:
+    - name: url
+      value: $(params.url)
+    - name: revision
+      value: $(params.revision)
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+  - name: peribolos
+    runAfter: [clone-repo]
+    taskRef:
+      name: peribolos
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    - name: github-oauth
+      workspace: github-oauth

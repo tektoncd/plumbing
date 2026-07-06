@@ -1,0 +1,6 @@
+# Apply name prefix to resource refs.
+nameReference:
+- kind: TriggerTemplate
+  fieldSpecs:
+  - path: spec/template/ref
+    kind: Trigger

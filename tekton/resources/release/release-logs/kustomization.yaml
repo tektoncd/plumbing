@@ -1,0 +1,6 @@
+resources:
+- rbac.yaml
+- release-logs-triggers.yaml
+- save-release-logs.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

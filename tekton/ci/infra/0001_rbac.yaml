@@ -1,0 +1,161 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: triggers-minimal
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "interceptors"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["impersonate"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-ci-workspace-listener
+secrets:
+- name: ci-webhook
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-ci-jobs
+secrets:
+- name: ci-webhook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-workspace-listener-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-workspace-listener
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-jobs-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-jobs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: config-map-admin
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default-config-map-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: config-map-admin
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-ci-jobs-triggers
+rules:
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["eventlisteners", "triggerbindings", "triggertemplates", "triggers", "clustertriggerbindings", "clusterinterceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tekton-interceptor-access
+rules:
+- apiGroups: ["triggers.tekton.dev"]
+  resources: ["interceptors"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-ci-jobs-triggers-tekton-ci-workspace-listener
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-workspace-listener
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-ci-jobs-triggers
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tekton-interceptor-access-tekton-ci-workspace-listener
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-workspace-listener
+  namespace: tekton-ci
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-interceptor-access
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-logs-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "namespaces"]
+  verbs: ["get", "list"]
+- apiGroups: ["tekton.dev"]
+  resources: ["pipelines", "tasks", "pipelineruns", "pipelineresources", "taskruns"]
+  verbs: ["get"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-ci-logs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-logs-tekton-logs-reader
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tekton-logs-reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-ci-logs-triggers-minimal
+subjects:
+- kind: ServiceAccount
+  name: tekton-ci-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triggers-minimal

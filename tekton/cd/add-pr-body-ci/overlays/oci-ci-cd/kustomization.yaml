@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tekton-ci
+resources:
+- ../../base
+patches:
+  - path: debug-logging.yaml
+  - target:
+      kind: Service
+      name: add-pr-body-interceptor
+    patch: |-
+      - op: replace
+        path: /spec/ports/0/targetPort
+        value: 8082

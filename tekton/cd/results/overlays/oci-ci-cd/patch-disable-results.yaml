@@ -1,0 +1,48 @@
+# TEMPORARY: Tekton Results is disabled on the dogfooding cluster.
+#
+# The upstream postgres image (docker.io/bitnami/postgresql) is no longer
+# pullable since Bitnami deprecated their free Docker Hub catalog, so the
+# results-postgres StatefulSet is stuck in ImageInspectError and the api,
+# watcher and retention-policy-agent are in CrashLoopBackOff.
+#
+# While broken, the watcher could re-add the results.tekton.dev/pipelinerun
+# finalizer to PipelineRuns without ever removing it, leaving them stuck in
+# Terminating forever (which previously caused a large PipelineRun/PVC pileup).
+#
+# Scaling everything to 0 stops the crashloops and prevents the finalizer
+# pileup. Manifests and the postgres PVC are kept intact so this is a trivial
+# revert once Results is fixed (see tracking issue).
+#
+# TODO(results): remove this patch once the postgres image / Results deployment
+# is fixed.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-results-api
+  namespace: tekton-pipelines
+spec:
+  replicas: 0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-results-watcher
+  namespace: tekton-pipelines
+spec:
+  replicas: 0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-results-retention-policy-agent
+  namespace: tekton-pipelines
+spec:
+  replicas: 0
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tekton-results-postgres
+  namespace: tekton-pipelines
+spec:
+  replicas: 0

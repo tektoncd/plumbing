@@ -1,0 +1,9 @@
+namespace: default
+commonAnnotations:
+  managed-by: Tekton
+
+resources:
+- bindings.yaml
+- github-template.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization

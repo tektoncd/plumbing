@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: buildcaptain-deployment
+  labels:
+    app: buildcaptain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buildcaptain
+  template:
+    metadata:
+      labels:
+        app: buildcaptain
+    spec:
+      containers:
+      - name: buildcaptain
+        image: ko://github.com/tektoncd/plumbing/bots/buildcaptain/cmd/buildcaptain
+        envFrom:
+        - configMapRef:
+            name: buildcaptain-cfg
