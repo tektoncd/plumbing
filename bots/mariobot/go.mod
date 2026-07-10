@@ -1,8 +1,6 @@
 module github.com/tektoncd/plumbing/bots/mariobot
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.0
 
 require (
 	github.com/google/go-cmp v0.7.0
@@ -12,5 +10,5 @@ require (
 
 require (
 	github.com/google/go-querystring v1.0.0 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
 )
