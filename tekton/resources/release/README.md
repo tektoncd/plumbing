@@ -55,6 +55,15 @@ a release tag line.
 Parameters are: `package`, `release-name`, `release-tag`, `previous-release-tag`
 , `git-revision`, `bucket` and `rekor-uuid`.
 
+The OCI variant ([release-draft-oci](./base/github_release_oci.yaml)) also
+accepts an optional `draft` parameter (default `"true"`, matching the
+existing behavior above). Set it to `"false"` to publish the release
+directly instead of creating a draft pre-release — useful for routine
+releases (e.g. patch releases) that don't need manual curation. Either way,
+the release title is always set to a clean `Tekton <Project> release
+<version>` (with the release name quoted alongside it, only when one is
+given), instead of being left blank for the release manager to fill in.
+
 An example using `tkn`. Start defining a few environment variables, obtain the
 REKOR_UUID and then run the pipeline:
 
