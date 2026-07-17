@@ -35,6 +35,12 @@ spec:
   - name: release-subpath
     description: Subpath within workspace for release artifacts
     default: "release"
+  - name: draft
+    description: |
+      Whether to create the GitHub release as a draft pre-release for manual
+      review (the default, preserving existing behavior). Set to "false" to
+      publish the release directly instead.
+    default: "true"
   workspaces:
   - name: shared
     description: contains the cloned repo and the release files
@@ -59,6 +65,8 @@ spec:
         value: $(params.git-revision)
       - name: REKOR_UUID
         value: $(params.rekor-uuid)
+      - name: DRAFT
+        value: $(params.draft)
   steps:
     - name: header
       image: docker.io/library/alpine:3.21
@@ -69,8 +77,19 @@ spec:
         BQ="\`" # Backquote
 
         TEKTON_PROJECT_CAPITALIZED=$(echo "$TEKTON_PROJECT" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')
+
+        # Only append the quoted release name when one was actually given.
+        # Otherwise this would show up as a redundant, empty/duplicated
+        # suffix, e.g. `Tekton Foo release v0.1.2 "Release v0.1.2"`.
+        if [ -n "${RELEASE_NAME}" ]; then
+          TITLE="Tekton ${TEKTON_PROJECT_CAPITALIZED} release ${VERSION} \"${RELEASE_NAME}\""
+        else
+          TITLE="Tekton ${TEKTON_PROJECT_CAPITALIZED} release ${VERSION}"
+        fi
+        printf '%s' "${TITLE}" > $HOME/release-title.txt
+
         cat <<EOF | tee $HOME/release.md
-        Tekton ${TEKTON_PROJECT_CAPITALIZED} release ${VERSION} "${RELEASE_NAME}"
+        ${TITLE}
 
         <!-- For major releases, add a tag line
         # 🎉 [Tag Line - to be done] 🎉
@@ -295,6 +314,7 @@ spec:
 
         RELEASE_PATH="$(workspaces.shared.path)/$(params.release-subpath)"
         TEKTON_PROJECT=$(basename $PROJECT)
+        TITLE=$(cat $HOME/release-title.txt)
 
         # Collect release artifact files
         ATTACH_FLAGS=""
@@ -302,10 +322,21 @@ spec:
           ATTACH_FLAGS="${ATTACH_FLAGS} ${f}"
         done
 
+        if [ "${DRAFT}" = "false" ]; then
+          # Publish directly. Explicitly opt out of GitHub's "Latest"
+          # auto-marking (which is based on publish date, not semver), since
+          # patch releases for older branches can be published out of
+          # chronological order; callers that do want this release marked
+          # "Latest" can pass --latest afterwards with `gh release edit`.
+          STATE_FLAGS="--latest=false"
+        else
+          STATE_FLAGS="--draft --prerelease"
+        fi
+
         gh release create "${VERSION}" \
           --repo "${PROJECT}" \
-          --draft \
-          --prerelease \
+          --title "${TITLE}" \
+          ${STATE_FLAGS} \
           --target "${GIT_REVISION}" \
           --notes-file "$HOME/release.md" \
           ${ATTACH_FLAGS}
@@ -332,6 +363,12 @@ spec:
     description: OCI bucket where to get the release files from (e.g. tekton-releases)
   - name: rekor-uuid
     description: The Rekor UUID associated to the attestation
+  - name: draft
+    description: |
+      Whether to create the GitHub release as a draft pre-release for manual
+      review (the default, preserving existing behavior). Set to "false" to
+      publish the release directly instead.
+    default: "true"
   workspaces:
     - name: shared
       description: Workspace where the git repo is prepared for testing
@@ -439,3 +476,5 @@ spec:
           value: $(params.previous-release-tag)
         - name: rekor-uuid
           value: $(params.rekor-uuid)
+        - name: draft
+          value: $(params.draft)
