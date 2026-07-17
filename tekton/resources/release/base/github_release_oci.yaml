@@ -37,8 +37,8 @@ spec:
     default: "release"
   - name: draft
     description: |
-      Whether to create the GitHub release as a draft pre-release for manual
-      review (the default, preserving existing behavior). Set to "false" to
+      Whether to create the GitHub release as a draft for manual review
+      (the default, preserving existing behavior). Set to "false" to
       publish the release directly instead.
     default: "true"
   workspaces:
@@ -88,9 +88,12 @@ spec:
         fi
         printf '%s' "${TITLE}" > $HOME/release-title.txt
 
+        # The title above is already set on the release itself via
+        # `gh release create --title`, and GitHub renders it prominently
+        # above the description — repeating it as the first line of the
+        # body here would just be redundant, so the body starts straight
+        # into the content instead.
         cat <<EOF | tee $HOME/release.md
-        ${TITLE}
-
         <!-- For major releases, add a tag line
         # 🎉 [Tag Line - to be done] 🎉
         -->
@@ -330,7 +333,7 @@ spec:
           # "Latest" can pass --latest afterwards with `gh release edit`.
           STATE_FLAGS="--latest=false"
         else
-          STATE_FLAGS="--draft --prerelease"
+          STATE_FLAGS="--draft"
         fi
 
         gh release create "${VERSION}" \
@@ -365,8 +368,8 @@ spec:
     description: The Rekor UUID associated to the attestation
   - name: draft
     description: |
-      Whether to create the GitHub release as a draft pre-release for manual
-      review (the default, preserving existing behavior). Set to "false" to
+      Whether to create the GitHub release as a draft for manual review
+      (the default, preserving existing behavior). Set to "false" to
       publish the release directly instead.
     default: "true"
   workspaces:
