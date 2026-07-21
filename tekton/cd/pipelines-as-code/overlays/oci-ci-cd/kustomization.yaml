@@ -9,5 +9,7 @@ resources:
 - repositories/cli.yaml
 - repositories/pruner.yaml
 - repositories/chains.yaml
+- repositories/triggers.yaml
+- repositories/results.yaml
 patches:
 - path: pipelines-as-code-configmap.yaml
