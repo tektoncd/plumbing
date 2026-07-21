@@ -271,13 +271,16 @@ jobs:
 
               echo "Created PR: $PR_URL"
               echo "new_pr_url=$PR_URL" >> $GITHUB_OUTPUT
-
-              # Assign the user who triggered the cherry-pick if accessible.
-              # Accessing user login requires additional permissions (read:org) so it is an optional post-cherry pick step
-              gh pr edit "$PR_URL" --add-assignee "${{ github.event.client_payload.github.payload.comment.user.login }}" 2>&1 || echo "⚠️ Failed to assign user (non-fatal)"
-
-              echo "✅ Cherry-pick completed successfully!"
             fi
+
+            # Assign the user who triggered the cherry-pick if accessible.
+            # Accessing user login requires additional permissions (read:org) so it is an optional post-cherry-pick step.
+            ASSIGNEE_LOGIN='${{ github.event.client_payload.github.payload.comment.user.login }}'
+            if [ -n "$ASSIGNEE_LOGIN" ]; then
+              gh pr edit "$PR_URL" --add-assignee "$ASSIGNEE_LOGIN" 2>&1 || echo "⚠️ Failed to assign user (non-fatal)"
+            fi
+
+            echo "✅ Cherry-pick completed successfully!"
           } 2>&1 | tee "$OUTPUT_FILE"
 
           EXIT_CODE=${PIPESTATUS[0]}
