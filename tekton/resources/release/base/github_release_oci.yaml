@@ -41,6 +41,13 @@ spec:
       (the default, preserving existing behavior). Set to "false" to
       publish the release directly instead.
     default: "true"
+  - name: chains-signed
+    description: |
+      Chains signing status from the wait-for-chains task ("true", "failed", or
+      "timeout"). If not "true", the task exits 1 with a clear message and no
+      draft release is created. Defaults to "true" so existing callers that do
+      not pass this param are unaffected.
+    default: "true"
   workspaces:
   - name: shared
     description: contains the cloned repo and the release files
@@ -73,6 +80,13 @@ spec:
       script: |
         #!/bin/sh
         set -ex
+
+        if [ "$(params.chains-signed)" != "true" ]; then
+          echo "ERROR: Chains signing did not succeed (status: $(params.chains-signed))."
+          echo "Release artifacts are published. Create the draft release manually once signing is resolved."
+          exit 1
+        fi
+
         TEKTON_PROJECT=$(basename $PROJECT)
         BQ="\`" # Backquote
 
