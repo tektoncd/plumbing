@@ -5,7 +5,7 @@
 # Labels are the source of truth:
 # - priority/urgent → Urgent, priority/high → High,
 #   priority/medium → Medium, priority/low → Low
-# - No priority/* label → clears the field
+# - No priority/* label → preserves any manually assigned priority
 #
 # Uses the setIssueFieldValue mutation (Issue Fields API, public preview).
 #
@@ -156,7 +156,6 @@ jobs:
           echo "::endgroup::"
 
           UPDATED=0
-          CLEARED=0
           SKIPPED=0
           ERRORS=0
           PROCESSED=0
@@ -184,7 +183,7 @@ jobs:
             # Log progress every 100 issues
             if (( PROCESSED % 100 == 0 )); then
               ELAPSED=$(( $(date +%s) - START_TIME ))
-              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED cleared=$CLEARED skipped=$SKIPPED errors=$ERRORS) ---"
+              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED skipped=$SKIPPED errors=$ERRORS) ---"
             fi
 
             # Get priority/* labels
@@ -299,44 +298,8 @@ jobs:
               continue
             fi
 
-            # Case 2: No priority label but has priority field — clear it
-            if [ "$CURRENT_PRIORITY" != "none" ]; then
-              echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing priority $CURRENT_PRIORITY (no priority/* label)"
-
-              if [ "$DRY_RUN" != "true" ]; then
-                RESULT=$(gh api graphql -f query='
-                  mutation($issueId: ID!, $fieldId: ID!) {
-                    setIssueFieldValue(input: {
-                      issueId: $issueId
-                      issueFields: [{
-                        fieldId: $fieldId
-                        delete: true
-                      }]
-                    }) {
-                      issue { id }
-                    }
-                  }' -f issueId="$ISSUE_ID" \
-                     -f fieldId="${{ env.PRIORITY_FIELD_ID }}" 2>/dev/null || true)
-
-                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
-                  ((++ERRORS))
-                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
-                  ((++ERRORS))
-                else
-                  ((++CLEARED))
-                fi
-
-                sleep 0.3
-              else
-                ((++CLEARED))
-              fi
-              continue
-            fi
-
-            # Case 3: No priority label and no priority field — already correct
-            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no priority/* label and no priority field"
+            # Case 2: No priority label — preserve any existing priority
+            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no priority/* label, preserving current priority ($CURRENT_PRIORITY)"
             ((++SKIPPED))
 
           done < <(jq -c '.[]' /tmp/issues.json)
@@ -347,14 +310,12 @@ jobs:
           echo "::group::Results (completed in ${ELAPSED}s)"
           echo "Processed: $PROCESSED"
           echo "Priority set: $UPDATED"
-          echo "Priority cleared: $CLEARED"
           echo "Skipped: $SKIPPED"
           echo "Errors: $ERRORS"
           echo "::endgroup::"
 
           # Set outputs for summary
           echo "updated=$UPDATED" >> $GITHUB_OUTPUT
-          echo "cleared=$CLEARED" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
@@ -366,8 +327,7 @@ jobs:
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Priority set | ${{ steps.sync_priority.outputs.updated || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Priority cleared | ${{ steps.sync_priority.outputs.cleared || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped | ${{ steps.sync_priority.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped (preserved) | ${{ steps.sync_priority.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Errors | ${{ steps.sync_priority.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Label → Priority Mapping" >> $GITHUB_STEP_SUMMARY
@@ -377,7 +337,7 @@ jobs:
           echo "| priority/high | High |" >> $GITHUB_STEP_SUMMARY
           echo "| priority/medium | Medium |" >> $GITHUB_STEP_SUMMARY
           echo "| priority/low | Low |" >> $GITHUB_STEP_SUMMARY
-          echo "| (no priority/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+          echo "| (no priority/* label) | (preserved) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Legacy Labels (supported during transition)" >> $GITHUB_STEP_SUMMARY
           echo "| Legacy Label | Maps to |" >> $GITHUB_STEP_SUMMARY
