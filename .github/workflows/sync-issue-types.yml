@@ -3,7 +3,7 @@
 # Syncs GitHub Issue Types based on kind/* labels for all tektoncd repos.
 # Labels are the source of truth:
 # - kind/bug → Bug, kind/feature → Feature, other kind/* → Task
-# - No kind/* label → clears the type
+# - No kind/* label → preserves any manually assigned type
 #
 # Queries each repository individually to avoid the GitHub Search API's
 # 1000-result cap.
@@ -140,7 +140,6 @@ jobs:
           echo "::endgroup::"
 
           UPDATED=0
-          CLEARED=0
           SKIPPED=0
           ERRORS=0
           PROCESSED=0
@@ -159,7 +158,7 @@ jobs:
             # Log progress every 100 issues
             if (( PROCESSED % 100 == 0 )); then
               ELAPSED=$(( $(date +%s) - START_TIME ))
-              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED cleared=$CLEARED skipped=$SKIPPED errors=$ERRORS) ---"
+              echo "--- Progress: $PROCESSED/$TOTAL (${ELAPSED}s elapsed, updated=$UPDATED skipped=$SKIPPED errors=$ERRORS) ---"
             fi
 
             # Get kind/* labels
@@ -246,44 +245,8 @@ jobs:
               continue
             fi
 
-            # Case 2: No kind label but has type - clear the type
-            if [ "$CURRENT_TYPE" != "none" ]; then
-              echo "CLEAR: $REPO_NAME#$ISSUE_NUMBER - removing type $CURRENT_TYPE (no kind/* label)"
-
-              if [ "$DRY_RUN" != "true" ]; then
-                # Capture stdout only; see comment on the set-type mutation.
-                RESULT=$(gh api graphql -f query='
-                  mutation($issueId: ID!) {
-                    updateIssueIssueType(input: {
-                      issueId: $issueId
-                      issueTypeId: null
-                    }) {
-                      issue {
-                        id
-                        issueType { name }
-                      }
-                    }
-                  }' -f issueId="$ISSUE_ID" 2>/dev/null || true)
-
-                if ! jq -e . <<< "$RESULT" > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: gh returned non-JSON output: $RESULT"
-                  ((++ERRORS))
-                elif jq -e '.errors' <<< "$RESULT" > /dev/null 2>&1; then
-                  echo "::error::$REPO_NAME#$ISSUE_NUMBER: $(jq -r '.errors[0].message' <<< "$RESULT")"
-                  ((++ERRORS))
-                else
-                  ((++CLEARED))
-                fi
-
-                sleep 0.3
-              else
-                ((++CLEARED))
-              fi
-              continue
-            fi
-
-            # Case 3: No kind label and no type - already correct
-            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no kind/* label and no type"
+            # Case 2: No kind label — preserve any existing type
+            echo "SKIP: $REPO_NAME#$ISSUE_NUMBER - no kind/* label, preserving current type ($CURRENT_TYPE)"
             ((++SKIPPED))
 
           done < <(jq -c '.[]' /tmp/issues.json)
@@ -294,14 +257,12 @@ jobs:
           echo "::group::Results (completed in ${ELAPSED}s)"
           echo "Processed: $PROCESSED"
           echo "Types set: $UPDATED"
-          echo "Types cleared: $CLEARED"
           echo "Skipped: $SKIPPED"
           echo "Errors: $ERRORS"
           echo "::endgroup::"
 
           # Set outputs for summary
           echo "updated=$UPDATED" >> $GITHUB_OUTPUT
-          echo "cleared=$CLEARED" >> $GITHUB_OUTPUT
           echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
           echo "errors=$ERRORS" >> $GITHUB_OUTPUT
 
@@ -313,8 +274,7 @@ jobs:
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Issues found | ${{ steps.search_issues.outputs.issue_count }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Types set | ${{ steps.sync_types.outputs.updated || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Types cleared | ${{ steps.sync_types.outputs.cleared || '0' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Skipped | ${{ steps.sync_types.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Skipped (preserved) | ${{ steps.sync_types.outputs.skipped || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Errors | ${{ steps.sync_types.outputs.errors || '0' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Label → Type Mapping" >> $GITHUB_STEP_SUMMARY
@@ -323,7 +283,7 @@ jobs:
           echo "| kind/bug | Bug |" >> $GITHUB_STEP_SUMMARY
           echo "| kind/feature | Feature |" >> $GITHUB_STEP_SUMMARY
           echo "| kind/* (other) | Task |" >> $GITHUB_STEP_SUMMARY
-          echo "| (no kind/* label) | (cleared) |" >> $GITHUB_STEP_SUMMARY
+          echo "| (no kind/* label) | (preserved) |" >> $GITHUB_STEP_SUMMARY
 
       - name: Verify types persisted
         if: steps.sync_types.outputs.updated > 0 && inputs.dry_run != 'true'
