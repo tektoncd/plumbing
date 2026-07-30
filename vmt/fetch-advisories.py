@@ -5,7 +5,7 @@ Outputs structured JSON suitable for generating a weekly VMT digest.
 Requires `gh` CLI with org admin/security access.
 
 Usage:
-    python3 vmt/fetch-advisories.py [--state open|closed|published|all] [--since YYYY-MM-DD]
+    python3 vmt/fetch-advisories.py [--org ORG] [--repo REPO] [--state triage|draft|published|closed|all] [--since YYYY-MM-DD]
 """
 
 import argparse
@@ -15,14 +15,23 @@ import sys
 from datetime import datetime, timezone
 
 
-def gh_api(endpoint):
-    """Call gh api with pagination, return parsed JSON."""
+def gh_api(endpoint, repo=None):
+    """Call gh api with pagination, return parsed JSON.
+
+    Returns [] for 404 (no advisories enabled). Raises on other errors.
+    """
     result = subprocess.run(
         ["gh", "api", "--paginate", endpoint],
         capture_output=True, text=True
     )
     if result.returncode != 0:
-        # Some repos have no advisories enabled — skip silently
+        stderr = result.stderr.strip()
+        # 404 = advisories not enabled for this repo — expected, skip
+        if "404" in stderr or "Not Found" in stderr:
+            return []
+        # Real error (auth, rate limit, network) — surface it
+        label = repo or endpoint
+        print(f"Warning: gh api failed for {label}: {stderr}", file=sys.stderr)
         return []
     try:
         return json.loads(result.stdout)
@@ -65,7 +74,7 @@ def extract_advisory(repo, adv):
         "published_at": adv.get("published_at"),
         "closed_at": adv.get("closed_at"),
         "withdrawn_at": adv.get("withdrawn_at"),
-        "days_open": days_since(adv.get("created_at")),
+        "days_open": days_since(adv.get("created_at") or adv.get("published_at")),
         "days_since_update": days_since(adv.get("updated_at")),
         "submission_accepted": (adv.get("submission") or {}).get("accepted"),
         "author": (adv.get("author") or {}).get("login"),
@@ -99,7 +108,7 @@ def main():
     parser = argparse.ArgumentParser(description="Fetch tektoncd security advisories")
     parser.add_argument("--org", default="tektoncd", help="GitHub org (default: tektoncd)")
     parser.add_argument("--state", default="all",
-                        choices=["open", "closed", "published", "triage", "draft", "all"],
+                        choices=["triage", "draft", "published", "closed", "all"],
                         help="Filter by advisory state (triage/draft are client-side filtered)")
     parser.add_argument("--since", default=None, help="Only include advisories updated since YYYY-MM-DD")
     parser.add_argument("--repo", default=None, help="Single repo instead of whole org")
@@ -115,11 +124,11 @@ def main():
     for repo in repos:
         endpoint = f"/repos/{args.org}/{repo}/security-advisories"
         # API only supports open/closed/published; triage/draft are client-side
-        api_state = args.state if args.state in ("open", "closed", "published") else None
+        api_state = args.state if args.state in ("closed", "published") else None
         if api_state:
             endpoint += f"?state={api_state}"
 
-        advisories = gh_api(endpoint)
+        advisories = gh_api(endpoint, repo=repo)
         if not isinstance(advisories, list):
             continue
 
@@ -136,7 +145,7 @@ def main():
             all_advisories.append(extract_advisory(repo, adv))
 
     # Sort: open/triage first, then by staleness
-    state_order = {"triage": 0, "draft": 1, "open": 1, "published": 2, "closed": 3}
+    state_order = {"triage": 0, "draft": 1, "published": 2, "closed": 3}
     all_advisories.sort(key=lambda a: (
         state_order.get(a["state"], 99),
         -(a["days_open"] or 0),
