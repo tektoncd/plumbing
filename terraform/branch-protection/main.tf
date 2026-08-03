@@ -66,11 +66,17 @@ resource "github_branch_protection" "releases" {
     )
   }
 
-  required_pull_request_reviews {
-    dismiss_stale_reviews           = var.dismiss_stale_reviews
-    require_code_owner_reviews      = var.require_code_owner_reviews
-    required_approving_review_count = var.required_approving_review_count_releases
-  }
+  # Note: PR reviews not required here (same as main branches). Tekton's
+  # review flow is Prow label-based (/lgtm, /approve -> lgtm/approved labels),
+  # not necessarily a formal GitHub "Approve" review. Requiring a native
+  # GitHub approving review here blocked Tide from completing automerges on
+  # release branches even after lgtm+approved were set.
+  # Can be enabled later by uncommenting:
+  # required_pull_request_reviews {
+  #   dismiss_stale_reviews           = var.dismiss_stale_reviews
+  #   require_code_owner_reviews      = var.require_code_owner_reviews
+  #   required_approving_review_count = var.required_approving_review_count_releases
+  # }
 }
 
 # Main branch protection for tektoncd-catalog repositories
