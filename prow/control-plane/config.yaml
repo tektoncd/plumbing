@@ -90,6 +90,7 @@ tide:
     - tektoncd/pruner
     - tektoncd/resolution
     - tektoncd/results
+    - tektoncd/tekton-kueue
     - tektoncd/triggers
     - tektoncd/website
     labels:
@@ -122,6 +123,7 @@ tide:
     tektoncd/pruner: rebase
     tektoncd/resolution: rebase
     tektoncd/results: rebase
+    tektoncd/tekton-kueue: rebase
     tektoncd/triggers: rebase
     tektoncd/website: rebase
   target_url: https://prow.infra.tekton.dev/tide

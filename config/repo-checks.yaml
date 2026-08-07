@@ -50,6 +50,7 @@ repos:
     - "CI summary"
   results:
     - "CI summary"
+  tekton-kueue: []
   triggers:
     - "CI summary"
 
