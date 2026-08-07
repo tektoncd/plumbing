@@ -83,6 +83,12 @@ plugins:
   tektoncd/results:
     plugins:
       - release-note
+  tektoncd/tekton-kueue:
+    plugins:
+      - release-note
+  tektoncd/mcp-server:
+    plugins:
+      - release-note
 
 external_plugins:
   tektoncd:
