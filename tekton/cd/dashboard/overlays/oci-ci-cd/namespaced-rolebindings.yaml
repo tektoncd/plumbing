@@ -577,7 +577,7 @@ subjects:
   name: tekton-dashboard
   namespace: tekton-pipelines
 
-# releases-tekton-kueue namespace (Pipelines-as-Code releases)
+# releases-tekton-kueue namespace (Tekton Kueue releases)
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
