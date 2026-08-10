@@ -138,6 +138,40 @@ subjects:
   name: release
   namespace: releases-pruner
 
+# --- releases-tekton-kueue ---
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-tekton-kueue
+secrets:
+- name: ghcr-chains-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: release-chain-watcher
+  namespace: releases-tekton-kueue
+rules:
+- apiGroups: ["tekton.dev"]
+  resources: ["taskruns"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: release-chain-watcher
+  namespace: releases-tekton-kueue
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: release-chain-watcher
+subjects:
+- kind: ServiceAccount
+  name: release
+  namespace: releases-tekton-kueue
+
 # --- releases-chains ---
 ---
 apiVersion: v1
