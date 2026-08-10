@@ -131,3 +131,8 @@ external_plugins:
     events:
       - issue_comment
       - pull_request
+  tektoncd/tekton-kueue:
+  - name: cherrypicker
+    events:
+      - issue_comment
+      - pull_request
