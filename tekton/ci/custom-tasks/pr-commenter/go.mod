@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/jenkins-x/go-scm v1.15.32
+	github.com/jenkins-x/go-scm v1.15.36
 	github.com/tektoncd/pipeline v1.15.0
 	go.uber.org/zap v1.28.0
 	k8s.io/apimachinery v0.36.3
@@ -21,7 +21,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/bluekeyes/go-gitdiff v0.8.1 // indirect
+	github.com/bluekeyes/go-gitdiff v0.9.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
