@@ -2,7 +2,7 @@ module github.com/tektoncd/plumbing
 
 go 1.25.7
 
-require github.com/google/go-containerregistry v0.21.8
+require github.com/google/go-containerregistry v0.21.9
 
 require (
 	github.com/docker/cli v29.6.2+incompatible // indirect
