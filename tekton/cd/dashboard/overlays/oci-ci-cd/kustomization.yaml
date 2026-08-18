@@ -21,7 +21,7 @@ patches:
   patch: |-
     - op: replace
       path: /spec/template/spec/containers/0/args/5
-      value: --namespaces=tekton-ci,tekton-nightly,bastion-p,bastion-z,releases-pipeline,releases-operator,releases-pruner,releases-chains,releases-tekton-kueue
+      value: --namespaces=tekton-ci,tekton-nightly,bastion-p,bastion-z,releases-pipeline,releases-operator,releases-pruner,releases-chains,releases-cli,releases-results,releases-triggers,releases-tekton-kueue
 - patch: |-
     $patch: delete
     apiVersion: rbac.authorization.k8s.io/v1
