@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM alpine:3.22@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 LABEL maintainer="Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for tini"
 LABEL org.opencontainers.image.licenses=Apache-2.0
-RUN apk add --no-cache tini git && \
-    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcurl
+RUN apk add --no-cache tini git
 USER 65532
 ENTRYPOINT ["/sbin/tini", "--"]
