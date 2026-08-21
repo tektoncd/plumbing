@@ -218,6 +218,19 @@ updates:
         patterns:
           - "*"
   - package-ecosystem: "docker"
+    directory: "/tekton/images/tini-git"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ok-to-test"
+      - "dependencies"
+      - "release-note-none"
+      - "kind/misc"
+    groups:
+      all:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
     directory: "/tekton/images/kind-e2e"
     schedule:
       interval: "weekly"
