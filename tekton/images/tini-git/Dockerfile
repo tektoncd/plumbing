@@ -16,6 +16,7 @@ LABEL maintainer="Tekton Authors <tekton-dev@googlegroups.com>"
 LABEL org.opencontainers.image.source=https://github.com/tektoncd/plumbing
 LABEL org.opencontainers.image.description="Image for tini"
 LABEL org.opencontainers.image.licenses=Apache-2.0
-RUN apk add --no-cache tini git
+RUN apk add --no-cache tini git && \
+    apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcurl
 USER 65532
 ENTRYPOINT ["/sbin/tini", "--"]
