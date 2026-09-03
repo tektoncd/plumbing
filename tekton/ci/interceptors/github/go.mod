@@ -3,7 +3,7 @@ module github.com/tektoncd/plumbing/tekton/ci/interceptors/github
 go 1.25.7
 
 require (
-	github.com/gobwas/glob v0.2.3
+	github.com/gobwas/glob v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v34 v34.0.0
