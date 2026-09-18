@@ -1,0 +1,35 @@
+---
+# Base Trigger for slash commands.
+# Per-command triggers patch:
+#   /spec/interceptors/0/params/0/value  - the CEL filter (command match + repo filter)
+#   /spec/template/ref                   - the TriggerTemplate name
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: slash-command
+  labels:
+    ci.tekton.dev/trigger-type: github.slash-command
+spec:
+  interceptors:
+    - name: "Filter by command and repo"
+      ref:
+        name: cel
+        kind: ClusterInterceptor
+      params:
+        - name: filter
+          value: >-
+            body.comment.body.matches('^/command($| )')
+        - name: overlays
+          value:
+            - key: add_pr_body.pull_request_url
+              expression: "body.issue.pull_request.url"
+    - name: "Add PR body"
+      ref:
+        name: "add-pr-body"
+        kind: ClusterInterceptor
+  bindings:
+    - ref: tekton-ci-github-base
+    - ref: tekton-ci-webhook-slash-command
+    - ref: tekton-ci-webhook-comment
+  template:
+    ref: slash-command-pipeline
