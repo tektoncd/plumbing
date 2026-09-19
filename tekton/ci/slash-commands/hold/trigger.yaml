@@ -1,0 +1,13 @@
+---
+# Trigger for /hold and /hold cancel
+# Patches the base trigger to match only hold commands across all tektoncd repos.
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/hold($| cancel)')
+- op: replace
+  path: /metadata/name
+  value: slash-command-hold
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-hold

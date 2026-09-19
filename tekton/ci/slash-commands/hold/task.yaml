@@ -1,0 +1,57 @@
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: slash-command-hold
+  namespace: tekton-ci
+spec:
+  params:
+    - name: package
+      description: "org/repo e.g. tektoncd/plumbing"
+    - name: pullRequestNumber
+      description: PR number
+    - name: pullRequestUrl
+      description: HTML URL of the pull request (used for comment feedback)
+    - name: commenter
+      description: GitHub login of the user who posted the command
+    - name: slashCommand
+      description: Full comment body e.g. "/hold" or "/hold cancel"
+  steps:
+    - name: hold
+      image: ghcr.io/tektoncd/plumbing/gh-cli:latest
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bot-token-github
+              key: bot-token
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        PACKAGE="$(params.package)"
+        PR="$(params.pullRequestNumber)"
+        COMMAND="$(params.slashCommand)"
+
+        # Determine add or cancel
+        if echo "${COMMAND}" | grep -qE '^/hold\s+cancel'; then
+          ACTION="remove"
+          LABEL="do-not-merge/hold"
+        else
+          ACTION="add"
+          LABEL="do-not-merge/hold"
+        fi
+
+        if [ "${ACTION}" = "add" ]; then
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${PACKAGE}/issues/${PR}/labels" \
+            -f "labels[]=${LABEL}"
+        else
+          ENCODED_LABEL="$(printf '%s' "${LABEL}" | sed 's|/|%2F|g')"
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${PACKAGE}/issues/${PR}/labels/${ENCODED_LABEL}"
+        fi

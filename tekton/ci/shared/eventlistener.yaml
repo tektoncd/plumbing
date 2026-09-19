@@ -83,6 +83,45 @@ spec:
         labelSelector:
           matchLabels:
             ci.tekton.dev/trigger-type: github.issue-comment
+    - name: github-tektoncd-slash-commands-group
+      interceptors:
+        - name: "Validate GitHub payload and filter on eventType"
+          ref:
+            name: "github"
+            kind: ClusterInterceptor
+          params:
+            - name: "secretRef"
+              value:
+                secretName: ci-webhook
+                secretKey: secret
+            - name: "eventTypes"
+              value:
+                - "issue_comment"
+        - name: "Filter org, open PR comments, permission and slash command pattern"
+          ref:
+            name: "cel"
+            kind: ClusterInterceptor
+          params:
+            - name: "filter"
+              value: >-
+                (body.repository.full_name.startsWith('tektoncd/') ||
+                body.repository.full_name.startsWith('tektoncd-catalog/')) &&
+                body.action == 'created' &&
+                'pull_request' in body.issue &&
+                body.issue.state == 'open' &&
+                body.comment.author_association in ['OWNER', 'MEMBER', 'COLLABORATOR'] &&
+                body.comment.body.matches('^/(retest|cherry-pick|rebase|hold|assign|unassign|cc|kind|priority|area|label|retitle|milestone|help|good-first-issue|remove-kind|remove-priority|remove-area|remove-label)($| .*)')
+        - name: "Add a build ID into the payload"
+          ref:
+            name: "build-id"
+            kind: ClusterInterceptor
+      triggerSelector:
+        namespaceSelector:
+          matchNames:
+            - tekton-ci
+        labelSelector:
+          matchLabels:
+            ci.tekton.dev/trigger-type: github.slash-command
     - name: github-tektoncd-labels-group
       interceptors:
         - name: "Validate GitHub payload and filter on eventType"

@@ -48,9 +48,12 @@ A trigger in an event listener:
 
 ## Installation
 
-The interceptor is installed via `ko`:
+The interceptor is installed via `ko` from this directory (nested `go.mod`; do not run `ko` from the repo root):
 
 ```bash
 export KO_DOCKER_REPO=ghcr.io/tektoncd/plumbing
-ko apply -P -f tekton/ci/cluster-interceptors/build-id/config/
+cd tekton/ci/cluster-interceptors/build-id
+ko apply -P -f config/ -- --namespace=tekton-ci
 ```
+
+On kind, use `KO_DOCKER_REPO=kind.local` or `ko apply --local`.
