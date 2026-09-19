@@ -1,0 +1,166 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: slash-retest
+  namespace: tekton-ci
+spec:
+  description: |
+    Task for the /retest slash command.
+
+    Responsibilities:
+    - Determine the PR head SHA (if not provided by the Trigger).
+    - Discover failed GitHub Actions check runs for that commit.
+    - Re-run failed jobs for each workflow run associated with those checks.
+    - Optionally filter by check name prefix.
+    - Add a success reaction on the pull request when complete.
+
+    This task is intended to be invoked by a TriggerTemplate created from
+    an issue_comment webhook where the body contains the "/retest" command.
+  params:
+    # Full repository name from webhook payload, e.g. "tektoncd/pipeline".
+    - name: repository
+      type: string
+      description: GitHub repository in owner/repo format.
+    # Pull request number from webhook payload.
+    - name: pull_request_number
+      type: string
+      description: Pull request number that requested /retest.
+    # Optional commit SHA. If empty, integration layer can resolve PR HEAD SHA.
+    - name: commit_sha
+      type: string
+      description: Optional commit SHA associated with the retest request.
+      default: ""
+    # Optional filter: only re-run checks whose name starts with this prefix.
+    # When empty, all failed checks are considered.
+    - name: check_name_prefix
+      type: string
+      description: Optional prefix to filter GitHub check runs by name.
+      default: ""
+    # When true, only log what would be re-run without calling GitHub APIs
+    # that cause side effects; useful for testing the integration.
+    - name: dry_run
+      type: string
+      description: "'true' to only log actions instead of re-running checks."
+      default: "false"
+  steps:
+    - name: rerun-failed-checks-and-react
+      image: ghcr.io/github/cli/gh:latest
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        repo="$(params.repository)"
+        pr="$(params.pull_request_number)"
+        sha="$(params.commit_sha)"
+        check_prefix="$(params.check_name_prefix)"
+        dry_run="$(params.dry_run)"
+
+        echo "Starting /retest for ${repo}#${pr}"
+
+        # gh uses GH_TOKEN or GITHUB_TOKEN for authentication.
+        if [[ -z "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]]; then
+          echo "error: GH_TOKEN or GITHUB_TOKEN must be set in the Task's ServiceAccount"
+          exit 1
+        fi
+
+        if [[ "${dry_run}" != "true" && "${dry_run}" != "false" ]]; then
+          echo "error: params.dry_run must be 'true' or 'false', got '${dry_run}'"
+          exit 1
+        fi
+
+        # Resolve PR HEAD SHA if not provided.
+        if [[ -z "${sha}" ]]; then
+          echo "Resolving PR head SHA from GitHub API..."
+          sha="$(gh api "repos/${repo}/pulls/${pr}" --jq '.head.sha')"
+        fi
+
+        echo "Using commit SHA: ${sha}"
+
+        # Find failed check runs for the commit.
+        echo "Listing failed check runs for commit ${sha}..."
+        jq_filter='.check_runs[]
+                   | select(.status == "completed" and .conclusion == "failure")'
+
+        if [[ -n "${check_prefix}" ]]; then
+          echo "Filtering failed check runs with name starting with '${check_prefix}'"
+          jq_filter="${jq_filter} | select(.name | startswith(\"${check_prefix}\"))"
+        fi
+
+        mapfile -t run_ids < <(
+          gh api "repos/${repo}/commits/${sha}/check-runs" --paginate \
+            --jq "${jq_filter} | .external_id // empty"
+        )
+
+        if ((${#run_ids[@]} == 0)); then
+          echo "No failed check runs found; nothing to rerun."
+        else
+          echo "Found ${#run_ids[@]} failed runs to rerun."
+          for id in "${run_ids[@]}"; do
+            if [[ -z "${id}" ]]; then
+              continue
+            fi
+            if [[ "${dry_run}" == "true" ]]; then
+              echo "[dry-run] Would re-run workflow run ${id} (failed jobs only)..."
+            else
+              echo "Re-running workflow run ${id} (failed jobs only)..."
+              gh run rerun "${id}" --failed
+            fi
+          done
+        fi
+
+        if [[ "${dry_run}" == "true" ]]; then
+          echo "[dry-run] Skipping reaction creation on PR #${pr}"
+          exit 0
+        fi
+
+        # Add a 🎉 reaction on success to acknowledge the command.
+        echo "Adding success reaction to PR #${pr}..."
+        gh api \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          "repos/${repo}/issues/${pr}/reactions" \
+          -f content='hooray' >/dev/null
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: slash-retest
+  namespace: tekton-ci
+spec:
+  description: |
+    Minimal pipeline wrapper for the /retest slash command task.
+    TriggerTemplate can instantiate this PipelineRun with webhook values.
+  params:
+    - name: repository
+      type: string
+      description: GitHub repository in owner/repo format.
+    - name: pull_request_number
+      type: string
+      description: Pull request number that requested /retest.
+    - name: commit_sha
+      type: string
+      description: Optional commit SHA associated with the retest request.
+      default: ""
+    - name: check_name_prefix
+      type: string
+      description: Optional prefix to filter GitHub check runs by name.
+      default: ""
+    - name: dry_run
+      type: string
+      description: "'true' to only log actions instead of re-running checks."
+      default: "false"
+  tasks:
+    - name: retest
+      taskRef:
+        name: slash-retest
+      params:
+        - name: repository
+          value: $(params.repository)
+        - name: pull_request_number
+          value: $(params.pull_request_number)
+        - name: commit_sha
+          value: $(params.commit_sha)
+        - name: check_name_prefix
+          value: $(params.check_name_prefix)
+        - name: dry_run
+          value: $(params.dry_run)
