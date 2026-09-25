@@ -1,0 +1,219 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: slash-rebase
+  namespace: tekton-ci
+spec:
+  description: |
+    Task for the /rebase slash command.
+
+    Responsibilities:
+    - Validate that the PR is open and not from a fork.
+    - Fetch PR metadata (head/base refs, repo, owner).
+    - Clone the repo, rebase the PR branch onto its base branch.
+    - Push the rebased head using --force-with-lease (never plain --force).
+    - Post a plain-text summary comment with success or failure details.
+
+    This Task is intended to be invoked from a TriggerTemplate bound to the
+    issue_comment webhook for the "/rebase" command.
+
+  params:
+    # Full repository name from webhook payload, e.g. "tektoncd/pipeline".
+    - name: repository
+      type: string
+      description: GitHub repository in owner/repo format.
+    # Pull request number from webhook payload.
+    - name: pull_request_number
+      type: string
+      description: Pull request number that requested /rebase.
+    # When true, log all steps but do not push or modify the PR branch.
+    - name: dry_run
+      type: string
+      description: "'true' to only log actions instead of pushing changes."
+      default: "false"
+  workspaces:
+    - name: source
+      description: Workspace where the repo will be cloned and rebased.
+  steps:
+    - name: rebase-pr
+      image: ghcr.io/github/cli/gh:latest
+      workingDir: /workspace/source
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        repo="$(params.repository)"
+        pr_number="$(params.pull_request_number)"
+        dry_run="$(params.dry_run)"
+
+        echo "Starting /rebase for ${repo}#${pr_number}"
+
+        # Validate dry_run value early.
+        if [[ "${dry_run}" != "true" && "${dry_run}" != "false" ]]; then
+          echo "error: params.dry_run must be 'true' or 'false', got '${dry_run}'"
+          exit 1
+        fi
+
+        # Require GitHub token for API + push.
+        if [[ -z "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]]; then
+          echo "error: GH_TOKEN or GITHUB_TOKEN must be set in the Task's ServiceAccount"
+          exit 1
+        fi
+
+        # Ensure jq is available for JSON parsing.
+        if ! command -v jq >/dev/null 2>&1; then
+          echo "jq not found; attempting installation..."
+          if command -v apk >/dev/null 2>&1; then
+            apk add --no-cache jq
+          elif command -v apt-get >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y jq
+            rm -rf /var/lib/apt/lists/*
+          else
+            echo "error: jq is required but no supported package manager (apk/apt-get) was found"
+            exit 1
+          fi
+        fi
+
+        echo "Fetching PR metadata for ${repo}#${pr_number}..."
+        pr_json="$(gh api "repos/${repo}/pulls/${pr_number}")"
+
+        state="$(jq -r '.state' <<<"${pr_json}")"
+        head_ref="$(jq -r '.head.ref' <<<"${pr_json}")"
+        base_ref="$(jq -r '.base.ref' <<<"${pr_json}")"
+        head_repo_full="$(jq -r '.head.repo.full_name' <<<"${pr_json}")"
+        base_repo_full="$(jq -r '.base.repo.full_name' <<<"${pr_json}")"
+
+        echo "PR state: ${state}"
+        echo "Head repo: ${head_repo_full}, head ref: ${head_ref}"
+        echo "Base repo: ${base_repo_full}, base ref: ${base_ref}"
+
+        # Reject closed/merged PRs.
+        if [[ "${state}" != "open" ]]; then
+          echo "error: cannot rebase PR in state '${state}', only 'open' is supported"
+          gh issue comment "${pr_number}" --repo "${repo}" \
+            --body "Rebase failed: PR is in state '${state}' (only open PRs can be rebased)." || true
+          exit 1
+        fi
+
+        # Reject fork PRs: we can only push to branches in the base repo.
+        if [[ "${head_repo_full}" != "${base_repo_full}" ]]; then
+          msg="Rebase is not supported for fork PRs (head repo '${head_repo_full}' != base repo '${base_repo_full}')."
+          echo "error: ${msg}"
+          gh issue comment "${pr_number}" --repo "${repo}" \
+            --body "Rebase failed: ${msg}" || true
+          exit 1
+        fi
+
+        # Determine clone URL with token if available.
+        token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+        clone_url="https://github.com/${base_repo_full}.git"
+        if [[ -n "${token}" ]]; then
+          clone_url="https://x-access-token:${token}@github.com/${base_repo_full}.git"
+        fi
+
+        # Clone the base repo and fetch both base and head branches.
+        echo "Cloning ${base_repo_full}..."
+        git clone "${clone_url}" .
+        git remote -v
+
+        # Configure git identity for the rebase commit(s).
+        git config user.name "tekton-bot"
+        git config user.email "tekton-bot@users.noreply.github.com"
+
+        echo "Fetching base branch ${base_ref} and head branch ${head_ref}..."
+        git fetch origin "${base_ref}"
+        git fetch origin "${head_ref}:${head_ref}" || true
+
+        echo "Checking out head branch ${head_ref}..."
+        git checkout "${head_ref}"
+
+        echo "Checking whether ${head_ref} is already up-to-date with ${base_ref}..."
+        git fetch origin "${base_ref}"
+        if git merge-base --is-ancestor "origin/${base_ref}" "HEAD"; then
+          msg="Branch '${head_ref}' is already up-to-date with '${base_ref}'. No rebase needed."
+          echo "${msg}"
+          if [[ "${dry_run}" == "true" ]]; then
+            echo "[dry-run] Would comment on PR #${pr_number}: ${msg}"
+          else
+            gh issue comment "${pr_number}" --repo "${repo}" --body "${msg}" || true
+          fi
+          exit 0
+        fi
+
+        echo "Rebasing ${head_ref} onto ${base_ref}..."
+        if ! git rebase "origin/${base_ref}"; then
+          echo "error: git rebase reported conflicts; aborting"
+          git rebase --abort || true
+          msg="Rebase failed due to merge conflicts. Please resolve conflicts locally and push the updated branch."
+          if [[ "${dry_run}" == "true" ]]; then
+            echo "[dry-run] Would comment on PR #${pr_number}: ${msg}"
+          else
+            gh issue comment "${pr_number}" --repo "${repo}" --body "${msg}" || true
+          fi
+          exit 1
+        fi
+
+        echo "Rebase completed successfully."
+
+        if [[ "${dry_run}" == "true" ]]; then
+          echo "[dry-run] Skipping push of rebased branch ${head_ref}"
+        else
+          echo "Pushing rebased branch ${head_ref} with --force-with-lease..."
+          git push origin "${head_ref}" --force-with-lease
+        fi
+
+        # Build a plain-text status message for the PR comment.
+        if [[ "${dry_run}" == "true" ]]; then
+          status_msg="Rebased '${head_ref}' onto '${base_ref}' (dry run: no changes were pushed)."
+        else
+          status_msg="Rebased '${head_ref}' onto '${base_ref}' and pushed the updated branch using --force-with-lease."
+        fi
+
+        echo "Posting status comment on PR #${pr_number}..."
+        if [[ "${dry_run}" == "true" ]]; then
+          echo "[dry-run] Would comment on PR #${pr_number}: ${status_msg}"
+        else
+          gh issue comment "${pr_number}" --repo "${repo}" --body "${status_msg}" || true
+        fi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: slash-rebase
+  namespace: tekton-ci
+spec:
+  description: |
+    Pipeline wrapper for the /rebase slash command Task.
+    A TriggerTemplate can instantiate this PipelineRun from an issue_comment
+    webhook payload that contains the "/rebase" command.
+
+  params:
+    - name: repository
+      type: string
+      description: GitHub repository in owner/repo format.
+    - name: pull_request_number
+      type: string
+      description: Pull request number that requested /rebase.
+    - name: dry_run
+      type: string
+      description: "'true' to only log actions instead of pushing changes."
+      default: "false"
+  workspaces:
+    - name: source
+      description: Workspace where the repo will be cloned and rebased.
+  tasks:
+    - name: rebase
+      taskRef:
+        name: slash-rebase
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: repository
+          value: $(params.repository)
+        - name: pull_request_number
+          value: $(params.pull_request_number)
+        - name: dry_run
+          value: $(params.dry_run)
+
