@@ -1,0 +1,179 @@
+---
+# Shared dispatcher Task for /ci slash commands.
+# All per-command TriggerTemplates reference this single Task.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: slash-command-simple
+  namespace: tekton-ci
+spec:
+  params:
+    - name: package
+      description: "org/repo e.g. tektoncd/plumbing"
+    - name: pullRequestNumber
+      description: PR number
+    - name: pullRequestUrl
+      description: HTML URL of the pull request
+    - name: commenter
+      description: GitHub login of the user who posted the command
+    - name: slashCommand
+      description: Full comment body e.g. "/ci hold" or "/ci kind bug"
+  steps:
+    - name: dispatch
+      image: ghcr.io/tektoncd/plumbing/gh-cli:latest
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bot-token-github
+              key: bot-token
+        - name: PACKAGE
+          value: $(params.package)
+        - name: PR
+          value: $(params.pullRequestNumber)
+        - name: COMMAND
+          value: $(params.slashCommand)
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        export LC_ALL=C.UTF-8
+
+        die() { echo "$*" >&2; exit 1; }
+
+        # --- Validate inputs (PACKAGE and PR end up in API paths) ---
+        [[ "${PACKAGE}" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || die "invalid package: ${PACKAGE}"
+        [[ "${PR}" =~ ^[0-9]+$ ]]                                 || die "invalid PR number: ${PR}"
+
+        # --- Normalize the comment body ---
+        COMMAND="$(printf '%s' "${COMMAND}" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        [[ "${COMMAND}" != *$'\n'* ]] || die "multi-line comments are not supported"
+        [[ "${COMMAND}" == /* ]]      || die "not a slash command: ${COMMAND}"
+
+        # Accept "/ci <cmd>" as well as "/<cmd>".
+        if [[ "${COMMAND}" == "/ci "* ]]; then COMMAND="/${COMMAND#/ci }"; fi
+
+        # --- Split into command word + argument ---
+        CMD="${COMMAND%% *}"
+        ARG=""
+        if [[ "${COMMAND}" == *" "* ]]; then ARG="${COMMAND#* }"; fi
+
+        ISSUES_API="/repos/${PACKAGE}/issues/${PR}"
+        PULLS_API="/repos/${PACKAGE}/pulls/${PR}"
+
+        # --- Label allowlists (mirrors labels in tektoncd/pipeline) ---
+        # Prevents GitHub from auto-creating junk labels on unknown values.
+        VALID_KINDS="api-change|beta-blocking|bug|cleanup|design|documentation|failing-test|feature|flake|misc|question|security|tep"
+        VALID_PRIORITIES="critical-urgent|important-soon|important-longterm|backlog|awaiting-more-evidence"
+        VALID_AREAS="api|automation|dependency|dogfooding|ecosystem|entrypoint|epic|licensing|metrics|performance|plumbing|release|resolution|roadmap|s3c|test-infra|testing|tracing|user-study|yamls"
+
+        # --- Helpers ---
+        gh_api() { gh api -H "Accept: application/vnd.github+json" "$@"; }
+
+        no_arg() { [[ -z "${ARG}" ]] || die "${CMD} takes no arguments"; }
+
+        need_label() {
+          local pattern="$1"
+          [[ "${ARG}" =~ ^(${pattern})$ ]] \
+            || die "unknown ${CMD} value '${ARG}'; allowed: ${pattern//|/, }"
+        }
+
+        add_label() {
+          gh_api --method POST "${ISSUES_API}/labels" -f "labels[]=$1" >/dev/null
+          echo "Added '$1' to ${PACKAGE}#${PR}"
+        }
+
+        remove_label() {
+          local label="$1" encoded out
+          encoded="${label//\//%2F}"
+          encoded="${encoded// /%20}"
+          if out="$(gh_api --method DELETE "${ISSUES_API}/labels/${encoded}" 2>&1)"; then
+            echo "Removed '${label}' from ${PACKAGE}#${PR}"
+          elif grep -q 'HTTP 404' <<<"${out}"; then
+            echo "'${label}' not present on ${PACKAGE}#${PR}, nothing to do"
+          else
+            echo "${out}" >&2; return 1
+          fi
+        }
+
+        # Parse "@user" and "@org/team" tokens from ARG.
+        # Populates globals USERS (logins) and TEAMS (slugs without org/).
+        parse_users() {
+          USERS=(); TEAMS=()
+          [[ -n "${ARG}" ]] || die "usage: ${CMD} @user|@org/team [...]"
+          local words w
+          read -ra words <<<"${ARG}"
+          for w in "${words[@]}"; do
+            # team: @org/team-slug
+            if [[ "${w}" =~ ^@([A-Za-z0-9_][-A-Za-z0-9_]*/([A-Za-z0-9_][-A-Za-z0-9_-]*))$ ]]; then
+              TEAMS+=("${BASH_REMATCH[2]}")
+            # individual user (EMU logins may contain _)
+            elif [[ "${w}" =~ ^@([A-Za-z0-9_][-A-Za-z0-9_]*)$ ]]; then
+              USERS+=("${BASH_REMATCH[1]}")
+            else
+              die "invalid user or team: ${w}"
+            fi
+          done
+        }
+
+        change_people() {
+          local method="$1" kind="$2" endpoint
+          local -a fields=()
+          if [[ "${kind}" == "assignees" ]]; then
+            [[ ${#TEAMS[@]} -eq 0 ]] || die "/assign does not support team targets"
+            endpoint="${ISSUES_API}/assignees"
+            local u; for u in "${USERS[@]}"; do fields+=(-f "assignees[]=${u}"); done
+          else
+            endpoint="${PULLS_API}/requested_reviewers"
+            local u; for u in "${USERS[@]}"; do fields+=(-f "reviewers[]=${u}"); done
+            local t; for t in "${TEAMS[@]}"; do fields+=(-f "team_reviewers[]=${t}"); done
+          fi
+          [[ ${#fields[@]} -gt 0 ]] || die "no users or teams specified"
+          gh_api --method "${method}" "${endpoint}" "${fields[@]}" >/dev/null
+          echo "${method} ${kind} on ${PACKAGE}#${PR}: users=${USERS[*]:-} teams=${TEAMS[*]:-}"
+        }
+
+        # --- Dispatch ---
+        case "${CMD}" in
+          /hold)
+            case "${ARG}" in
+              "")     add_label    "do-not-merge/hold" ;;
+              cancel) remove_label "do-not-merge/hold" ;;
+              *)      die "usage: /hold [cancel]" ;;
+            esac
+            ;;
+
+          /kind)           need_label "${VALID_KINDS}";      add_label    "kind/${ARG}" ;;
+          /remove-kind)    need_label "${VALID_KINDS}";      remove_label "kind/${ARG}" ;;
+          /priority)       need_label "${VALID_PRIORITIES}"; add_label    "priority/${ARG}" ;;
+          /remove-priority) need_label "${VALID_PRIORITIES}"; remove_label "priority/${ARG}" ;;
+          /area)           need_label "${VALID_AREAS}";      add_label    "area/${ARG}" ;;
+          /remove-area)    need_label "${VALID_AREAS}";      remove_label "area/${ARG}" ;;
+
+          /help)                    no_arg; add_label    "help wanted" ;;
+          /remove-help)             no_arg; remove_label "help wanted" ;;
+          /good-first-issue)        no_arg; add_label    "good first issue" ;;
+          /remove-good-first-issue) no_arg; remove_label "good first issue" ;;
+
+          /assign)   parse_users; change_people POST   assignees ;;
+          /unassign) parse_users; change_people DELETE assignees ;;
+          /cc)       parse_users; change_people POST   reviewers ;;
+          /uncc)     parse_users; change_people DELETE reviewers ;;
+
+          /retitle)
+            [[ -n "${ARG}" ]]    || die "usage: /retitle <new title>"
+            (( ${#ARG} <= 256 )) || die "title too long (max 256 characters)"
+            gh pr edit "${PR}" --repo "${PACKAGE}" --title="${ARG}"
+            echo "Retitled ${PACKAGE}#${PR}"
+            ;;
+
+          /milestone)
+            [[ "${ARG}" =~ ^[A-Za-z0-9][A-Za-z0-9\ ._-]*$ ]] && (( ${#ARG} <= 100 )) \
+              || die "invalid milestone name"
+            gh pr edit "${PR}" --repo "${PACKAGE}" --milestone="${ARG}"
+            echo "Set milestone '${ARG}' on ${PACKAGE}#${PR}"
+            ;;
+
+          *)
+            die "unsupported slash command: ${COMMAND}"
+            ;;
+        esac

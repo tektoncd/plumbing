@@ -1,0 +1,32 @@
+---
+# Base TriggerTemplate for slash commands.
+# Per-command templates add their own resourcetemplates (TaskRun).
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: slash-command-pipeline
+spec:
+  params:
+    - name: buildUUID
+      description: Unique build ID for this run
+    - name: sourceEventId
+      description: GitHub delivery ID (X-GitHub-Delivery header)
+    - name: package
+      description: "org/repo e.g. tektoncd/plumbing"
+    - name: gitRepository
+      description: HTML URL of the repository
+    - name: pullRequestNumber
+      description: PR number the comment was posted on
+    - name: pullRequestUrl
+      description: HTML URL of the pull request
+    - name: pullRequestBaseRef
+      description: Base branch of the pull request
+    - name: gitRevision
+      description: HEAD SHA of the PR branch
+    - name: commenter
+      description: GitHub login of the user who posted the command
+    - name: slashCommand
+      description: Full comment body e.g. "/ci hold" or "/ci hold cancel"
+    - name: authorAssociation
+      description: GitHub author_association of the commenter
+  resourcetemplates: []
