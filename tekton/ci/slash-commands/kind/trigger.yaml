@@ -1,0 +1,12 @@
+---
+# Trigger for /ci kind <type> and /ci remove-kind <type>
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci kind [A-Za-z0-9][-A-Za-z0-9]*\\s*$|^/ci remove-kind [A-Za-z0-9][-A-Za-z0-9]*\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-kind
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-kind

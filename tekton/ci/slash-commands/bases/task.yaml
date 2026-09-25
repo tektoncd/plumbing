@@ -4,7 +4,7 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: slash-command-simple
+  name: slash-commands
   namespace: tekton-ci
 spec:
   params:
