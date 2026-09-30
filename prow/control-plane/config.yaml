@@ -66,6 +66,9 @@ tide:
           results:
             required-contexts:
             - "CI summary"
+          tekton-kueue:
+            required-contexts:
+            - "CI summary"
           triggers:
             required-contexts:
             - "CI summary"
