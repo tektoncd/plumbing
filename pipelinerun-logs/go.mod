@@ -3,7 +3,7 @@ module github.com/tektoncd/plumbing/pipelinerun-logs
 go 1.26.0
 
 require (
-	cloud.google.com/go/logging v1.19.1
+	cloud.google.com/go/logging v1.20.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	google.golang.org/api v0.299.0
 )
