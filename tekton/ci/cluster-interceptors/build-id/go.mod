@@ -1,10 +1,10 @@
 module github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/build-id
 
-go 1.26.4
+go 1.26.6
 
 require (
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/tektoncd/triggers v0.37.0
+	github.com/tektoncd/triggers v0.37.1
 	knative.dev/pkg v0.0.0-20260622140654-39ebae2ee2dc
 )
 
