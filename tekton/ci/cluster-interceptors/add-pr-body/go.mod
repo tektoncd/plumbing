@@ -1,10 +1,10 @@
 module github.com/tektoncd/plumbing/tekton/ci/cluster-interceptors/add-pr-body
 
-go 1.26.4
+go 1.26.6
 
 require (
 	github.com/google/go-cmp v0.7.0
-	github.com/tektoncd/triggers v0.37.0
+	github.com/tektoncd/triggers v0.37.1
 	go.uber.org/zap v1.28.0
 	google.golang.org/grpc v1.84.0
 	knative.dev/pkg v0.0.0-20260622140654-39ebae2ee2dc
