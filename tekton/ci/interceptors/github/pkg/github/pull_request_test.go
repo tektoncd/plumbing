@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"os"
 	"log"
+	"os"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"

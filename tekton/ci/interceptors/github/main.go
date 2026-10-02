@@ -3,9 +3,9 @@ package main
 import (
 	"bytes"
 	"flag"
-	"os"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/github"
 )
