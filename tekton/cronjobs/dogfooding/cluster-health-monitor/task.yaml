@@ -1,0 +1,79 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: cluster-health-monitor
+  namespace: default
+spec:
+  description: >
+    Monitors the health of CronJobs, Jobs, PipelineRuns, and TaskRuns
+    in the dogfooding cluster and reports issues. Clones plumbing to
+    run scripts from the repo, making them easy to maintain and test
+    locally.
+  params:
+    - name: repository
+      description: The plumbing repository URL
+      type: string
+      default: "https://github.com/tektoncd/plumbing.git"
+    - name: revision
+      description: Git revision to use for the scripts
+      type: string
+      default: "main"
+    - name: namespaces
+      description: Comma-separated list of namespaces to monitor for PipelineRun/TaskRun failures
+      type: string
+      default: "default,tekton-ci,tekton-nightly,bastion-p,bastion-z"
+  workspaces:
+    - name: source
+      description: Workspace for the cloned plumbing repository
+    - name: report
+      description: Workspace to share the health report between steps
+  steps:
+    - name: clone
+      image: ghcr.io/tektoncd/plumbing/alpine-git-nonroot
+      script: |
+        #!/bin/sh
+        set -ex
+        git clone --depth 1 --branch "$(params.revision)" \
+          "$(params.repository)" "$(workspaces.source.path)/plumbing"
+        echo "Cloned $(params.repository) @ $(params.revision)"
+        ls "$(workspaces.source.path)/plumbing/tekton/cronjobs/dogfooding/cluster-health-monitor/scripts/"
+
+    - name: check-cronjobs-and-jobs
+      image: ghcr.io/tektoncd/plumbing/kubectl
+      script: |
+        #!/bin/sh
+        exec "$(workspaces.source.path)/plumbing/tekton/cronjobs/dogfooding/cluster-health-monitor/scripts/check-cronjobs.sh" \
+          "$(workspaces.report.path)"
+
+    - name: check-pipelineruns-taskruns
+      image: ghcr.io/tektoncd/plumbing/kubectl
+      script: |
+        #!/bin/sh
+        exec "$(workspaces.source.path)/plumbing/tekton/cronjobs/dogfooding/cluster-health-monitor/scripts/check-runs.sh" \
+          "$(workspaces.report.path)" "$(params.namespaces)"
+
+    - name: report
+      image: ghcr.io/tektoncd/plumbing/kubectl
+      env:
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: bot-token-github
+              key: bot-token
+      script: |
+        #!/bin/sh
+        exec "$(workspaces.source.path)/plumbing/tekton/cronjobs/dogfooding/cluster-health-monitor/scripts/report.sh" \
+          "$(workspaces.report.path)"
