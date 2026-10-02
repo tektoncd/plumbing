@@ -19,3 +19,7 @@
 tekton/**/.ko.yaml
 tekton/**/vendor/
 .release-*/.claude/settings.local.json
+terraform/org-management/tektoncd/imports-teams.tf
+terraform/org-management/tektoncd/backend_override.tf
+terraform/org-management/tektoncd/.terraform/
+terraform/org-management/tektoncd/*.tfstate*
