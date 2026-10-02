@@ -1,0 +1,38 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: slash-command-priority
+spec:
+  params:
+    - name: buildUUID
+    - name: package
+    - name: pullRequestNumber
+    - name: pullRequestUrl
+    - name: commenter
+    - name: slashCommand
+    - name: authorAssociation
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: TaskRun
+      metadata:
+        generateName: slash-command-priority-
+        namespace: tekton-ci
+        labels:
+          prow.k8s.io/build-id: $(tt.params.buildUUID)
+          ci.tekton.dev/slash-command: priority
+      spec:
+        serviceAccountName: tekton-ci-jobs
+        taskRef:
+          name: slash-commands
+        params:
+          - name: package
+            value: $(tt.params.package)
+          - name: pullRequestNumber
+            value: $(tt.params.pullRequestNumber)
+          - name: pullRequestUrl
+            value: $(tt.params.pullRequestUrl)
+          - name: commenter
+            value: $(tt.params.commenter)
+          - name: slashCommand
+            value: $(tt.params.slashCommand)
