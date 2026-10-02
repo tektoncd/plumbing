@@ -7,11 +7,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"os"
 	"testing"
 
 	pb "github.com/tektoncd/plumbing/tekton/ci/interceptors/github/pkg/proto/v1alpha1/config_go_proto"
