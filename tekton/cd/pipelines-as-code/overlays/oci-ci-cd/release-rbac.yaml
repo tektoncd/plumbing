@@ -2,6 +2,16 @@
 # The wait-for-chains task needs to list/get TaskRuns to check
 # Tekton Chains signing status on publish-images tasks.
 
+# Dashboard has no wait-for-chains task and needs no watcher Role.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: release
+  namespace: releases-dashboard
+secrets:
+- name: ghcr-chains-auth
+
 # --- releases-operator ---
 ---
 apiVersion: v1
