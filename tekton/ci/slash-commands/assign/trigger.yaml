@@ -1,0 +1,12 @@
+---
+# Trigger for /ci assign commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci assign( @[A-Za-z0-9_][-A-Za-z0-9_]*(/[A-Za-z0-9_][-A-Za-z0-9_]*)?)+\\s*$|^/ci unassign( @[A-Za-z0-9_][-A-Za-z0-9_]*(/[A-Za-z0-9_][-A-Za-z0-9_]*)?)+\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-assign
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-assign
