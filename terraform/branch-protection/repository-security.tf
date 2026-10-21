@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# tekton-kueue is the pilot for the repository security baseline tracked in
+# https://github.com/tektoncd/plumbing/issues/3748.
 resource "github_repository" "tekton_kueue" {
   name         = "tekton-kueue"
   description  = "Kueue extension for Tekton"
