@@ -1,13 +1,13 @@
 module github.com/tektoncd/plumbing/tekton/ci/interceptors/github
 
-go 1.26.6
+go 1.26.10
 
 require (
 	github.com/gobwas/glob v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-github/v34 v34.0.0
-	github.com/tektoncd/triggers v0.37.1
+	github.com/tektoncd/triggers v0.37.2
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 	sigs.k8s.io/yaml v1.6.0
