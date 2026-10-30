@@ -12,5 +12,6 @@ resources:
 - repositories/chains.yaml
 - repositories/triggers.yaml
 - repositories/results.yaml
+- repositories/dashboard.yaml
 patches:
 - path: pipelines-as-code-configmap.yaml
