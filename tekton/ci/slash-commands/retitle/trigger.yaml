@@ -1,0 +1,12 @@
+---
+# Trigger for /ci retitle commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci retitle .+\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-retitle
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-retitle

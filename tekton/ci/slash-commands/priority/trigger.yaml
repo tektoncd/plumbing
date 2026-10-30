@@ -1,0 +1,12 @@
+---
+# Trigger for /ci priority commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci priority [A-Za-z0-9][-A-Za-z0-9]*\\s*$|^/ci remove-priority [A-Za-z0-9][-A-Za-z0-9]*\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-priority
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-priority

@@ -1,0 +1,12 @@
+---
+# Trigger for /ci help commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci help\\s*$|^/ci remove-help\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-help
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-help
