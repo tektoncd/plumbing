@@ -1,0 +1,92 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: terraform-org-management-sync
+spec:
+  description: >
+    Clones the community and plumbing repos, then runs Terraform to
+    synchronize the GitHub org configuration from org.yaml.
+  workspaces:
+  - name: plumbing-workspace
+  - name: community-workspace
+  - name: github-oauth
+  params:
+  - name: communityUrl
+    default: https://github.com/tektoncd/community.git
+  - name: communityRevision
+    default: main
+  - name: plumbingUrl
+    default: https://github.com/tektoncd/plumbing.git
+  - name: plumbingRevision
+    default: main
+  - name: terraformCommand
+    default: apply
+    description: Terraform command (plan or apply)
+  tasks:
+  # Clone both repos in parallel — no dependency between them
+  - name: clone-community
+    taskRef:
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+    params:
+    - name: url
+      value: $(params.communityUrl)
+    - name: revision
+      value: $(params.communityRevision)
+    workspaces:
+    - name: output
+      workspace: community-workspace
+  - name: clone-plumbing
+    taskRef:
+      resolver: bundles
+      params:
+      - name: bundle
+        value: ghcr.io/tektoncd/catalog/upstream/tasks/git-clone:0.7
+      - name: name
+        value: git-clone
+      - name: kind
+        value: task
+    params:
+    - name: url
+      value: $(params.plumbingUrl)
+    - name: revision
+      value: $(params.plumbingRevision)
+    workspaces:
+    - name: output
+      workspace: plumbing-workspace
+  # Run Terraform after both clones complete
+  - name: terraform-org-management
+    runAfter: [clone-community, clone-plumbing]
+    taskRef:
+      name: terraform-org-management
+    params:
+    - name: command
+      value: $(params.terraformCommand)
+    - name: orgConfigPath
+      value: $(workspaces.community-workspace.path)/org/org.yaml
+    workspaces:
+    - name: plumbing
+      workspace: plumbing-workspace
+    - name: community
+      workspace: community-workspace
+    - name: github-oauth
+      workspace: github-oauth
