@@ -1,0 +1,12 @@
+---
+# Trigger for /ci cc commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci cc( @[A-Za-z0-9_][-A-Za-z0-9_]*(/[A-Za-z0-9_][-A-Za-z0-9_]*)?)+\\s*$|^/ci uncc( @[A-Za-z0-9_][-A-Za-z0-9_]*(/[A-Za-z0-9_][-A-Za-z0-9_]*)?)+\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-cc
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-cc

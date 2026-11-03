@@ -1,0 +1,12 @@
+---
+# Trigger for /ci good-first-issue commands
+- op: replace
+  path: /spec/interceptors/0/params/0/value
+  value: >-
+    body.comment.body.matches('^/ci good-first-issue\\s*$|^/ci remove-good-first-issue\\s*$')
+- op: replace
+  path: /metadata/name
+  value: slash-command-good-first-issue
+- op: replace
+  path: /spec/template/ref
+  value: slash-command-good-first-issue
