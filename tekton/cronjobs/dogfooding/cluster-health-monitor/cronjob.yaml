@@ -1,0 +1,64 @@
+# Copyright 2026 The Tekton Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cluster-health-monitor
+  namespace: default
+spec:
+  schedule: "0 6 * * *"  # Daily at 06:00 UTC
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    metadata:
+      annotations:
+        managed-by: Tekton
+    spec:
+      activeDeadlineSeconds: 600  # 10 minute timeout to avoid stuck jobs
+      template:
+        spec:
+          serviceAccountName: tekton-monitor
+          containers:
+            - name: create-taskrun
+              # Fully-qualified image to avoid CRI-O short name issues
+              image: ghcr.io/tektoncd/plumbing/kubectl
+              command:
+                - /bin/sh
+              args:
+                - -ce
+                - |
+                  cat <<'EOF' | kubectl create -f -
+                  apiVersion: tekton.dev/v1
+                  kind: TaskRun
+                  metadata:
+                    generateName: cluster-health-monitor-
+                    namespace: default
+                    labels:
+                      app: cluster-health-monitor
+                  spec:
+                    serviceAccountName: tekton-monitor
+                    taskRef:
+                      name: cluster-health-monitor
+                    params:
+                      - name: namespaces
+                        value: "default,tekton-ci,tekton-nightly,bastion-p,bastion-z"
+                    workspaces:
+                      - name: source
+                        emptyDir: {}
+                      - name: report
+                        emptyDir: {}
+                  EOF
+                  echo "TaskRun created successfully"
+          restartPolicy: Never
