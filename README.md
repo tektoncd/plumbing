@@ -1,4 +1,6 @@
 # Plumbing
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftektoncd%2Fplumbing.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftektoncd%2Fplumbing?ref=badge_shield)
+
 
 This repo holds configuration for infrastructure used across the tektoncd org 🏗️:
 
@@ -25,3 +27,7 @@ via the `#plumbing` channel.
 
 [Members of the Tekton governing board](https://github.com/tektoncd/community/blob/main/governance.md)
 [have access to the underlying resources](https://github.com/tektoncd/community/blob/main/governance.md#permissions-and-access).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ftektoncd%2Fplumbing.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ftektoncd%2Fplumbing?ref=badge_large)
