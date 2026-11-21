@@ -125,26 +125,24 @@ spec:
 
         The Rekor UUID for this release is \`${REKOR_UUID}\`
 
-        Obtain the attestation:
-        ${BQ}${BQ}${BQ}shell
-        REKOR_UUID=${REKOR_UUID}
-        rekor-cli get --uuid \$REKOR_UUID --format json | jq -r .Attestation | jq .
-        ${BQ}${BQ}${BQ}
-
-        Verify that all container images in the attestation are in the release file:
+        Obtain the attestations from the released images:
         ${BQ}${BQ}${BQ}shell
         RELEASE_FILE=https://infra.tekton.dev/tekton-releases/${TEKTON_PROJECT}/previous/${VERSION}/release.yaml
-        REKOR_UUID=${REKOR_UUID}
+        curl -fsSL "\$RELEASE_FILE" -o release.yaml
+        for image in \$(awk '\$1 == "image:" {print \$2}' release.yaml | sort -u); do
+          cosign download attestation "\$image" | jq -r '.payload | @base64d'
+        done > attestations.json
+        jq . attestations.json
+        ${BQ}${BQ}${BQ}
 
+        Check that all container images in the downloaded attestations are in the release file:
+        ${BQ}${BQ}${BQ}shell
         # Obtains the list of images with sha from the attestation
-        REKOR_ATTESTATION_IMAGES=\$(rekor-cli get --uuid "\$REKOR_UUID" --format json | jq -r .Attestation | jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256')
-
-        # Download the release file
-        curl -L "\$RELEASE_FILE" > release.yaml
+        REKOR_ATTESTATION_IMAGES=\$(jq -r '.subject[]|.name + ":${VERSION}@sha256:" + .digest.sha256' attestations.json)
 
         # For each image in the attestation, match it to the release file
         for image in \$REKOR_ATTESTATION_IMAGES; do
-          printf \$image; grep -q \$image release.yaml && echo " ===> ok" || echo " ===> no match";
+          printf '%s' "\$image"; grep -Fq -- "\$image" release.yaml && echo " ===> ok" || echo " ===> no match";
         done
         ${BQ}${BQ}${BQ}
 
