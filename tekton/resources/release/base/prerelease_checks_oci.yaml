@@ -29,6 +29,9 @@ spec:
   - name: ociNamespace
     description: The Oracle Cloud Infrastructure namespace for the bucket
     default: ""
+  - name: imageRepository
+    description: Optional public ghcr.io/OWNER/NAME repository to check for versionTag
+    default: ""
   stepTemplate:
     env:
     - name: PACKAGE
@@ -39,6 +42,8 @@ spec:
       value: $(params.releaseBucket)
     - name: OCI_NAMESPACE
       value: $(params.ociNamespace)
+    - name: IMAGE_REPOSITORY
+      value: $(params.imageRepository)
   workspaces:
     - name: source-to-release
       description: The workspace where the repo has been cloned
@@ -46,94 +51,183 @@ spec:
       description: The workspace containing OCI credentials secret
       optional: false
   steps:
-    - name: check-git-tag
-      image: docker.io/alpine/git
+    - name: check-github-state
+      image: docker.io/library/python:3.12-alpine3.21
+      env:
+      - name: GITHUB_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: github-token
+            key: GITHUB_TOKEN
+            optional: true
       script: |
-        echo "Checking git tag"
-        # Look for the tag in the list of tags
-        git ls-remote --tags https://$(params.package) | \
-          grep "${VERSION_TAG}$" || exit 0
-        # If the version was found fail
-        echo "Version ${VERSION_TAG} already tagged for ${PACKAGE}"
-        exit 1
+        #!/usr/bin/env python3
+        import http.client
+        import json
+        import os
+        import re
+        from urllib.parse import quote
+
+        package = os.environ["PACKAGE"]
+        version = os.environ["VERSION_TAG"]
+        image = os.environ["IMAGE_REPOSITORY"]
+        if not re.fullmatch(r"github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+", package):
+            raise SystemExit("Invalid package: expected github.com/OWNER/REPO")
+        if package.rsplit("/", 1)[1] in (".", ".."):
+            raise SystemExit("Invalid package repository")
+        if not re.fullmatch(r"v?[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?", version):
+            raise SystemExit("Invalid versionTag: expected a release version")
+        if image and (
+            not re.fullmatch(r"ghcr\.io/[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*", image)
+            or not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}", version)
+        ):
+            raise SystemExit("Invalid imageRepository or container version tag")
+        token = os.environ.get("GITHUB_TOKEN", "")
+        if not token.strip():
+            raise SystemExit("Missing github-token/GITHUB_TOKEN credential")
+        absent = object()
+
+        def get(host, path, headers, missing=False, missing_code=None):
+            connection = http.client.HTTPSConnection(host, timeout=30)
+            try:
+                connection.request("GET", path, headers=headers)
+                response = connection.getresponse()
+                body = response.read()
+                if missing and response.status == 404:
+                    if missing_code is not None:
+                        content = json.loads(body)
+                        errors = content.get("errors") if isinstance(content, dict) else None
+                        if not isinstance(errors, list) or not errors or not all(
+                            isinstance(error, dict) and error.get("code") == missing_code
+                            for error in errors
+                        ):
+                            raise SystemExit("Registry response did not confirm manifest absence")
+                    return absent
+                if response.status != 200:
+                    raise SystemExit(f"Preflight lookup failed: {host} HTTP {response.status}")
+                return json.loads(body)
+            except (OSError, http.client.HTTPException, ValueError):
+                # Never log headers, tokens, or untrusted response bodies.
+                raise SystemExit(f"Preflight transport or JSON lookup failed: {host}") from None
+            finally:
+                connection.close()
+
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "tekton-release-preflight",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        user = get("api.github.com", "/user", headers)
+        if not isinstance(user, dict) or user.get("login") != "tekton-robot":
+            raise SystemExit("GitHub credential must authenticate as tekton-robot")
+        repo = package.removeprefix("github.com/")
+        base = f"/repos/{repo}"
+        access = get("api.github.com", base, headers)
+        # Push access is required to see every draft, not just public releases.
+        if (
+            not isinstance(access, dict)
+            or access.get("full_name", "").lower() != repo.lower()
+            or access.get("permissions", {}).get("push") is not True
+        ):
+            raise SystemExit("GitHub repository access must include push permission for draft visibility")
+        tag = get("api.github.com", f"{base}/git/ref/tags/{quote(version, safe='')}", headers, missing=True)
+        if tag is not absent:
+            raise SystemExit(f"Git tag {version} already exists")
+        page = 1
+        while True:
+            releases = get("api.github.com", f"{base}/releases?per_page=100&page={page}", headers)
+            if not isinstance(releases, list):
+                raise SystemExit("Invalid GitHub releases response")
+            for release in releases:
+                if not isinstance(release, dict) or not isinstance(release.get("tag_name"), str):
+                    raise SystemExit("Invalid GitHub release entry")
+                if release["tag_name"] == version:
+                    raise SystemExit(f"GitHub release or draft {version} already exists")
+            if len(releases) < 100:
+                break
+            page += 1
+
+        if image:
+            repository = image.removeprefix("ghcr.io/")
+            pull = get("ghcr.io", f"/token?service=ghcr.io&scope=repository:{repository}:pull", {})
+            if not isinstance(pull, dict) or not isinstance(pull.get("token"), str) or not pull["token"]:
+                raise SystemExit("Invalid GHCR pull token response")
+            manifest = get("ghcr.io", f"/v2/{repository}/manifests/{version}", {
+                "Authorization": f"Bearer {pull['token']}",
+                "Accept": "application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json",
+            }, missing=True, missing_code="MANIFEST_UNKNOWN")
+            if manifest is not absent:
+                raise SystemExit(f"Container tag {image}:{version} already exists")
+        print("GitHub and optional container state checks passed")
     - name: check-release-file
       image: ghcr.io/oracle/oci-cli:sha-b324bd6  # released 2025-10-01
+      env:
+      - name: OCI_CREDENTIALS
+        value: $(workspaces.oci-credentials.path)
       script: |
-        #!/bin/bash
-        set -e
-        echo "Checking release file"
+        #!/usr/bin/env python3
+        import json
+        import os
+        from pathlib import Path
+        import re
+        import subprocess
+        import tempfile
 
-        # Create OCI CLI config directory
-        mkdir -p /oracle/.oci
-        chmod 700 /oracle/.oci
+        bucket_path = os.environ["RELEASE_BUCKET"]
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+", bucket_path):
+            raise SystemExit("Invalid releaseBucket: expected bucket/project")
+        bucket, project = bucket_path.split("/", 1)
+        if any(part in ("", ".", "..") for part in project.split("/")):
+            raise SystemExit("Invalid releaseBucket project path")
+        source = Path(os.environ["OCI_CREDENTIALS"])
+        os.umask(0o077)
+        with tempfile.TemporaryDirectory(prefix="release-preflight-") as directory:
+            config = Path(directory) / "config"
+            key = Path(directory) / "oci_api_key.pem"
+            key.write_bytes((source / "oci_api_key.pem").read_bytes())
+            fields = {}
+            for name, filename in (
+                ("user", "user_ocid"), ("fingerprint", "fingerprint"),
+                ("tenancy", "tenancy_ocid"), ("region", "region"),
+            ):
+                value = (source / filename).read_text().strip()
+                if not value or "\n" in value or "\r" in value:
+                    raise SystemExit(f"Invalid OCI credential file: {filename}")
+                fields[name] = value
+            config.write_text("[DEFAULT]\n" + "".join(f"{k}={v}\n" for k, v in fields.items()) + f"key_file={key}\n")
 
-        # Read credentials from workspace files directly into config
-        # Avoid storing sensitive data in environment variables
-        OCI_FINGERPRINT=$(cat $(workspaces.oci-credentials.path)/fingerprint)
-        OCI_TENANCY_OCID=$(cat $(workspaces.oci-credentials.path)/tenancy_ocid)
-        OCI_USER_OCID=$(cat $(workspaces.oci-credentials.path)/user_ocid)
-        OCI_REGION=$(cat $(workspaces.oci-credentials.path)/region)
+            def oci(*args):
+                return subprocess.run(
+                    ["oci", "--config-file", str(config), "--output", "json", "--no-retry", *args],
+                    capture_output=True, text=True, timeout=90, check=False,
+                )
 
-        # Copy the API key directly (avoid echoing or storing in variables)
-        cp $(workspaces.oci-credentials.path)/oci_api_key.pem /oracle/.oci/oci_api_key.pem
-        chmod 600 /oracle/.oci/oci_api_key.pem
-
-        # Create OCI config file
-        cat > /oracle/.oci/config <<OCICONFIG
-        [DEFAULT]
-        user=${OCI_USER_OCID}
-        fingerprint=${OCI_FINGERPRINT}
-        tenancy=${OCI_TENANCY_OCID}
-        region=${OCI_REGION}
-        key_file=/oracle/.oci/oci_api_key.pem
-        OCICONFIG
-        chmod 600 /oracle/.oci/config
-
-        echo "OCI CLI configured successfully"
-
-        # Automatically detect namespace from tenancy if not provided
-        if [ -z "${OCI_NAMESPACE}" ]; then
-          echo "Namespace not provided, auto-detecting from tenancy..."
-          OCI_NAMESPACE=$(oci os ns get --query data --raw-output)
-          echo "Detected namespace successfully"
-        fi
-
-        # Check if the release file already exists in Oracle Cloud Storage
-        # Extract bucket name from RELEASE_BUCKET
-        BUCKET_NAME=$(echo ${RELEASE_BUCKET} | awk -F'/' '{print $1}')
-        OBJECT_PATH=$(echo ${RELEASE_BUCKET} | cut -d'/' -f2-)/previous/${VERSION_TAG}/release.yaml
-
-        echo "Checking bucket: ${BUCKET_NAME}"
-        echo "Object path: ${OBJECT_PATH}"
-
-        # Check if object exists using OCI CLI
-        # oci os object head returns 0 if object exists, non-zero if not found
-        if oci os object head \
-           --bucket-name "${BUCKET_NAME}" \
-           --name "${OBJECT_PATH}" \
-           --namespace-name "${OCI_NAMESPACE}" 2>/dev/null; then
-          echo "Release file already exists for ${VERSION_TAG} in the release bucket,"
-          echo "but no git tag was found. To continue remove the release file first."
-          # Clean up credentials before exiting
-          rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
-          exit 1
-        fi
-
-        # Clean up credentials
-        rm -f /oracle/.oci/oci_api_key.pem /oracle/.oci/config
-        echo "Release file does not exist. Check passed."
-    - name: check-github-release
-      image: docker.io/library/python:3.6-alpine3.9
-      script: |
-        echo "Checking GitHub release"
-        PACKAGE=$(echo ${PACKAGE} | cut -d/ -f2,3)
-        # Check if the release exists on GitHub
-        wget -q -O- --header 'Accept: application/vnd.github.v3+json' \
-          https://api.github.com/repos/${PACKAGE}/releases | \
-          python -c 'import sys; import json; print("\n".join([x["tag_name"] for x in json.load(sys.stdin)]))' | \
-          grep "${VERSION_TAG}$" || exit 0
-        echo "Release ${VERSION_TAG} already exists for ${PACKAGE}"
-        exit 1
+            namespace = os.environ["OCI_NAMESPACE"]
+            if not namespace:
+                result = oci("os", "ns", "get")
+                if result.returncode:
+                    raise SystemExit("OCI namespace lookup failed")
+                namespace = json.loads(result.stdout)["data"]
+            if not isinstance(namespace, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", namespace):
+                raise SystemExit("Invalid OCI namespace response")
+            location = ("--bucket-name", bucket, "--namespace-name", namespace)
+            # A missing or inaccessible bucket must not masquerade as a missing object.
+            result = oci("os", "bucket", "get", *location)
+            if result.returncode or json.loads(result.stdout)["data"]["name"] != bucket:
+                raise SystemExit("OCI bucket access check failed")
+            for filename in ("release.yaml", "release.notags.yaml", "SHA256SUMS"):
+                result = oci("os", "object", "head", *location, "--name",
+                             f"{project}/previous/{os.environ['VERSION_TAG']}/{filename}")
+                if result.returncode == 0:
+                    raise SystemExit("Release artifact already exists; use the release recovery process")
+                prefix = "ServiceError:"
+                if not result.stderr.startswith(prefix):
+                    raise SystemExit("OCI object lookup failed without a structured service error")
+                error = json.loads(result.stderr[len(prefix):])
+                if error.get("status") != 404 or error.get("code") not in ("ObjectNotFound", "NotFound"):
+                    raise SystemExit("OCI object lookup failed; absence was not confirmed")
+        print("Release artifact absence confirmed")
     - name: success-confirmation
       image: docker.io/library/alpine
       script: |
