@@ -1,0 +1,16 @@
+# Shared crdify policy for Tekton components.
+#
+# - description: None — OpenAPI doc churn is not a stored-object break
+# - unhandledEnforcement: Warn — fail only on known validations; reviewers
+#   catch the rest
+# - enum: allow value additions
+# - conversion: None — still validate across served versions
+unhandledEnforcement: Warn
+conversion: None
+validations:
+  - name: description
+    enforcement: None
+  - name: enum
+    enforcement: Error
+    configuration:
+      additionPolicy: Allow

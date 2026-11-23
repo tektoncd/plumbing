@@ -109,6 +109,30 @@ function pre_integration_tests() {
 main $@
 ```
 
+## Using the `verify-crd-compat.sh` helper script
+
+Shared CRD OpenAPI compatibility check (via
+[crdify](https://github.com/kubernetes-sigs/crdify), policy aligned with
+openshift/api). Intended for every PR on every Tekton component that ships CRDs.
+
+1. Set `CRD_DIRS` to the component's CRD YAML directories (space-separated, repo-relative).
+2. For PR CI, set `COMPAT_BASELINE_REF` to the PR base SHA, or rely on
+   `PULL_BASE_SHA` (Prow). Defaults to `upstream/main` then `main` locally.
+3. Run the script from the component repo root (or via a thin wrapper).
+
+```bash
+# From a component repo (example: operator hack/verify-crd-compat.sh)
+# Run it, don't source it (it exits and sets shell options).
+CRD_DIRS=config/base/generated-crds \
+  COMPAT_BASELINE_REF="${PULL_BASE_SHA:-$(git merge-base HEAD upstream/main)}" \
+  bash "$(git rev-parse --show-toplevel)/vendor/github.com/tektoncd/plumbing/scripts/verify-crd-compat.sh"
+```
+
+Policy file: `crdify-compat.yaml` next to the script (override with `CRDIFY_CONFIG`).
+
+Until this lands in a vendored plumbing revision, copy `verify-crd-compat.sh` and
+`crdify-compat.yaml` into `vendor/github.com/tektoncd/plumbing/scripts/` for local testing.
+
 ## Using the `e2e-tests.sh` helper script
 
 This is a helper script for Knative E2E test scripts. To use it:
