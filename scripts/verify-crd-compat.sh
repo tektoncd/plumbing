@@ -78,9 +78,19 @@ ensure_crdify() {
   if [[ -x "${CRDIFY_BIN}" ]]; then
     return
   fi
-  mkdir -p "$(dirname "${CRDIFY_BIN}")"
+  local bindir
+  bindir="$(dirname "${CRDIFY_BIN}")"
+  mkdir -p "${bindir}"
   echo "installing sigs.k8s.io/crdify@${CRDIFY_VERSION} -> ${CRDIFY_BIN}"
-  GOBIN="$(dirname "${CRDIFY_BIN}")" go install "sigs.k8s.io/crdify@${CRDIFY_VERSION}"
+  # go install always names the binary "crdify"; move to the versioned path.
+  GOBIN="${bindir}" go install "sigs.k8s.io/crdify@${CRDIFY_VERSION}"
+  if [[ "${CRDIFY_BIN}" != "${bindir}/crdify" ]]; then
+    mv "${bindir}/crdify" "${CRDIFY_BIN}"
+  fi
+  if [[ ! -x "${CRDIFY_BIN}" ]]; then
+    echo "error: crdify install failed; expected ${CRDIFY_BIN}" >&2
+    exit 1
+  fi
 }
 
 # Reads YAML on stdin. No -q: grep must drain stdin or `git show | is_crd` can SIGPIPE under pipefail.
