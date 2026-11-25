@@ -139,7 +139,7 @@ func parseFlags() (config, error) {
 	flag.UintVar(&c.days, "days", 365, "number of days to run the rotation for.")
 	flag.StringVar(&overridesPath, "overrides", "", "path to a csv file in YYYY-MM-DD,user format that should override whatever this program generates for that date.")
 	flag.Usage = func() {
-		log.Printf(strings.TrimSpace(usageMessage) + "\n\n")
+		log.Print(strings.TrimSpace(usageMessage) + "\n\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()

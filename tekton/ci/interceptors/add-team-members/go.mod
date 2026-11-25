@@ -1,6 +1,6 @@
 module github.com/tektoncd/plumbing/tekton/ci/interceptors/add-team-members
 
-go 1.21
+go 1.26.0
 
 toolchain go1.23.4
 
