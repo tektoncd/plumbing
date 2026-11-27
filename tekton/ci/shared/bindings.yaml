@@ -81,3 +81,17 @@ spec:
   params:
   - name: labels
     value: $(body.issue.labels)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: tekton-ci-webhook-slash-command
+  namespace: tekton-ci
+spec:
+  params:
+  - name: commenter
+    value: $(body.comment.user.login)
+  - name: slashCommand
+    value: $(body.comment.body)
+  - name: authorAssociation
+    value: $(body.comment.author_association)
