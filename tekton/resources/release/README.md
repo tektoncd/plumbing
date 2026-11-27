@@ -7,6 +7,53 @@ The core release pipelines are still owned by the specific project.
 
 ## Tasks and Pipelines
 
+### OCI Release Preflight
+
+[`prerelease-checks-oci`](./base/prerelease_checks_oci.yaml) is a read-only
+gate for a new release, not a recovery workflow. It requires:
+
+- `package`: `github.com/OWNER/REPO` (default `github.com/tektoncd/pipeline`).
+- `versionTag`: a release version such as `v0.4.3` or `v0.4.3-rc.1`.
+- `releaseBucket`: `<bucket-name>/<project-name>`; all three versioned objects
+  `release.yaml`, `release.notags.yaml`, and `SHA256SUMS` are checked under
+  `<project-name>/previous/<versionTag>/`.
+- `ociNamespace`: the OCI namespace, or `""` (default) to discover it.
+- `imageRepository`: `""` by default, skipping the image check. When supplied,
+  it must be a public `ghcr.io/OWNER/NAME` repository without a tag or digest,
+  and `versionTag` must also be a valid container tag. Callers must explicitly
+  pass their image repository; it is not inferred from `package`.
+- Workspaces `source-to-release` and `oci-credentials`, with the existing OCI
+  files `fingerprint`, `tenancy_ocid`, `user_ocid`, `region`, and `oci_api_key.pem`.
+- Namespace Secret `github-token`, key `GITHUB_TOKEN`, authenticating as
+  `tekton-robot` with repository push permission so drafts are visible.
+  A missing Secret/key produces a script error rather than a pending Pod.
+
+The Task first verifies the GitHub identity and repository access, then checks
+the exact tag reference and every page of authenticated releases, including
+drafts. When enabled, the GHCR check obtains a public pull token and probes
+the version manifest. The OCI check verifies bucket access before checking the
+release objects, using temporary private credential files cleaned up on success
+and script errors.
+
+An existing tag, release (published or draft), manifest, or release object blocks
+the Task. Only an HTTP 404 on the exact tag lookup, a manifest 404 with a
+structured `MANIFEST_UNKNOWN` error, or a structured
+OCI object error with status 404 and code `ObjectNotFound` or `NotFound` after
+successful bucket access, establishes absence. Authentication, authorization,
+network, other HTTP, CLI, and parse errors fail the Task; there is no anonymous
+GitHub fallback. Credentials and response bodies are not logged.
+
+If state already exists, stop and use the project's release recovery process;
+this Task does not delete or repair published state. Kueue caller wiring,
+shared-resource pinning, and recovery automation are separate changes.
+
+Run the focused deterministic tests (Python with `pytest` and the repository's
+`requirements.txt` installed):
+
+```shell
+python3 -m pytest -q tekton/resources/release/tests/test_prerelease_checks_oci.py
+```
+
 ### Install Tekton Release
 
 The task `install-tekton-release` installs a release of a Tekton project from the YAML file in the
